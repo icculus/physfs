@@ -304,6 +304,8 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname);
 /* These get used all over for lessening code clutter. */
 #define BAIL_MACRO(e, r) { __PHYSFS_setError(e); return r; }
 #define BAIL_IF_MACRO(c, e, r) if (c) { __PHYSFS_setError(e); return r; }
+#define BAIL_MACRO_MUTEX(e, m, r) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; }
+#define BAIL_IF_MACRO_MUTEX(c, e, m, r) if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; }
 
 
 
@@ -632,6 +634,44 @@ int __PHYSFS_platformMkDir(const char *path);
  */
 int __PHYSFS_platformDelete(const char *path);
 
+
+/*
+ * Create a platform-specific mutex. This can be whatever datatype your
+ *  platform uses for mutexes, but it is cast to a (void *) for abstractness.
+ *
+ * Return (NULL) if you couldn't create one. Systems without threads can
+ *  return any arbitrary non-NULL value.
+ */
+void *__PHYSFS_platformCreateMutex(void);
+
+/*
+ * Destroy a platform-specific mutex, and clean up any resources associated
+ *  with it. (mutex) is a value previously returned by
+ *  __PHYSFS_platformCreateMutex(). This can be a no-op on single-threaded
+ *  platforms.
+ */
+void __PHYSFS_platformDestroyMutex(void *mutex);
+
+/*
+ * Grab possession of a platform-specific mutex. Mutexes should be recursive;
+ *  that is, the same thread should be able to call this function multiple
+ *  times in a row without causing a deadlock. This function should block 
+ *  until a thread can gain possession of the mutex.
+ *
+ * Return non-zero if the mutex was grabbed, zero if there was an 
+ *  unrecoverable problem grabbing it (this should not be a matter of 
+ *  timing out! We're talking major system errors; block until the mutex 
+ *  is available otherwise.)
+ */
+int __PHYSFS_platformGrabMutex(void *mutex);
+
+/*
+ * Relinquish possession of the mutex when this method has been called 
+ *  once for each time that platformGrabMutex was called. Once possession has
+ *  been released, the next thread in line to grab the mutex (if any) may
+ *  proceed.
+ */
+void __PHYSFS_platformReleaseMutex(void *mutex);
 
 #ifdef __cplusplus
 }

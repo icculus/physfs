@@ -660,5 +660,40 @@ int __PHYSFS_platformDelete(const char *path)
     return(1);
 } /* __PHYSFS_platformDelete */
 
+
+void *__PHYSFS_platformCreateMutex(void)
+{
+    int rc;
+    pthread_mutex_t *m = (pthread_mutex_t *) malloc(sizeof (pthread_mutex_t));
+    BAIL_IF_MACRO(m == NULL, ERR_OUT_OF_MEMORY, NULL);
+    rc = pthread_mutex_init(m, NULL);
+    if (rc != 0)
+    {
+        free(m);
+        BAIL_MACRO(strerror(rc), NULL);
+    } /* if */
+
+    return((void *) m);
+} /* __PHYSFS_platformCreateMutex */
+
+
+void __PHYSFS_platformDestroyMutex(void *mutex)
+{
+    pthread_mutex_destroy((pthread_mutex_t *) mutex);
+    free(mutex);
+} /* __PHYSFS_platformDestroyMutex */
+
+
+int __PHYSFS_platformGrabMutex(void *mutex)
+{
+    return(pthread_mutex_lock((pthread_mutex_t *) mutex) == 0);    
+} /* __PHYSFS_platformGrabMutex */
+
+
+void __PHYSFS_platformReleaseMutex(void *mutex)
+{
+    pthread_mutex_unlock((pthread_mutex_t *) mutex);
+} /* __PHYSFS_platformReleaseMutex */
+
 /* end of unix.c ... */
 
