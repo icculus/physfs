@@ -82,6 +82,8 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     int mounts;
     int ii;
 
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+
     mounts = getmntinfo( &mntbufp, MNT_WAIT );
 
     for ( ii=0; ii < mounts; ++ii ) {
@@ -124,6 +126,8 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     int cd_count = 1;  /* We count the NULL entry. */
     FILE *mounts = NULL;
     struct mntent *ent = NULL;
+
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     *retval = NULL;
     mounts = setmntent("/etc/mtab", "r");
