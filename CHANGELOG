@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+07282002 - macclassic.c now returns human readable error messages instead of
+           ERR_OS_ERROR. Minor error message tweak in os2.c.
 07272002 - Patched the OS/2 code to be useful...works pretty well, now. Added
            makeos2.cmd for building (not an ideal solution, but oh well).
            Initialized some variables in zip.c to prevent compiler whining.
