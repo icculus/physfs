@@ -13,8 +13,6 @@
  * Please note that I haven't tried this code with CarbonLib or under
  *  MacOS X at all. The code in unix.c is known to work with Darwin,
  *  and you may or may not be better off using that.
- *
- * GetDefaultUser() from PPCToolbox.h isn't supported in CarbonLib, for one.
  */
 #ifdef __PHYSFS_CARBONIZED__   
 #include <Carbon.h>
@@ -22,7 +20,9 @@
 #include <OSUtils.h>
 #include <Processes.h>
 #include <Files.h>
-#include <PPCToolbox.h>
+#include <TextUtils.h>
+#include <Resources.h>
+#include <MacMemory.h>
 #endif
 
 #define __PHYSICSFS_INTERNAL__
@@ -118,14 +118,27 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 char *__PHYSFS_platformGetUserName(void)
 {
     char *retval = NULL;
-    Str32 name;
-    UInt32 ref;
-    BAIL_IF_MACRO(GetDefaultUser(&ref, name) != noErr, ERR_OS_ERROR, NULL);
+    StringHandle strHandle;
+    short origResourceFile = CurResFile();
 
-    retval = (char *) malloc(name[0] + 1);
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    memcpy(retval, &name[1], name[0]);
-    retval[name[0]] = '\0';  /* null-terminate it. */
+    /* use the System resource file. */
+    UseResFile(0);
+    /* apparently, -16096 specifies the username. */
+    strHandle = GetString(-16096);
+    UseResFile(origResourceFile);
+    BAIL_IF_MACRO(strHandle == NULL, ERR_OS_ERROR, NULL);
+
+    HLock((Handle) strHandle);
+    retval = (char *) malloc((*strHandle)[0] + 1);
+    if (retval == NULL)
+    {
+        HUnlock((Handle) strHandle);
+        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+    } /* if */
+    memcpy(retval, &(*strHandle)[1], (*strHandle)[0]);
+    retval[(*strHandle)[0]] = '\0';  /* null-terminate it. */
+    HUnlock((Handle) strHandle);
+
     return(retval);
 } /* __PHYSFS_platformGetUserName */
 
