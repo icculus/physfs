@@ -263,6 +263,9 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_COMPRESSION          "(De)compression error"
 #define ERR_NOT_IMPLEMENTED      "Not implemented"
 #define ERR_OS_ERROR             "Operating system reported error"
+#define ERR_FILE_EXISTS          "File already exists"
+#define ERR_NOT_A_DIR            "Not a directory"
+#define ERR_FILE_NOT_FOUND       "File not found"
 
 /*
  * Call this to set the message returned by PHYSFS_getLastError().
