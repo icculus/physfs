@@ -2,7 +2,7 @@
  * CHANGELOG.
  */
 
-07272002 - Patched the OS/2 code to compile...works, to a degree. Added
+07272002 - Patched the OS/2 code to be useful...works pretty well, now. Added
            makeos2.cmd for building (not an ideal solution, but oh well).
            Initialized some variables in zip.c to prevent compiler whining.
 07262002 - Fixed a typo in documentation. Archivers with matching file
