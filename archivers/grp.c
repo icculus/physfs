@@ -130,7 +130,8 @@ static PHYSFS_sint64 GRP_read(FileHandle *handle, void *buffer,
     void *fh = finfo->handle;
     PHYSFS_sint64 curPos = __PHYSFS_platformTell(fh);
     PHYSFS_uint64 bytesLeft = (finfo->startPos + finfo->size) - curPos;
-    PHYSFS_uint32 objsLeft = bytesLeft / objSize;
+    /*!!! If objSize is '1' it's quite likely that objsLeft will be greater than 32-bits */
+    PHYSFS_uint32 objsLeft = (PHYSFS_uint32)(bytesLeft / objSize);
 
     if (objsLeft < objCount)
         objCount = objsLeft;
@@ -157,7 +158,8 @@ static PHYSFS_sint64 GRP_tell(FileHandle *handle)
 static int GRP_seek(FileHandle *handle, PHYSFS_uint64 offset)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
-    int newPos = finfo->startPos + offset;
+    /*!!! Why isn't newPos a 64-bit??? */
+    int newPos = (int)(finfo->startPos + offset);
 
     BAIL_IF_MACRO(offset < 0, ERR_INVALID_ARGUMENT, 0);
     BAIL_IF_MACRO(newPos > finfo->startPos + finfo->size, ERR_PAST_EOF, 0);
@@ -287,7 +289,8 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h,
     PHYSFS_uint8 buf[16];
     GRPinfo *g = (GRPinfo *) (h->opaque);
     void *fh = g->handle;
-    int i;
+    /*!!! This should be a uint32 and not an int...look at loops below */
+    PHYSFS_uint32 i;
     LinkedStringList *retval = NULL;
     LinkedStringList *l = NULL;
     LinkedStringList *prev = NULL;
@@ -299,6 +302,7 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h,
         /* jump to first file entry... */
     BAIL_IF_MACRO(!__PHYSFS_platformSeek(fh, 16), NULL, NULL);
 
+    /*!!! i needs to be unsigned */
     for (i = 0; i < g->totalEntries; i++)
     {
         BAIL_IF_MACRO(__PHYSFS_platformRead(fh, buf, 16, 1) != 1, NULL, retval);
@@ -337,7 +341,8 @@ static PHYSFS_sint32 getFileEntry(DirHandle *h, const char *name,
     PHYSFS_uint8 buf[16];
     GRPinfo *g = (GRPinfo *) (h->opaque);
     void *fh = g->handle;
-    int i;
+    /*!!! This should be a uint32 and not an int...look at loops below */
+    PHYSFS_uint32 i;
     char *ptr;
     int retval = (g->totalEntries + 1) * 16; /* offset of raw file data */
 
