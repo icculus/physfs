@@ -159,6 +159,15 @@ if test x$enable_qpak = xyes; then
   AC_DEFINE([PHYSFS_SUPPORTS_QPAK], 1, [define if qpak support is enabled])
 fi
 
+dnl Check for mix archiver inclusion...
+AC_ARG_ENABLE(mix,
+[  --enable-mix               enable Westwood MIX support [default=no]],
+                , enable_mix=no)
+if test x$enable_mix = xyes; then
+  AC_DEFINE([PHYSFS_SUPPORTS_MIX], 1, [define if mix support is enabled])
+fi
+
+
 dnl Check if we should statically link the included zlib...
 AC_ARG_ENABLE(internal-zlib,
 [  --enable-internal-zlib     use included zlib [default=only if needed]],

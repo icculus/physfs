@@ -13,5 +13,5 @@ libarchivers_la_SOURCES =	\
 	hog.c		\
 	mvl.c		\
 	zip.c		\
-	qpak.c
-
+	qpak.c		\
+	mix.c

@@ -79,6 +79,11 @@ extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_WAD;
 extern const DirFunctions         __PHYSFS_DirFunctions_WAD;
 #endif
 
+#if (defined PHYSFS_SUPPORTS_MIX)
+extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_MIX;
+extern const DirFunctions         __PHYSFS_DirFunctions_MIX;
+#endif
+
 extern const DirFunctions  __PHYSFS_DirFunctions_DIR;
 
 
@@ -108,6 +113,9 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
     &__PHYSFS_ArchiveInfo_WAD,
 #endif
 
+#if (defined PHYSFS_SUPPORTS_MIX)
+    &__PHYSFS_ArchiveInfo_MIX,
+#endif
 
     NULL
 };
@@ -136,6 +144,10 @@ static const DirFunctions *dirFunctions[] =
 
 #if (defined PHYSFS_SUPPORTS_WAD)
     &__PHYSFS_DirFunctions_WAD,
+#endif
+
+#if (defined PHYSFS_SUPPORTS_MIX)
+    &__PHYSFS_DirFunctions_MIX,
 #endif
 
     &__PHYSFS_DirFunctions_DIR,
