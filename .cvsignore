@@ -1,3 +1,5 @@
+physfs_static_debug
+physfs_static_release
 depcomp
 Makefile
 .deps
