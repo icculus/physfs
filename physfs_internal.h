@@ -125,6 +125,8 @@ typedef struct __PHYSFS_DIRHANDLE__
  */
 typedef struct __PHYSFS_DIRFUNCTIONS__
 {
+    const PHYSFS_ArchiveInfo *info;
+
         /*
          * Returns non-zero if (filename) is a valid archive that this
          *  driver can handle. This filename is in platform-dependent

@@ -141,9 +141,16 @@ static int ZIP_isSymLink(DirHandle *h, const char *name);
 static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h, const char *name);
 static FileHandle *ZIP_openRead(DirHandle *h, const char *filename);
 static void ZIP_dirClose(DirHandle *h);
-
 static int zip_resolve(void *in, ZIPinfo *info, ZIPentry *entry);
 
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
+{
+    "ZIP",
+    "PkZip/WinZip/Info-Zip compatible",
+    "Ryan C. Gordon <icculus@clutteredmind.org>",
+    "http://icculus.org/physfs/",
+};
 
 static const FileFunctions __PHYSFS_FileFunctions_ZIP =
 {
@@ -159,6 +166,7 @@ static const FileFunctions __PHYSFS_FileFunctions_ZIP =
 
 const DirFunctions __PHYSFS_DirFunctions_ZIP =
 {
+    &__PHYSFS_ArchiveInfo_ZIP,
     ZIP_isArchive,          /* isArchive() method      */
     ZIP_openArchive,        /* openArchive() method    */
     ZIP_enumerateFiles,     /* enumerateFiles() method */
@@ -173,15 +181,6 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
     NULL,                   /* mkdir() method          */
     ZIP_dirClose            /* dirClose() method       */
 };
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
-{
-    "ZIP",
-    "PkZip/WinZip/Info-Zip compatible",
-    "Ryan C. Gordon <icculus@clutteredmind.org>",
-    "http://www.icculus.org/physfs/",
-};
-
 
 
 /*
