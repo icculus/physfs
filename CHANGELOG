@@ -56,6 +56,8 @@
            create the directory, and make sure that the writing functions
            get used in dir.c when a file is opened for writing/appending.
            Updated CREDITS.
+10092001 - Syntax fixes in dir.c, a FIXME in grp.c, and a "cat" command in
+           the test program.
 
 --ryan. (icculus@clutteredmind.org)
 
