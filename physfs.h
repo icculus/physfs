@@ -272,7 +272,7 @@ __EXPORT__ const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void);
  *
  *   @param list List of information specified as freeable by this function.
  */
-__EXPORT__ void PHYSFS_freeList(void *list);
+__EXPORT__ void PHYSFS_freeList(void *listVar);
 
 
 /**
