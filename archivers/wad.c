@@ -298,11 +298,7 @@ static void *WAD_openArchive(const char *name, int forWriting)
     memset(info, '\0', sizeof (WADinfo));
 
     info->filename = (char *) malloc(strlen(name) + 1);
-    if (info->filename == NULL)
-    {
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-        goto WAD_openArchive_failed;
-    } /* if */
+    GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, WAD_openArchive_failed);
 
     if (!wad_load_entries(name, forWriting, info))
         goto WAD_openArchive_failed;

@@ -219,11 +219,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     struct mntent *ent = NULL;
 
     mounts = setmntent("/etc/mtab", "r");
-    if (mounts == NULL)
-    {
-        __PHYSFS_setError(ERR_IO_ERROR);
-        return;
-    } /* if */
+    BAIL_IF_MACRO(mounts == NULL, ERR_IO_ERROR, /*return void*/);
 
     while ( (ent = getmntent(mounts)) != NULL )
     {

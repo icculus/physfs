@@ -75,7 +75,7 @@ typedef struct
 } QPAKfileinfo;
 
 /* Magic numbers... */
-#define QPAK_SIGNATURE 0x4b434150   /* "PACK" in ASCII. */
+#define QPAK_SIG 0x4b434150   /* "PACK" in ASCII. */
 
 
 static void QPAK_dirClose(dvoid *opaque)
@@ -175,11 +175,7 @@ static int qpak_open(const char *filename, int forWriting,
         goto openQpak_failed;
 
     buf = PHYSFS_swapULE32(buf);
-    if (buf != QPAK_SIGNATURE)
-    {
-        __PHYSFS_setError(ERR_UNSUPPORTED_ARCHIVE);
-        goto openQpak_failed;
-    } /* if */
+    GOTO_IF_MACRO(buf != QPAK_SIG, ERR_UNSUPPORTED_ARCHIVE, openQpak_failed);
 
     if (__PHYSFS_platformRead(*fh, &buf, sizeof (PHYSFS_uint32), 1) != 1)
         goto openQpak_failed;
@@ -191,11 +187,8 @@ static int qpak_open(const char *filename, int forWriting,
 
     *count = PHYSFS_swapULE32(*count);
 
-    if ((*count % 64) != 0)  /* corrupted archive? */
-    {
-        __PHYSFS_setError(ERR_CORRUPTED);
-        goto openQpak_failed;
-    } /* if */
+    /* corrupted archive? */
+    GOTO_IF_MACRO((*count % 64) != 0, ERR_CORRUPTED, openQpak_failed);
 
     if (!__PHYSFS_platformSeek(*fh, buf))
         goto openQpak_failed;
