@@ -12,7 +12,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   nice for an email program. That's blue sky, unless someone wants to tackle
   it.
 - Try to remove ERR_OS_ERROR from macclassic.c where possible.
-- Get os2.c working.
 - Figure out that pesky pthread casting problem.
 - macclassic.c :
   "/* (Hmm. Default behaviour is broken in the base library.  :)  )  */"
