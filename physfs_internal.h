@@ -1149,6 +1149,23 @@ LinkedStringList *__PHYSFS_addToLinkedStringList(LinkedStringList *retval,
                                                  PHYSFS_sint32 len);
 
 
+/* This byteorder stuff was lifted from SDL. http://www.libsdl.org/ */
+#define PHYSFS_LIL_ENDIAN  1234
+#define PHYSFS_BIG_ENDIAN  4321
+
+#if  defined(__i386__) || defined(__ia64__) || defined(WIN32) || \
+    (defined(__alpha__) || defined(__alpha)) || \
+     defined(__arm__) || defined(ARM) || \
+    (defined(__mips__) && defined(__MIPSEL__)) || \
+     defined(__SYMBIAN32__) || \
+     defined(__x86_64__) || \
+     defined(__LITTLE_ENDIAN__)
+#define PHYSFS_BYTEORDER    PHYSFS_LIL_ENDIAN
+#else
+#define PHYSFS_BYTEORDER    PHYSFS_BIG_ENDIAN
+#endif
+
+
 /*
  * When sorting the entries in an archive, we use a modified QuickSort.
  *  When there are less then PHYSFS_QUICKSORT_THRESHOLD entries left to sort,

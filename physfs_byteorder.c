@@ -18,23 +18,6 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-/* This byteorder stuff was lifted from SDL. http://www.libsdl.org/ */
-#define PHYSFS_LIL_ENDIAN  1234
-#define PHYSFS_BIG_ENDIAN  4321
-
-#if  defined(__i386__) || defined(__ia64__) || defined(WIN32) || \
-    (defined(__alpha__) || defined(__alpha)) || \
-     defined(__arm__) || defined(ARM) || \
-    (defined(__mips__) && defined(__MIPSEL__)) || \
-     defined(__SYMBIAN32__) || \
-     defined(__x86_64__) || \
-     defined(__LITTLE_ENDIAN__)
-#define PHYSFS_BYTEORDER    PHYSFS_LIL_ENDIAN
-#else
-#define PHYSFS_BYTEORDER    PHYSFS_BIG_ENDIAN
-#endif
-
-
 /* The macros used to swap values */
 /* Try to use superfast macros on systems that support them */
 #ifdef linux
