@@ -35,5 +35,5 @@ EXTRA_DIST =	\
     docs
 
 dist-hook:
-	rm -rf `find $(distdir)/docs -name CVS`
+	rm -rf $(distdir)/docs/*
 
