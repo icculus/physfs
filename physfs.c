@@ -111,7 +111,7 @@ static ErrMsg *findErrorForCurrentThread(void)
     ErrMsg *i;
     PHYSFS_uint64 tid;
 
-    if (initialized)
+    if (errorLock != NULL)
         __PHYSFS_platformGrabMutex(errorLock);
 
     if (errorMessages != NULL)
@@ -122,13 +122,14 @@ static ErrMsg *findErrorForCurrentThread(void)
         {
             if (i->tid == tid)
             {
-                __PHYSFS_platformReleaseMutex(errorLock);
+                if (errorLock != NULL)
+                    __PHYSFS_platformReleaseMutex(errorLock);
                 return(i);
             } /* if */
         } /* for */
     } /* if */
 
-    if (initialized)
+    if (errorLock != NULL)
         __PHYSFS_platformReleaseMutex(errorLock);
 
     return(NULL);   /* no error available. */
@@ -153,10 +154,14 @@ void __PHYSFS_setError(const char *str)
         memset((void *) err, '\0', sizeof (ErrMsg));
         err->tid = __PHYSFS_platformGetThreadID();
 
-        __PHYSFS_platformGrabMutex(errorLock);
+        if (errorLock != NULL)
+            __PHYSFS_platformGrabMutex(errorLock);
+
         err->next = errorMessages;
         errorMessages = err;
-        __PHYSFS_platformReleaseMutex(errorLock);
+
+        if (errorLock != NULL)
+            __PHYSFS_platformReleaseMutex(errorLock);
     } /* if */
 
     err->errorAvailable = 1;
@@ -188,6 +193,8 @@ static void freeErrorMessages(void)
         next = i->next;
         free(i);
     } /* for */
+
+    errorMessages = NULL;
 } /* freeErrorMessages */
 
 
