@@ -309,11 +309,7 @@ static void *HOG_openArchive(const char *name, int forWriting)
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, 0);
     memset(info, '\0', sizeof (HOGinfo));
     info->filename = (char *) malloc(strlen(name) + 1);
-    if (info->filename == NULL)
-    {
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-        goto HOG_openArchive_failed;
-    } /* if */
+    GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, HOG_openArchive_failed);
 
     if (!hog_load_entries(name, forWriting, info))
         goto HOG_openArchive_failed;

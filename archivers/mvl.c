@@ -268,12 +268,7 @@ static void *MVL_openArchive(const char *name, int forWriting)
     memset(info, '\0', sizeof (MVLinfo));
 
     info->filename = (char *) malloc(strlen(name) + 1);
-    if (info->filename == NULL)
-    {
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-        goto MVL_openArchive_failed;
-    } /* if */
-
+    GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, MVL_openArchive_failed);
     if (!mvl_load_entries(name, forWriting, info))
         goto MVL_openArchive_failed;
 

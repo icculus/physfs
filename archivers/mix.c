@@ -236,12 +236,8 @@ static void *MIX_openArchive(const char *name, int forWriting)
     memset(info, '\0', sizeof (MIXinfo));
 
     info->filename = (char *) malloc(strlen(name) + 1);
-    if (info->filename == NULL)
-    {
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-        goto MIX_openArchive_failed;
-    } /* if */
-    
+    GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, MIX_openArchive_failed);
+
     /* store filename */
     strcpy(info->filename, name);
     
@@ -259,12 +255,8 @@ static void *MIX_openArchive(const char *name, int forWriting)
 
     /* allocate space for the entries and read the entries */
     info->entry = malloc(sizeof (MIXentry) * info->header.num_files);
-    if (info->entry == NULL)
-    {
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-        goto MIX_openArchive_failed;
-    } /* if */
-    
+    GOTO_IF_MACRO(!info->entry, ERR_OUT_OF_MEMORY, MIX_openArchive_failed);
+
     /* read the directory list */
     for (i = 0; i < header.num_files; i++)
     {
