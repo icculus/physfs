@@ -1875,7 +1875,22 @@ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, 0);
-    h->buffill = h->bufpos = 0;     /* just in case. */
+
+    if (h->buffer && h->forReading)
+    {
+        /* avoid throwing away our precious buffer if seeking within it. */
+        PHYSFS_sint64 offset = pos - PHYSFS_tell(handle);
+        if ( /* seeking within the already-buffered range? */
+            ((offset >= 0) && (offset <= h->buffill - h->bufpos)) /* forwards */
+            || ((offset < 0) && (-offset <= h->bufpos)) /* backwards */ )
+        {
+            h->bufpos += offset;
+            return(1); /* successful seek */
+        } /* if */
+    } /* if */
+
+    /* we have to fall back to a 'raw' seek. */
+    h->buffill = h->bufpos = 0;
     return(h->funcs->seek(h, pos));
 } /* PHYSFS_seek */
 
