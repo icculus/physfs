@@ -19,6 +19,17 @@ Some might be dupes, some might be done already.
 - Use __cdecl in physfs.h?
 - Look for FIXMEs (many marked with "!!!" in comments).
 - Probably other stuff. Requests and recommendations are welcome.
+- Cygwin should use unix/posix and not win32 platform code.
+- Add "mount points"
+- Expose the archiver registration mechanism to the outside world.
+- Set up a mechanism for file enumeration that employs a callback.
+- Allow the application to provide allocation services.
+- Find some way to relax or remove the security model for external tools.
+- Non-blocking I/O
+- mmap() in posix.c
+- OSX shouldn't use ~/.app for userdir.
+- fscanf and fprintf support in extras dir.
+- maybe other stuff.
 
 // end of TODO ...
 
