@@ -535,6 +535,44 @@ static int sanitizePlatformIndependentPath(const char *src, char *dst)
 } /* sanitizePlatformIndependentPath */
 
 
+/*
+ * Figure out if (fname) is part of (h)'s mountpoint. (fname) must be an
+ *  output from sanitizePlatformIndependentPath(), so that it is in a known
+ *  state.
+ *
+ * This only finds legitimate segments of a mountpoint. If the mountpoint is
+ *  "/a/b/c" and (fname) is "/a/b/c", "/", or "/a/b/c/d", then the results are
+ *  all zero. "/a/b" will succeed, though.
+ */
+static int partOfMountPoint(DirHandle *h, char *fname)
+{
+    /* !!! FIXME: This code feels gross. */
+    int rc;
+    size_t len, mntpntlen;
+
+    if (h->mountPoint == NULL)
+        return(0);
+    else if (*fname == '\0')
+        return(1);
+
+    len = strlen(fname);
+    mntpntlen = strlen(h->mountPoint);
+    if (len > mntpntlen)  /* can't be a subset of mountpoint. */
+        return(0);
+
+    /* if true, must be not a match or a complete match, but not a subset. */
+    if ((len + 1) == mntpntlen)
+        return(0);
+
+    rc = strncmp(fname, h->mountPoint, len); /* !!! FIXME: case insensitive? */
+    if (rc != 0)
+        return(0);  /* not a match. */
+
+    /* make sure /a/b matches /a/b/ and not /a/bc ... */
+    return(h->mountPoint[len] == '/');
+} /* partOfMountPoint */
+
+
 static DirHandle *createDirHandle(const char *newDir,
                                   const char *mountPoint,
                                   int forWriting)
@@ -594,6 +632,7 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
     
     dh->funcs->dirClose(dh->opaque);
     free(dh->dirName);
+    free(dh->mountPoint);
     free(dh);
     return(1);
 } /* freeDirHandle */
@@ -1023,6 +1062,25 @@ char **PHYSFS_getSearchPath(void)
 } /* PHYSFS_getSearchPath */
 
 
+const char *PHYSFS_getMountPoint(const char *dir)
+{
+    DirHandle *i;
+    __PHYSFS_platformGrabMutex(stateLock);
+    for (i = searchPath; i != NULL; i = i->next)
+    {
+        if (strcmp(i->dirName, dir) == 0)
+        {
+            const char *retval = ((i->mountPoint) ? i->mountPoint : "/");
+            __PHYSFS_platformReleaseMutex(stateLock);
+            return(retval);
+        } /* if */
+    } /* for */
+    __PHYSFS_platformReleaseMutex(stateLock);
+
+    BAIL_MACRO(ERR_NOT_IN_SEARCH_PATH, NULL);
+} /* PHYSFS_getMountPoint */
+
+
 void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback callback, void *data)
 {
     DirHandle *i;
@@ -1216,17 +1274,20 @@ char * __PHYSFS_convertToDependent(const char *prepend,
  * With some exceptions (like PHYSFS_mkdir(), which builds multiple subdirs
  *  at a time), you should always pass zero for "allowMissing" for efficiency.
  *
- * (fname) must be an output fromsanitizePlatformIndependentPath(), since it
- *  will make sure that path names are in the right format for passing certain
- *  checks. It will also do checks for "insecure" pathnames like ".." which
- *  should be done once instead of once per archive. This also gives us
- *  license to treat (fname) as scratch space in this function.
+ * (fname) must point to an output from sanitizePlatformIndependentPath(),
+ *  since it will make sure that path names are in the right format for
+ *  passing certain checks. It will also do checks for "insecure" pathnames
+ *  like ".." which should be done once instead of once per archive. This also
+ *  gives us license to treat (fname) as scratch space in this function.
  *
  * Returns non-zero if string is safe, zero if there's a security issue.
- *  PHYSFS_getLastError() will specify what was wrong.
+ *  PHYSFS_getLastError() will specify what was wrong. (*fname) will be
+ *  updated to point past any mount point elements so it is prepared to
+ *  be used with the archiver directly.
  */
-int __PHYSFS_verifySecurity(DirHandle *h, char *fname, int allowMissing)
+static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
 {
+    char *fname = *_fname;
     int retval = 1;
     char *start;
     char *end;
@@ -1234,18 +1295,24 @@ int __PHYSFS_verifySecurity(DirHandle *h, char *fname, int allowMissing)
     if (*fname == '\0')  /* quick rejection. */
         return(1);
 
+    /* !!! FIXME: This codeblock sucks. */
     if (h->mountPoint != NULL)  /* NULL mountpoint means "/". */
     {
-        /* !!! FIXME: Case insensitive? */
         size_t mntpntlen = strlen(h->mountPoint);
         assert(mntpntlen > 1); /* root mount points should be NULL. */
         size_t len = strlen(fname);
         /* not under the mountpoint, so skip this archive. */
-        BAIL_IF_MACRO(len < mntpntlen, ERR_NO_SUCH_PATH, 0);
-        retval = strncmp(h->mountPoint, fname, mntpntlen);
+        BAIL_IF_MACRO(len < mntpntlen-1, ERR_NO_SUCH_PATH, 0);
+        /* !!! FIXME: Case insensitive? */
+        retval = strncmp(h->mountPoint, fname, mntpntlen-1);
         BAIL_IF_MACRO(retval != 0, ERR_NO_SUCH_PATH, 0);
-        fname += mntpntlen;  /* move to start of actual archive path. */
-        retval = 1;
+        if (len > mntpntlen-1)  /* corner case... */
+            BAIL_IF_MACRO(fname[mntpntlen-1] != '/', ERR_NO_SUCH_PATH, 0);
+        fname += mntpntlen-1;  /* move to start of actual archive path. */
+        if (*fname == '/')
+            fname++;
+        *_fname = fname;  /* skip mountpoint for later use. */
+        retval = 1;  /* may be reset, below. */
     } /* if */
 
     start = fname;
@@ -1282,7 +1349,7 @@ int __PHYSFS_verifySecurity(DirHandle *h, char *fname, int allowMissing)
     } /* if */
 
     return(retval);
-} /* __PHYSFS_verifySecurity */
+} /* verifyPath */
 
 
 int PHYSFS_mkdir(const char *_dname)
@@ -1301,9 +1368,9 @@ int PHYSFS_mkdir(const char *_dname)
     __PHYSFS_platformGrabMutex(stateLock);
     BAIL_IF_MACRO_MUTEX(writeDir == NULL, ERR_NO_WRITE_DIR, stateLock, 0);
     h = writeDir;
-    BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h,dname,1),NULL,stateLock,0);
-    start = dname;
+    BAIL_IF_MACRO_MUTEX(!verifyPath(h, &dname, 1), NULL, stateLock, 0);
 
+    start = dname;
     while (1)
     {
         end = strchr(start, '/');
@@ -1345,7 +1412,7 @@ int PHYSFS_delete(const char *_fname)
 
     BAIL_IF_MACRO_MUTEX(writeDir == NULL, ERR_NO_WRITE_DIR, stateLock, 0);
     h = writeDir;
-    BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h,fname,0),NULL,stateLock,0);
+    BAIL_IF_MACRO_MUTEX(!verifyPath(h, &fname, 0), NULL, stateLock, 0);
     retval = h->funcs->remove(h->opaque, fname);
 
     __PHYSFS_platformReleaseMutex(stateLock);
@@ -1365,9 +1432,12 @@ const char *PHYSFS_getRealDir(const char *_fname)
     __PHYSFS_platformGrabMutex(stateLock);
     for (i = searchPath; ((i != NULL) && (retval == NULL)); i = i->next)
     {
-        if (__PHYSFS_verifySecurity(i, fname, 0))
+        char *arcfname = fname;
+        if (partOfMountPoint(i, arcfname))
+            retval = i->dirName;
+        else if (verifyPath(i, &arcfname, 0))
         {
-            if (i->funcs->exists(i->opaque, fname))
+            if (i->funcs->exists(i->opaque, arcfname))
                 retval = i->dirName;
         } /* if */
     } /* for */
@@ -1484,8 +1554,22 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
     noSyms = !allowSymLinks;
     for (i = searchPath; i != NULL; i = i->next)
     {
-        if (__PHYSFS_verifySecurity(i, fname, 0))
-            i->funcs->enumerateFiles(i->opaque, fname, noSyms, callback, data);
+        char *arcfname = fname;
+        if (partOfMountPoint(i, arcfname))
+        {
+            size_t len = strlen(arcfname);
+            char *ptr = i->mountPoint + ((len) ? len + 1 : 0);
+            char *end = strchr(ptr, '/');
+            assert(end);  /* should always find a terminating '/'. */
+            *end = '\0';  /* !!! FIXME: not safe in a callback... */
+            callback(data, ptr);
+            *end = '/';   /* !!! FIXME: not safe in a callback... */
+        } /* if */
+
+        else if (verifyPath(i, &arcfname, 0))
+        {
+            i->funcs->enumerateFiles(i->opaque,arcfname,noSyms,callback,data);
+        } /* else if */
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 } /* PHYSFS_enumerateFilesCallback */
@@ -1513,8 +1597,12 @@ PHYSFS_sint64 PHYSFS_getLastModTime(const char *_fname)
     __PHYSFS_platformGrabMutex(stateLock);
     for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
-        if (__PHYSFS_verifySecurity(i, fname, 0))
-            retval = i->funcs->getLastModTime(i->opaque, fname, &fileExists);
+        char *arcfname = fname;
+        fileExists = partOfMountPoint(i, arcfname);
+        if (fileExists)
+            retval = 1; /* !!! FIXME: What's the right value? */
+        else if (verifyPath(i, &arcfname, 0))
+            retval = i->funcs->getLastModTime(i->opaque,arcfname,&fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
@@ -1536,8 +1624,11 @@ int PHYSFS_isDirectory(const char *_fname)
     __PHYSFS_platformGrabMutex(stateLock);
     for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
-        if (__PHYSFS_verifySecurity(i, fname, 0))
-            retval = i->funcs->isDirectory(i->opaque, fname, &fileExists);
+        char *arcfname = fname;
+        if ((fileExists = partOfMountPoint(i, arcfname)) != 0)
+            retval = 1;
+        else if (verifyPath(i, &arcfname, 0))
+            retval = i->funcs->isDirectory(i->opaque, arcfname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
@@ -1562,8 +1653,11 @@ int PHYSFS_isSymbolicLink(const char *_fname)
     __PHYSFS_platformGrabMutex(stateLock);
     for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
-        if (__PHYSFS_verifySecurity(i, fname, 0))
-            retval = i->funcs->isSymLink(i->opaque, fname, &fileExists);
+        char *arcfname = fname;
+        if ((fileExists = partOfMountPoint(i, arcfname)) != 0)
+            retval = 0;  /* virtual dir...not a symlink. */
+        else if (verifyPath(i, &arcfname, 0))
+            retval = i->funcs->isSymLink(i->opaque, arcfname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
@@ -1586,8 +1680,7 @@ static PHYSFS_File *doOpenWrite(const char *_fname, int appending)
     BAIL_IF_MACRO_MUTEX(!writeDir, ERR_NO_WRITE_DIR, stateLock, NULL);
 
     h = writeDir;
-    BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h, fname, 0), NULL,
-                        stateLock, NULL);
+    BAIL_IF_MACRO_MUTEX(!verifyPath(h, &fname, 0), NULL, stateLock, NULL);
 
     f = h->funcs;
     if (appending)
@@ -1642,15 +1735,19 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
     BAIL_IF_MACRO(!sanitizePlatformIndependentPath(_fname, fname), NULL, 0);
 
     __PHYSFS_platformGrabMutex(stateLock);
+
+    /* !!! FIXME: should probably be ERR_PATH_NOT_FOUND */
     BAIL_IF_MACRO_MUTEX(!searchPath, ERR_NOT_IN_SEARCH_PATH, stateLock, NULL);
 
+    /* !!! FIXME: Why aren't we using a for loop here? */
     i = searchPath;
 
     do
     {
-        if (__PHYSFS_verifySecurity(i, fname, 0))
+        char *arcfname = fname;
+        if (verifyPath(i, &arcfname, 0))
         {
-            opaque = i->funcs->openRead(i->opaque, fname, &fileExists);
+            opaque = i->funcs->openRead(i->opaque, arcfname, &fileExists);
             if (opaque)
                 break;
         } /* if */
