@@ -1108,10 +1108,13 @@ char *__PHYSFS_convertToDependent(const char *prepend,
  *  for symlinks (if they aren't permitted). Also, elements such as
  *  ".", "..", or ":" are flagged.
  *
+ * With some exceptions (like PHYSFS_mkdir(), which builds multiple subdirs
+ *  at a time), you should always pass zero for "allowMissing" for efficiency.
+ *
  * Returns non-zero if string is safe, zero if there's a security issue.
  *  PHYSFS_getLastError() will specify what was wrong.
  */
-int __PHYSFS_verifySecurity(DirHandle *h, const char *fname);
+int __PHYSFS_verifySecurity(DirHandle *h, const char *fname, int allowMissing);
 
 
 /*
