@@ -45,6 +45,7 @@ Some might be dupes, some might be done already.
 - Update internal zlib?
 - Get svn hooks working.
 - maybe other stuff.
+- Need "getmountpoint" command in test_physfs.c ...
 
 // end of TODO ...
 
