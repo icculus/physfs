@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+10142002 - Added check for AMD's x86-64 ("Hammer") architecture when
+           determining platform byte order.
 10112002 - Fixed "setsaneconfig" command in test_physfs.c ...
 09232002 - Happy September. Updated VC++6 project files, fixed some
            VC++ compile nags (more work to be done in zip.c).
