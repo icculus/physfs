@@ -577,7 +577,7 @@ static char *get_zip_realpath(void *in, ZIPentry *entry)
     else  /* symlink target path is compressed... */
     {
         z_stream stream;
-        PHYSFS_uint32 compsize = entry->uncompressed_size;
+        PHYSFS_uint32 compsize = entry->compressed_size;
         PHYSFS_uint8 *compressed = (PHYSFS_uint8 *) malloc(compsize);
         if (compressed != NULL)
         {
@@ -590,8 +590,11 @@ static char *get_zip_realpath(void *in, ZIPentry *entry)
                 stream.avail_out = size;
                 if (zlib_err(inflateInit2(&stream, -MAX_WBITS)) == Z_OK)
                 {
-                    rc = (zlib_err(inflate(&stream, Z_FINISH)) == Z_OK);
+                    rc = zlib_err(inflate(&stream, Z_FINISH));
                     inflateEnd(&stream);
+
+                    /* both are acceptable outcomes... */
+                    rc = ((rc == Z_OK) || (rc == Z_STREAM_END));
                 } /* if */
             } /* if */
             free(compressed);
@@ -636,7 +639,12 @@ static int entry_is_symlink(ZIPentry *entry, PHYSFS_uint32 extern_attr)
     return (
               (version_does_symlinks(entry->version)) &&
               (entry->uncompressed_size > 0) &&
-              (extern_attr & 0x00120000)  /* symlink flag. */
+
+            #if 0 /* !!! FIXME ... this check is incorrect for some files! */
+              (extern_attr & 0x0120000)  /* symlink flag. */
+            #else
+              0  /* always fail for now. Symlinks will just be small files. */
+            #endif
            );
 } /* entry_is_symlink */
 
