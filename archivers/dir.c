@@ -46,6 +46,15 @@ static int DIR_mkdir(DirHandle *h, const char *name);
 static void DIR_dirClose(DirHandle *h);
 
 
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
+{
+    "",
+    "non-archive directory I/O",
+    "Ryan C. Gordon <icculus@clutteredmind.org>",
+    "http://icculus.org/physfs/",
+};
+
+
 static const FileFunctions __PHYSFS_FileFunctions_DIR =
 {
     DIR_read,       /* read() method       */
@@ -72,6 +81,7 @@ static const FileFunctions __PHYSFS_FileFunctions_DIRW =
 
 const DirFunctions __PHYSFS_DirFunctions_DIR =
 {
+    &__PHYSFS_ArchiveInfo_DIR,
     DIR_isArchive,          /* isArchive() method      */
     DIR_openArchive,        /* openArchive() method    */
     DIR_enumerateFiles,     /* enumerateFiles() method */
@@ -86,18 +96,6 @@ const DirFunctions __PHYSFS_DirFunctions_DIR =
     DIR_mkdir,              /* mkdir() method          */
     DIR_dirClose            /* dirClose() method       */
 };
-
-
-/* This doesn't get listed, since it's technically not an archive... */
-#if 0
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
-{
-    "DIR",
-    "non-archive directory I/O",
-    "Ryan C. Gordon <icculus@clutteredmind.org>",
-    "http://www.icculus.org/physfs/",
-};
-#endif
 
 
 static PHYSFS_sint64 DIR_read(FileHandle *handle, void *buffer,

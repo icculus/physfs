@@ -90,6 +90,15 @@ static int GRP_isSymLink(DirHandle *h, const char *name);
 static PHYSFS_sint64 GRP_getLastModTime(DirHandle *h, const char *name);
 static FileHandle *GRP_openRead(DirHandle *h, const char *name);
 
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
+{
+    "GRP",
+    "Build engine Groupfile format",
+    "Ryan C. Gordon <icculus@clutteredmind.org>",
+    "http://icculus.org/physfs/",
+};
+
+
 static const FileFunctions __PHYSFS_FileFunctions_GRP =
 {
     GRP_read,       /* read() method       */
@@ -104,6 +113,7 @@ static const FileFunctions __PHYSFS_FileFunctions_GRP =
 
 const DirFunctions __PHYSFS_DirFunctions_GRP =
 {
+    &__PHYSFS_ArchiveInfo_GRP,
     GRP_isArchive,          /* isArchive() method      */
     GRP_openArchive,        /* openArchive() method    */
     GRP_enumerateFiles,     /* enumerateFiles() method */
@@ -117,14 +127,6 @@ const DirFunctions __PHYSFS_DirFunctions_GRP =
     NULL,                   /* remove() method         */
     NULL,                   /* mkdir() method          */
     GRP_dirClose            /* dirClose() method       */
-};
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
-{
-    "GRP",
-    "Build engine Groupfile format",
-    "Ryan C. Gordon <icculus@clutteredmind.org>",
-    "http://www.icculus.org/physfs/",
 };
 
 
