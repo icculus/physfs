@@ -70,16 +70,9 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 } /* __PHYSFS_detectAvailableCDs */
 
 
-char *__PHYSFS_platformCalcBaseDir(const char *argv0)
+static char *getExePath(void)
 {
-    DWORD buflen = 0;
-    char *retval = NULL;
-    char *filepart = NULL;
-
-    if (strchr(argv0, '\\') != NULL)   /* default behaviour can handle this. */
-        return(NULL);
-
-    retval = (char *) malloc(sizeof (TCHAR) * (MAX_PATH + 1));
+    char *retval = (char *) malloc(sizeof (TCHAR) * (MAX_PATH + 1));
     buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
     retval[buflen] = '\0';  /* does API always null-terminate the string? */
 
@@ -105,6 +98,19 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     SearchPath(NULL, argv0, NULL, buflen, retval, &filepart);
 
     return(retval);
+} /* getExePath */
+
+
+char *__PHYSFS_platformCalcBaseDir(const char *argv0)
+{
+    DWORD buflen = 0;
+    char *retval = NULL;
+    char *filepart = NULL;
+
+    if (strchr(argv0, '\\') != NULL)   /* default behaviour can handle this. */
+        return(NULL);
+
+    return(getExePath());
 } /* __PHYSFS_platformCalcBaseDir */
 
 
@@ -169,7 +175,8 @@ char *__PHYSFS_platformGetUserDir(void)
         } /* if */
     } /* if */
 
-    return(NULL);  /* fall through to default rules. */
+    /* screw it; it's the same as the base dir... */
+    return(getExePath());
 } /* __PHYSFS_platformGetUserDir */
 
 
