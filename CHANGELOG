@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+12222003 - Fixed a search-and-replace mistake in win32.c that preventing
+           compiling on Windows. (thanks, Brian!)
 12182003 - WAD archiver now puts maps into subdirectories, making them
            accessible to the application. (Thanks, Travis!) RPM spec and
            Makefile.am* now package zlib_license_change.txt (Thanks, Edward!)
