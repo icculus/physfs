@@ -161,10 +161,6 @@ SOURCE=.\zlib114\uncompr.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\archivers\unzip.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\platform\win32.c
 # End Source File
 # Begin Source File
