@@ -165,32 +165,32 @@ static void __PHYSFS_quick_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
     PHYSFS_uint32 j;
     PHYSFS_uint32 v;
 
-	if ((hi - lo) <= PHYSFS_QUICKSORT_THRESHOLD)
+    if ((hi - lo) <= PHYSFS_QUICKSORT_THRESHOLD)
         __PHYSFS_bubble_sort(a, lo, hi, cmpfn, swapfn);
     else
-	{
-		i = (hi + lo) / 2;
+    {
+        i = (hi + lo) / 2;
 
         if (cmpfn(a, lo, i) > 0) swapfn(a, lo, i);
-		if (cmpfn(a, lo, hi) > 0) swapfn(a, lo, hi);
-		if (cmpfn(a, i, hi) > 0) swapfn(a, i, hi);
+        if (cmpfn(a, lo, hi) > 0) swapfn(a, lo, hi);
+        if (cmpfn(a, i, hi) > 0) swapfn(a, i, hi);
 
-		j = hi - 1;
-		swapfn(a, i, j);
-		i = lo;
-		v = j;
-		while (1)
-		{
-			while(cmpfn(a, ++i, v) < 0) { /* do nothing */ }
-			while(cmpfn(a, --j, v) > 0) { /* do nothing */ }
-			if (j < i)
+        j = hi - 1;
+        swapfn(a, i, j);
+        i = lo;
+        v = j;
+        while (1)
+        {
+            while(cmpfn(a, ++i, v) < 0) { /* do nothing */ }
+            while(cmpfn(a, --j, v) > 0) { /* do nothing */ }
+            if (j < i)
                 break;
-			swapfn(a, i, j);
-		} /* while */
-		swapfn(a, i, hi-1);
-		__PHYSFS_quick_sort(a, lo, j, cmpfn, swapfn);
-		__PHYSFS_quick_sort(a, i+1, hi, cmpfn, swapfn);
-	} /* else */
+            swapfn(a, i, j);
+        } /* while */
+        swapfn(a, i, hi-1);
+        __PHYSFS_quick_sort(a, lo, j, cmpfn, swapfn);
+        __PHYSFS_quick_sort(a, i+1, hi, cmpfn, swapfn);
+    } /* else */
 } /* __PHYSFS_quick_sort */
 
 
@@ -675,7 +675,7 @@ static char *calculateBaseDir(const char *argv0)
      */
     retval = __PHYSFS_platformCurrentDir();
     if(retval != NULL) {
-	return(retval);
+    return(retval);
     }
 
     /*
@@ -1851,7 +1851,7 @@ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
 int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 _bufsize)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
-	PHYSFS_uint32 bufsize = (PHYSFS_uint32) _bufsize;
+    PHYSFS_uint32 bufsize = (PHYSFS_uint32) _bufsize;
 
     BAIL_IF_MACRO(_bufsize > 0xFFFFFFFF, "buffer must fit in 32-bits", 0);
     BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, 0);

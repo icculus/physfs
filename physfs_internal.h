@@ -622,15 +622,15 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
     int (*isSymLink)(DirHandle *r, const char *name, int *fileExists);
 
         /*
-	     * Retrieve the last modification time (mtime) of a file.
-    	 *  Returns -1 on failure, or the file's mtime in seconds since
-    	 *  the epoch (Jan 1, 1970) on success.
+         * Retrieve the last modification time (mtime) of a file.
+         *  Returns -1 on failure, or the file's mtime in seconds since
+         *  the epoch (Jan 1, 1970) on success.
          *  This filename is in platform-independent notation.
          *
          * Regardless of success or failure, please set *exists to
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
-    	 */
+         */
     PHYSFS_sint64 (*getLastModTime)(DirHandle *r, const char *fnm, int *exist);
 
         /*
