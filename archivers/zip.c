@@ -1258,7 +1258,7 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
     LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_uint32 dlen = strlen(dirname);
 
-    if (dirname[dlen - 1] == '/')
+    if ((dlen > 0) && (dirname[dlen - 1] == '/'))
         dlen--;
 
     i = zip_find_start_of_dir(info, dirname, 0);
@@ -1275,8 +1275,7 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
         if ( ((omitSymLinks) && (zip_entry_is_symlink(entry))) ||
              (*add_file == '\0') ) /* skip links and the dir entry itself. */
         {
-            i++;
-            continue;
+            if (++i >= max) break; else continue;
         } /* if */
 
         slash = strchr(add_file, '/'); /* handle subdirs under dirname... */
@@ -1297,8 +1296,7 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
             {
                 if (info->entries[i].name[dlen] == '/')
                 {
-                    i++;  /* skip it. */
-                    continue;
+                    if (++i >= max) break; else continue;
                 } /* if */
             } /* if */
             slash = NULL;
