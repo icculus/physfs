@@ -10,7 +10,10 @@
            and archivers/grp.c (returns lastmodtime of GRPfile itself in the
            physical filesystem). Put a 64-bit _llseek() version of the seek()
            and tell() methods in platform/posix.c, but you need to hack (or
-           rather, fix) configure.in to enable it.
+           rather, fix) configure.in to enable it. From Greg on win32.c: Fixed
+           file enumerator function (needed a wildcard '*' specification), CD
+           enumeration only reports CDs that have media, getLastModTime() has
+           been implemented.
 06012002 - Added -Wall to debug builds. Removed ANSI stdio calls from
            platform/posix.c, and replaced them with actual POSIX calls (that
            is, fopen() became open(), fseek() became lseek(), etc...)
