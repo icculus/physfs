@@ -138,6 +138,7 @@ void __PHYSFS_setError(const char *str)
         if (err == NULL)
             return;   /* uhh...? */
 
+        memset((void *) err, '\0', sizeof (ErrMsg));
         err->tid = __PHYSFS_platformGetThreadID();
         err->next = errorMessages;
         errorMessages = err;
