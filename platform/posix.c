@@ -131,10 +131,8 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
     {
         ux = toupper((int) *x);
         uy = toupper((int) *y);
-        if (ux > uy)
-            return(1);
-        else if (ux < uy)
-            return(-1);
+        if (ux != uy)
+            return((ux > uy) ? 1 : -1);
         x++;
         y++;
     } while ((ux) && (uy));
