@@ -24,7 +24,7 @@
 
 #if  defined(__i386__) || defined(__ia64__) || defined(WIN32) || \
     (defined(__alpha__) || defined(__alpha)) || \
-     defined(__arm__) || \
+     defined(__arm__) || defined(ARM) || \
     (defined(__mips__) && defined(__MIPSEL__)) || \
      defined(__SYMBIAN32__) || \
      defined(__x86_64__) || \
