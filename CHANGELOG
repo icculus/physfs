@@ -3,6 +3,7 @@
  */
 
 01282003 - Fixed seeking in buffered files opened for read.
+01072003 - .NET assembly and C# wrapper by Gregory S. Read in the extras dir.
 01042003 - Added a hack for dealing with OSX bundles and newer PBProjects
            (thanks, Eric Wing!). Added some missing files to "make dist".
            Fixed minor Doxygen typo in PHYSFS_flush() docs. Upped version to
