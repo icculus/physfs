@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+04092004 - Added MIX support for legacy Westwood titles (Thanks, Sebastian!)
 01152003 - Added Portuguese (Brazil) translation (Thanks, Danny!)
 12292003 - Updated CodeWarrior projects from CW6 to CW7, and made a bunch of
            patches to get the Mac Classic target building again. Removed
