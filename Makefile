@@ -138,10 +138,10 @@ ASMFLAGS := -f $(ASMOBJFMT) $(ASMDEFS)
 BASELIBNAME := physfs
 MAINLIB := $(BINDIR)/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
 
-MAINSRCS := physfs.c unix.c dir.c
+MAINSRCS := physfs.c platform/unix.c archivers/dir.c
 
 ifeq ($(strip $(use_archive_zip)),true)
-MAINSRCS += zip.c
+MAINSRCS += archivers/zip.c
 CFLAGS += -DPHYSFS_SUPPORTS_ZIP
 endif
 
@@ -182,6 +182,8 @@ $(MAINLIB) : $(BINDIR) $(MAINOBJS)
 
 $(BINDIR):
 	mkdir -p $(BINDIR)
+	mkdir -p $(BINDIR)/archive_drivers
+	mkdir -p $(BINDIR)/platform
 
 distclean: clean
 
