@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 #include "physfs.h"
 #include "unzip.h"
 
@@ -75,6 +76,7 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
 static int ZIP_exists(DirHandle *h, const char *name);
 static int ZIP_isDirectory(DirHandle *h, const char *name);
 static int ZIP_isSymLink(DirHandle *h, const char *name);
+static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h, const char *name);
 static FileHandle *ZIP_openRead(DirHandle *h, const char *filename);
 static void ZIP_dirClose(DirHandle *h);
 
@@ -99,7 +101,7 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
     ZIP_exists,             /* exists() method         */
     ZIP_isDirectory,        /* isDirectory() method    */
     ZIP_isSymLink,          /* isSymLink() method      */
-    NULL,                   /* getLastModTime() method */  /* !!! FIXME: This can be determined in a zipfile. */
+    ZIP_getLastModTime,     /* getLastModTime() method */
     ZIP_openRead,           /* openRead() method       */
     NULL,                   /* openWrite() method      */
     NULL,                   /* openAppend() method     */
@@ -579,6 +581,32 @@ static int ZIP_exists(DirHandle *h, const char *name)
 
     return(1);
 } /* ZIP_exists */
+
+
+static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h, const char *name)
+{
+    ZIPinfo *zi = (ZIPinfo *) (h->opaque);
+    int pos = ZIP_exists_symcheck(h, name, SYMLINK_RECURSE_COUNT);
+    ZIPentry *entry;
+    struct tm t;
+
+    if (pos == -1)
+        return(0);
+
+    entry = &zi->entries[pos];
+
+    /* if it's a symlink, then we ran into a possible symlink loop. */
+    BAIL_IF_MACRO(entry->symlink != NULL, ERR_TOO_MANY_SYMLINKS, 0);
+
+    memset(&t, '\0', sizeof (t));
+    t.tm_year = entry->info.tmu_date.tm_year - 1900;
+    t.tm_mon = entry->info.tmu_date.tm_mon;
+    t.tm_mday = entry->info.tmu_date.tm_mday;
+    t.tm_hour = entry->info.tmu_date.tm_hour;
+    t.tm_min = entry->info.tmu_date.tm_min;
+    t.tm_sec = entry->info.tmu_date.tm_sec;
+    return((PHYSFS_sint64) mktime(&t));
+} /* ZIP_getLastModTime */
 
 
 static int ZIP_isDirectory(DirHandle *h, const char *name)
