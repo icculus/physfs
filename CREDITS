@@ -77,6 +77,10 @@ Initial PHYSFS_mount() work:
 Translation work:
     Danny Angelo Carminati Grein
 
+MacOS Classic fixes,
+MPW support:
+    Chris Taylor
+
 Other stuff:
     Your name here! Patches go to icculus@clutteredmind.org ...
 

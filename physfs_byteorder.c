@@ -30,6 +30,10 @@
 #endif
 #endif /* linux */
 
+#if (defined macintosh) && !(defined __MWERKS__)
+#define __inline__
+#endif
+
 #if (defined _MSC_VER)
 #define __inline__ __inline
 #endif
