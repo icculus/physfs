@@ -3,7 +3,8 @@
  */
 
 12182003 - WAD archiver now puts maps into subdirectories, making them
-           accessible to the application. (Thanks, Travis!)
+           accessible to the application. (Thanks, Travis!) RPM spec and
+           Makefile.am* now package zlib_license_change.txt (Thanks, Edward!)
 12142003 - Added Doom WAD support (Thanks, Travis!)
 12082003 - Fixed some win32.c deficiencies that Robby Dermody pointed
            out (thanks!)
