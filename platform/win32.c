@@ -483,7 +483,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     dir = FindFirstFile(SearchPath, &ent);
     BAIL_IF_MACRO
     (
-        dir == PHYSFS_INVALID_HANDLE_VALUE,
+        dir == INVALID_HANDLE_VALUE,
         win32strerror(), NULL
     );
 
@@ -750,7 +750,7 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 
     BAIL_IF_MACRO
     (
-        fileHandle == PHYSFS_INVALID_HANDLE_VALUE,
+        fileHandle == INVALID_HANDLE_VALUE,
         win32strerror(), NULL
     );
 
