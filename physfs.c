@@ -35,7 +35,7 @@ typedef struct __PHYSFS_DIRINFO__
 
 typedef struct __PHYSFS_FILEHANDLELIST__
 {
-    PHYSFS_file *handle;
+    PHYSFS_file handle;
     struct __PHYSFS_FILEHANDLELIST__ *next;
 } FileHandleList;
 
@@ -236,7 +236,7 @@ static int freeDirInfo(DirInfo *di, FileHandleList *openList)
 
     for (i = openList; i != NULL; i = i->next)
     {
-        const DirHandle *h = ((FileHandle *) i->handle->opaque)->dirHandle;
+        const DirHandle *h = ((FileHandle *) &(i->handle.opaque))->dirHandle;
         BAIL_IF_MACRO(h == di->dirHandle, ERR_FILES_STILL_OPEN, 0);
     } /* for */
 
@@ -387,14 +387,13 @@ static int closeFileHandleList(FileHandleList **list)
     for (i = *list; i != NULL; i = next)
     {
         next = i->next;
-        h = (FileHandle *) (i->handle->opaque);
-        if (!h->funcs->fileClose(i->handle->opaque))
+        h = (FileHandle *) (i->handle.opaque);
+        if (!h->funcs->fileClose(h))
         {
             *list = i;
             return(0);
         } /* if */
 
-        free(i->handle);
         free(i);
     } /* for */
 
@@ -1052,13 +1051,12 @@ int PHYSFS_isSymbolicLink(const char *fname)
 
 static PHYSFS_file *doOpenWrite(const char *fname, int appending)
 {
-    PHYSFS_file *retval = (PHYSFS_file *) malloc(sizeof (PHYSFS_file));
+    PHYSFS_file *retval = NULL;
     FileHandle *rc = NULL;
     DirHandle *h = (writeDir == NULL) ? NULL : writeDir->dirHandle;
     const DirFunctions *f = (h == NULL) ? NULL : h->funcs;
     FileHandleList *list;
 
-    BAIL_IF_MACRO(!retval, ERR_OUT_OF_MEMORY, NULL);
     BAIL_IF_MACRO(!h, ERR_NO_WRITE_DIR, NULL);
     BAIL_IF_MACRO(!__PHYSFS_verifySecurity(h, fname), NULL, NULL);
 
@@ -1067,17 +1065,13 @@ static PHYSFS_file *doOpenWrite(const char *fname, int appending)
 
     rc = (appending) ? f->openAppend(h, fname) : f->openWrite(h, fname);
     if (rc == NULL)
-    {
         free(list);
-        free(retval);
-        retval = NULL;
-    } /* if */
     else
     {
-        retval->opaque = (void *) rc;
-        list->handle = retval;
+        list->handle.opaque = (void *) rc;
         list->next = openWriteList;
         openWriteList = list;
+        retval = &(list->handle);
     } /* else */
 
     return(retval);
@@ -1098,19 +1092,13 @@ PHYSFS_file *PHYSFS_openAppend(const char *filename)
 
 PHYSFS_file *PHYSFS_openRead(const char *fname)
 {
-    PHYSFS_file *retval;
+    PHYSFS_file *retval = NULL;
     FileHandle *rc = NULL;
     FileHandleList *list;
     DirInfo *i;
 
-    retval = (PHYSFS_file *) malloc(sizeof (PHYSFS_file));
-    BAIL_IF_MACRO(!retval, ERR_OUT_OF_MEMORY, NULL);
     list = (FileHandleList *) malloc(sizeof (FileHandleList));
-    if (!list)
-    {
-        free(retval);
-        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
-    } /* if */
+    BAIL_IF_MACRO(!list, ERR_OUT_OF_MEMORY, NULL);
 
     for (i = searchPath; i != NULL; i = i->next)
     {
@@ -1124,57 +1112,66 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
     } /* for */
 
     if (rc == NULL)
-    {
         free(list);
-        free(retval);
-        retval = NULL;
-    } /* if */
     else
     {
-        retval->opaque = (void *) rc;
-        list->handle = retval;
+        list->handle.opaque = (void *) rc;
         list->next = openReadList;
         openReadList = list;
+        retval = &(list->handle);
     } /* else */
 
     return(retval);
 } /* PHYSFS_openRead */
 
 
-int PHYSFS_close(PHYSFS_file *handle)
+static int closeHandleInOpenList(FileHandleList **list, PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
+    FileHandleList *prev = NULL;
     FileHandleList *i;
-    FileHandleList *prev;
-    FileHandleList **_lists[] = { &openWriteList, &openReadList, NULL };
-    FileHandleList ***lists = _lists;  /* gay. */
     int rc;
 
-    while (lists != NULL)
+    for (i = *list; i != NULL; i = i->next)
     {
-        for (i = *(*lists), prev = NULL; i != NULL; prev = i, i = i->next)
+        if (&i->handle == handle)  /* handle is in this list? */
         {
-            if (i->handle == handle)
-            {
-                rc = h->funcs->fileClose(h);
-                if (!rc)
-                    return(0);
+            rc = h->funcs->fileClose(h);
+            if (!rc)
+                return(-1);
 
-                if (prev == NULL)
-                    *(*lists) = i->next;
-                else
-                    prev->next = i->next;
+            if (prev == NULL)
+                *list = i->next;
+            else
+                prev->next = i->next;
 
-                free(handle);
-                free(i);
-                return(1);
-            } /* if */
-        } /* for */
-        lists++;
-    } /* while */
+            free(i);
+            return(1);
+        } /* if */
+        prev = i;
+    } /* for */
 
-    __PHYSFS_setError(ERR_NOT_A_HANDLE);
     return(0);
+} /* closeHandleInOpenList */
+
+
+int PHYSFS_close(PHYSFS_file *handle)
+{
+    int rc;
+
+    /* -1 == close failure. 0 == not found. 1 == success. */
+    rc = closeHandleInOpenList(&openReadList, handle);
+    BAIL_IF_MACRO(rc == -1, NULL, 0);
+    if (!rc)
+    {
+        rc = closeHandleInOpenList(&openWriteList, handle);
+        BAIL_IF_MACRO(rc == -1, NULL, 0);
+    } /* if */
+
+    if (!rc)
+        __PHYSFS_setError(ERR_NOT_A_HANDLE);
+
+    return(rc);
 } /* PHYSFS_close */
 
 
