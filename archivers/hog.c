@@ -346,7 +346,7 @@ static int hog_load_entries(const char *name, int forWriting, HOGinfo *info)
         } /* if */
 
         entry->size = PHYSFS_swapULE32(entry->size);
-        entry->startPos = __PHYSFS_platformTell(fh);
+        entry->startPos = (unsigned int) __PHYSFS_platformTell(fh);
         if (entry->startPos == -1)
         {
             __PHYSFS_platformClose(fh);
