@@ -116,7 +116,7 @@ BINDIR := bin
 SRCDIR := .
 
 CFLAGS += $(use_asm) -I$(SRCDIR) -D_REENTRANT -fsigned-char -DPLATFORM_UNIX
-CFLAGS += -Wall -Werror -fno-exceptions -fno-rtti -ansi -pendantic
+CFLAGS += -Wall -Werror -fno-exceptions -fno-rtti -ansi -pedantic
 
 LDFLAGS += -lm
 
