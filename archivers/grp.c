@@ -44,8 +44,8 @@
 typedef struct
 {
     char name[13];
-    PHYSFS_uint64 startPos;
-    PHYSFS_uint64 size;
+    PHYSFS_uint32 startPos;
+    PHYSFS_uint32 size;
 } GRPentry;
 
 typedef struct
@@ -60,7 +60,7 @@ typedef struct
 {
     void *handle;
     GRPentry *entry;
-    PHYSFS_sint64 curPos;
+    PHYSFS_uint32 curPos;
 } GRPfileinfo;
 
 
@@ -145,16 +145,16 @@ static PHYSFS_sint64 GRP_read(FileHandle *handle, void *buffer,
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
     GRPentry *entry = finfo->entry;
-    PHYSFS_uint64 bytesLeft = entry->size - finfo->curPos;
-    PHYSFS_uint64 objsLeft = (bytesLeft / objSize);
+    PHYSFS_uint32 bytesLeft = entry->size - finfo->curPos;
+    PHYSFS_uint32 objsLeft = (bytesLeft / objSize);
     PHYSFS_sint64 rc;
 
     if (objsLeft < objCount)
-        objCount = (PHYSFS_uint32) objsLeft;
+        objCount = objsLeft;
 
     rc = __PHYSFS_platformRead(finfo->handle, buffer, objSize, objCount);
     if (rc > 0)
-        finfo->curPos += (rc * objSize);
+        finfo->curPos += (PHYSFS_uint32) (rc * objSize);
 
     return(rc);
 } /* GRP_read */
@@ -171,7 +171,7 @@ static int GRP_eof(FileHandle *handle)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
     GRPentry *entry = finfo->entry;
-    return(finfo->curPos >= (PHYSFS_sint64) entry->size);
+    return(finfo->curPos >= entry->size);
 } /* GRP_eof */
 
 
@@ -185,14 +185,13 @@ static int GRP_seek(FileHandle *handle, PHYSFS_uint64 offset)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
     GRPentry *entry = finfo->entry;
-    PHYSFS_uint64 newPos = (entry->startPos + offset);
     int rc;
 
     BAIL_IF_MACRO(offset < 0, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(newPos > entry->startPos + entry->size, ERR_PAST_EOF, 0);
-    rc = __PHYSFS_platformSeek(finfo->handle, newPos);
+    BAIL_IF_MACRO(offset >= entry->size, ERR_PAST_EOF, 0);
+    rc = __PHYSFS_platformSeek(finfo->handle, entry->startPos + offset);
     if (rc)
-        finfo->curPos = offset;
+        finfo->curPos = (PHYSFS_uint32) offset;
 
     return(rc);
 } /* GRP_seek */
@@ -200,7 +199,8 @@ static int GRP_seek(FileHandle *handle, PHYSFS_uint64 offset)
 
 static PHYSFS_sint64 GRP_fileLength(FileHandle *handle)
 {
-    return(((GRPfileinfo *) handle->opaque)->entry->size);
+    GRPfileinfo *finfo = ((GRPfileinfo *) handle->opaque);
+    return((PHYSFS_sint64) finfo->entry->size);
 } /* GRP_fileLength */
 
 
