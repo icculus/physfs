@@ -42,9 +42,8 @@ Some might be dupes, some might be done already.
 - Should file enumeration return an error or set error state?
 - Ryanify pocketpc.c ...
 - Update internal zlib?
-- Get svn hooks working.
-- maybe other stuff.
 - Need "getmountpoint" command in test_physfs.c ...
+- maybe other stuff.
 
 // end of TODO ...
 
