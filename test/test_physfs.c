@@ -34,6 +34,7 @@
 #define TEST_VERSION_PATCH  7
 
 static FILE *history_file = NULL;
+static PHYSFS_uint32 do_buffer_size = 0;
 
 static void output_versions(void)
 {
@@ -288,6 +289,230 @@ static int cmd_permitsyms(char *args)
 } /* cmd_permitsyms */
 
 
+static int cmd_setbuffer(char *args)
+{
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    do_buffer_size = atoi(args);
+    if (do_buffer_size)
+    {
+        printf("Further tests will set a (%lu) size buffer.\n",
+                (unsigned long) do_buffer_size);
+    } /* if */
+
+    else
+    {
+        printf("Further tests will NOT use a buffer.\n");
+    } /* else */
+
+    return(1);
+} /* cmd_setbuffer */
+
+
+static int cmd_stressbuffer(char *args)
+{
+    int num;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    num = atoi(args);
+    if (num < 0)
+        printf("buffer must be greater than or equal to zero.\n");
+    else
+    {
+        PHYSFS_file *f;
+        int rndnum;
+
+        printf("Stress testing with (%d) byte buffer...\n", num);
+        f = PHYSFS_openWrite("test.txt");
+        if (f == NULL)
+            printf("Couldn't open test.txt for writing: %s.\n", PHYSFS_getLastError());
+        else
+        {
+            int i, j;
+            char buf[37];
+            char buf2[37];
+
+            if (!PHYSFS_setBuffer(f, num))
+            {
+                printf("PHYSFS_setBuffer() failed: %s.\n", PHYSFS_getLastError());
+                PHYSFS_close(f);
+                PHYSFS_delete("test.txt");
+                return(1);
+            } /* if */
+
+            strcpy(buf, "abcdefghijklmnopqrstuvwxyz0123456789");
+            srand(time(NULL));
+
+            for (i = 0; i < 10; i++)
+            {
+                for (j = 0; j < 10000; j++)
+                {
+                    int right = 1 + (int) (35.0 * rand() / (RAND_MAX + 1.0));
+                    int left = 36 - right;
+                    if (PHYSFS_write(f, buf, left, 1) != 1)
+                    {
+                        printf("PHYSFS_write() failed: %s.\n", PHYSFS_getLastError());
+                        PHYSFS_close(f);
+                        return(1);
+                    } /* if */
+
+                    rndnum = 1 + (int) (1000.0 * rand() / (RAND_MAX + 1.0));
+                    if (rndnum == 42)
+                    {
+                        if (!PHYSFS_flush(f))
+                        {
+                            printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
+                            PHYSFS_close(f);
+                            return(1);
+                        } /* if */
+                    } /* if */
+
+                    if (PHYSFS_write(f, buf + left, 1, right) != right)
+                    {
+                        printf("PHYSFS_write() failed: %s.\n", PHYSFS_getLastError());
+                        PHYSFS_close(f);
+                        return(1);
+                    } /* if */
+
+                    rndnum = 1 + (int) (1000.0 * rand() / (RAND_MAX + 1.0));
+                    if (rndnum == 42)
+                    {
+                        if (!PHYSFS_flush(f))
+                        {
+                            printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
+                            PHYSFS_close(f);
+                            return(1);
+                        } /* if */
+                    } /* if */
+                } /* for */
+
+                if (!PHYSFS_flush(f))
+                {
+                    printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
+                    PHYSFS_close(f);
+                    return(1);
+                } /* if */
+
+            } /* for */
+
+            if (!PHYSFS_close(f))
+            {
+                printf("PHYSFS_close() failed: %s.\n", PHYSFS_getLastError());
+                return(1);  /* oh well. */
+            } /* if */
+
+            printf(" ... test file written ...\n");
+            f = PHYSFS_openRead("test.txt");
+            if (f == NULL)
+            {
+                printf("Failed to reopen stress file for reading: %s.\n", PHYSFS_getLastError());
+                return(1);
+            } /* if */
+
+            if (!PHYSFS_setBuffer(f, num))
+            {
+                printf("PHYSFS_setBuffer() failed: %s.\n", PHYSFS_getLastError());
+                PHYSFS_close(f);
+                return(1);
+            } /* if */
+
+            for (i = 0; i < 10; i++)
+            {
+                for (j = 0; j < 10000; j++)
+                {
+                    int right = 1 + (int) (35.0 * rand() / (RAND_MAX + 1.0));
+                    int left = 36 - right;
+                    if (PHYSFS_read(f, buf2, left, 1) != 1)
+                    {
+                        printf("PHYSFS_read() failed: %s.\n", PHYSFS_getLastError());
+                        PHYSFS_close(f);
+                        return(1);
+                    } /* if */
+
+                    rndnum = 1 + (int) (1000.0 * rand() / (RAND_MAX + 1.0));
+                    if (rndnum == 42)
+                    {
+                        if (!PHYSFS_flush(f))
+                        {
+                            printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
+                            PHYSFS_close(f);
+                            return(1);
+                        } /* if */
+                    } /* if */
+
+                    if (PHYSFS_read(f, buf2 + left, 1, right) != right)
+                    {
+                        printf("PHYSFS_read() failed: %s.\n", PHYSFS_getLastError());
+                        PHYSFS_close(f);
+                        return(1);
+                    } /* if */
+
+                    rndnum = 1 + (int) (1000.0 * rand() / (RAND_MAX + 1.0));
+                    if (rndnum == 42)
+                    {
+                        if (!PHYSFS_flush(f))
+                        {
+                            printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
+                            PHYSFS_close(f);
+                            return(1);
+                        } /* if */
+                    } /* if */
+
+                    if (memcmp(buf, buf2, 36) != 0)
+                    {
+                        printf("readback is mismatched on iterations (%d, %d).\n", i, j);
+                        printf("wanted: [");
+                        for (i = 0; i < 36; i++)
+                            printf("%c", buf[i]);
+                        printf("]\n");
+
+                        printf("   got: [");
+                        for (i = 0; i < 36; i++)
+                            printf("%c", buf2[i]);
+                        printf("]\n");
+                        PHYSFS_close(f);
+                        return(1);
+                    } /* if */
+                } /* for */
+
+                if (!PHYSFS_flush(f))
+                {
+                    printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
+                    PHYSFS_close(f);
+                    return(1);
+                } /* if */
+
+            } /* for */
+
+            printf(" ... test file read ...\n");
+
+            if (!PHYSFS_eof(f))
+                printf("PHYSFS_eof() returned true! That's wrong.\n");
+
+            if (!PHYSFS_close(f))
+            {
+                printf("PHYSFS_close() failed: %s.\n", PHYSFS_getLastError());
+                return(1);  /* oh well. */
+            } /* if */
+
+            PHYSFS_delete("test.txt");
+            printf("stress test completed successfully.\n");
+        } /* else */
+    } /* else */
+
+    return(1);
+} /* cmd_stressbuffer */
+
+
 static int cmd_setsaneconfig(char *args)
 {
     char *org;
@@ -433,6 +658,17 @@ static int cmd_cat(char *args)
         printf("failed to open. Reason: [%s].\n", PHYSFS_getLastError());
     else
     {
+        if (do_buffer_size)
+        {
+            if (!PHYSFS_setBuffer(f, do_buffer_size))
+            {
+                printf("failed to set file buffer. Reason: [%s].\n",
+                        PHYSFS_getLastError());
+                PHYSFS_close(f);
+                return(1);
+            } /* if */
+        } /* if */
+
         while (1)
         {
             char buffer[128];
@@ -506,8 +742,22 @@ static int cmd_append(char *args)
         printf("failed to open. Reason: [%s].\n", PHYSFS_getLastError());
     else
     {
-        size_t bw = strlen(WRITESTR);
-        PHYSFS_sint64 rc = PHYSFS_write(f, WRITESTR, 1, bw);
+        size_t bw;
+        PHYSFS_sint64 rc;
+
+        if (do_buffer_size)
+        {
+            if (!PHYSFS_setBuffer(f, do_buffer_size))
+            {
+                printf("failed to set file buffer. Reason: [%s].\n",
+                        PHYSFS_getLastError());
+                PHYSFS_close(f);
+                return(1);
+            } /* if */
+        } /* if */
+
+        bw = strlen(WRITESTR);
+        rc = PHYSFS_write(f, WRITESTR, 1, bw);
         if (rc != bw)
         {
             printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n",
@@ -540,8 +790,22 @@ static int cmd_write(char *args)
         printf("failed to open. Reason: [%s].\n", PHYSFS_getLastError());
     else
     {
-        size_t bw = strlen(WRITESTR);
-        PHYSFS_sint64 rc = PHYSFS_write(f, WRITESTR, 1, bw);
+        size_t bw;
+        PHYSFS_sint64 rc;
+
+        if (do_buffer_size)
+        {
+            if (!PHYSFS_setBuffer(f, do_buffer_size))
+            {
+                printf("failed to set file buffer. Reason: [%s].\n",
+                        PHYSFS_getLastError());
+                PHYSFS_close(f);
+                return(1);
+            } /* if */
+        } /* if */
+
+        bw = strlen(WRITESTR);
+        rc = PHYSFS_write(f, WRITESTR, 1, bw);
         if (rc != bw)
         {
             printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n",
@@ -648,6 +912,8 @@ static const command_info commands[] =
     { "append",         cmd_append,         1, "<fileToAppend>"             },
     { "write",          cmd_write,          1, "<fileToCreateOrTrash>"      },
     { "getlastmodtime", cmd_getlastmodtime, 1, "<fileToExamine>"            },
+    { "setbuffer",      cmd_setbuffer,      1, "<bufferSize>"               },
+    { "stressbuffer",   cmd_stressbuffer,   1, "<bufferSize>"               },
     { NULL,             NULL,              -1, NULL                         }
 };
 

@@ -258,6 +258,8 @@ PHYSFS_COMPILE_TIME_ASSERT(sint64, sizeof(PHYSFS_sint64) == 8);
  * \sa PHYSFS_seek
  * \sa PHYSFS_tell
  * \sa PHYSFS_eof
+ * \sa PHYSFS_setBuffer
+ * \sa PHYSFS_flush
  */
 typedef struct
 {
@@ -289,6 +291,7 @@ typedef struct
     const char *url;         /**< URL related to this archive */
 } PHYSFS_ArchiveInfo;
 
+
 /**
  * \struct PHYSFS_Version
  * \brief Information the version of PhysicsFS in use.
@@ -314,6 +317,9 @@ typedef struct
 #define PHYSFS_VER_MINOR 1
 #define PHYSFS_VER_PATCH 7
 #endif  /* DOXYGEN_SHOULD_IGNORE_THIS */
+
+
+/* PhysicsFS state stuff ... */
 
 /**
  * \def PHYSFS_VERSION(x)
@@ -775,6 +781,8 @@ __EXPORT__ int PHYSFS_setSaneConfig(const char *organization,
                                     int archivesFirst);
 
 
+/* Directory management stuff ... */
+
 /**
  * \fn int PHYSFS_mkdir(const char *dirName)
  * \brief Create a directory.
@@ -854,7 +862,6 @@ __EXPORT__ int PHYSFS_delete(const char *filename);
  *             the file in question. NULL if not found.
  */
 __EXPORT__ const char *PHYSFS_getRealDir(const char *filename);
-
 
 
 /**
@@ -957,6 +964,24 @@ __EXPORT__ int PHYSFS_isSymbolicLink(const char *fname);
 
 
 /**
+ * \fn PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename)
+ * \brief Get the last modification time of a file.
+ *
+ * The modtime is returned as a number of seconds since the epoch
+ *  (Jan 1, 1970). The exact derivation and accuracy of this time depends on
+ *  the particular archiver. If there is no reasonable way to obtain this
+ *  information for a particular archiver, or there was some sort of error,
+ *  this function returns (-1).
+ *
+ *   \param filename filename to check, in platform-independent notation.
+ *  \return last modified time of the file. -1 if it can't be determined.
+ */
+__EXPORT__ PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
+
+
+/* i/o stuff... */
+
+/**
  * \fn PHYSFS_file *PHYSFS_openWrite(const char *filename)
  * \brief Open a file for writing.
  *
@@ -1054,22 +1079,6 @@ __EXPORT__ int PHYSFS_close(PHYSFS_file *handle);
 
 
 /**
- * \fn PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename)
- * \brief Get the last modification time of a file.
- *
- * The modtime is returned as a number of seconds since the epoch
- *  (Jan 1, 1970). The exact derivation and accuracy of this time depends on
- *  the particular archiver. If there is no reasonable way to obtain this
- *  information for a particular archiver, or there was some sort of error,
- *  this function returns (-1).
- *
- *   \param filename filename to check, in platform-independent notation.
- *  \return last modified time of the file. -1 if it can't be determined.
- */
-__EXPORT__ PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
-
-
-/**
  * \fn PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle, void *buffer, PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
  * \brief Read data from a PhysicsFS filehandle
  *
@@ -1107,6 +1116,9 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle,
                                       const void *buffer,
                                       PHYSFS_uint32 objSize,
                                       PHYSFS_uint32 objCount);
+
+
+/* File position stuff... */
 
 /**
  * \fn int PHYSFS_eof(PHYSFS_file *handle)
@@ -1170,6 +1182,70 @@ __EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos);
  * \sa PHYSFS_seek
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle);
+
+
+/* Buffering stuff... */
+
+/**
+ * \fn int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 bufsize)
+ * \brief Set up buffering for a PhysicsFS file handle.
+ *
+ * Define an i/o buffer for a file handle. A memory block of (bufsize) bytes
+ *  will be allocated and associated with (handle).
+ *
+ * For files opened for reading, up to (bufsize) bytes are read from (handle)
+ *  and stored in the internal buffer. Calls to PHYSFS_read() will pull
+ *  from this buffer until it is empty, and then refill it for more reading.
+ *  Note that compressed files, like ZIP archives, will decompress while
+ *  buffering, so this can be handy for offsetting CPU-intensive operations.
+ *  The buffer isn't filled until you do your next read.
+ *
+ * For files opened for writing, data will be buffered to memory until the
+ *  buffer is full or the buffer is flushed. Closing a handle implicitly
+ *  causes a flush...check your return values!
+ *
+ * Seeking, etc transparently accounts for buffering.
+ *
+ * You can resize an existing buffer by calling this function more than once
+ *  on the same file. Setting the buffer size to zero will free an existing
+ *  buffer.
+ *
+ * PhysicsFS file handles are unbuffered by default.
+ *
+ * Please check the return value of this function! Failures can include
+ *  not being able to seek backwards in a read-only file when removing the
+ *  buffer, not being able to allocate the buffer, and not being able to
+ *  flush the buffer to disk, among other unexpected problems.
+ *
+ *   \param handle handle returned from PHYSFS_open*().
+ *   \param bufsize size, in bytes, of buffer to allocate.
+ *  \return nonzero if successful, zero on error.
+ *
+ * \sa PHYSFS_flush
+ * \sa PHYSFS_read
+ * \sa PHYSFS_write
+ * \sa PHYSFS_close
+ */
+__EXPORT__ int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 bufsize);
+
+
+/**
+ * \fn int PHYSFS_flush(PHYSFS_file *handle, PHYSFS_uint64 bufsize)
+ * \brief Flush a buffered PhysicsFS file handle.
+ *
+ * For buffered files opened for writing, this will put the current contents
+ *  of the buffer to disk and flag the buffer as empty if possible.
+ *
+ * For buffered files opened for reading or unbuffered files, this is a safe
+ *  no-op, and will report success.
+ *
+ *   \param handle handle returned from PHYSFS_open*().
+ *  \return nonzero if successful, zero on error.
+ *
+ * \sa PHYSFS_setBuffer
+ * \sa PHYSFS_close
+ */
+__EXPORT__ int PHYSFS_flush(PHYSFS_file *handle);
 
 
 /* Byteorder stuff... */
