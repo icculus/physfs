@@ -94,6 +94,8 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 
         if ( strcmp( mntbufp[ii].f_fstypename, "iso9660") == 0 )
             add_it = 1;
+        else if ( strcmp( mntbufp[ii].f_fstypename, "cd9660") == 0 )
+            add_it = 1;
         /* !!! other mount types? */
 
         if (add_it)

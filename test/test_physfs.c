@@ -15,7 +15,13 @@
 #include <SIOUX.h>
 #endif
 
-#if ((!defined WIN32) && (!defined __MACOS__))
+#if ((defined __APPLE__) && (defined __MACH__))
+#  if (!defined __DARWIN__)
+#    define __DARWIN__
+#  endif
+#endif
+
+#if ((!defined WIN32) && (!defined __MACOS__) && (!defined __DARWIN__))
 #define HAVE_READLINE
 #endif
 
