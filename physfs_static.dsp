@@ -23,8 +23,8 @@ CFG=physfs_static - Win32 Debug
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
-# PROP Scc_ProjName ""
-# PROP Scc_LocalPath ""
+# PROP Scc_ProjName "Perforce Project"
+# PROP Scc_LocalPath "."
 CPP=cl.exe
 RSC=rc.exe
 
@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "physfs_static_release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "zlib114" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_MVL=1 /YX /FD /c
+# ADD CPP /nologo /G6 /MT /W3 /GX /O2 /I "zlib114" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_MVL=1 /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "physfs_static_debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "zlib114" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_MVL=1 /YX /FD /GZ /c
+# ADD CPP /nologo /G6 /MTd /W3 /Gm /GX /ZI /Od /I "zlib114" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_MVL=1 /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
