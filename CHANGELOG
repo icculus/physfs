@@ -2,6 +2,12 @@
  * CHANGELOG.
  */
 
+06082002 - Fixes to __PHYSFS_platformEnumerateFiles() in win32.c: cleaned up
+           memory leak, handles paths more robustly, and prevents possible
+           skipped file entries. Removed AC_C_CONST and AC_TYPE_SIZE_T checks
+           from configure.in (not needed, and they broke BeOS build). Clean
+           out the docs/ directory when doing a "make dist". Fixed crashbug
+           when calling PHYSFS_deinit() more than once in a row.
 06072002 - Manpages! Finally installed Doxygen and scratched together a
            Doxyfile. After some revision to physfs.h, we've got a rather
            nice API reference.
