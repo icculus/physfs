@@ -55,6 +55,7 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
+AC_LIBTOOL_WIN32_DLL 
 AC_PROG_LIBTOOL
 
 
@@ -216,6 +217,8 @@ dnl Add Makefile conditionals
 AM_CONDITIONAL(BUILD_ZLIB, test x$enable_internal_zlib = xyes)
 AM_CONDITIONAL(BUILD_TEST_PHYSFS, test x$enable_testprog = xyes)
 AM_CONDITIONAL(BUILD_BEOS_CPP, test x$this_is_beos = xyes)
+
+LDFLAGS="$LDFLAGS -no-undefined"
 
 AC_OUTPUT([
 Makefile
