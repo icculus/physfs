@@ -1,5 +1,5 @@
 /*
- * Unix support routines for PhysicsFS.
+ * Win32 support routines for PhysicsFS.
  *
  * Please see the file LICENSE in the source's root directory.
  *
@@ -12,18 +12,7 @@
 
 #include <windows.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <sys/stat.h>
-#include <sys/param.h>
-#include <dirent.h>
-#include <time.h>
-#include <errno.h>
+
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -34,20 +23,20 @@ const char *__PHYSFS_platformDirSeparator = "\\";
 
 static const char *win32strerror(void)
 {
-    static char msgbuf[255];
+    static TCHAR msgbuf[255];
 
     FormatMessage(
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL,
         GetLastError(),
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-        &msgbuf,
-        0,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
+        msgbuf,
+        sizeof (msgbuf) / sizeof (TCHAR),
         NULL 
     );
 
-    return(msgbuf);
+    return((const char *) msgbuf);
 } /* win32strerror */
 
 
@@ -56,7 +45,6 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     char **retval = (char **) malloc(sizeof (char *));
     int cd_count = 1;  /* We count the NULL entry. */
     char drive_str[4] = "x:\\";
-    int i;
 
     for (drive_str[0] = 'A'; drive_str[0] <= 'Z'; drive_str[0]++)
     {
@@ -81,22 +69,6 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 } /* __PHYSFS_detectAvailableCDs */
 
 
-static char *copyEnvironmentVariable(const char *varname)
-{
-    const char *envr = getenv(varname);
-    char *retval = NULL;
-
-    if (envr != NULL)
-    {
-        retval = malloc(strlen(envr) + 1);
-        if (retval != NULL)
-            strcpy(retval, envr);
-    } /* if */
-
-    return(retval);
-} /* copyEnvironmentVariable */
-
-
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
     DWORD buflen = 0;
@@ -106,17 +78,17 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     if (strchr(argv0, '\\') != NULL)   /* default behaviour can handle this. */
         return(NULL);
 
-    SearchPath(NULL, argv0, NULL, &buflen, NULL, NULL);
+    buflen = SearchPath(NULL, argv0, NULL, buflen, NULL, NULL);
     retval = (char *) malloc(buflen);
     BAIL_IF_MACRO(!retval, ERR_OUT_OF_MEMORY, NULL);
-    SearchPath(NULL, argv0, NULL, &buflen, retval, &filepart);
+    SearchPath(NULL, argv0, NULL, buflen, retval, &filepart);
     return(retval);
 } /* __PHYSFS_platformCalcBaseDir */
 
 
 char *__PHYSFS_platformGetUserName(void)
 {
-    LPDWORD bufsize = 0;
+    DWORD bufsize = 0;
     LPTSTR retval = NULL;
 
     if (GetUserName(NULL, &bufsize) == 0)  /* This SHOULD fail. */
@@ -146,9 +118,24 @@ int __PHYSFS_platformGetThreadID(void)
 } /* __PHYSFS_platformGetThreadID */
 
 
+/* ...make this Cygwin AND Visual C friendly... */
 int __PHYSFS_platformStricmp(const char *x, const char *y)
 {
-    return(stricmp(x, y));
+    int ux, uy;
+
+    do
+    {
+        ux = toupper((int) *x);
+        uy = toupper((int) *y);
+        if (ux > uy)
+            return(1);
+        else if (ux < uy)
+            return(-1);
+        x++;
+        y++;
+    } while ((ux) && (uy));
+
+    return(0);
 } /* __PHYSFS_platformStricmp */
 
 
@@ -178,6 +165,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
               ((append) ? strlen(append) : 0) +
               strlen(dirName) + 1;
     char *retval = malloc(len);
+    char *p;
 
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
@@ -217,7 +205,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     dir = FindFirstFile(dirname, &ent);
     BAIL_IF_MACRO(dir == INVALID_HANDLE_VALUE, win32strerror(), NULL);
 
-    for (; FineNextFile(dir, &ent) != 0; )
+    for (; FindNextFile(dir, &ent) != 0; )
     {
         if (strcmp(ent.cFileName, ".") == 0)
             continue;
@@ -267,25 +255,26 @@ int __PHYSFS_platformFileLength(FILE *handle)
 
 char *__PHYSFS_platformCurrentDir(void)
 {
-    LPTSTR *retval;
+    LPTSTR retval;
     DWORD buflen = 0;
 
-    GetCurrentDirectory(&buflen, NULL);
+    buflen = GetCurrentDirectory(buflen, NULL);
     retval = (LPTSTR) malloc(buflen);
-    GetCurrentDirectory(&buflen, retval);
+    GetCurrentDirectory(buflen, retval);
     return((char *) retval);
 } /* __PHYSFS_platformCurrentDir */
 
 
 char *__PHYSFS_platformRealPath(const char *path)
 {
+    /* !!! FIXME: This isn't supported on CygWin! */
     return(_fullpath(NULL, path, _MAX_PATH));
 } /* __PHYSFS_platformRealPath */
 
 
 int __PHYSFS_platformMkDir(const char *path)
 {
-    rc = CreateDirectory(path, NULL);
+    DWORD rc = CreateDirectory(path, NULL);
     BAIL_IF_MACRO(rc == 0, win32strerror(), 0);
     return(1);
 } /* __PHYSFS_platformMkDir */

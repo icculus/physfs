@@ -1,7 +1,20 @@
 Building is very easy.
 
+
+ALL PLATFORMS:
+
+Please understand your rights and mine: read the text file LICENSE in the root
+of the source tree. If you can't abide by it, delete this source tree now.
+
+The best documentation for the PhysicsFS API is physfs.h. It is VERY heavily
+commented, and makes an excellent, in-depth reference to all the functions.
+
+
+UNIX:
+
 Edit "Makefile", and follow the instructions. The defaults are probably okay
-for general purposes, but give it a once over to make sure.
+for general purposes, but give it a once over to make sure. If you don't have
+zLib on your system, you'll need to disable ZIP support.
 
 run "make"
 
@@ -9,5 +22,13 @@ That's it. The library will be sitting in a new directory called "bin".
 
 Run "make install" to install the library for use on your system.
 
+
+WIN32:
+If building with CygWin, follow the Unix instructions, above. If you're using
+Visual C, unzip VisualC.zip so that the project files end up in the same
+directory as physfs.c, and point Visual C at that project to build. If you're
+using any other compiler, send me a patch when you get it working.  :) 
+
 --ryan. (icculus@clutteredmind.org)
+
 

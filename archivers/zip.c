@@ -363,7 +363,7 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
                                             int omitSymLinks)
 {
     ZIPinfo *zi = (ZIPinfo *) (h->opaque);
-    int i;
+    unsigned int i;
     int dlen;
     LinkedStringList *retval = NULL;
     LinkedStringList *l = NULL;
@@ -470,7 +470,7 @@ static int ZIP_exists_symcheck(DirHandle *h, const char *name, int follow)
     ZIPinfo *zi = (ZIPinfo *) (h->opaque);
     int dlen;
     char *d;
-    int i;
+    unsigned int i;
     ZIPentry *entry;
 
     dlen = strlen(name);

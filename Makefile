@@ -170,7 +170,12 @@ MAINSRCS := physfs.c archivers/dir.c
 ifeq ($(strip $(use_archive_zip)),true)
 MAINSRCS += archivers/zip.c archivers/unzip.c
 CFLAGS += -DPHYSFS_SUPPORTS_ZIP
+ifeq ($(strip $(cygwin)),true)
+CFLAGS += -Izlibwin32
+LDFLAGS += zlibwin32/zlibstat.lib
+else
 LDFLAGS += -lz
+endif
 endif
 
 ifeq ($(strip $(use_archive_grp)),true)

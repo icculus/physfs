@@ -11,8 +11,9 @@
            platform/win32.c. Other cleanups to get this compiling with
            Visual C and CygWin. Added BAIL_MACRO for times when we were doing
            BAIL_IF_MACRO(1, ...). Abstracted mkdir() in the platform drivers.
-           Added GRP setting output to showcfg in the Makefile. Changed
-           version to 0.1.2.
+           Added GRP setting output to showcfg in the Makefile. Updated INSTALL
+           with license info and Win32 build instructions.
+           Changed version to 0.1.2.
 
 --ryan. (icculus@clutteredmind.org)
 
