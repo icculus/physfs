@@ -10,7 +10,8 @@
            project, otherwise we'll eventually replace their work...everyone
            else signed on for the change. Committed a patch to convert all
            tabs to spaces (Thanks, James!). Added patch to zip.c to fix
-           crash (thanks, dillo!).
+           crash (thanks, dillo!). Reimplmented qpak.c, by welding together
+           bits of grp.c and zip.c.
 06112003 - Patches to globbing.c to handle corner cases (thanks, Bradley!).
 06102003 - Added globbing.c to "extras" directory.
 05232003 - Rewrote MacOSX/Darwin CD-ROM detection code to use IOKit, which is
