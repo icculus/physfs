@@ -88,7 +88,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 {
     "DIR",
     "non-archive directory I/O",
-    "Ryan C. Gordon (icculus@clutteredmind.org)",
+    "Ryan C. Gordon <icculus@clutteredmind.org>",
     "http://www.icculus.org/physfs/",
 };
 #endif

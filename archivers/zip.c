@@ -110,7 +110,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 {
     "ZIP",
     "PkZip/WinZip/Info-Zip compatible",
-    "Ryan C. Gordon (icculus@clutteredmind.org)",
+    "Ryan C. Gordon <icculus@clutteredmind.org>",
     "http://www.icculus.org/physfs/",
 };
 
