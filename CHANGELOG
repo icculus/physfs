@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+04202002 - Added a (very) quick and (very) dirty http server to the
+           extras directory (public domain), as another example of using
+           the library.
 04192002 - Corrected some win32 info in INSTALL. Changed Makefile to
            package releases as .tar.gz instead of .tar.bz2.
 04122002 - Some win32 cleanups and fixes across several files. Upped
