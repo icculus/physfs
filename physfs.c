@@ -11,7 +11,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include <assert.h>
 #include "physfs.h"
 
@@ -303,7 +307,6 @@ static char *calculateBaseDir(const char *argv0)
     const char *dirsep = PHYSFS_getDirSeparator();
     char *retval;
     char *ptr;
-    int allocSize = 0;
 
     /*
      * See if the platform driver wants to handle this for us...
@@ -337,35 +340,34 @@ static char *calculateBaseDir(const char *argv0)
     /*
      * Last ditch effort: it's the current working directory. (*shrug*)
      */
-    do
-    {
-        allocSize += 100;
-        ptr = (char *) realloc(retval, allocSize);
-        if (ptr == NULL)
-        {
-            if (retval != NULL)
-                free(retval);
-            BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
-        } /* if */
-
-        retval = ptr;
-        ptr = getcwd(retval, allocSize);
-    } while (ptr == NULL);
-
-    return(retval);
+    return(__PHYSFS_platformCurrentDir());
 } /* calculateBaseDir */
 
 
 int PHYSFS_init(const char *argv0)
 {
+    char *ptr;
+
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
     BAIL_IF_MACRO(argv0 == NULL, ERR_INVALID_ARGUMENT, 0);
 
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(baseDir == NULL, NULL, 0);
+    ptr = __PHYSFS_platformRealPath(baseDir);
+    free(baseDir);
+    BAIL_IF_MACRO(ptr == NULL, NULL, 0);
+    baseDir = ptr;
+
     BAIL_IF_MACRO(!appendDirSep(&baseDir), NULL, 0);
 
     userDir = calculateUserDir();
+    if (userDir != NULL)
+    {
+        ptr = __PHYSFS_platformRealPath(userDir);
+        free(userDir);
+        userDir = ptr;
+    } /* if */
+
     if ((userDir == NULL) || (!appendDirSep(&userDir)))
     {
         free(baseDir);
@@ -624,15 +626,30 @@ int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
     const char *userdir = PHYSFS_getUserDir();
     const char *dirsep = PHYSFS_getDirSeparator();
     char *str;
-    int rc;
 
         /* set write dir... */
     str = malloc(strlen(userdir) + (strlen(appName) * 2) +
                  (strlen(dirsep) * 2) + 2);
     BAIL_IF_MACRO(str == NULL, ERR_OUT_OF_MEMORY, 0);
-    sprintf(str, "%s%s.%s", userdir, dirsep, appName);
-    rc = PHYSFS_setWriteDir(str);
-    BAIL_IF_MACRO(!rc, NULL, 0);
+    sprintf(str, "%s.%s", userdir, appName);
+
+    if (!PHYSFS_setWriteDir(str))
+    {
+        if ( (!PHYSFS_setWriteDir(userdir)) ||
+             (!PHYSFS_mkdir(str + strlen(userdir))) )
+        {
+            PHYSFS_setWriteDir(NULL);
+            free(str);
+            BAIL_IF_MACRO(1, ERR_CANT_SET_WRITE_DIR, 0);
+        } /* if */
+    } /* if */
+
+    if (!PHYSFS_setWriteDir(str))
+    {
+        PHYSFS_setWriteDir(NULL);
+        free(str);
+        BAIL_IF_MACRO(1, ERR_CANT_SET_WRITE_DIR, 0);
+    } /* if */
 
         /* Put write dir related dirs on search path... */
     PHYSFS_addToSearchPath(str, 1);
@@ -648,7 +665,7 @@ int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
                  (strlen(dirsep) * 2) + 2);
     if (str != NULL)
     {
-        sprintf(str, "%s%s.%s", basedir, dirsep, appName);
+        sprintf(str, "%s.%s", basedir, appName);
         PHYSFS_addToSearchPath(str, 1);
         free(str);
     } /* if */
@@ -724,6 +741,9 @@ char *__PHYSFS_convertToDependent(const char *prepend,
     char *i1;
     char *i2;
     size_t allocSize;
+
+    while (*dirName == '/')
+        dirName++;
 
     allocSize = strlen(dirName) + 1;
     if (prepend != NULL)
@@ -836,7 +856,12 @@ int PHYSFS_mkdir(const char *dirName)
     int retval = 0;
 
     BAIL_IF_MACRO(writeDir == NULL, ERR_NO_WRITE_DIR, 0);
+
     h = writeDir->dirHandle;
+
+    while (*dirName == '/')
+        dirName++;
+
     BAIL_IF_MACRO(h->funcs->mkdir == NULL, ERR_NOT_SUPPORTED, 0);
     BAIL_IF_MACRO(!__PHYSFS_verifySecurity(h, dirName), NULL, 0);
 
@@ -872,6 +897,10 @@ int PHYSFS_delete(const char *fname)
     BAIL_IF_MACRO(writeDir == NULL, ERR_NO_WRITE_DIR, 0);
     h = writeDir->dirHandle;
     BAIL_IF_MACRO(h->funcs->remove == NULL, ERR_NOT_SUPPORTED, 0);
+
+    while (*fname == '/')
+        fname++;
+
     BAIL_IF_MACRO(!__PHYSFS_verifySecurity(h, fname), NULL, 0);
     return(h->funcs->remove(h, fname));
 } /* PHYSFS_delete */
@@ -880,6 +909,9 @@ int PHYSFS_delete(const char *fname)
 const char *PHYSFS_getRealDir(const char *filename)
 {
     DirInfo *i;
+
+    while (*filename == '/')
+        filename++;
 
     for (i = searchPath; i != NULL; i = i->next)
     {
@@ -899,8 +931,6 @@ static int countList(LinkedStringList *list)
 {
     int retval = 0;
     LinkedStringList *i;
-
-    assert(list != NULL);
 
     for (i = list; i != NULL; i = i->next)
         retval++;
@@ -947,23 +977,27 @@ static void insertStringListItem(LinkedStringList **final,
     for (i = *final; i != NULL; i = i->next)
     {
         rc = strcmp(i->str, item->str);
-        if (rc == 0)      /* already in list. */
+        if (rc > 0)  /* insertion point. */
+            break;
+        else if (rc == 0)      /* already in list. */
         {
             free(item->str);
             free(item);
             return;
-        } /* if */
-        else if (rc > 0)  /* insertion point. */
-        {
-            if (prev == NULL)
-                *final = item;
-            else
-                prev->next = item;
-            item->next = i;
-            return;
         } /* else if */
         prev = i;
     } /* for */
+
+        /*
+         * If we are here, we are either at the insertion point.
+         *  This may be the end of the list, or the list may be empty, too.
+         */
+    if (prev == NULL)
+        *final = item;
+    else
+        prev->next = item;
+
+    item->next = i;
 } /* insertStringListItem */
 
 
@@ -989,6 +1023,9 @@ char **PHYSFS_enumerateFiles(const char *path)
     LinkedStringList *rc;
     LinkedStringList *finalList = NULL;
 
+    while (*path == '/')
+        path++;
+
     for (i = searchPath; i != NULL; i = i->next)
     {
         DirHandle *h = i->dirHandle;
@@ -1006,6 +1043,9 @@ char **PHYSFS_enumerateFiles(const char *path)
 
 int PHYSFS_exists(const char *fname)
 {
+    while (*fname == '/')
+        fname++;
+
     return(PHYSFS_getRealDir(fname) != NULL);
 } /* PHYSFS_exists */
 
@@ -1013,6 +1053,9 @@ int PHYSFS_exists(const char *fname)
 int PHYSFS_isDirectory(const char *fname)
 {
     DirInfo *i;
+
+    while (*fname == '/')
+        fname++;
 
     for (i = searchPath; i != NULL; i = i->next)
     {
@@ -1035,6 +1078,9 @@ int PHYSFS_isSymbolicLink(const char *fname)
     if (!allowSymLinks)
         return(0);
 
+    while (*fname == '/')
+        fname++;
+
     for (i = searchPath; i != NULL; i = i->next)
     {
         DirHandle *h = i->dirHandle;
@@ -1056,6 +1102,9 @@ static PHYSFS_file *doOpenWrite(const char *fname, int appending)
     DirHandle *h = (writeDir == NULL) ? NULL : writeDir->dirHandle;
     const DirFunctions *f = (h == NULL) ? NULL : h->funcs;
     FileHandleList *list;
+
+    while (*fname == '/')
+        fname++;
 
     BAIL_IF_MACRO(!h, ERR_NO_WRITE_DIR, NULL);
     BAIL_IF_MACRO(!__PHYSFS_verifySecurity(h, fname), NULL, NULL);
@@ -1096,6 +1145,9 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
     FileHandle *rc = NULL;
     FileHandleList *list;
     DirInfo *i;
+
+    while (*fname == '/')
+        fname++;
 
     list = (FileHandleList *) malloc(sizeof (FileHandleList));
     BAIL_IF_MACRO(!list, ERR_OUT_OF_MEMORY, NULL);

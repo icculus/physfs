@@ -249,6 +249,8 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_PAST_EOF             "Past end of file"
 #define ERR_ARC_IS_READ_ONLY     "Archive is read-only"
 #define ERR_IO_ERROR             "I/O error"
+#define ERR_CANT_SET_WRITE_DIR   "Can't set write directory."
+
 
 /*
  * Call this to set the message returned by PHYSFS_getLastError().
@@ -415,6 +417,29 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname);
  *  Return -1 if you can't do it, and call __PHYSFS_setError().
  */
 int __PHYSFS_platformFileLength(FILE *handle);
+
+
+/*
+ * Get the current working directory. The return value should be an
+ *  absolute path in platform-dependent notation. The caller will deallocate
+ *  the return value with the standard C runtime free() function when it
+ *  is done with it.
+ * On error, return NULL and set the error message.
+ */
+char *__PHYSFS_platformCurrentDir(void);
+
+
+/*
+ * Get the real physical path to a file. (path) is specified in
+ *  platform-dependent notation, as should your return value be.
+ *  All relative paths should be removed, leaving you with an absolute
+ *  path. Symlinks should be resolved, too, so that the returned value is
+ *  the most direct path to a file.
+ * The return value will be deallocated with the standard C runtime free()
+ *  function when the caller is done with it.
+ * On error, return NULL and set the error message.
+ */
+char *__PHYSFS_platformRealPath(const char *path);
 
 
 #ifdef __cplusplus

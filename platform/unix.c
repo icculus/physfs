@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <dirent.h>
 #include <time.h>
 #include <errno.h>
@@ -303,8 +304,14 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname)
         if (ent == NULL)   /* we're done. */
             break;
 
+        if (strcmp(ent->d_name, ".") == 0)
+            continue;
+
+        if (strcmp(ent->d_name, "..") == 0)
+            continue;
+
         l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
-        if (l != NULL)
+        if (l == NULL)
             break;
 
         l->str = (char *) malloc(strlen(ent->d_name) + 1);
@@ -313,6 +320,8 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname)
             free(l);
             break;
         } /* if */
+
+        strcpy(l->str, ent->d_name);
 
         if (retval == NULL)
             retval = l;
@@ -336,6 +345,44 @@ int __PHYSFS_platformFileLength(FILE *handle)
     return(statbuf.st_size);
 } /* __PHYSFS_platformFileLength */
 
+
+char *__PHYSFS_platformCurrentDir(void)
+{
+    int allocSize = 0;
+    char *retval = NULL;
+    char *ptr;
+
+    do
+    {
+        allocSize += 100;
+        ptr = (char *) realloc(retval, allocSize);
+        if (ptr == NULL)
+        {
+            if (retval != NULL)
+                free(retval);
+            BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+        } /* if */
+
+        retval = ptr;
+        ptr = getcwd(retval, allocSize);
+    } while (ptr == NULL);
+
+    return(retval);
+} /* __PHYSFS_platformCurrentDir */
+
+
+char *__PHYSFS_platformRealPath(const char *path)
+{
+    char resolved_path[MAXPATHLEN];
+    char *retval = NULL;
+
+    errno = 0;
+    BAIL_IF_MACRO(!realpath(path, resolved_path), strerror(errno), NULL);
+    retval = malloc(strlen(resolved_path) + 1);
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    strcpy(retval, resolved_path);
+    return(retval);
+} /* __PHYSFS_platformRealPath */
 
 /* end of unix.c ... */
 

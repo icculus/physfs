@@ -222,7 +222,7 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h, const char *dirname)
         buf[12] = '\0';  /* FILENAME.EXT is all you get. */
 
         l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
-        if (l != NULL)
+        if (l == NULL)
             break;
 
         l->str = (char *) malloc(strlen(buf) + 1);
@@ -231,6 +231,8 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h, const char *dirname)
             free(l);
             break;
         } /* if */
+
+        strcpy(l->str, buf);
 
         if (retval == NULL)
             retval = l;

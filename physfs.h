@@ -313,6 +313,10 @@ const char *PHYSFS_getDirSeparator(void);
  *  unless you feel there's a specific danger in allowing them, you should
  *  permit them.
  *
+ * Symlinks are only explicitly checked when dealing with filenames
+ *  in platform-independent notation. That is, when setting up your
+ *  search and write paths, etc, symlinks are never checked for.
+ *
  * Symbolic link permission can be enabled or disabled at any time, and is
  *  disabled by default.
  *

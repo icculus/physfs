@@ -162,7 +162,7 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h, const char *dirname)
         } /* else */
 
         l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
-        if (l != NULL)
+        if (l == NULL)
             break;
 
         l->str = (char *) malloc(strlen(ptr) + 1);
@@ -171,6 +171,8 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h, const char *dirname)
             free(l);
             break;
         } /* if */
+
+        strcpy(l->str, ptr);
 
         if (retval == NULL)
             retval = l;
