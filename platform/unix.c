@@ -588,11 +588,11 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
 } /* __PHYSFS_platformRead */
 
 
-PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, void *buffer,
+PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint32 size, PHYSFS_uint32 count)
 {
     FILE *io = (FILE *) opaque;
-    int rc = fwrite(buffer, size, count, io);
+    int rc = fwrite((void *) buffer, size, count, io);
     if (rc < count)
         __PHYSFS_setError(strerror(errno));
 
