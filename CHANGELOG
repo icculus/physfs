@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+06072002 - Manpages! Finally installed Doxygen and scratched together a
+           Doxyfile. After some revision to physfs.h, we've got a rather
+           nice API reference.
 06062002 - Fixed __PHYSFS_platformSeek() in archivers/posix.c. Implemented the
            getLastModTime method in archivers/zip.c (returns legitimate info)
            and archivers/grp.c (returns lastmodtime of GRPfile itself in the

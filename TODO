@@ -5,8 +5,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 
 - Include the Visual Studio (6 and .NET) project files in CVS directly.
 - A PHYSFS_readUint32(), _readSint32(), etc API.
-- Write manpages, preferrably generated from some javadoc-style solution
-  so we can make HTML versions etc from the same data.
 - Improve ZIP_seek() (archivers/zip.c)
 - Make the zipfile parse symlinks with relative paths. See the function
   expand_symlink_path() in archivers/zip.c ...
@@ -22,6 +20,7 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - Look for FIXMEs (many marked with "!!!" in comments).
 - Port to MacOS X (specifically, make Project Builder files; unix.c should
   work with it as-is. Might compile as-is with autoconf.)
+- Make the library friendly to Win95 systems.
 - Probably other stuff. Requests and recommendations are welcome.
 
 // end of TODO ...
