@@ -58,7 +58,8 @@ WinCE port and other Win32 patches:
 German translation:
     Michael Renner
 
-Apple Project Builder support:
+Apple Project Builder support,
+MacOS X improvements:
     Eric Wing
 
 Other stuff:
