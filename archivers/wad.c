@@ -493,7 +493,7 @@ static int WAD_mkdir(dvoid *opaque, const char *name)
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_WAD =
 {
     "WAD",
-    /* !!! FIXME WAD_ARCHIVE_DESCRIPTION, */ "DOOM engine format",
+    WAD_ARCHIVE_DESCRIPTION,
     "Travis Wells <traviswells@mchsi.com>",
     "http://www.3dmm2.com/doom/",
 };
