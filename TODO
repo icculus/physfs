@@ -44,7 +44,6 @@ Some might be dupes, some might be done already.
 - MIX enumerates files as hash values.
 - Should file enumeration return an error or set error state?
 - Ryanify pocketpc.c ...
-- CFLAGS fix.
 - Update internal zlib?
 - Get svn hooks working.
 - maybe other stuff.
