@@ -274,6 +274,8 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_FILE_EXISTS          "File already exists"
 #define ERR_NOT_A_DIR            "Not a directory"
 #define ERR_FILE_NOT_FOUND       "File not found"
+#define ERR_NOT_AN_ARCHIVE       "Not an archive"
+#define ERR_CORRUPTED            "Corrupted archive"
 
 
 /*
