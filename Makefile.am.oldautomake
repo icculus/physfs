@@ -35,7 +35,8 @@ EXTRA_DIST =	\
 	CWProjects.sit \
 	physfs.spec \
 	physfs.dsp \
-	test_physfs.dsp
+	test_physfs.dsp \
+	makeos2.cmd
 
 dist-hook:
 	mkdir $(distdir)/docs
