@@ -37,6 +37,7 @@ EXTRA_DIST =	\
 	physfs.spec \
 	physfs.dsp \
 	test_physfs.dsp \
+	zlib_license_change.txt \
 	makeos2.cmd
 
 dist-hook:
