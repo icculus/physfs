@@ -94,6 +94,7 @@ EXTRA_DIST =	\
     extras/physfshttpd.c   \
 	Makefile.am.oldautomake \
 	Makefile.am.newautomake \
+	zlib_license_change.txt \
     makeos2.cmd             \
     $(ZLIB_EXTRADIST) $(BEOS_EXTRADIST) $(TEST_EXTRADIST)
 
@@ -132,6 +133,7 @@ EXTRA_DIST =	\
 	physfs.spec \
 	physfs.dsp \
 	test_physfs.dsp \
+	zlib_license_change.txt \
 	makeos2.cmd
 
 
