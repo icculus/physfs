@@ -125,7 +125,7 @@ static char *getExePath(const char *argv0)
 
             /* make sure the string was not truncated. */
         if (__PHYSFS_platformStricmp(&retval[buflen - 4], ".exe") != 0)
-            __PHYSFS_setError(ERR_GOTMODFN_TRUNC);
+            __PHYSFS_setError(ERR_GETMODFN_TRUNC);
         else
         {
             ptr = strrchr(retval, '\\');
