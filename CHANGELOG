@@ -2,8 +2,10 @@
  * CHANGELOG.
  */
 
+09122003 - Happy September. Actually released current tree as 0.1.9.
 08262003 - Added MiNT support to build process and fixed cross-compiling
            (thanks Patrice Mandin!)
+08092003 - Some Windows build fixes (thanks, Brian Hook!)
 07232003 - Upped version to 0.1.9.
 07202003 - Switched to zlib license (see new LICENSE text in root of source
            tree, and zlib_license_switch.txt for details). Had to remove
