@@ -222,6 +222,65 @@ static APIRET os2err(APIRET retval)
 } /* os2err */
 
 
+/* (be gentle, this function isn't very robust.) */
+static void cvt_path_to_correct_case(char *buf)
+{
+    char *fname = buf + 3;            /* point to first element. */
+    char *ptr = strchr(fname, '\\');  /* find end of first element. */
+
+    buf[0] = toupper(buf[0]);  /* capitalize drive letter. */
+
+    /*
+     * Go through each path element, and enumerate its parent dir until
+     *  a case-insensitive match is found. If one is (and it SHOULD be)
+     *  then overwrite the original element with the correct case.
+     * If there's an error, or the path has vanished for some reason, it
+     *  won't hurt to have the original case, so we just keep going.
+     */
+    while (fname != NULL)
+    {
+        char spec[CCHMAXPATH];
+        FILEFINDBUF3 fb;
+        HDIR hdir = HDIR_CREATE;
+        ULONG count = 1;
+        APIRET rc;
+
+        *(fname - 1) = '\0';  /* isolate parent dir string. */
+
+        strcpy(spec, buf);      /* copy isolated parent dir... */
+        strcat(spec, "\\*.*");  /*  ...and add wildcard search spec. */
+
+        if (ptr != NULL)  /* isolate element to find (fname is the start). */
+            *ptr = '\0';
+
+        rc = DosFindFirst(spec, &hdir, FILE_DIRECTORY,
+                          &fb, sizeof (fb), &count, FIL_STANDARD);
+        if (rc == NO_ERROR)
+        {
+            while (count == 1)  /* while still entries to enumerate... */
+            {
+                if (__PHYSFS_platformStricmp(fb.achName, fname) == 0)
+                {
+                    strcpy(fname, fb.achName);
+                    break;  /* there it is. Overwrite and stop searching. */
+                } /* if */
+
+                DosFindNext(hdir, &fb, sizeof (fb), &count);
+            } /* while */
+            DosFindClose(hdir);
+        } /* if */
+
+        *(fname - 1) = '\\';   /* unisolate parent dir. */
+        fname = ptr;           /* point to next element. */
+        if (ptr != NULL)
+        {
+            *ptr = '\\';       /* unisolate element. */
+            ptr = strchr(++fname, '\\');  /* find next element. */
+        } /* if */
+    } /* while */
+} /* cvt_file_to_correct_case */
+
+
 static char *baseDir = NULL;
 
 int __PHYSFS_platformInit(void)
@@ -249,10 +308,12 @@ int __PHYSFS_platformInit(void)
 
     assert(len > 0);  /* should have been a "x:\\" on the front on string. */
 
+    /* The string is capitalized! Figure out the REAL case... */
+    cvt_path_to_correct_case(buf);
+
     baseDir = (char *) malloc(len + 1);
     BAIL_IF_MACRO(baseDir == NULL, ERR_OUT_OF_MEMORY, 0);
     strcpy(baseDir, buf);
-
     return(1);  /* success. */
 } /* __PHYSFS_platformInit */
 
