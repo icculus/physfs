@@ -331,6 +331,7 @@ platform/Makefile
 zlib114/Makefile
 test/Makefile
 extras/Makefile
+physfs.spec
 ])
 
 dnl end of configure.in ...
