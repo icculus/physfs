@@ -2,6 +2,12 @@
  * CHANGELOG.
  */
 
+07122002 - Rewrote the ZIP archiver to no longer use Gilles Vollant's unzip.c
+           code. Losing that abstraction should make the ZIP archiver
+           significantly more efficient, and halved the amount of code used.
+           Plus, being a control freak, I like my coding style more than
+           Gilles's. :)  There are still bugs to shake out, but this is good
+           progress.
 07112002 - configure.in updated to make it happier on newer autoconfs
            (thanks again, Alexander!). FIXME cleanups.
 07102002 - Added a byteorder-friendly convenience API, so you can read/write
