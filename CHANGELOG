@@ -4,6 +4,8 @@
 
 01042003 - Added a hack for dealing with OSX bundles and newer PBProjects
            (thanks, Eric Wing!). Added some missing files to "make dist".
+           Fixed minor Doxygen typo in PHYSFS_flush() docs. Upped version to
+           0.1.8.
 12172002 - Added Apple Project Builder support files (thanks, Eric Wing!).
 12112002 - Added Ruby bindings to extras directory (thanks, Ed Sinjiashvili!).
            Patched win32.c to compile with Mingw32 (thanks, Niels Wagenaar!).
