@@ -1289,9 +1289,8 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
             while ((++i < max) && (ptr != NULL))
             {
                 char *e_new = info->entries[i].name;
-                if ((strncmp(e, e_new, ln) == 0) && (e_new[ln] == '/'))
-                    continue;
-                ptr = NULL;
+                if ((strncmp(e, e_new, ln) != 0) || (e_new[ln] != '/'))
+                    break;
             } /* while */
         } /* else */
     } /* while */
