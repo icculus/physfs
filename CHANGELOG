@@ -70,6 +70,7 @@
            "write" functions to get data from a "const" buffer. Added an
            "extras" dir, which currently contains PhysFS->SDL_RWops glue code.
 03202002 - Patched platform/win32.c to compile.
+03242002 - Added __PHYSFS_platformInit() and __PHYSFS_platformDeinit().
 
 --ryan. (icculus@clutteredmind.org)
 

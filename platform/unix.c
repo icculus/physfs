@@ -59,6 +59,19 @@
 const char *__PHYSFS_platformDirSeparator = "/";
 
 
+int __PHYSFS_platformInit(void)
+{
+    return(1);  /* always succeed. */
+} /* __PHYSFS_platformInit */
+
+
+int __PHYSFS_platformDeinit(void)
+{
+    return(1);  /* always succeed. */
+} /* __PHYSFS_platformDeinit */
+
+
+
 #if (defined __DARWIN__)
 
 char **__PHYSFS_platformDetectAvailableCDs(void)

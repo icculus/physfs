@@ -362,6 +362,7 @@ int PHYSFS_init(const char *argv0)
 
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
     BAIL_IF_MACRO(argv0 == NULL, ERR_INVALID_ARGUMENT, 0);
+    BAIL_IF_MACRO(!__PHYSFS_platformInit(), NULL, 0);
 
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(baseDir == NULL, NULL, 0);
@@ -438,6 +439,7 @@ static void freeSearchPath(void)
 int PHYSFS_deinit(void)
 {
     BAIL_IF_MACRO(!initialized, ERR_NOT_INITIALIZED, 0);
+    BAIL_IF_MACRO(!__PHYSFS_platformDeinit(), NULL, 0);
 
     closeFileHandleList(&openWriteList);
     BAIL_IF_MACRO(!PHYSFS_setWriteDir(NULL), ERR_FILES_STILL_OPEN, 0);

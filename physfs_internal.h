@@ -319,6 +319,27 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname);
  */
 extern const char *__PHYSFS_platformDirSeparator;
 
+
+/*
+ * Initialize the platform. This is called when PHYSFS_init() is called from
+ *  the application. You can use this to (for example) determine what version
+ *  of Windows you're running.
+ *
+ * Return zero if there was a catastrophic failure (which prevents you from
+ *  functioning at all), and non-zero otherwise.
+ */
+int __PHYSFS_platformInit(void);
+
+/*
+ * Deinitialize the platform. This is called when PHYSFS_deinit() is called
+ *  from the application. You can use this to clean up anything you've
+ *  allocated in your platform driver.
+ *
+ * Return zero if there was a catastrophic failure (which prevents you from
+ *  functioning at all), and non-zero otherwise.
+ */
+int __PHYSFS_platformDeinit(void);
+
 /*
  * Platform implementation of PHYSFS_getCdRomDirs()...
  *  See physfs.h. The retval should be freeable via PHYSFS_freeList().
