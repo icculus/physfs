@@ -1169,7 +1169,6 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
                 rc = 1;
             else 
             {
-                
                 if (stop_on_first_find) /* Just checking dir's existance? */
                     return(middle);
 
@@ -1241,8 +1240,12 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
 
 static int ZIP_exists(DirHandle *h, const char *name)
 {
-    ZIPentry *entry = zip_find_entry((ZIPinfo *) h->opaque, name);
-    return(entry != NULL);
+    ZIPinfo *info = (ZIPinfo *) h->opaque;
+    int retval = (zip_find_entry(info, name) != NULL);
+/* !!! FIXME: this would be faster the other way, I think: dirs first. */
+    if (!retval)  /* might be a directory... */
+        retval = (zip_find_start_of_dir(info, name, 1) != -1);
+    return(retval);
 } /* ZIP_exists */
 
 
@@ -1252,6 +1255,7 @@ static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h,
 {
     ZIPentry *entry = zip_find_entry((ZIPinfo *) h->opaque, name);
     *fileExists = (entry != NULL);
+    /* !!! FIXME: Fails for directories. */
     BAIL_IF_MACRO(entry == NULL, NULL, -1);
     return(entry->last_mod_time);
 } /* ZIP_getLastModTime */
