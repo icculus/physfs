@@ -230,6 +230,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_INSECURE_FNAME       "Insecure filename"
 #define ERR_SYMLINK_DISALLOWED   "Symbolic links are disabled"
 #define ERR_NO_WRITE_DIR         "Write directory is not set"
+#define ERR_NO_SUCH_FILE         "No such file"
 
 
 /*

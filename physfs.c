@@ -956,52 +956,90 @@ int PHYSFS_isSymbolicLink(const char *fname)
     return(0);
 } /* PHYSFS_isSymbolicLink */
 
-/**
- * Open a file for writing, in platform-independent notation and in relation
- *  to the write path as the root of the writable filesystem. The specified
- *  file is created if it doesn't exist. If it does exist, it is truncated to
- *  zero bytes, and the writing offset is set to the start.
- *
- *   @param filename File to open.
- *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
- *           of the error can be gleaned from PHYSFS_getLastError().
- */
+
+static PHYSFS_file *doOpenWrite(const char *fname, int appending)
+{
+    PHYSFS_file *retval = (PHYSFS_file *) malloc(sizeof (PHYSFS_file));
+    FileHandle *rc = NULL;
+    DirHandle *h = (writeDir == NULL) ? NULL : writeDir->dirHandle;
+    const DirFunctions *f = (h == NULL) ? NULL : h->funcs;
+    FileHandleList *list;
+
+    BAIL_IF_MACRO(!retval, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(!h, ERR_NO_WRITE_DIR, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_verifySecurity(h, fname), NULL, NULL);
+
+    list = (FileHandleList *) malloc(sizeof (FileHandleList));
+    BAIL_IF_MACRO(!list, ERR_OUT_OF_MEMORY, NULL);
+
+    rc = (appending) ? f->openAppend(h, fname) : f->openWrite(h, fname);
+    if (rc == NULL)
+    {
+        free(list);
+        free(retval);
+        retval = NULL;
+    } /* if */
+    else
+    {
+        retval->opaque = (void *) rc;
+        list->handle = retval;
+        list->next = openWriteList;
+        openWriteList = list;
+    } /* else */
+
+    return(retval);
+} /* doOpenWrite */
+
+
 PHYSFS_file *PHYSFS_openWrite(const char *filename)
 {
-return NULL;
+    return(doOpenWrite(filename, 0));
 } /* PHYSFS_openWrite */
 
 
-/**
- * Open a file for writing, in platform-independent notation and in relation
- *  to the write path as the root of the writable filesystem. The specified
- *  file is created if it doesn't exist. If it does exist, the writing offset
- *  is set to the end of the file, so the first write will be the byte after
- *  the end.
- *
- *   @param filename File to open.
- *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
- *           of the error can be gleaned from PHYSFS_getLastError().
- */
 PHYSFS_file *PHYSFS_openAppend(const char *filename)
 {
-return NULL;
+    return(doOpenWrite(filename, 1));
 } /* PHYSFS_openAppend */
 
 
-/**
- * Open a file for reading, in platform-independent notation. The search path
- *  is checked one at a time until a matching file is found, in which case an
- *  abstract filehandle is associated with it, and reading may be done.
- *  The reading offset is set to the first byte of the file.
- *
- *   @param filename File to open.
- *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
- *           of the error can be gleaned from PHYSFS_getLastError().
- */
-PHYSFS_file *PHYSFS_openRead(const char *filename)
+PHYSFS_file *PHYSFS_openRead(const char *fname)
 {
-return NULL;
+    PHYSFS_file *retval = (PHYSFS_file *) malloc(sizeof (PHYSFS_file));
+    FileHandle *rc = NULL;
+    FileHandleList *list;
+    DirInfo *i;
+
+    BAIL_IF_MACRO(!retval, ERR_OUT_OF_MEMORY, NULL);
+    list = (FileHandleList *) malloc(sizeof (FileHandleList));
+    BAIL_IF_MACRO(!list, ERR_OUT_OF_MEMORY, NULL);
+
+    for (i = searchPath; i != NULL; i = i->next)
+    {
+        DirHandle *h = i->dirHandle;
+        if (__PHYSFS_verifySecurity(h, fname))
+        {
+            rc = h->funcs->openRead(h, fname);
+            if (rc != NULL)
+                break;
+        } /* if */
+    } /* for */
+
+    if (rc == NULL)
+    {
+        free(list);
+        free(retval);
+        retval = NULL;
+    } /* if */
+    else
+    {
+        retval->opaque = (void *) rc;
+        list->handle = retval;
+        list->next = openReadList;
+        openReadList = list;
+    } /* else */
+
+    return(retval);
 } /* PHYSFS_openRead */
 
 
@@ -1018,7 +1056,7 @@ int PHYSFS_close(PHYSFS_file *handle)
     {
         for (i = *(*lists), prev = NULL; i != NULL; prev = i, i = i->next)
         {
-            if (((FileHandle *) i->handle->opaque) == h)
+            if (i->handle == handle)
             {
                 rc = h->funcs->close(h);
                 if (!rc)
@@ -1028,8 +1066,9 @@ int PHYSFS_close(PHYSFS_file *handle)
                     *(*lists) = i->next;
                 else
                     prev->next = i->next;
-                free(i);
+
                 free(handle);
+                free(i);
                 return(1);
             } /* if */
         } /* for */
