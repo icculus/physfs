@@ -2,6 +2,13 @@
  * CHANGELOG.
  */
 
+07202003 - Switched to zlib license (see new LICENSE text in root of source
+           tree, and zlib_license_switch.txt for details). Had to remove
+           archivers/qpak.c, the Ruby bindings from the extras directory, and
+           the Russian and Spanish translations, since those contributors
+           couldn't be contacted. If they show up, we'll readd them to the
+           project, otherwise we'll eventually replace their work...everyone
+           else signed on for the change.
 06112003 - Patches to globbing.c to handle corner cases (thanks, Bradley!).
 06102003 - Added globbing.c to "extras" directory.
 05232003 - Rewrote MacOSX/Darwin CD-ROM detection code to use IOKit, which is
