@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "physfs.h"
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -30,8 +31,7 @@ static int DIR_read(FileHandle *handle, void *buffer,
 
     errno = 0;
     retval = fread(buffer, objSize, objCount, h);
-    if ( (retval < objCount) && (ferror(h)) )
-        __PHYSFS_setError(strerror(errno));
+    BAIL_IF_MACRO((retval < objCount) && (ferror(h)),strerror(errno),retval);
 
     return(retval);
 } /* DIR_read */
@@ -294,7 +294,7 @@ static const FileFunctions __PHYSFS_FileFunctions_DIRW =
     DIR_eof,        /* eof() method       */
     DIR_tell,       /* tell() method      */
     DIR_seek,       /* seek() method      */
-    DIR_fileClose,  /* fileClose() method */
+    DIR_fileClose   /* fileClose() method */
 };
 
 
@@ -311,13 +311,13 @@ const DirFunctions __PHYSFS_DirFunctions_DIR =
     DIR_openAppend,         /* openAppend() method     */
     DIR_remove,             /* remove() method         */
     DIR_mkdir,              /* mkdir() method          */
-    DIR_dirClose,           /* dirClose() method       */
+    DIR_dirClose            /* dirClose() method       */
 };
 
 
 /* This doesn't get listed, since it's technically not an archive... */
 #if 0
-const __PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 {
     "DIR",
     "non-archive directory I/O"

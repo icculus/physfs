@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "physfs.h"
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -17,7 +18,7 @@
 #endif
 
 extern const DirFunctions __PHYSFS_DirFunctions_ZIP;
-extern const FileFunctions __PHYSFS_FileHandle_ZIP;
+static const FileFunctions __PHYSFS_FileFunctions_ZIP;
 
 
 static int ZIP_read(FileHandle *handle, void *buffer,
@@ -93,7 +94,7 @@ static const FileFunctions __PHYSFS_FileFunctions_ZIP =
     ZIP_eof,        /* eof() method   */
     ZIP_tell,       /* tell() method  */
     ZIP_seek,       /* seek() method  */
-    ZIP_fileClose,  /* fileClose() method */
+    ZIP_fileClose   /* fileClose() method */
 };
 
 
@@ -110,10 +111,10 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
     NULL,                   /* openAppend() method     */
     NULL,                   /* remove() method         */
     NULL,                   /* mkdir() method          */
-    ZIP_dirClose,           /* dirClose() method       */
+    ZIP_dirClose            /* dirClose() method       */
 };
 
-const __PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 {
     "ZIP",
     "PkZip/WinZip/Info-Zip compatible"

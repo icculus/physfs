@@ -46,6 +46,11 @@ extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_ZIP;
 extern const DirFunctions         __PHYSFS_DirFunctions_ZIP;
 #endif
 
+#if (defined PHYSFS_SUPPORTS_GRP)
+extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_GRP;
+extern const DirFunctions         __PHYSFS_DirFunctions_GRP;
+#endif
+
 extern const DirFunctions  __PHYSFS_DirFunctions_DIR;
 
 static const PHYSFS_ArchiveInfo *supported_types[] =

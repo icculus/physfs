@@ -240,6 +240,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_NO_WRITE_DIR         "Write directory is not set"
 #define ERR_NO_SUCH_FILE         "No such file"
 #define ERR_PAST_EOF             "Past end of file"
+#define ERR_ARC_IS_READ_ONLY     "Archive is read-only"
 
 /*
  * Call this to set the message returned by PHYSFS_getLastError().

@@ -145,6 +145,11 @@ MAINSRCS += archivers/zip.c
 CFLAGS += -DPHYSFS_SUPPORTS_ZIP
 endif
 
+ifeq ($(strip $(use_archive_grp)),true)
+MAINSRCS += archivers/grp.c
+CFLAGS += -DPHYSFS_SUPPORTS_GRP
+endif
+
 # Rule for getting list of objects from source
 MAINOBJS1 := $(MAINSRCS:.c=.o)
 MAINOBJS2 := $(MAINOBJS1:.cpp=.o)
