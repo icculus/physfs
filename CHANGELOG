@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+11092003 - Added __PHYSFS_platformStrnicmp(), and made qpak.c case-insensitive.
 09122003 - Happy September. Actually released current tree as 0.1.9.
 08262003 - Added MiNT support to build process and fixed cross-compiling
            (thanks Patrice Mandin!)
