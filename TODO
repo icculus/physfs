@@ -1,16 +1,14 @@
 Stuff that needs to be done and wishlist:
 
-These are in no particular order. A 1.0 release is reliant on doing some of
- this stuff. Some might be dupes, some might be done already.
+These are in no particular order.
+Some might be dupes, some might be done already.
 
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
-  an installer/updater. I thought it might be neat to have MBOX and Maildir
-  support so that both "archives" look identical to an application; might be
-  nice for an email program. That's blue sky, unless someone wants to tackle
-  it.
+  an installer/updater.
 - Stack allocate in stripAppleBundle() (platform/unix.c) instead of calloc().
+- Reduce malloc() pressure all over the place. We fragment memory like mad.
 - macclassic.c :
   "/* (Hmm. Default behaviour is broken in the base library.  :)  )  */"
 - Platforms to port to: Amiga (needs platform driver), DOS4GW (platform driver).
