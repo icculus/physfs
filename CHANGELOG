@@ -6,6 +6,7 @@
 
 10302004 - Fixed a strcpy that should have been a strcat. (thanks, Tolga!)
            Removed .cvsignore files (we're in a Subversion repository, now).
+           Build system respects external CFLAGS now. (thanks, Adam!)
 09212003 - Happy September. Fixes to bootstrap on MacOS X. Seeking now tries
            to respect pre-buffered data.
 
