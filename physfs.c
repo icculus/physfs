@@ -25,6 +25,22 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
+
+/* !!! FIXME: Get rid of this. Merge it with PhysDirInfo. */
+typedef struct __PHYSFS_DIRHANDLE__
+{
+        /*
+         * This is reserved for the driver to store information.
+         */
+    void *opaque;
+
+        /*
+         * Pointer to the directory i/o functions for this handle.
+         */
+    const struct __PHYSFS_DIRFUNCTIONS__ *funcs;
+} DirHandle;
+
+
 typedef struct __PHYSFS_ERRMSGTYPE__
 {
     PHYSFS_uint64 tid;
@@ -529,8 +545,32 @@ static const char *find_filename_extension(const char *fname)
 } /* find_filename_extension */
 
 
+static DirHandle *tryOpenDir(const DirFunctions *f, const char *d, int fw)
+{
+    DirHandle *retval = NULL;
+    if (f->isArchive(d, fw))  /* fw == "for writing" */
+    {
+        void *opaque = f->openArchive(d, fw);
+        if (opaque != NULL)
+        {
+            retval = (DirHandle *) allocator.malloc(sizeof (DirHandle));
+            if (retval == NULL)
+                f->dirClose(opaque);
+            else
+            {
+                retval->funcs = f;
+                retval->opaque = opaque;
+            } /* else */
+        } /* if */
+    } /* if */
+
+    return(retval);
+} /* tryOpenDir */
+
+
 static DirHandle *openDirectory(const char *d, int forWriting)
 {
+    DirHandle *retval = NULL;
     const DirFunctions **i;
     const char *ext;
 
@@ -540,37 +580,28 @@ static DirHandle *openDirectory(const char *d, int forWriting)
     if (ext != NULL)
     {
         /* Look for archivers with matching file extensions first... */
-        for (i = dirFunctions; *i != NULL; i++)
+        for (i = dirFunctions; (*i != NULL) && (retval == NULL); i++)
         {
             if (__PHYSFS_platformStricmp(ext, (*i)->info->extension) == 0)
-            {
-                if ((*i)->isArchive(d, forWriting))
-                    return( (*i)->openArchive(d, forWriting) );
-            } /* if */
+                retval = tryOpenDir(*i, d, forWriting);
         } /* for */
 
         /* failing an exact file extension match, try all the others... */
-        for (i = dirFunctions; *i != NULL; i++)
+        for (i = dirFunctions; (*i != NULL) && (retval == NULL); i++)
         {
             if (__PHYSFS_platformStricmp(ext, (*i)->info->extension) != 0)
-            {
-                if ((*i)->isArchive(d, forWriting))
-                    return( (*i)->openArchive(d, forWriting) );
-            } /* if */
+                retval = tryOpenDir(*i, d, forWriting);
         } /* for */
     } /* if */
 
     else  /* no extension? Try them all. */
     {
-        for (i = dirFunctions; *i != NULL; i++)
-        {
-            if ((*i)->isArchive(d, forWriting))
-                return( (*i)->openArchive(d, forWriting) );
-        } /* for */
+        for (i = dirFunctions; (*i != NULL) && (retval == NULL); i++)
+            retval = tryOpenDir(*i, d, forWriting);
     } /* else */
 
-    __PHYSFS_setError(ERR_UNSUPPORTED_ARCHIVE);
-    return(NULL);
+    BAIL_IF_MACRO(retval == NULL, ERR_UNSUPPORTED_ARCHIVE, NULL);
+    return(retval);
 } /* openDirectory */
 
 
@@ -584,10 +615,12 @@ static PhysDirInfo *buildDirInfo(const char *newDir, int forWriting)
     dirHandle = openDirectory(newDir, forWriting);
     BAIL_IF_MACRO(dirHandle == NULL, NULL, 0);
 
+    /* !!! FIXME: get rid of this allocation */
     di = (PhysDirInfo *) malloc(sizeof (PhysDirInfo));
     if (di == NULL)
     {
-        dirHandle->funcs->dirClose(dirHandle);
+        dirHandle->funcs->dirClose(dirHandle->opaque);
+        free(dirHandle);
         BAIL_IF_MACRO(di == NULL, ERR_OUT_OF_MEMORY, 0);
     } /* if */
 
@@ -595,7 +628,8 @@ static PhysDirInfo *buildDirInfo(const char *newDir, int forWriting)
     if (di->dirName == NULL)
     {
         free(di);
-        dirHandle->funcs->dirClose(dirHandle);
+        dirHandle->funcs->dirClose(dirHandle->opaque);
+        free(dirHandle);
         BAIL_MACRO(ERR_OUT_OF_MEMORY, 0);
     } /* if */
 
@@ -620,7 +654,8 @@ static int freeDirInfo(PhysDirInfo *di, FileHandleList *openList)
         BAIL_IF_MACRO(h == di->dirHandle, ERR_FILES_STILL_OPEN, 0);
     } /* for */
     
-    di->dirHandle->funcs->dirClose(di->dirHandle);
+    di->dirHandle->funcs->dirClose(di->dirHandle->opaque);
+    free(di->dirHandle);
     free(di->dirName);
     free(di);
     return(1);
@@ -767,6 +802,8 @@ int PHYSFS_init(const char *argv0)
     if (!externalAllocator)
         setDefaultAllocator();
 
+    BAIL_IF_MACRO(!allocator.init(), NULL, 0);
+
     BAIL_IF_MACRO(!__PHYSFS_platformInit(), NULL, 0);
 
     BAIL_IF_MACRO(!initializeMutexes(), NULL, 0);
@@ -890,6 +927,8 @@ int PHYSFS_deinit(void)
 
     __PHYSFS_platformDestroyMutex(errorLock);
     __PHYSFS_platformDestroyMutex(stateLock);
+
+    allocator.deinit();
 
     errorLock = stateLock = NULL;
     return(1);
@@ -1253,6 +1292,18 @@ char * __PHYSFS_convertToDependent(const char *prepend,
 } /* __PHYSFS_convertToDependent */
 
 
+/*
+ * Verify that (fname) (in platform-independent notation), in relation
+ *  to (h) is secure. That means that each element of fname is checked
+ *  for symlinks (if they aren't permitted). Also, elements such as
+ *  ".", "..", or ":" are flagged.
+ *
+ * With some exceptions (like PHYSFS_mkdir(), which builds multiple subdirs
+ *  at a time), you should always pass zero for "allowMissing" for efficiency.
+ *
+ * Returns non-zero if string is safe, zero if there's a security issue.
+ *  PHYSFS_getLastError() will specify what was wrong.
+ */
 int __PHYSFS_verifySecurity(DirHandle *h, const char *fname, int allowMissing)
 {
     int retval = 1;
@@ -1286,7 +1337,7 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname, int allowMissing)
 
         if (!allowSymLinks)
         {
-            if (h->funcs->isSymLink(h, str, &retval))
+            if (h->funcs->isSymLink(h->opaque, str, &retval))
             {
                 __PHYSFS_setError(ERR_SYMLINK_DISALLOWED);
                 free(str);
@@ -1348,10 +1399,10 @@ int PHYSFS_mkdir(const char *dname)
 
         /* only check for existance if all parent dirs existed, too... */
         if (exists)
-            retval = h->funcs->isDirectory(h, str, &exists);
+            retval = h->funcs->isDirectory(h->opaque, str, &exists);
 
         if (!exists)
-            retval = h->funcs->mkdir(h, str);
+            retval = h->funcs->mkdir(h->opaque, str);
 
         if (!retval)
             break;
@@ -1384,7 +1435,7 @@ int PHYSFS_delete(const char *fname)
     BAIL_IF_MACRO_MUTEX(writeDir == NULL, ERR_NO_WRITE_DIR, stateLock, 0);
     h = writeDir->dirHandle;
     BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h,fname,0),NULL,stateLock,0);
-    retval = h->funcs->remove(h, fname);
+    retval = h->funcs->remove(h->opaque, fname);
 
     __PHYSFS_platformReleaseMutex(stateLock);
     return(retval);
@@ -1405,7 +1456,7 @@ const char *PHYSFS_getRealDir(const char *filename)
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, filename, 0))
         {
-            if (h->funcs->exists(h, filename))
+            if (h->funcs->exists(h->opaque, filename))
                 retval = i->dirName;
         } /* if */
     } /* for */
@@ -1522,7 +1573,7 @@ char **PHYSFS_enumerateFiles(const char *path)
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, path, 0))
         {
-            rc = h->funcs->enumerateFiles(h, path, omitSymLinks);
+            rc = h->funcs->enumerateFiles(h->opaque, path, omitSymLinks);
             interpolateStringLists(&finalList, rc);
         } /* if */
     } /* for */
@@ -1561,7 +1612,7 @@ PHYSFS_sint64 PHYSFS_getLastModTime(const char *fname)
     {
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname, 0))
-            retval = h->funcs->getLastModTime(h, fname, &fileExists);
+            retval = h->funcs->getLastModTime(h->opaque, fname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
@@ -1586,7 +1637,7 @@ int PHYSFS_isDirectory(const char *fname)
     {
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname, 0))
-            retval = h->funcs->isDirectory(h, fname, &fileExists);
+            retval = h->funcs->isDirectory(h->opaque, fname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
@@ -1613,7 +1664,7 @@ int PHYSFS_isSymbolicLink(const char *fname)
     {
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname, 0))
-            retval = h->funcs->isSymLink(h, fname, &fileExists);
+            retval = h->funcs->isSymLink(h->opaque, fname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
@@ -1643,11 +1694,16 @@ static PHYSFS_file *doOpenWrite(const char *fname, int appending)
     BAIL_IF_MACRO_MUTEX(!list, ERR_OUT_OF_MEMORY, stateLock, NULL);
 
     f = h->funcs;
-    rc = (appending) ? f->openAppend(h, fname) : f->openWrite(h, fname);
+    if (appending)
+        rc = f->openAppend(h->opaque, fname);
+    else
+        rc = f->openWrite(h->opaque, fname);
+
     if (rc == NULL)
         free(list);
     else
     {
+        rc->dirHandle = h;
         rc->buffer = NULL;  /* just in case. */
         rc->buffill = rc->bufpos = rc->bufsize = 0;  /* just in case. */
         rc->forReading = 0;
@@ -1679,8 +1735,9 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
     PHYSFS_file *retval = NULL;
     FileHandle *rc = NULL;
     FileHandleList *list;
+    DirHandle *h = NULL;
     int fileExists = 0;
-    PhysDirInfo *i;
+    PhysDirInfo *i = NULL;
 
     BAIL_IF_MACRO(fname == NULL, ERR_INVALID_ARGUMENT, NULL);
     while (*fname == '/')
@@ -1690,11 +1747,13 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
     BAIL_IF_MACRO_MUTEX(!searchPath, ERR_NOT_IN_SEARCH_PATH, stateLock, NULL);
     for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
-        DirHandle *h = i->dirHandle;
+        h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname, 0))
-            rc = h->funcs->openRead(h, fname, &fileExists);
+            rc = h->funcs->openRead(h->opaque, fname, &fileExists);
     } /* for */
     BAIL_IF_MACRO_MUTEX(rc == NULL, NULL, stateLock, NULL);
+
+    rc->dirHandle = h;
 
     list = (FileHandleList *) malloc(sizeof (FileHandleList));
     BAIL_IF_MACRO_MUTEX(!list, ERR_OUT_OF_MEMORY, stateLock, NULL);
@@ -2020,11 +2079,11 @@ int PHYSFS_setAllocator(PHYSFS_allocator *a)
 static void setDefaultAllocator(void)
 {
     assert(!externalAllocator);
-    allocator.malloc = __PHYSFS_platformMalloc;
-    allocator.realloc = __PHYSFS_platformRealloc;
-    allocator.free = __PHYSFS_platformFree;
-    allocator.lock = __PHYSFS_platformLock;
-    allocator.unlock = __PHYSFS_platformUnlock;
+    allocator.init = __PHYSFS_platformAllocatorInit;
+    allocator.deinit = __PHYSFS_platformAllocatorDeinit;
+    allocator.malloc = __PHYSFS_platformAllocatorMalloc;
+    allocator.realloc = __PHYSFS_platformAllocatorRealloc;
+    allocator.free = __PHYSFS_platformAllocatorFree;
 } /* setDefaultAllocator */
 
 

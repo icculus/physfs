@@ -75,7 +75,7 @@ typedef struct
 } HOGfileinfo;
 
 
-static void HOG_dirClose(DirHandle *h);
+static void HOG_dirClose(void *opaque);
 static PHYSFS_sint64 HOG_read(FileHandle *handle, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static PHYSFS_sint64 HOG_write(FileHandle *handle, const void *buffer,
@@ -86,19 +86,19 @@ static int HOG_seek(FileHandle *handle, PHYSFS_uint64 offset);
 static PHYSFS_sint64 HOG_fileLength(FileHandle *handle);
 static int HOG_fileClose(FileHandle *handle);
 static int HOG_isArchive(const char *filename, int forWriting);
-static DirHandle *HOG_openArchive(const char *name, int forWriting);
-static LinkedStringList *HOG_enumerateFiles(DirHandle *h,
+static void *HOG_openArchive(const char *name, int forWriting);
+static LinkedStringList *HOG_enumerateFiles(void *opaque,
                                             const char *dirname,
                                             int omitSymLinks);
-static int HOG_exists(DirHandle *h, const char *name);
-static int HOG_isDirectory(DirHandle *h, const char *name, int *fileExists);
-static int HOG_isSymLink(DirHandle *h, const char *name, int *fileExists);
-static PHYSFS_sint64 HOG_getLastModTime(DirHandle *h, const char *n, int *e);
-static FileHandle *HOG_openRead(DirHandle *h, const char *name, int *exist);
-static FileHandle *HOG_openWrite(DirHandle *h, const char *name);
-static FileHandle *HOG_openAppend(DirHandle *h, const char *name);
-static int HOG_remove(DirHandle *h, const char *name);
-static int HOG_mkdir(DirHandle *h, const char *name);
+static int HOG_exists(void *opaque, const char *name);
+static int HOG_isDirectory(void *opaque, const char *name, int *fileExists);
+static int HOG_isSymLink(void *opaque, const char *name, int *fileExists);
+static PHYSFS_sint64 HOG_getLastModTime(void *opaque, const char *n, int *e);
+static FileHandle *HOG_openRead(void *opaque, const char *name, int *exist);
+static FileHandle *HOG_openWrite(void *opaque, const char *name);
+static FileHandle *HOG_openAppend(void *opaque, const char *name);
+static int HOG_remove(void *opaque, const char *name);
+static int HOG_mkdir(void *opaque, const char *name);
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_HOG =
 {
@@ -141,13 +141,12 @@ const DirFunctions __PHYSFS_DirFunctions_HOG =
 
 
 
-static void HOG_dirClose(DirHandle *h)
+static void HOG_dirClose(void *opaque)
 {
-    HOGinfo *info = ((HOGinfo *) h->opaque);
+    HOGinfo *info = ((HOGinfo *) opaque);
     free(info->filename);
     free(info->entries);
     free(info);
-    free(h);
 } /* HOG_dirClose */
 
 
@@ -369,22 +368,13 @@ static int hog_load_entries(const char *name, int forWriting, HOGinfo *info)
 } /* hog_load_entries */
 
 
-static DirHandle *HOG_openArchive(const char *name, int forWriting)
+static void *HOG_openArchive(const char *name, int forWriting)
 {
-    HOGinfo *info;
-    DirHandle *retval = malloc(sizeof (DirHandle));
     PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
+    HOGinfo *info = malloc(sizeof (HOGinfo));
 
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    info = retval->opaque = malloc(sizeof (HOGinfo));
-    if (info == NULL)
-    {
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-        goto HOG_openArchive_failed;
-    } /* if */
-
+    BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, 0);
     memset(info, '\0', sizeof (HOGinfo));
-
     info->filename = (char *) malloc(strlen(name) + 1);
     if (info->filename == NULL)
     {
@@ -397,32 +387,28 @@ static DirHandle *HOG_openArchive(const char *name, int forWriting)
 
     strcpy(info->filename, name);
     info->last_mod_time = modtime;
-    retval->funcs = &__PHYSFS_DirFunctions_HOG;
-    return(retval);
+
+    return(info);
 
 HOG_openArchive_failed:
-    if (retval != NULL)
+    if (info != NULL)
     {
-        if (retval->opaque != NULL)
-        {
-            if (info->filename != NULL)
-                free(info->filename);
-            if (info->entries != NULL)
-                free(info->entries);
-            free(info);
-        } /* if */
-        free(retval);
+        if (info->filename != NULL)
+            free(info->filename);
+        if (info->entries != NULL)
+            free(info->entries);
+        free(info);
     } /* if */
 
     return(NULL);
 } /* HOG_openArchive */
 
 
-static LinkedStringList *HOG_enumerateFiles(DirHandle *h,
+static LinkedStringList *HOG_enumerateFiles(void *opaque,
                                             const char *dirname,
                                             int omitSymLinks)
 {
-    HOGinfo *info = ((HOGinfo *) h->opaque);
+    HOGinfo *info = ((HOGinfo *) opaque);
     HOGentry *entry = info->entries;
     LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_uint32 max = info->entryCount;
@@ -471,44 +457,44 @@ static HOGentry *hog_find_entry(HOGinfo *info, const char *name)
 } /* hog_find_entry */
 
 
-static int HOG_exists(DirHandle *h, const char *name)
+static int HOG_exists(void *opaque, const char *name)
 {
-    return(hog_find_entry(((HOGinfo *) h->opaque), name) != NULL);
+    return(hog_find_entry(((HOGinfo *) opaque), name) != NULL);
 } /* HOG_exists */
 
 
-static int HOG_isDirectory(DirHandle *h, const char *name, int *fileExists)
+static int HOG_isDirectory(void *opaque, const char *name, int *fileExists)
 {
-    *fileExists = HOG_exists(h, name);
+    *fileExists = HOG_exists(opaque, name);
     return(0);  /* never directories in a groupfile. */
 } /* HOG_isDirectory */
 
 
-static int HOG_isSymLink(DirHandle *h, const char *name, int *fileExists)
+static int HOG_isSymLink(void *opaque, const char *name, int *fileExists)
 {
-    *fileExists = HOG_exists(h, name);
+    *fileExists = HOG_exists(opaque, name);
     return(0);  /* never symlinks in a groupfile. */
 } /* HOG_isSymLink */
 
 
-static PHYSFS_sint64 HOG_getLastModTime(DirHandle *h,
+static PHYSFS_sint64 HOG_getLastModTime(void *opaque,
                                         const char *name,
                                         int *fileExists)
 {
-    HOGinfo *info = ((HOGinfo *) h->opaque);
+    HOGinfo *info = ((HOGinfo *) opaque);
     PHYSFS_sint64 retval = -1;
 
     *fileExists = (hog_find_entry(info, name) != NULL);
     if (*fileExists)  /* use time of HOG itself in the physical filesystem. */
-        retval = ((HOGinfo *) h->opaque)->last_mod_time;
+        retval = info->last_mod_time;
 
     return(retval);
 } /* HOG_getLastModTime */
 
 
-static FileHandle *HOG_openRead(DirHandle *h, const char *fnm, int *fileExists)
+static FileHandle *HOG_openRead(void *opaque, const char *fnm, int *fileExists)
 {
-    HOGinfo *info = ((HOGinfo *) h->opaque);
+    HOGinfo *info = ((HOGinfo *) opaque);
     FileHandle *retval;
     HOGfileinfo *finfo;
     HOGentry *entry;
@@ -539,30 +525,29 @@ static FileHandle *HOG_openRead(DirHandle *h, const char *fnm, int *fileExists)
     finfo->entry = entry;
     retval->opaque = (void *) finfo;
     retval->funcs = &__PHYSFS_FileFunctions_HOG;
-    retval->dirHandle = h;
     return(retval);
 } /* HOG_openRead */
 
 
-static FileHandle *HOG_openWrite(DirHandle *h, const char *name)
+static FileHandle *HOG_openWrite(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* HOG_openWrite */
 
 
-static FileHandle *HOG_openAppend(DirHandle *h, const char *name)
+static FileHandle *HOG_openAppend(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* HOG_openAppend */
 
 
-static int HOG_remove(DirHandle *h, const char *name)
+static int HOG_remove(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* HOG_remove */
 
 
-static int HOG_mkdir(DirHandle *h, const char *name)
+static int HOG_mkdir(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* HOG_mkdir */

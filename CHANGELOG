@@ -2,6 +2,12 @@
  * CHANGELOG.
  */
 
+09252004 - Cleaned up archiver interface to not deal with DirHandles anymore,
+           which simplifies things, removes some responsibility and code
+           duplication from the archivers, and trims some malloc pressure.
+           Ripped up the allocation hook code a little. We'll try to screw
+           with memory locking later, since it makes everything ugly and
+           complex. Oh well.
 09232004 - Started adding allocation hooks.
 09222004 - Happy September. Added Spanish translation back in.
 04092004 - Added MIX support for legacy Westwood titles (Thanks, Sebastian!).
