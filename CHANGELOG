@@ -69,6 +69,7 @@
            better. Patched makefile to link the test program. Changed all the
            "write" functions to get data from a "const" buffer. Added an
            "extras" dir, which currently contains PhysFS->SDL_RWops glue code.
+03202002 - Patched platform/win32.c to compile.
 
 --ryan. (icculus@clutteredmind.org)
 
