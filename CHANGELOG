@@ -2,6 +2,10 @@
  * CHANGELOG.
  */
 
+04022002 - Mac work continues. Found a bug where we put a double dir
+           separator in if we had to resort to the fallback userdir (if
+           __PHYSFS_platformGetUserDir() returned NULL to calculateUserDir().
+           Made note of potential infinite recursion in platform driver docs.
 04012002 - (_NOT_ an April Fool's Joke:) Started working on MacOS Classic
            port. Added skeleton.c to platform directory. Minor patches to
            get things compiling on Mac (notably, DirInfo conflicts with
