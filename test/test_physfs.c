@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <string.h>
 
-#if (!defined WIN32)
+#if ((!defined WIN32) && (!defined __MACOS__))
 #define HAVE_READLINE
 #endif
 
