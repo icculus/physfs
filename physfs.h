@@ -269,8 +269,9 @@ PHYSFS_COMPILE_TIME_ASSERT(sint64, sizeof(PHYSFS_sint64) == 8);
 typedef struct
 {
     void *opaque;  /**< That's all you get. Don't touch. */
-} PHYSFS_file;
+} PHYSFS_File;
 
+typedef PHYSFS_File PHYSFS_file;  /* for backwards compatibility with 1.0 */
 
 
 /**
