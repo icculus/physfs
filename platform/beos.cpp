@@ -228,7 +228,7 @@ char *__PHYSFS_platformRealPath(const char *path)
 
     BPath normalized(str, leaf, true);  /* force normalization of path. */
     const char *resolved_path = normalized.Path();
-    BAIL_IF_MACRO(resolved_path == NULL, ERR_FILE_NOT_FOUND, NULL);
+    BAIL_IF_MACRO(resolved_path == NULL, ERR_NO_SUCH_FILE, NULL);
     char *retval = (char *) malloc(strlen(resolved_path) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, resolved_path);
