@@ -2,7 +2,8 @@
  * CHANGELOG.
  */
 
-03122003 - Attempt at cleaning up some type correctness for VC++6.
+03122003 - Attempt at cleaning up some type correctness for VC++6. Made QPAK
+           archiver case-insensitive (since Quake2 has problems without it).
 01302003 - Added buffering API to OS/2 build's exported symbol list. Updated
            CWProjects.sit and made several fixes to get physfs building on
            MacOS Classic again.
