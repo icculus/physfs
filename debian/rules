@@ -22,7 +22,7 @@ ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 endif
 
 # shared library versions, option 1
-version=0.1.7
+version=0.1.8
 major=0
 # option 2, assuming the library is created as src/.libs/libfoo.so.2.0.5 or so
 #version=`ls src/.libs/lib*.so.* | \
