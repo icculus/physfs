@@ -369,7 +369,9 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
 
 int __PHYSFS_platformExists(const char *fname)
 {
-    return(GetFileAttributes(fname) != INVALID_FILE_ATTRIBUTES);
+    BAIL_IF_MACRO(GetFileAttributes(fname) == INVALID_FILE_ATTRIBUTES,
+                  win32strerror(), 0);
+    return(1);
 } /* __PHYSFS_platformExists */
 
 

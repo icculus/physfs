@@ -22,7 +22,6 @@
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <assert.h>
 #include "physfs.h"
 
 #define __PHYSICSFS_INTERNAL__
@@ -70,7 +69,6 @@ extern const DirFunctions         __PHYSFS_DirFunctions_QPAK;
 extern const DirFunctions  __PHYSFS_DirFunctions_DIR;
 
 
-// !!! FIXME: This is stored with dirFunctions now, too.
 static const PHYSFS_ArchiveInfo *supported_types[] =
 {
 #if (defined PHYSFS_SUPPORTS_ZIP)
@@ -1198,10 +1196,12 @@ char * __PHYSFS_convertToDependent(const char *prepend,
 int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
 {
     int retval = 1;
+    int fileExists;
     char *start;
     char *end;
     char *str;
 
+    /* !!! FIXME: Can we ditch this malloc()? */
     start = str = malloc(strlen(fname) + 1);
     BAIL_IF_MACRO(str == NULL, ERR_OUT_OF_MEMORY, 0);
     strcpy(str, fname);
@@ -1222,11 +1222,16 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
             break;
         } /* if */
 
-        if ((!allowSymLinks) && (h->funcs->isSymLink(h, str)))
+        if (!allowSymLinks)
         {
-            __PHYSFS_setError(ERR_SYMLINK_DISALLOWED);
-            retval = 0;
-            break;
+            if (h->funcs->isSymLink(h, str, &fileExists))
+            {
+                __PHYSFS_setError(ERR_SYMLINK_DISALLOWED);
+                retval = 0;
+                break;
+            } /* if */
+
+            /* !!! FIXME: Abort early here if !fileExists? */
         } /* if */
 
         if (end == NULL)
@@ -1256,7 +1261,6 @@ int PHYSFS_mkdir(const char *dname)
     __PHYSFS_platformGrabMutex(stateLock);
     BAIL_IF_MACRO_MUTEX(writeDir == NULL, ERR_NO_WRITE_DIR, stateLock, 0);
     h = writeDir->dirHandle;
-    BAIL_IF_MACRO_MUTEX(!h->funcs->mkdir, ERR_NOT_SUPPORTED, stateLock, 0);
     BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h, dname), NULL, stateLock, 0);
     start = str = malloc(strlen(dname) + 1);
     BAIL_IF_MACRO_MUTEX(str == NULL, ERR_OUT_OF_MEMORY, stateLock, 0);
@@ -1299,7 +1303,6 @@ int PHYSFS_delete(const char *fname)
 
     BAIL_IF_MACRO_MUTEX(writeDir == NULL, ERR_NO_WRITE_DIR, stateLock, 0);
     h = writeDir->dirHandle;
-    BAIL_IF_MACRO_MUTEX(!h->funcs->remove, ERR_NOT_SUPPORTED, stateLock, 0);
     BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h, fname), NULL, stateLock, 0);
     retval = h->funcs->remove(h, fname);
 
@@ -1311,28 +1314,24 @@ int PHYSFS_delete(const char *fname)
 const char *PHYSFS_getRealDir(const char *filename)
 {
     PhysDirInfo *i;
+    const char *retval = NULL;
 
     while (*filename == '/')
         filename++;
 
     __PHYSFS_platformGrabMutex(stateLock);
-    for (i = searchPath; i != NULL; i = i->next)
+    for (i = searchPath; ((i != NULL) && (retval == NULL)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, filename))
         {
-            if (!h->funcs->exists(h, filename))
-                __PHYSFS_setError(ERR_NO_SUCH_FILE);
-            else
-            {
-                __PHYSFS_platformReleaseMutex(stateLock);
-                return(i->dirName);
-            } /* else */
+            if (h->funcs->exists(h, filename))
+                retval = i->dirName;
         } /* if */
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
-    return(NULL);
+    return(retval);
 } /* PHYSFS_getRealDir */
 
 
@@ -1467,6 +1466,8 @@ int PHYSFS_exists(const char *fname)
 PHYSFS_sint64 PHYSFS_getLastModTime(const char *fname)
 {
     PhysDirInfo *i;
+    PHYSFS_sint64 retval = -1;
+    int fileExists = 0;
 
     BAIL_IF_MACRO(fname == NULL, ERR_INVALID_ARGUMENT, 0);
     while (*fname == '/')
@@ -1476,95 +1477,67 @@ PHYSFS_sint64 PHYSFS_getLastModTime(const char *fname)
         return(1);
 
     __PHYSFS_platformGrabMutex(stateLock);
-    for (i = searchPath; i != NULL; i = i->next)
+    for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname))
-        {
-            if (!h->funcs->exists(h, fname))
-                __PHYSFS_setError(ERR_NO_SUCH_FILE);
-            else
-            {
-                PHYSFS_sint64 retval = -1;
-                if (h->funcs->getLastModTime == NULL)
-                    __PHYSFS_setError(ERR_NOT_SUPPORTED);
-                else
-                    retval = h->funcs->getLastModTime(h, fname);
-
-                __PHYSFS_platformReleaseMutex(stateLock);
-                return(retval);
-            } /* else */
-        } /* if */
+            retval = h->funcs->getLastModTime(h, fname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
-    return(-1);  /* error set in verifysecurity/exists */
+    return(retval);
 } /* PHYSFS_getLastModTime */
 
 
 int PHYSFS_isDirectory(const char *fname)
 {
     PhysDirInfo *i;
+    int retval = 0;
+    int fileExists = 0;
 
     BAIL_IF_MACRO(fname == NULL, ERR_INVALID_ARGUMENT, 0);
     while (*fname == '/')
         fname++;
 
-    if (*fname == '\0')
-        return(1);
+    BAIL_IF_MACRO(*fname == '\0', NULL, 1); /* Root is always a dir.  :) */
 
     __PHYSFS_platformGrabMutex(stateLock);
-    for (i = searchPath; i != NULL; i = i->next)
+    for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname))
-        {
-            if (!h->funcs->exists(h, fname))
-                __PHYSFS_setError(ERR_NO_SUCH_FILE);
-            else
-            {
-                int retval = h->funcs->isDirectory(h, fname);
-                __PHYSFS_platformReleaseMutex(stateLock);
-                return(retval);
-            } /* else */
-        } /* if */
+            retval = h->funcs->isDirectory(h, fname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
-    return(0);
+    return(retval);
 } /* PHYSFS_isDirectory */
 
 
 int PHYSFS_isSymbolicLink(const char *fname)
 {
     PhysDirInfo *i;
+    int retval = 0;
+    int fileExists = 0;
 
-    if (!allowSymLinks)
-        return(0);
+    BAIL_IF_MACRO(!allowSymLinks, ERR_SYMLINK_DISALLOWED, 0);
 
     BAIL_IF_MACRO(fname == NULL, ERR_INVALID_ARGUMENT, 0);
     while (*fname == '/')
         fname++;
 
+    BAIL_IF_MACRO(*fname == '\0', NULL, 0);   /* Root is never a symlink */
+
     __PHYSFS_platformGrabMutex(stateLock);
-    for (i = searchPath; i != NULL; i = i->next)
+    for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname))
-        {
-            if (!h->funcs->exists(h, fname))
-                __PHYSFS_setError(ERR_NO_SUCH_FILE);
-            else
-            {
-                int retval = h->funcs->isSymLink(h, fname);
-                __PHYSFS_platformReleaseMutex(stateLock);
-                return(retval);
-            } /* else */
-        } /* if */
+            retval = h->funcs->isSymLink(h, fname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
-    return(0);
+    return(retval);
 } /* PHYSFS_isSymbolicLink */
 
 
@@ -1620,9 +1593,10 @@ PHYSFS_file *PHYSFS_openAppend(const char *filename)
 
 PHYSFS_file *PHYSFS_openRead(const char *fname)
 {
-    PHYSFS_file *retval;
+    PHYSFS_file *retval = NULL;
     FileHandle *rc = NULL;
     FileHandleList *list;
+    int fileExists = 0;
     PhysDirInfo *i;
 
     BAIL_IF_MACRO(fname == NULL, ERR_INVALID_ARGUMENT, NULL);
@@ -1631,17 +1605,12 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
 
     __PHYSFS_platformGrabMutex(stateLock);
     BAIL_IF_MACRO_MUTEX(!searchPath, ERR_NOT_IN_SEARCH_PATH, stateLock, NULL);
-    for (i = searchPath; i != NULL; i = i->next)
+    for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname))
-        {
-            rc = h->funcs->openRead(h, fname);
-            if (rc != NULL)
-                break;
-        } /* if */
+            rc = h->funcs->openRead(h, fname, &fileExists);
     } /* for */
-
     BAIL_IF_MACRO_MUTEX(rc == NULL, NULL, stateLock, NULL);
 
     list = (FileHandleList *) malloc(sizeof (FileHandleList));
@@ -1711,9 +1680,6 @@ PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle, void *buffer,
                           PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
-    assert(h != NULL);
-    assert(h->funcs != NULL);
-    BAIL_IF_MACRO(h->funcs->read == NULL, ERR_NOT_SUPPORTED, -1);
     return(h->funcs->read(h, buffer, objSize, objCount));
 } /* PHYSFS_read */
 
@@ -1722,9 +1688,6 @@ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer,
                            PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
-    assert(h != NULL);
-    assert(h->funcs != NULL);
-    BAIL_IF_MACRO(h->funcs->write == NULL, ERR_NOT_SUPPORTED, -1);
     return(h->funcs->write(h, buffer, objSize, objCount));
 } /* PHYSFS_write */
 
@@ -1732,9 +1695,6 @@ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer,
 int PHYSFS_eof(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
-    assert(h != NULL);
-    assert(h->funcs != NULL);
-    BAIL_IF_MACRO(h->funcs->eof == NULL, ERR_NOT_SUPPORTED, -1);
     return(h->funcs->eof(h));
 } /* PHYSFS_eof */
 
@@ -1742,9 +1702,6 @@ int PHYSFS_eof(PHYSFS_file *handle)
 PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
-    assert(h != NULL);
-    assert(h->funcs != NULL);
-    BAIL_IF_MACRO(h->funcs->tell == NULL, ERR_NOT_SUPPORTED, -1);
     return(h->funcs->tell(h));
 } /* PHYSFS_tell */
 
@@ -1752,10 +1709,6 @@ PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle)
 int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
-    assert(h != NULL);
-    assert(h->funcs != NULL);
-    BAIL_IF_MACRO(h->funcs->seek == NULL, ERR_NOT_SUPPORTED, 0);
-    BAIL_IF_MACRO(pos < 0, ERR_INVALID_ARGUMENT, 0);
     return(h->funcs->seek(h, pos));
 } /* PHYSFS_seek */
 
@@ -1763,10 +1716,6 @@ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
 PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
-    assert(h != NULL);
-    assert(h->funcs != NULL);
-    BAIL_IF_MACRO(h->funcs->fileLength == NULL, ERR_NOT_SUPPORTED, 0);
-
     return(h->funcs->fileLength(h));
 } /* PHYSFS_filelength */
 

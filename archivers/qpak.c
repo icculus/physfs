@@ -73,19 +73,25 @@ static void          QPAK_dirClose(DirHandle *h);
 static LinkedStringList *QPAK_enumerateFiles(DirHandle *h, const char *dirname,
                                              int omitSymLinks);
 static int           QPAK_exists(DirHandle *h, const char *name);
-static int           QPAK_isDirectory(DirHandle *h, const char *name);
-static int           QPAK_isSymLink(DirHandle *h, const char *name);
-static PHYSFS_sint64 QPAK_getLastModTime(DirHandle *h, const char *name);
-static FileHandle   *QPAK_openRead(DirHandle *h, const char *name);
+static int           QPAK_isDirectory(DirHandle *h, const char *name, int *e);
+static int           QPAK_isSymLink(DirHandle *h, const char *name, int *e);
+static PHYSFS_sint64 QPAK_getLastModTime(DirHandle *h, const char *n, int *e);
+static FileHandle   *QPAK_openRead(DirHandle *h, const char *name, int *e);
+static FileHandle   *QPAK_openWrite(DirHandle *h, const char *name);
+static FileHandle   *QPAK_openAppend(DirHandle *h, const char *name);
 
 
 static PHYSFS_sint64 QPAK_read(FileHandle *handle, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+static PHYSFS_sint64 QPAK_write(FileHandle *handle, const void *buffer,
+                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static int           QPAK_eof(FileHandle *handle);
 static PHYSFS_sint64 QPAK_tell(FileHandle *handle);
 static int           QPAK_seek(FileHandle *handle, PHYSFS_uint64 offset);
 static PHYSFS_sint64 QPAK_fileLength(FileHandle *handle);
 static int           QPAK_fileClose(FileHandle *handle);
+static int           QPAK_remove(DirHandle *h, const char *name);
+static int           QPAK_mkdir(DirHandle *h, const char *name);
 
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_QPAK =
@@ -99,7 +105,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_QPAK =
 static const FileFunctions __PHYSFS_FileFunctions_QPAK =
 {
     QPAK_read,               /* read() method       */
-    NULL,                    /* write() method      */
+    QPAK_write,              /* write() method      */
     QPAK_eof,                /* eof() method        */
     QPAK_tell,               /* tell() method       */
     QPAK_seek,               /* seek() method       */
@@ -118,10 +124,10 @@ const DirFunctions __PHYSFS_DirFunctions_QPAK =
     QPAK_isSymLink,          /* isSymLink() method      */
     QPAK_getLastModTime,     /* getLastModTime() method */
     QPAK_openRead,           /* openRead() method       */
-    NULL,                    /* openWrite() method      */
-    NULL,                    /* openAppend() method     */
-    NULL,                    /* remove() method         */
-    NULL,                    /* mkdir() method          */
+    QPAK_openWrite,          /* openWrite() method      */
+    QPAK_openAppend,         /* openAppend() method     */
+    QPAK_remove,             /* remove() method         */
+    QPAK_mkdir,              /* mkdir() method          */
     QPAK_dirClose            /* dirClose() method       */
 };
 
@@ -308,7 +314,7 @@ static QPAKdirectory *qpak_findDirectory(QPAKdirectory *root, const char *name)
         } /* while */
     } /* else */
 
-    return(0);
+    BAIL_MACRO(ERR_NO_SUCH_PATH, 0);
 } /* qpak_findDirectory */
 
 
@@ -390,7 +396,7 @@ static QPAKentry *qpak_findEntry(QPAKdirectory *root, const char *name)
         thisFile = thisFile->next;
     } /* while */
 
-    return(0);
+    BAIL_MACRO(ERR_NO_SUCH_FILE, 0);
 } /* qpak_findEntry */
 
 
@@ -585,22 +591,45 @@ static int QPAK_exists(DirHandle *h, const char *name)
 } /* QPAK_exists */
 
 
-static int QPAK_isDirectory(DirHandle *h, const char *name)
+static int QPAK_isDirectory(DirHandle *h, const char *name, int *fileExists)
 {
     QPAKinfo *info = (QPAKinfo *) h->opaque;
-    return(qpak_findDirectory(info->root, name) != 0);
+    *fileExists = (qpak_findDirectory(info->root, name) != 0);
+    return(*fileExists);
 } /* QPAK_isDirectory */
 
 
-static int QPAK_isSymLink(DirHandle *h, const char *name)
+static int QPAK_isSymLink(DirHandle *h, const char *name, int *fileExists)
 {
+    *fileExists = QPAK_exists(h, name);
     return(0); /* we don't support symlinks for now */
 } /* QPAK_isSymlink */
 
 
-static PHYSFS_sint64 QPAK_getLastModTime(DirHandle *h, const char *name)
+static int QPAK_remove(DirHandle *h, const char *name)
 {
-    return(__PHYSFS_platformGetLastModTime(((QPAKinfo *) h->opaque)->filename));
+    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+} /* QPAK_remove */
+
+
+static int QPAK_mkdir(DirHandle *h, const char *name)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+} /* QPAK_mkdir */
+
+
+static PHYSFS_sint64 QPAK_getLastModTime(DirHandle *h,
+                                         const char *name,
+                                         int *fileExists)
+{
+    QPAKinfo *info = (QPAKinfo *) h->opaque;
+    PHYSFS_sint64 retval = -1;
+
+    *fileExists = QPAK_exists(h, name);
+    if (*fileExists)
+        retval = __PHYSFS_platformGetLastModTime(info->filename);
+
+    return(retval);
 } /* QPAK_getLastModTime */
 
 
@@ -620,13 +649,14 @@ static void *qpak_getFileHandle(const char *name, QPAKentry *entry)
 } /* qpak_getFileHandle */
 
 
-static FileHandle *QPAK_openRead(DirHandle *h, const char *name)
+static FileHandle *QPAK_openRead(DirHandle *h, const char *fnm, int *fileExists)
 {
     QPAKinfo *driver = (QPAKinfo *) h->opaque;
-    QPAKentry *entry = qpak_findEntry(driver->root, name);
+    QPAKentry *entry = qpak_findEntry(driver->root, fnm);
     QPAKfileinfo *fileDriver = 0;
     FileHandle *result = 0;
 
+    *fileExists = (entry != NULL);
     if (entry == NULL)
         return(NULL);
  
@@ -658,6 +688,18 @@ static FileHandle *QPAK_openRead(DirHandle *h, const char *name)
 } /* QPAK_openRead */
 
 
+static FileHandle *QPAK_openWrite(DirHandle *h, const char *name)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+} /* QPAK_openWrite */
+
+
+static FileHandle *QPAK_openAppend(DirHandle *h, const char *name)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+} /* QPAK_openAppend */
+
+
 static PHYSFS_sint64 QPAK_read(FileHandle *handle, void *buffer,
                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
@@ -676,6 +718,13 @@ static PHYSFS_sint64 QPAK_read(FileHandle *handle, void *buffer,
 
     return(rc);
 } /* QPAK_read */
+
+
+static PHYSFS_sint64 QPAK_write(FileHandle *handle, const void *buffer,
+                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
+} /* QPAK_write */
 
 
 static int QPAK_eof(FileHandle *handle)

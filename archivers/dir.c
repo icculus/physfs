@@ -24,6 +24,10 @@ static PHYSFS_sint64 DIR_read(FileHandle *handle, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static PHYSFS_sint64 DIR_write(FileHandle *handle, const void *buffer,
                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+static PHYSFS_sint64 DIR_dummyRead(FileHandle *handle, void *buffer,
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+static PHYSFS_sint64 DIR_dummyWrite(FileHandle *handle, const void *buffer,
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static int DIR_eof(FileHandle *handle);
 static PHYSFS_sint64 DIR_tell(FileHandle *handle);
 static int DIR_seek(FileHandle *handle, PHYSFS_uint64 offset);
@@ -35,10 +39,10 @@ static LinkedStringList *DIR_enumerateFiles(DirHandle *h,
                                             const char *dname,
                                             int omitSymLinks);
 static int DIR_exists(DirHandle *h, const char *name);
-static int DIR_isDirectory(DirHandle *h, const char *name);
-static int DIR_isSymLink(DirHandle *h, const char *name);
-static FileHandle *DIR_openRead(DirHandle *h, const char *filename);
-static PHYSFS_sint64 DIR_getLastModTime(DirHandle *h, const char *name);
+static int DIR_isDirectory(DirHandle *h, const char *name, int *fileExists);
+static int DIR_isSymLink(DirHandle *h, const char *name, int *fileExists);
+static FileHandle *DIR_openRead(DirHandle *h, const char *fnm, int *exist);
+static PHYSFS_sint64 DIR_getLastModTime(DirHandle *h, const char *f, int *e);
 static FileHandle *DIR_openWrite(DirHandle *h, const char *filename);
 static FileHandle *DIR_openAppend(DirHandle *h, const char *filename);
 static int DIR_remove(DirHandle *h, const char *name);
@@ -58,7 +62,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 static const FileFunctions __PHYSFS_FileFunctions_DIR =
 {
     DIR_read,       /* read() method       */
-    NULL,           /* write() method      */
+    DIR_dummyWrite, /* write() method      */
     DIR_eof,        /* eof() method        */
     DIR_tell,       /* tell() method       */
     DIR_seek,       /* seek() method       */
@@ -69,7 +73,7 @@ static const FileFunctions __PHYSFS_FileFunctions_DIR =
 
 static const FileFunctions __PHYSFS_FileFunctions_DIRW =
 {
-    NULL,           /* read() method       */
+    DIR_dummyRead,  /* read() method       */
     DIR_write,      /* write() method      */
     DIR_eof,        /* eof() method        */
     DIR_tell,       /* tell() method       */
@@ -114,6 +118,20 @@ static PHYSFS_sint64 DIR_write(FileHandle *handle, const void *buffer,
     retval = __PHYSFS_platformWrite(handle->opaque, buffer, objSize, objCount);
     return(retval);
 } /* DIR_write */
+
+
+static PHYSFS_sint64 DIR_dummyRead(FileHandle *handle, void *buffer,
+                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
+} /* DIR_dummyRead */
+
+
+static PHYSFS_sint64 DIR_dummyWrite(FileHandle *handle, const void *buffer,
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
+} /* DIR_dummyWrite */
 
 
 static int DIR_eof(FileHandle *handle)
@@ -217,37 +235,45 @@ static int DIR_exists(DirHandle *h, const char *name)
 } /* DIR_exists */
 
 
-static int DIR_isDirectory(DirHandle *h, const char *name)
+static int DIR_isDirectory(DirHandle *h, const char *name, int *fileExists)
 {
     char *d = __PHYSFS_platformCvtToDependent((char *)(h->opaque), name, NULL);
-    int retval;
+    int retval = 0;
 
     BAIL_IF_MACRO(d == NULL, NULL, 0);
-    retval = __PHYSFS_platformIsDirectory(d);
+    *fileExists = __PHYSFS_platformExists(d);
+    if (*fileExists)
+        retval = __PHYSFS_platformIsDirectory(d);
     free(d);
     return(retval);
 } /* DIR_isDirectory */
 
 
-static int DIR_isSymLink(DirHandle *h, const char *name)
+static int DIR_isSymLink(DirHandle *h, const char *name, int *fileExists)
 {
     char *f = __PHYSFS_platformCvtToDependent((char *)(h->opaque), name, NULL);
-    int retval;
+    int retval = 0;
 
     BAIL_IF_MACRO(f == NULL, NULL, 0);
-    retval = __PHYSFS_platformIsSymLink(f);
+    *fileExists = __PHYSFS_platformExists(f);
+    if (*fileExists)
+        retval = __PHYSFS_platformIsSymLink(f);
     free(f);
     return(retval);
 } /* DIR_isSymLink */
 
 
-static PHYSFS_sint64 DIR_getLastModTime(DirHandle *h, const char *name)
+static PHYSFS_sint64 DIR_getLastModTime(DirHandle *h,
+                                        const char *name,
+                                        int *fileExists)
 {
     char *d = __PHYSFS_platformCvtToDependent((char *)(h->opaque), name, NULL);
-    PHYSFS_sint64 retval;
+    PHYSFS_sint64 retval = -1;
 
     BAIL_IF_MACRO(d == NULL, NULL, 0);
-    retval = __PHYSFS_platformGetLastModTime(d);
+    *fileExists = __PHYSFS_platformExists(d);
+    if (*fileExists)
+        retval = __PHYSFS_platformGetLastModTime(d);
     free(d);
     return(retval);
 } /* DIR_getLastModTime */
@@ -255,13 +281,23 @@ static PHYSFS_sint64 DIR_getLastModTime(DirHandle *h, const char *name)
 
 static FileHandle *doOpen(DirHandle *h, const char *name,
                           void *(*openFunc)(const char *filename),
-                          const FileFunctions *fileFuncs)
+                          int *fileExists, const FileFunctions *fileFuncs)
 {
     char *f = __PHYSFS_platformCvtToDependent((char *)(h->opaque), name, NULL);
     void *rc;
     FileHandle *retval;
 
     BAIL_IF_MACRO(f == NULL, NULL, NULL);
+
+    if (fileExists != NULL)
+    {
+        *fileExists = __PHYSFS_platformExists(f);
+        if (!(*fileExists))
+        {
+            free(f);
+            return(NULL);
+        } /* if */
+    } /* if */
 
     retval = (FileHandle *) malloc(sizeof (FileHandle));
     if (!retval)
@@ -287,23 +323,23 @@ static FileHandle *doOpen(DirHandle *h, const char *name,
 } /* doOpen */
 
 
-static FileHandle *DIR_openRead(DirHandle *h, const char *filename)
+static FileHandle *DIR_openRead(DirHandle *h, const char *fnm, int *exist)
 {
-    return(doOpen(h, filename, __PHYSFS_platformOpenRead,
+    return(doOpen(h, fnm, __PHYSFS_platformOpenRead, exist,
                   &__PHYSFS_FileFunctions_DIR));
 } /* DIR_openRead */
 
 
 static FileHandle *DIR_openWrite(DirHandle *h, const char *filename)
 {
-    return(doOpen(h, filename, __PHYSFS_platformOpenWrite,
+    return(doOpen(h, filename, __PHYSFS_platformOpenWrite, NULL,
                   &__PHYSFS_FileFunctions_DIRW));
 } /* DIR_openWrite */
 
 
 static FileHandle *DIR_openAppend(DirHandle *h, const char *filename)
 {
-    return(doOpen(h, filename, __PHYSFS_platformOpenAppend,
+    return(doOpen(h, filename, __PHYSFS_platformOpenAppend, NULL,
                   &__PHYSFS_FileFunctions_DIRW));
 } /* DIR_openAppend */
 
