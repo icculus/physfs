@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+03192003 - Fixed problem in PHYSFS_mkdir() when dirs to be created already
+           exist. Fixed problem where PHYSFS_mkdir() incorrectly tripped an
+           alarm in __PHYSFS_verifySecurity().
 03122003 - Attempt at cleaning up some type correctness for VC++6. Made QPAK
            archiver case-insensitive (since Quake2 has problems without it).
 01302003 - Added buffering API to OS/2 build's exported symbol list. Updated
