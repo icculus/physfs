@@ -1,10 +1,6 @@
 
- -----------------------------------------------------------------------------
-   Please note that the win32 and macos support files are out of date, but
-   will be corrected shortly.  --ryan.
- -----------------------------------------------------------------------------
-
-
+The latest PhysicsFS information and releases can be found at:
+  http://icculus.org/physfs/
 
 Building is (ahem) very easy.
 
@@ -14,8 +10,11 @@ ALL PLATFORMS:
 Please understand your rights and mine: read the text file LICENSE in the root
 of the source tree. If you can't abide by it, delete this source tree now.
 
-The best documentation for the PhysicsFS API is physfs.h. It is VERY heavily
-commented, and makes an excellent, in-depth reference to all the functions.
+If you've got Doxygen (http://www.doxygen.org/) installed, you can run it
+ without any command line arguments in the root of the source tree to generate
+ the API reference. This is optional. You can browse the API docs online
+ here:  http://icculus.org/physfs/docs/
+
 
 
 UNIX and BeOS:
@@ -30,26 +29,28 @@ As root, run "make install".
 If you get sick of the library, run "make uninstall" as root and it will
 remove all traces of the library from the system paths.
 
+BeOS doesn't seem to be building shared libraries with the version of
+autoconf/automake I used (even though it swears it did). If anyone has some
+insight into this, I'd like to hear from you.
+
+
 
 WIN32:
-If building with CygWin, follow the Unix instructions, above.
+If building with CygWin, mingw32 or something else that uses the GNU
+toolchain, follow the Unix instructions, above.
 
-Otherwise, get http://icculus.org/physfs/downloads/physfs-win32-support.zip,
-and unpack in the root of the source directory, preserving directory names. If
-you did it correctly, there should be a file named "physfs.dsp" in the
-same directory as "physfs.h". That zipfile has Visual C project files for
-Visual Studio 6.0 and Visual Studio .NET. If you're using Visual C, point the
-IDE at physfs.dsp, and build. If you're using any other compiler, send me a
-patch when you get it working.  :)
+Point Visual Studio 6.0 at "physfs.dsp" in the root of the source tree, and
+build. This will produce a "physfs.dll" and "physfs.lib" (shared library and
+import lib, respectively) in either a "Debug" or "Release" directory,
+depending on what configuration you chose to build. After building the lib,
+you can make sure it works by building the "test_physfs.dsp" project file,
+which will create "test_physfs.exe" in "Debug" or "Release". This EXE is
+linked against the DLL you built previously.
 
-IMPORTANT: If you are using anything older than Visual Studio.NET, you
-will _NEED_ to upgrade to the latest Platform SDK from Microsoft. It is a
-free download: http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
-Be sure to install _at least_ the Core SDK and the WMI SDK. Even though you
-need these SDK updates, the compiled PhysicsFS DLL should work on any win32
-platform from Win95 and WinNT 4.0 and later. IF YOU ARE MISSING CONSTANTS
-AND/OR THE PROJECT REFUSES TO LINK, YOUR PLATFORM SDK IS OUT OF DATE. Do _not_
-complain to us. Suck it up and upgrade your libraries.
+Visual Studio.NET probably handles these files, but we'll have honest-to-god
+.vcproj files in the next official release.
+
+If you're using another compiler, send me a patch when you get it working.  :)
 
 No one's tried building this for a WinCE (PocketPC) platform, but it may or
 may not work. Patches are welcome.
@@ -58,21 +59,47 @@ If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
 from you; send an email to icculus@clutteredmind.org.
 
 
+
 MACOS 8/9:
-Download http://icculus.org/physfs/downloads/mac_classic_support.sit and 
-unpack it in the root of the physfs folder. It should produce a folder 
-called "Mac Classic Support" that has CodeWarrior 6 project files.
+Double-click on "CWProjects.sit" in the root of the source tree. This will
+unpack into a folder called "Mac Classic Support", which has CodeWarrior 6
+project files.
+
+Point CodeWarrior at "physfs.mcp" in that new folder, and build. This will
+produce a "PhysicsFS" or "PhysicsFS Debug" shared library, depending on what
+configuration you chose to build. After building the lib, you can make sure
+it works by building the "test_physfs.mcp" project file, which will create
+"test_physfs" or "test_physfs Debug". These binaries are linked against the
+DLLs you built previously.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
 the Mac, I'd like to hear from you; send an email to icculus@clutteredmind.org.
 
 
+
+MACOS X:
+You (currently) need to use the freeware Apple Developer Tools, which are
+based on the GNU toolchain. Fire up a terminal and run "cc"...if this reports
+"no input files" then you've got the tools installed.
+
+From a terminal, run "./configure --disable-shared --enable-static". Run
+"make". This will get you a static library and a "test_physfs" binary.
+
+I would love for someone to fix this so it will build shared libraries (since
+static libraries make it awkward to deal with the license terms), or send me
+Project Builder libraries.
+
+If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
+MacOS X, I'd like to hear from you; send an email to icculus@clutteredmind.org.
+
+
+
 OTHER PLATFORMS:
-Many platforms, such as Solaris and MacOS X, might "just work" with the Unix
-autoconf tools. Some of these platforms are known to have worked at one time,
-but have not been heavily tested, if tested at all. To implement a new
-platform or archiver, please read the heavily-commented physfs_internal.h
-and look in the platform/ and archiver/ directories for examples.
+Many Unix-like platforms might "just work" with the GNU autoconf tools. Some
+of these platforms are known to have worked at one time, but have not been
+heavily tested, if tested at all. To implement a new platform or archiver,
+please read the heavily-commented physfs_internal.h and look in the platform/
+and archiver/ directories for examples.
 
 --ryan. (icculus@clutteredmind.org)
 
