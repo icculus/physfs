@@ -280,6 +280,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_FILE_NOT_FOUND       "File not found"
 #define ERR_NOT_AN_ARCHIVE       "Not an archive"
 #define ERR_CORRUPTED            "Corrupted archive"
+#define ERR_SEEK_OUT_OF_RANGE    "Seek out of range"
 
 
 /*
