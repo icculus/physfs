@@ -25,6 +25,14 @@
            and falls back to SearchPath() if there were problems. Changed an
            occurence of _MAX_PATH to MAX_PATH, so both CygWin and Visual C can
            handle it.
+09012001 - Happy September. Moved the Visual C project files and the zlib
+           source to a separate download. Look for it at
+           http://icculus.org/physfs/downloads/physfs-win32-support.zip ...
+           Updated the INSTALL doc for Win32 building. Rewrote win32.c's
+           __PHYSFS_platformRealPath() to not rely on Visual C's runtime lib,
+           which was the last Cygwin incompatibility (although the Makefile
+           needs to be updated to build a DLL under Cygwin). Tinkered with the
+           Makefile a little, but it needs more work.
 
 --ryan. (icculus@clutteredmind.org)
 
