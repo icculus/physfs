@@ -7,7 +7,13 @@
            skipped file entries. Removed AC_C_CONST and AC_TYPE_SIZE_T checks
            from configure.in (not needed, and they broke BeOS build). Clean
            out the docs/ directory when doing a "make dist". Fixed crashbug
-           when calling PHYSFS_deinit() more than once in a row.
+           when calling PHYSFS_deinit() more than once in a row. Tried to get
+           MacOS X to build a shared library, gave up; I'm doing something
+           wrong in my Makefile.am, I think. On MacOS X, running ./configure
+           --enable-static --disable-shared works, though. Hopefully someone
+           will fix this soon. In unix.c, the Darwin version of
+           __PHYSFS_platformDetectAvailableCDs() was free()ing a static
+           buffer; fixed.
 06072002 - Manpages! Finally installed Doxygen and scratched together a
            Doxyfile. After some revision to physfs.h, we've got a rather
            nice API reference.
