@@ -102,24 +102,16 @@
  *  PHYSFS_getBaseDir(), and PHYSFS_getUserDir() for info on what those
  *  are and how they can help you determine an optimal search path.
  *
- * PhysicsFS is (sort of) NOT thread safe! The error messages returned by
- *  PHYSFS_getLastError are unique by thread, but that's it. Generally
- *  speaking, we'd have to request a mutex at the start of each function,
- *  and release it before returning. Not only is this REALLY slow, it requires
- *  a thread lock portability layer to be written. All that work is only
- *  necessary as a safety if the calling application is poorly written.
- *  Generally speaking, it is safe to call most functions that don't set state
- *  simultaneously; you can read and write and open and close different files
- *  at the same time in different threads, but trying to set the write path in
- *  one thread while opening a file for writing in another will, at best,
- *  cause a polite error, but depending on the race condition results, you may
- *  get a segfault and crash, too. Use your head, and implement you own thread
- *  locks where needed. Also, consider if you REALLY need a multithreaded
- *  solution in the first place.
+ * PhysicsFS is mostly thread safe. The error messages returned by
+ *  PHYSFS_getLastError are unique by thread, and library-state-setting
+ *  functions are mutex'd. For efficiency, individual file accesses are 
+ *  not locked, so you can not safely read/write/seek/close/etc the same 
+ *  file from two threads at the same time. Other race conditions are bugs 
+ *  that should be reported/patched.
  *
  * While you CAN use stdio/syscall file access in a program that has PHYSFS_*
  *  calls, doing so is not recommended, and you can not use system
- *  filehandles with PhysicsFS filehandles and vice versa.
+ *  filehandles with PhysicsFS and vice versa.
  *
  * Note that archives need not be named as such: if you have a ZIP file and
  *  rename it with a .PKG extension, the file will still be recognized as a
@@ -865,6 +857,10 @@ __EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos);
  *  @return size in bytes of the file. -1 if can't be determined.
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle);
+
+#if 0 /* !!! FIXME: add this? */
+#undef __EXPORT__
+#endif
 
 #ifdef __cplusplus
 }
