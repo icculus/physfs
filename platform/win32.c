@@ -70,10 +70,11 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 } /* __PHYSFS_detectAvailableCDs */
 
 
-static char *getExePath(void)
+static char *getExePath(const char *argv0)
 {
+    char *filepart = NULL;
     char *retval = (char *) malloc(sizeof (TCHAR) * (MAX_PATH + 1));
-    buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
+    DWORD buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
     retval[buflen] = '\0';  /* does API always null-terminate the string? */
 
         /* make sure the string was not truncated. */
@@ -103,14 +104,10 @@ static char *getExePath(void)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    DWORD buflen = 0;
-    char *retval = NULL;
-    char *filepart = NULL;
-
     if (strchr(argv0, '\\') != NULL)   /* default behaviour can handle this. */
         return(NULL);
 
-    return(getExePath());
+    return(getExePath(argv0));
 } /* __PHYSFS_platformCalcBaseDir */
 
 
@@ -175,8 +172,7 @@ char *__PHYSFS_platformGetUserDir(void)
         } /* if */
     } /* if */
 
-    /* screw it; it's the same as the base dir... */
-    return(getExePath());
+    return(NULL);
 } /* __PHYSFS_platformGetUserDir */
 
 
