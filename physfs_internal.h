@@ -88,6 +88,12 @@ typedef struct __PHYSFS_DIRREADER__
 } DirHandle;
 
 
+typedef struct __PHYSFS_LINKEDSTRINGLIST__
+{
+    char *str;
+    struct __PHYSFS_LINKEDSTRINGLIST__ *next;
+} LinkedStringList;
+
 /*
  * Symlinks should always be followed; PhysicsFS will use
  *  DirFunctions->isSymLink() and make a judgement on whether to
@@ -110,11 +116,14 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
     DirHandle *(*openArchive)(const char *name);
 
         /*
-         * Returns a list (freeable via PHYSFS_freeList()) of
-         *  all files in dirname.
+         * Returns a list of all files in dirname. Each element of this list
+         *  (and its "str" field) will be deallocated with the system's free()
+         *  function by the caller, so be sure to explicitly malloc() each
+         *  chunk.
+         * If you have a memory failure, return as much as you can.
          *  This dirname is in platform-independent notation.
          */
-    char **(*enumerateFiles)(DirHandle *r, const char *dirname);
+    LinkedStringList **(*enumerateFiles)(DirHandle *r, const char *dirname);
 
         /*
          * Returns non-zero if filename is really a directory.

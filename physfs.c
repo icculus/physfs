@@ -708,41 +708,109 @@ const char *PHYSFS_getRealDir(const char *filename)
 } /* PHYSFS_getRealDir */
 
 
+static void countList(LinkedStringList *list)
+{
+    int retval = 0;
+    LinkedStringList *i;
 
-/**
- * Get a file listing of a search path's directory. Matching directories are
- *  interpolated. That is, if "C:\mypath" is in the search path and contains a
- *  directory "savegames" that contains "x.sav", "y.sav", and "z.sav", and
- *  there is also a "C:\userpath" in the search path that has a "savegames"
- *  subdirectory with "w.sav", then the following code:
- *
- * ------------------------------------------------
- * char **rc = PHYSFS_enumerateFiles("savegames");
- * char **i;
- *
- * for (i = rc; *i != NULL; i++)
- *     printf("We've got [%s].\n", *i);
- *
- * PHYSFS_freeList(rc);
- * ------------------------------------------------
- *
- *  ...will print:
- *
- * ------------------------------------------------
- * We've got [x.sav].
- * We've got [y.sav].
- * We've got [z.sav].
- * We've got [w.sav].
- * ------------------------------------------------
- *
- * Don't forget to call PHYSFS_freeList() with the return value from this
- *  function when you are done with it.
- *
- *    @param path directory in platform-independent notation to enumerate.
- *   @return Null-terminated array of null-terminated strings.
- */
+    assert(list != NULL);
+
+    for (i = list; i != NULL; i = i->next)
+        retval++;
+
+    return(retval);
+} /* countList */
+
+
+static char **convertStringListToPhysFSList(LinkedStringList *finalList)
+{
+    int i;
+    LinkedStringList *next = NULL;
+    int len = countList(finalList);
+    char **retval = (char **) malloc((len + 1) * sizeof (char *));
+
+    if (retval == NULL)
+        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
+
+    for (i = 0; i < len; i++)
+    {
+        next = finalList->next;
+        if (retval == NULL)
+            free(finalList->str);
+        else
+            retval[i] = finalList->str;
+        free(finalList);
+        finalList = next;
+    } /* for */
+
+    if (retval != NULL);
+        retval[i] = NULL;
+
+    return(retval);
+} /* convertStringListToPhysFSList */
+
+
+static void insertStringListItem(LinkedStringList **final,
+                                 LinkedStringList *item)
+{
+    LinkedStringList *i;
+    LinkedStringList *prev = NULL;
+    int rc;
+
+    for (i = *final; i != NULL; i = i->next)
+    {
+        rc = strcmp(i->str, item->str);
+        if (rc == 0)      /* already in list. */
+        {
+            free(item->str);
+            free(item);
+            return;
+        } /* if */
+        else if (rc > 0)  /* insertion point. */
+        {
+            if (prev == NULL)
+                *final = item;
+            else
+                prev->next = item;
+            item->next = i;
+            return;
+        } /* else if */
+        prev = i;
+    } /* for */
+} /* insertStringListItem */
+
+
+/* if we run out of memory anywhere in here, we give back what we can. */
+static void interpolateStringLists(LinkedStringList **final,
+                                    LinkedStringList *newList)
+{
+    LinkedStringList *next = NULL;
+
+    while (newList != NULL)
+    {
+        next = newList->next;
+        insertStringListItem(final, newList);
+        newList = next;
+    } /* while */
+} /* interpolateStringLists */
+
+
 char **PHYSFS_enumerateFiles(const char *path)
 {
+    SearchDirInfo *i;
+    char **retval = NULL;
+    LinkedStringList *rc;
+    LinkedStringList *finalList = NULL;
+
+    for (i = searchPath; i != NULL; i = i->next)
+    {
+        assert(i->reader->funcs->enumerateFiles != NULL);
+        rc = i->reader->funcs->enumerateFiles(path);
+        interpolateStringLists(&finalList, rc);
+    } /* for */
+
+    retval = convertStringListToPhysFSList(finalList);
+    return(retval);
 } /* PHYSFS_enumerateFiles */
 
 
