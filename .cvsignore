@@ -23,3 +23,4 @@ libphysfs.la
 stamp-h.in
 stamp-h1
 physfs_byteorder.lo
+ltconfig
