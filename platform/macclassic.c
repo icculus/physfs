@@ -808,7 +808,27 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 
 PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, -1);  /* !!! FIXME! */
+    FSSpec spec;
+    CInfoPBRec infoPB;
+    UInt32 modDate;
+
+    BAIL_IF_MACRO(fnameToFSSpec(fname, &spec) != noErr, ERR_OS_ERROR, -1);
+
+    memset(&infoPB, '\0', sizeof (CInfoPBRec));
+    infoPB.dirInfo.ioNamePtr = spec.name;
+    infoPB.dirInfo.ioVRefNum = spec.vRefNum;
+    infoPB.dirInfo.ioDrDirID = spec.parID;
+    infoPB.dirInfo.ioFDirIndex = 0;
+    BAIL_IF_MACRO(PBGetCatInfoSync(&infoPB) != noErr, ERR_OS_ERROR, -1);
+
+    modDate = ((infoPB.dirInfo.ioFlAttrib & kioFlAttribDirMask) != 0) ?
+                   infoPB.dirInfo.ioDrMdDat : infoPB.hFileInfo.ioFlMdDat;
+
+    /* epoch is different on MacOS. They use Jan 1, 1904, apparently. */
+    /*  subtract seconds between those epochs, counting leap years.   */
+    modDate -= 2082844800;
+
+    return((PHYSFS_sint64) modDate);
 } /* __PHYSFS_platformGetLastModTime */
 
 /* end of macclassic.c ... */
