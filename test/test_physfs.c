@@ -297,7 +297,7 @@ static int cmd_setbuffer(char *args)
         args[strlen(args) - 1] = '\0';
     } /* if */
 
-    do_buffer_size = atoi(args);
+    do_buffer_size = (unsigned int) atoi(args);
     if (do_buffer_size)
     {
         printf("Further tests will set a (%lu) size buffer.\n",
@@ -350,14 +350,14 @@ static int cmd_stressbuffer(char *args)
             } /* if */
 
             strcpy(buf, "abcdefghijklmnopqrstuvwxyz0123456789");
-            srand(time(NULL));
+            srand((unsigned int) time(NULL));
 
             for (i = 0; i < 10; i++)
             {
                 for (j = 0; j < 10000; j++)
                 {
-                    int right = 1 + (int) (35.0 * rand() / (RAND_MAX + 1.0));
-                    int left = 36 - right;
+                    PHYSFS_uint32 right = 1 + (PHYSFS_uint32) (35.0 * rand() / (RAND_MAX + 1.0));
+                    PHYSFS_uint32 left = 36 - right;
                     if (PHYSFS_write(f, buf, left, 1) != 1)
                     {
                         printf("PHYSFS_write() failed: %s.\n", PHYSFS_getLastError());
@@ -429,8 +429,8 @@ static int cmd_stressbuffer(char *args)
             {
                 for (j = 0; j < 10000; j++)
                 {
-                    int right = 1 + (int) (35.0 * rand() / (RAND_MAX + 1.0));
-                    int left = 36 - right;
+                    PHYSFS_uint32 right = 1 + (PHYSFS_uint32) (35.0 * rand() / (RAND_MAX + 1.0));
+                    PHYSFS_uint32 left = 36 - right;
                     if (PHYSFS_read(f, buf2, left, 1) != 1)
                     {
                         printf("PHYSFS_read() failed: %s.\n", PHYSFS_getLastError());

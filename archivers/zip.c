@@ -54,7 +54,7 @@ typedef enum
     ZIP_RESOLVING,
     ZIP_RESOLVED,
     ZIP_BROKEN_FILE,
-    ZIP_BROKEN_SYMLINK,
+    ZIP_BROKEN_SYMLINK
 } ZipResolveType;
 
 
@@ -724,7 +724,7 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
                 memset(&stream, '\0', sizeof (z_stream));
                 stream.next_in = compressed;
                 stream.avail_in = compsize;
-                stream.next_out = path;
+                stream.next_out = (unsigned char *) path;
                 stream.avail_out = size;
                 if (zlib_err(inflateInit2(&stream, -MAX_WBITS)) == Z_OK)
                 {
@@ -882,7 +882,7 @@ static int zip_has_symlink_attr(ZIPentry *entry, PHYSFS_uint32 extern_attr)
 } /* zip_has_symlink_attr */
 
 
-PHYSFS_sint64 zip_dos_time_to_physfs_time(PHYSFS_uint32 dostime)
+static PHYSFS_sint64 zip_dos_time_to_physfs_time(PHYSFS_uint32 dostime)
 {
     PHYSFS_uint32 dosdate;
     struct tm unixtime;

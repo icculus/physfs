@@ -122,7 +122,7 @@ static void *stateLock = NULL;     /* protects other PhysFS static state. */
 
 /* functions ... */
 
-void __PHYSFS_bubble_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
+static void __PHYSFS_bubble_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
                          int (*cmpfn)(void *, PHYSFS_uint32, PHYSFS_uint32),
                          void (*swapfn)(void *, PHYSFS_uint32, PHYSFS_uint32))
 {
@@ -144,7 +144,7 @@ void __PHYSFS_bubble_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
 } /* __PHYSFS_bubble_sort */
 
 
-void __PHYSFS_quick_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
+static void __PHYSFS_quick_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
                          int (*cmpfn)(void *, PHYSFS_uint32, PHYSFS_uint32),
                          void (*swapfn)(void *, PHYSFS_uint32, PHYSFS_uint32))
 {
