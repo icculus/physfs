@@ -51,6 +51,9 @@ Debian package support:
 "abs-file.h" in "extras" dir:
     Adam D. Moss
 
+WinCE port and other Win32 patches:
+    Corona688
+
 Other stuff:
     Your name here! Patches go to icculus@clutteredmind.org ...
 
