@@ -1712,7 +1712,7 @@ static PHYSFS_sint64 doBufferedRead(PHYSFS_file *handle, void *buffer,
     {
         PHYSFS_uint64 buffered = h->buffill - h->bufpos;
         PHYSFS_uint64 mustread = (objSize * objCount) - remainder;
-        PHYSFS_uint32 copied;
+        PHYSFS_uint64 copied;
 
         if (buffered == 0) /* need to refill buffer? */
         {

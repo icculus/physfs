@@ -832,7 +832,7 @@ typedef struct __PHYSFS_FILEHANDLE__
         /*
          * This is the buffer size, if one is set (0 otherwise). Don't touch.
          */
-    PHYSFS_uint64 bufsize;
+    PHYSFS_uint32 bufsize;
 
         /*
          * This is the buffer fill size. Don't touch.
