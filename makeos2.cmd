@@ -6,9 +6,7 @@ rem This script (and, indeed, our OS/2 support) could use some tweaking.
 rem  Patches go to icculus@clutteredmind.org ...
 
 set DEBUGFLAGS=-D_NDEBUG -O2 -s
-rem set DEBUGFLAGS=-DDEBUG -g
 set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib114 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP
-
 
 @echo on
 mkdir bin
@@ -127,5 +125,4 @@ gcc %DEBUGFLAGS% -Zdll -Zcrtdll -Zomf -Zmt -Zmtd -o bin/physfs.dll bin/*.obj bin
 
 gcc %CFLAGS% -o bin/test_physfs.obj test/test_physfs.c
 gcc %DEBUGFLAGS% -Zomf -Zcrtdll -Zmt -Zmtd -o bin/test_physfs.exe bin/test_physfs.obj bin/physfs.lib bin/test_physfs.def
-
 
