@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+05232003 - Rewrote MacOSX/Darwin CD-ROM detection code to use IOKit, which is
+           much much more accurate than the previous code. Updated
+           configure.in and Makefile.am.newautomake for some MacOSX stuff.
 05222003 - Fixed win32 crash if PHYSFS_init() is called with a NULL.
 05182003 - PocketPC fixes (thanks, David Hedbor!)
 05162003 - Compiler warning cleanup in HOG and MVL archivers (Thanks, Bradley!)
