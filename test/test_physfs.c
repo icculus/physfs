@@ -174,7 +174,7 @@ static int cmd_mount(char *args)
     } /* else */
     appending = atoi(ptr + 1);
 
-    printf("[%s], [%s], [%d]\n", args, mntpoint, appending);
+    /*printf("[%s], [%s], [%d]\n", args, mntpoint, appending);*/
 
     if (PHYSFS_mount(args, mntpoint, appending))
         printf("Successful.\n");
@@ -1044,7 +1044,7 @@ static int process_command(char *complete_cmd)
         return(0);
     } /* if */
 
-    cmd_copy = malloc(strlen(complete_cmd) + 1);
+    cmd_copy = (char *) malloc(strlen(complete_cmd) + 1);
     if (cmd_copy == NULL)
     {
         printf("\n\n\nOUT OF MEMORY!\n\n\n");
@@ -1175,7 +1175,7 @@ int main(int argc, char **argv)
         buf = readline("> ");
 #else
         int i;
-        buf = malloc(512);
+        buf = (char *) malloc(512);
         memset(buf, '\0', 512);
         printf("> ");
         for (i = 0; i < 511; i++)
