@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+03122005 - Added evil GOTO_*_MACRO_* macros.
 02152005 - Minor comment fix in platform/pocketpc.c
 01052005 - Fixed HOG archiver file lookup (thanks, Chris!)
 12162004 - Fixed some documentation/header comment typos (thanks, Gaetan!)
