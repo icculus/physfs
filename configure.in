@@ -52,6 +52,7 @@ dnl Compilers and other tools
 dnl ---------------------------------------------------------------------
 
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_LIBTOOL
@@ -183,6 +184,10 @@ if test x$enable_readline = xyes; then
   fi
 fi
 
+AC_CHECK_HEADER(be/kernel/OS.h, this_is_beos=yes)
+if test x$this_is_beos = xyes; then
+  LIBS="$LIBS -lroot -lbe"
+fi
 
 # Checks for header files.
 AC_HEADER_STDC
