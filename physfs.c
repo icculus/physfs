@@ -32,7 +32,7 @@ typedef struct __PHYSFS_DIRINFO__
     char *dirName;
     DirHandle *dirHandle;
     struct __PHYSFS_DIRINFO__ *next;
-} DirInfo;
+} PhysDirInfo;
 
 typedef struct __PHYSFS_FILEHANDLELIST__
 {
@@ -87,8 +87,8 @@ static const DirFunctions *dirFunctions[] =
 /* General PhysicsFS state ... */
 static int initialized = 0;
 static ErrMsg *errorMessages = NULL;
-static DirInfo *searchPath = NULL;
-static DirInfo *writeDir = NULL;
+static PhysDirInfo *searchPath = NULL;
+static PhysDirInfo *writeDir = NULL;
 static FileHandleList *openWriteList = NULL;
 static FileHandleList *openReadList = NULL;
 static char *baseDir = NULL;
@@ -211,17 +211,17 @@ static DirHandle *openDirectory(const char *d, int forWriting)
 } /* openDirectory */
 
 
-static DirInfo *buildDirInfo(const char *newDir, int forWriting)
+static PhysDirInfo *buildDirInfo(const char *newDir, int forWriting)
 {
     DirHandle *dirHandle = NULL;
-    DirInfo *di = NULL;
+    PhysDirInfo *di = NULL;
 
     BAIL_IF_MACRO(newDir == NULL, ERR_INVALID_ARGUMENT, 0);
 
     dirHandle = openDirectory(newDir, forWriting);
     BAIL_IF_MACRO(dirHandle == NULL, NULL, 0);
 
-    di = (DirInfo *) malloc(sizeof (DirInfo));
+    di = (PhysDirInfo *) malloc(sizeof (PhysDirInfo));
     if (di == NULL)
     {
         dirHandle->funcs->dirClose(dirHandle);
@@ -244,7 +244,7 @@ static DirInfo *buildDirInfo(const char *newDir, int forWriting)
 
 
 /* MAKE SURE you've got the stateLock held before calling this! */
-static int freeDirInfo(DirInfo *di, FileHandleList *openList)
+static int freeDirInfo(PhysDirInfo *di, FileHandleList *openList)
 {
     FileHandleList *i;
 
@@ -460,8 +460,8 @@ static int closeFileHandleList(FileHandleList **list)
 /* MAKE SURE you hold the stateLock before calling this! */
 static void freeSearchPath(void)
 {
-    DirInfo *i;
-    DirInfo *next = NULL;
+    PhysDirInfo *i;
+    PhysDirInfo *next = NULL;
 
     closeFileHandleList(&openReadList);
 
@@ -591,9 +591,9 @@ int PHYSFS_setWriteDir(const char *newDir)
 
 int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
 {
-    DirInfo *di;
-    DirInfo *prev = NULL;
-    DirInfo *i;
+    PhysDirInfo *di;
+    PhysDirInfo *prev = NULL;
+    PhysDirInfo *i;
 
     __PHYSFS_platformGrabMutex(stateLock);
 
@@ -628,9 +628,9 @@ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
 
 int PHYSFS_removeFromSearchPath(const char *oldDir)
 {
-    DirInfo *i;
-    DirInfo *prev = NULL;
-    DirInfo *next = NULL;
+    PhysDirInfo *i;
+    PhysDirInfo *prev = NULL;
+    PhysDirInfo *next = NULL;
 
     BAIL_IF_MACRO(oldDir == NULL, ERR_INVALID_ARGUMENT, 0);
 
@@ -661,7 +661,7 @@ char **PHYSFS_getSearchPath(void)
 {
     int count = 1;
     int x;
-    DirInfo *i;
+    PhysDirInfo *i;
     char **retval;
 
     __PHYSFS_platformGrabMutex(stateLock);
@@ -983,7 +983,7 @@ int PHYSFS_delete(const char *fname)
 
 const char *PHYSFS_getRealDir(const char *filename)
 {
-    DirInfo *i;
+    PhysDirInfo *i;
 
     while (*filename == '/')
         filename++;
@@ -1098,7 +1098,7 @@ static void interpolateStringLists(LinkedStringList **final,
 
 char **PHYSFS_enumerateFiles(const char *path)
 {
-    DirInfo *i;
+    PhysDirInfo *i;
     char **retval = NULL;
     LinkedStringList *rc;
     LinkedStringList *finalList = NULL;
@@ -1137,7 +1137,7 @@ int PHYSFS_exists(const char *fname)
 
 int PHYSFS_isDirectory(const char *fname)
 {
-    DirInfo *i;
+    PhysDirInfo *i;
 
     BAIL_IF_MACRO(fname == NULL, ERR_INVALID_ARGUMENT, 0);
     while (*fname == '/')
@@ -1168,7 +1168,7 @@ int PHYSFS_isDirectory(const char *fname)
 
 int PHYSFS_isSymbolicLink(const char *fname)
 {
-    DirInfo *i;
+    PhysDirInfo *i;
 
     if (!allowSymLinks)
         return(0);
@@ -1254,7 +1254,7 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
     PHYSFS_file *retval;
     FileHandle *rc = NULL;
     FileHandleList *list;
-    DirInfo *i;
+    PhysDirInfo *i;
 
     BAIL_IF_MACRO(fname == NULL, ERR_INVALID_ARGUMENT, NULL);
     while (*fname == '/')
