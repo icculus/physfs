@@ -1,4 +1,11 @@
+/** \file physfs.h */
+
 /**
+ * \mainpage PhysicsFS
+ *
+ * The latest version of PhysicsFS can be found at:
+ *     http://icculus.org/physfs/
+ *
  * PhysicsFS; a portable, flexible file i/o abstraction.
  *
  * This API gives you access to a system file system in ways superior to the
@@ -120,10 +127,15 @@
  *
  * Currently supported archive types:
  *   - .ZIP (pkZip/WinZip/Info-ZIP compatible)
+ *   - .GRP (Build Engine groupfile archives)
  *
- * Please see the file LICENSE in the source's root directory.
+ * Please see the file LICENSE in the source's root directory for licensing
+ *  and redistribution rights.
  *
- *  This file written by Ryan C. Gordon.
+ * Please see the file CREDITS in the source's root directory for a complete
+ *  list of who's responsible for this.
+ *
+ *  \author Ryan C. Gordon.
  */
 
 #ifndef _INCLUDE_PHYSFS_H_
@@ -133,18 +145,64 @@
 extern "C" {
 #endif
 
+#ifndef DOXYGEN_SHOULD_IGNORE_THIS
 #if (defined _MSC_VER)
 #define __EXPORT__ __declspec(dllexport)
 #else
 #define __EXPORT__
 #endif
+#endif  /* DOXYGEN_SHOULD_IGNORE_THIS */
 
+/**
+ * \typedef PHYSFS_uint8
+ * \brief An unsigned, 8-bit integer type.
+ */
 typedef unsigned char         PHYSFS_uint8;
+
+/**
+ * \typedef PHYSFS_sint8
+ * \brief A signed, 8-bit integer type.
+ */
 typedef signed char           PHYSFS_sint8;
+
+/**
+ * \typedef PHYSFS_uint16
+ * \brief An unsigned, 16-bit integer type.
+ */
 typedef unsigned short        PHYSFS_uint16;
+
+/**
+ * \typedef PHYSFS_sint16
+ * \brief A signed, 16-bit integer type.
+ */
 typedef signed short          PHYSFS_sint16;
+
+/**
+ * \typedef PHYSFS_uint32
+ * \brief An unsigned, 32-bit integer type.
+ */
 typedef unsigned int          PHYSFS_uint32;
+
+/**
+ * \typedef PHYSFS_sint32
+ * \brief A signed, 32-bit integer type.
+ */
 typedef signed int            PHYSFS_sint32;
+
+/**
+ * \typedef PHYSFS_uint64
+ * \brief An unsigned, 64-bit integer type.
+ * \warning on platforms without any sort of 64-bit datatype, this is
+ *           equivalent to PHYSFS_uint32!
+ */
+
+/**
+ * \typedef PHYSFS_sint64
+ * \brief A signed, 64-bit integer type.
+ * \warning on platforms without any sort of 64-bit datatype, this is
+ *           equivalent to PHYSFS_sint32!
+ */
+
 
 #if (defined PHYSFS_NO_64BIT_SUPPORT)  /* oh well. */
 typedef PHYSFS_uint32         PHYSFS_uint64;
@@ -157,6 +215,8 @@ typedef unsigned long long    PHYSFS_uint64;
 typedef signed long long      PHYSFS_sint64;
 #endif
 
+
+#ifndef DOXYGEN_SHOULD_IGNORE_THIS
 /* Make sure the types really have the right sizes */
 #define PHYSFS_COMPILE_TIME_ASSERT(name, x)               \
        typedef int PHYSFS_dummy_ ## name[(x) * 2 - 1]
@@ -175,49 +235,121 @@ PHYSFS_COMPILE_TIME_ASSERT(sint64, sizeof(PHYSFS_sint64) == 8);
 
 #undef PHYSFS_COMPILE_TIME_ASSERT
 
+#endif  /* DOXYGEN_SHOULD_IGNORE_THIS */
 
 
-typedef struct __PHYSFS_FILE__
+/**
+ * \struct PHYSFS_file
+ * \brief A PhysicsFS file handle.
+ *
+ * You get a pointer to one of these when you open a file for reading,
+ *  writing, or appending via PhysicsFS.
+ *
+ * As you can see from the lack of meaningful fields, you should treat this
+ *  as opaque data. Don't try to manipulate the file handle, just pass the
+ *  pointer you got, unmolested, to various PhysicsFS APIs.
+ *
+ * \sa PHYSFS_openRead
+ * \sa PHYSFS_openWrite
+ * \sa PHYSFS_openAppend
+ * \sa PHYSFS_close
+ * \sa PHYSFS_read
+ * \sa PHYSFS_write
+ * \sa PHYSFS_seek
+ * \sa PHYSFS_tell
+ * \sa PHYSFS_eof
+ */
+typedef struct
 {
-    void *opaque;
+    void *opaque;  /**< That's all you get. Don't touch. */
 } PHYSFS_file;
 
-typedef struct __PHYSFS_ARCHIVEINFO__
+
+
+/**
+ * \struct PHYSFS_ArchiveInfo
+ * \brief Information on various PhysicsFS-supported archives.
+ *
+ * This structure gives you details on what sort of archives are supported
+ *  by this implementation of PhysicsFS. Archives tend to be things like
+ *  ZIP files and such.
+ *
+ * \warning Not all binaries are created equal! PhysicsFS can be built with
+ *          or without support for various archives. You can check with
+ *          PHYSFS_supportedArchiveTypes() to see if your archive type is
+ *          supported.
+ *
+ * \sa PHYSFS_supportedArchiveTypes
+ */
+typedef struct
 {
-    const char *extension;
-    const char *description;
-    const char *author;
-    const char *url;
+    const char *extension;   /**< Archive file extension: "ZIP", for example. */
+    const char *description; /**< Human-readable archive description. */
+    const char *author;      /**< Person who did support for this archive. */
+    const char *url;         /**< URL related to this archive */
 } PHYSFS_ArchiveInfo;
 
-
-/* functions... */
-
-typedef struct __PHYSFS_VERSION__
+/**
+ * \struct PHYSFS_Version
+ * \brief Information the version of PhysicsFS in use.
+ *
+ * Represents the library's version as three levels: major revision
+ *  (increments with massive changes, additions, and enhancements),
+ *  minor revision (increments with backwards-compatible changes to the
+ *  major revision), and patchlevel (increments with fixes to the minor
+ *  revision).
+ *
+ * \sa PHYSFS_VERSION
+ * \sa PHYFS_getLinkedVersion
+ */
+typedef struct
 {
-    PHYSFS_uint8 major;
-    PHYSFS_uint8 minor;
-    PHYSFS_uint8 patch;
+    PHYSFS_uint8 major; /**< major revision */
+    PHYSFS_uint8 minor; /**< minor revision */
+    PHYSFS_uint8 patch; /**< patchlevel */
 } PHYSFS_Version;
 
+#ifndef DOXYGEN_SHOULD_IGNORE_THIS
 #define PHYSFS_VER_MAJOR 0
 #define PHYSFS_VER_MINOR 1
 #define PHYSFS_VER_PATCH 6
-
-#define PHYSFS_VERSION(x) { \
-                            (x)->major = PHYSFS_VER_MAJOR; \
-                            (x)->minor = PHYSFS_VER_MINOR; \
-                            (x)->patch = PHYSFS_VER_PATCH; \
-                          }
+#endif  /* DOXYGEN_SHOULD_IGNORE_THIS */
 
 /**
- * Get the version of PhysicsFS that is linked against your program. If you
- *  are using a shared library (DLL) version of PhysFS, then it is possible
- *  that it will be different than the version you compiled against.
+ * \def PHYSFS_VERSION(x)
+ * \brief Macro to determine PhysicsFS version program was compiled against.
+ *
+ * This macro fills in a PHYSFS_Version structure with the version of the
+ *  library you compiled against. This is determined by what header the
+ *  compiler uses. Note that if you dynamically linked the library, you might
+ *  have a slightly newer or older version at runtime. That version can be
+ *  determined with PHYSFS_getLinkedVersion(), which, unlike PHYSFS_VERSION,
+ *  is not a macro.
+ *
+ * \param x A pointer to a PHYSFS_Version struct to initialize.
+ *
+ * \sa PHYSFS_Version
+ * \sa PHYSFS_getLinkedVersion
+ */
+#define PHYSFS_VERSION(x) \
+{ \
+    (x)->major = PHYSFS_VER_MAJOR; \
+    (x)->minor = PHYSFS_VER_MINOR; \
+    (x)->patch = PHYSFS_VER_PATCH; \
+}
+
+
+/**
+ * \fn void PHYSFS_getLinkedVersion(PHYSFS_Version *ver)
+ * \brief Get the version of PhysicsFS that is linked against your program.
+ *
+ * If you are using a shared library (DLL) version of PhysFS, then it is
+ *  possible that it will be different than the version you compiled against.
  *
  * This is a real function; the macro PHYSFS_VERSION tells you what version
  *  of PhysFS you compiled against:
  *
+ * \code
  * PHYSFS_Version compiled;
  * PHYSFS_Version linked;
  *
@@ -227,29 +359,43 @@ typedef struct __PHYSFS_VERSION__
  *           compiled.major, compiled.minor, compiled.patch);
  * printf("But we linked against PhysFS version %d.%d.%d.\n",
  *           linked.major, linked.minor, linked.patch);
+ * \endcode
  *
  * This function may be called safely at any time, even before PHYSFS_init().
+ *
+ * \sa PHYSFS_VERSION
  */
 __EXPORT__ void PHYSFS_getLinkedVersion(PHYSFS_Version *ver);
 
 
 /**
- * Initialize PhysicsFS. This must be called before any other PhysicsFS
- *  function.
+ * \fn int PHYSFS_init(const char *argv0)
+ * \brief Initialize the PhysicsFS library.
+ *
+ * This must be called before any other PhysicsFS function.
  *
  * This should be called prior to any attempts to change your process's
  *  current working directory.
  *
- *   @param argv0 the argv[0] string passed to your program's mainline.
- *  @return nonzero on success, zero on error. Specifics of the error can be
+ *   \param argv0 the argv[0] string passed to your program's mainline.
+ *          This may be NULL on most platforms (such as ones without a
+ *          standard main() function), but you should always try to pass
+ *          something in here. Unix-like systems such as Linux _need_ to
+ *          pass argv[0] from main() in here.
+ *  \return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_deinit
  */
 __EXPORT__ int PHYSFS_init(const char *argv0);
 
 
 /**
- * Shutdown PhysicsFS. This closes any files opened via PhysicsFS, blanks the
- *  search/write paths, frees memory, and invalidates all of your handles.
+ * \fn int PHYSFS_deinit(void)
+ * \brief Deinitialize the PhysicsFS library.
+ *
+ * This closes any files opened via PhysicsFS, blanks the search/write paths,
+ *  frees memory, and invalidates all of your file handles.
  *
  * Note that this call can FAIL if there's a file open for writing that
  *  refuses to close (for example, the underlying operating system was
@@ -262,14 +408,19 @@ __EXPORT__ int PHYSFS_init(const char *argv0);
  *  restart the subsystem. All defaults API states are restored at this
  *  point.
  *
- *  @return nonzero on success, zero on error. Specifics of the error can be
+ *  \return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError(). If failure, state of PhysFS is
  *          undefined, and probably badly screwed up.
+ *
+ * \sa PHYSFS_init
  */
 __EXPORT__ int PHYSFS_deinit(void);
 
 
 /**
+ * \fn const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void)
+ * \brief Get a list of supported archive types.
+ *
  * Get a list of archive types supported by this implementation of PhysicFS.
  *  These are the file formats usable for search path entries. This is for
  *  informational purposes only. Note that the extension listed is merely
@@ -279,6 +430,7 @@ __EXPORT__ int PHYSFS_deinit(void);
  * The returned value is an array of pointers to PHYSFS_ArchiveInfo structures,
  *  with a NULL entry to signify the end of the list:
  *
+ * \code
  * PHYSFS_ArchiveInfo **i;
  *
  * for (i = PHYSFS_supportedArchiveTypes(); *i != NULL; i++)
@@ -286,25 +438,36 @@ __EXPORT__ int PHYSFS_deinit(void);
  *     printf("Supported archive: [%s], which is [%s].\n",
  *              i->extension, i->description);
  * }
+ * \endcode
  *
  * The return values are pointers to static internal memory, and should
  *  be considered READ ONLY, and never freed.
  *
- *   @return READ ONLY Null-terminated array of READ ONLY structures.
+ *   \return READ ONLY Null-terminated array of READ ONLY structures.
  */
 __EXPORT__ const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void);
 
 
 /**
+ * \fn void PHYSFS_freeList(void *listVar)
+ * \brief Deallocate resources of lists returned by PhysicsFS.
+ *
  * Certain PhysicsFS functions return lists of information that are
  *  dynamically allocated. Use this function to free those resources.
  *
- *   @param list List of information specified as freeable by this function.
+ *   \param listVar List of information specified as freeable by this function.
+ *
+ * \sa PHYSFS_getCdRomDirs
+ * \sa PHYSFS_enumerateFiles
+ * \sa PHYSFS_getSearchPath
  */
 __EXPORT__ void PHYSFS_freeList(void *listVar);
 
 
 /**
+ * \fn const char *PHYSFS_getLastError(void)
+ * \brief Get human-readable error information.
+ *
  * Get the last PhysicsFS error message as a null-terminated string.
  *  This will be NULL if there's been no error since the last call to this
  *  function. The pointer returned by this call points to an internal buffer.
@@ -313,29 +476,34 @@ __EXPORT__ void PHYSFS_freeList(void *listVar);
  *  with that thread. It is safe to call this function at anytime, even
  *  before PHYSFS_init().
  *
- *   @return READ ONLY string of last error message.
+ *   \return READ ONLY string of last error message.
  */
 __EXPORT__ const char *PHYSFS_getLastError(void);
 
 
 /**
- * Get a platform-dependent dir separator. This is "\\" on win32, "/" on Unix,
- *  and ":" on MacOS. It may be more than one character, depending on the
- *  platform, and your code should take that into account. Note that this is
- *  only useful for setting up the search/write paths, since access into those
- *  dirs always use '/' (platform-independent notation) to separate
- *  directories. This is also handy for getting platform-independent access
- *  when using stdio calls.
+ * \fn const char *PHYSFS_getDirSeparator(void)
+ * \brief Get platform-dependent dir separator string.
  *
- *   @return READ ONLY null-terminated string of platform's dir separator.
+ * This returns "\\\\" on win32, "/" on Unix, and ":" on MacOS. It may be more
+ *  than one character, depending on the platform, and your code should take
+ *  that into account. Note that this is only useful for setting up the
+ *  search/write paths, since access into those dirs always use '/'
+ *  (platform-independent notation) to separate directories. This is also
+ *  handy for getting platform-independent access when using stdio calls.
+ *
+ *   \return READ ONLY null-terminated string of platform's dir separator.
  */
 __EXPORT__ const char *PHYSFS_getDirSeparator(void);
 
 
 /**
- * Enable symbolic links. Some physical filesystems and archives contain
- *  files that are just pointers to other files. On the physical filesystem,
- *  opening such a link will (transparently) open the file that is pointed to.
+ * \fn void PHYSFS_permitSymbolicLinks(int allow)
+ * \brief Enable or disable following of symbolic links.
+ *
+ * Some physical filesystems and archives contain files that are just pointers
+ *  to other files. On the physical filesystem, opening such a link will
+ *  (transparently) open the file that is pointed to.
  *
  * By default, PhysicsFS will check if a file is really a symlink during open
  *  calls and fail if it is. Otherwise, the link could take you outside the
@@ -352,16 +520,17 @@ __EXPORT__ const char *PHYSFS_getDirSeparator(void);
  *  in platform-independent notation. That is, when setting up your
  *  search and write paths, etc, symlinks are never checked for.
  *
- * Symbolic link permission can be enabled or disabled at any time, and is
- *  disabled by default.
+ * Symbolic link permission can be enabled or disabled at any time after
+ *  you've called PHYSFS_init(), and is disabled by default.
  *
- *   @param allow nonzero to permit symlinks, zero to deny linking.
+ *   \param allow nonzero to permit symlinks, zero to deny linking.
  */
 __EXPORT__ void PHYSFS_permitSymbolicLinks(int allow);
 
 
 /**
- * Get an array of dirs to available CD-ROM drives.
+ * \fn char **PHYSFS_getCdRomDirs(void)
+ * \brief Get an array of paths to available CD-ROM drives.
  *
  * The dirs returned are platform-dependent ("D:\" on Win32, "/cdrom" or
  *  whatnot on Unix). Dirs are only returned if there is a disc ready and
@@ -374,6 +543,7 @@ __EXPORT__ void PHYSFS_permitSymbolicLinks(int allow);
  * The returned value is an array of strings, with a NULL entry to signify the
  *  end of the list:
  *
+ * \code
  * char **cds = PHYSFS_getCdRomDirs();
  * char **i;
  *
@@ -381,18 +551,22 @@ __EXPORT__ void PHYSFS_permitSymbolicLinks(int allow);
  *     printf("cdrom dir [%s] is available.\n", *i);
  *
  * PHYSFS_freeList(cds);
+ * \endcode
  *
  * This call may block while drives spin up. Be forewarned.
  *
  * When you are done with the returned information, you may dispose of the
  *  resources by calling PHYSFS_freeList() with the returned pointer.
  *
- *   @return Null-terminated array of null-terminated strings.
+ *   \return Null-terminated array of null-terminated strings.
  */
 __EXPORT__ char **PHYSFS_getCdRomDirs(void);
 
 
 /**
+ * \fn const char *PHYSFS_getBaseDir(void)
+ * \brief Get the path where the application resides.
+ *
  * Helper function.
  *
  * Get the "base dir". This is the directory where the application was run
@@ -401,12 +575,17 @@ __EXPORT__ char **PHYSFS_getCdRomDirs(void);
  *
  * You should probably use the base dir in your search path.
  *
- *  @return READ ONLY string of base dir in platform-dependent notation.
+ *  \return READ ONLY string of base dir in platform-dependent notation.
+ *
+ * \sa PHYSFS_getUserDir
  */
 __EXPORT__ const char *PHYSFS_getBaseDir(void);
 
 
 /**
+ * \fn const char *PHYSFS_getUserDir(void)
+ * \brief Get the path where user's home directory resides.
+ *
  * Helper function.
  *
  * Get the "user dir". This is meant to be a suggestion of where a specific
@@ -419,21 +598,31 @@ __EXPORT__ const char *PHYSFS_getBaseDir(void);
  * You should probably use the user dir as the basis for your write dir, and
  *  also put it near the beginning of your search path.
  *
- *  @return READ ONLY string of user dir in platform-dependent notation.
+ *  \return READ ONLY string of user dir in platform-dependent notation.
+ *
+ * \sa PHYSFS_getBaseDir
  */
 __EXPORT__ const char *PHYSFS_getUserDir(void);
 
 
 /**
+ * \fn const char *PHYSFS_getWriteDir(void)
+ * \brief Get path where PhysicsFS will allow file writing.
+ *
  * Get the current write dir. The default write dir is NULL.
  *
- *  @return READ ONLY string of write dir in platform-dependent notation,
+ *  \return READ ONLY string of write dir in platform-dependent notation,
  *           OR NULL IF NO WRITE PATH IS CURRENTLY SET.
+ *
+ * \sa PHYSFS_setWriteDir
  */
 __EXPORT__ const char *PHYSFS_getWriteDir(void);
 
 
 /**
+ * \fn int PHYSFS_setWriteDir(const char *newDir)
+ * \brief Tell PhysicsFS where it may write files.
+ *
  * Set a new write dir. This will override the previous setting. If the
  *  directory or a parent directory doesn't exist in the physical filesystem,
  *  PhysicsFS will attempt to create them as needed.
@@ -441,34 +630,42 @@ __EXPORT__ const char *PHYSFS_getWriteDir(void);
  * This call will fail (and fail to change the write dir) if the current
  *  write dir still has files open in it.
  *
- *   @param newDir The new directory to be the root of the write dir,
+ *   \param newDir The new directory to be the root of the write dir,
  *                   specified in platform-dependent notation. Setting to NULL
  *                   disables the write dir, so no files can be opened for
  *                   writing via PhysicsFS.
- *  @return non-zero on success, zero on failure. All attempts to open a file
+ *  \return non-zero on success, zero on failure. All attempts to open a file
  *           for writing via PhysicsFS will fail until this call succeeds.
  *           Specifics of the error can be gleaned from PHYSFS_getLastError().
  *
+ * \sa PHYSFS_getWriteDir
  */
 __EXPORT__ int PHYSFS_setWriteDir(const char *newDir);
 
 
 /**
- * Add a directory or archive to the search path. If this is a duplicate, the
- *  entry is not added again, even though the function succeeds.
+ * \fn int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
+ * \brief Add an archive or directory to the search path.
  *
- *   @param newDir directory or archive to add to the path, in
+ * If this is a duplicate, the entry is not added again, even though the
+ *  function succeeds.
+ *
+ *   \param newDir directory or archive to add to the path, in
  *                   platform-dependent notation.
- *   @param appendToPath nonzero to append to search path, zero to prepend.
- *  @return nonzero if added to path, zero on failure (bogus archive, dir
+ *   \param appendToPath nonzero to append to search path, zero to prepend.
+ *  \return nonzero if added to path, zero on failure (bogus archive, dir
  *                   missing, etc). Specifics of the error can be
  *                   gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_removeFromSearchPath
+ * \sa PHYSFS_getSearchPath
  */
 __EXPORT__ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath);
 
 
 /**
- * Remove a directory or archive from the search path.
+ * \fn int PHYSFS_removeFromSearchPath(const char *oldDir)
+ * \brief Remove a directory or archive from the search path.
  *
  * This must be a (case-sensitive) match to a dir or archive already in the
  *  search path, specified in platform-dependent notation.
@@ -476,38 +673,52 @@ __EXPORT__ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath);
  * This call will fail (and fail to remove from the path) if the element still
  *  has files open in it.
  *
- *    @param oldDir dir/archive to remove.
- *   @return nonzero on success, zero on failure.
+ *    \param oldDir dir/archive to remove.
+ *   \return nonzero on success, zero on failure.
  *            Specifics of the error can be gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_addToSearchPath
+ * \sa PHYSFS_getSearchPath
  */
 __EXPORT__ int PHYSFS_removeFromSearchPath(const char *oldDir);
 
 
 /**
- * Get the current search path. The default search path is an empty list.
+ * \fn char **PHYSFS_getSearchPath(void)
+ * \brief Get the current search path.
+ *
+ * The default search path is an empty list.
  *
  * The returned value is an array of strings, with a NULL entry to signify the
  *  end of the list:
  *
+ * \code
  * char **i;
  *
  * for (i = PHYSFS_getSearchPath(); *i != NULL; i++)
  *     printf("[%s] is in the search path.\n", *i);
+ * \endcode
  *
  * When you are done with the returned information, you may dispose of the
  *  resources by calling PHYSFS_freeList() with the returned pointer.
  *
- *   @return Null-terminated array of null-terminated strings. NULL if there
+ *   \return Null-terminated array of null-terminated strings. NULL if there
  *            was a problem (read: OUT OF MEMORY).
+ *
+ * \sa PHYSFS_addToSearchPath
+ * \sa PHYSFS_removeFromSearchPath
  */
 __EXPORT__ char **PHYSFS_getSearchPath(void);
 
 
 /**
+ * \fn int PHYSFS_setSaneConfig(const char *organization, const char *appName, const char *archiveExt, int includeCdRoms, int archivesFirst)
+ * \brief Set up sane, default paths.
+ *
  * Helper function.
  *
- * Set up sane, default paths. The write dir will be set to
- *  "userdir/.organization/appName", which is created if it doesn't exist.
+ * The write dir will be set to "userdir/.organization/appName", which is
+ *  created if it doesn't exist.
  *
  * The above is sufficient to make sure your program's configuration directory
  *  is separated from other clutter, and platform-independent. The period
@@ -529,20 +740,20 @@ __EXPORT__ char **PHYSFS_getSearchPath(void);
  * All of this can be accomplished from the application, but this just does it
  *  all for you. Feel free to add more to the search path manually, too.
  *
- *    @param organization Name of your company/group/etc to be used as a
+ *    \param organization Name of your company/group/etc to be used as a
  *                         dirname, so keep it small, and no-frills.
  *
- *    @param appName Program-specific name of your program, to separate it
+ *    \param appName Program-specific name of your program, to separate it
  *                   from other programs using PhysicsFS.
  *
- *    @param archiveExt File extention used by your program to specify an
+ *    \param archiveExt File extention used by your program to specify an
  *                      archive. For example, Quake 3 uses "pk3", even though
  *                      they are just zipfiles. Specify NULL to not dig out
  *                      archives automatically. Do not specify the '.' char;
  *                      If you want to look for ZIP files, specify "ZIP" and
  *                      not ".ZIP" ... the archive search is case-insensitive.
  *
- *    @param includeCdRoms Non-zero to include CD-ROMs in the search path, and
+ *    \param includeCdRoms Non-zero to include CD-ROMs in the search path, and
  *                         (if (archiveExt) != NULL) search them for archives.
  *                         This may cause a significant amount of blocking
  *                         while discs are accessed, and if there are no discs
@@ -551,10 +762,10 @@ __EXPORT__ char **PHYSFS_getSearchPath(void);
  *                         want to specify zero and handle the disc setup
  *                         yourself.
  *
- *    @param archivesFirst Non-zero to prepend the archives to the search path.
+ *    \param archivesFirst Non-zero to prepend the archives to the search path.
  *                          Zero to append them. Ignored if !(archiveExt).
  *
- *  @return nonzero on success, zero on error. Specifics of the error can be
+ *  \return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_setSaneConfig(const char *organization,
@@ -565,9 +776,12 @@ __EXPORT__ int PHYSFS_setSaneConfig(const char *organization,
 
 
 /**
- * Create a directory. This is specified in platform-independent notation in
- *  relation to the write dir. All missing parent directories are also
- *  created if they don't exist.
+ * \fn int PHYSFS_mkdir(const char *dirName)
+ * \brief Create a directory.
+ *
+ * This is specified in platform-independent notation in relation to the
+ *  write dir. All missing parent directories are also created if they
+ *  don't exist.
  *
  * So if you've got the write dir set to "C:\mygame\writedir" and call
  *  PHYSFS_mkdir("downloads/maps") then the directories
@@ -576,16 +790,21 @@ __EXPORT__ int PHYSFS_setSaneConfig(const char *organization,
  *  have successfully created "downloads", then the function leaves the
  *  created directory behind and reports failure.
  *
- *   @param dirname New dir to create.
- *  @return nonzero on success, zero on error. Specifics of the error can be
+ *   \param dirName New dir to create.
+ *  \return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_delete
  */
 __EXPORT__ int PHYSFS_mkdir(const char *dirName);
 
 
 /**
- * Delete a file or directory. This is specified in platform-independent
- *  notation in relation to the write dir.
+ * \fn int PHYSFS_delete(const char *filename)
+ * \brief Delete a file or directory.
+ *
+ * (filename) is specified in platform-independent notation in relation to the
+ *  write dir.
  *
  * A directory must be empty before this call can delete it.
  *
@@ -606,20 +825,22 @@ __EXPORT__ int PHYSFS_mkdir(const char *dirName);
  *  made available to be written over at a later point. Don't consider this
  *  a security method or anything.  :)
  *
- *   @param filename Filename to delete.
- *  @return nonzero on success, zero on error. Specifics of the error can be
+ *   \param filename Filename to delete.
+ *  \return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_delete(const char *filename);
 
 
 /**
- * Figure out where in the search path a file resides. The file is specified
- *  in platform-independent notation. The returned filename will be the
- *  element of the search path where the file was found, which may be a
- *  directory, or an archive. Even if there are multiple matches in different
- *  parts of the search path, only the first one found is used, just like
- *  when opening a file.
+ * \fn const char *PHYSFS_getRealDir(const char *filename)
+ * \brief Figure out where in the search path a file resides.
+ *
+ * The file is specified in platform-independent notation. The returned
+ *  filename will be the element of the search path where the file was found,
+ *  which may be a directory, or an archive. Even if there are multiple
+ *  matches in different parts of the search path, only the first one found
+ *  is used, just like when opening a file.
  *
  * So, if you look for "maps/level1.map", and C:\mygame is in your search
  *  path and C:\mygame\maps\level1.map exists, then "C:\mygame" is returned.
@@ -628,8 +849,8 @@ __EXPORT__ int PHYSFS_delete(const char *filename);
  *  permitted symlinks, then it will be ignored, and the search for a match
  *  will continue.
  *
- *     @param filename file to look for.
- *    @return READ ONLY string of element of search path containing the
+ *     \param filename file to look for.
+ *    \return READ ONLY string of element of search path containing the
  *             the file in question. NULL if not found.
  */
 __EXPORT__ const char *PHYSFS_getRealDir(const char *filename);
@@ -637,30 +858,31 @@ __EXPORT__ const char *PHYSFS_getRealDir(const char *filename);
 
 
 /**
- * Get a file listing of a search path's directory. Matching directories are
- *  interpolated. That is, if "C:\mydir" is in the search path and contains a
- *  directory "savegames" that contains "x.sav", "y.sav", and "z.sav", and
- *  there is also a "C:\userdir" in the search path that has a "savegames"
- *  subdirectory with "w.sav", then the following code:
+ * \fn char **PHYSFS_enumerateFiles(const char *dir)
+ * \brief Get a file listing of a search path's directory.
  *
- * ------------------------------------------------
+ * Matching directories are interpolated. That is, if "C:\mydir" is in the
+ *  search path and contains a directory "savegames" that contains "x.sav",
+ *  "y.sav", and "z.sav", and there is also a "C:\userdir" in the search path
+ *  that has a "savegames" subdirectory with "w.sav", then the following code:
+ *
+ * \code
  * char **rc = PHYSFS_enumerateFiles("savegames");
  * char **i;
  *
  * for (i = rc; *i != NULL; i++)
- *     printf("We've got [%s].\n", *i);
+ *     printf(" * We've got [%s].\n", *i);
  *
  * PHYSFS_freeList(rc);
- * ------------------------------------------------
+ * \endcode
  *
  *  ...will print:
  *
- * ------------------------------------------------
+ * \verbatim
  * We've got [x.sav].
  * We've got [y.sav].
  * We've got [z.sav].
- * We've got [w.sav].
- * ------------------------------------------------
+ * We've got [w.sav].\endverbatim
  *
  * Feel free to sort the list however you like. We only promise there will
  *  be no duplicates, but not what order the final list will come back in.
@@ -668,27 +890,36 @@ __EXPORT__ const char *PHYSFS_getRealDir(const char *filename);
  * Don't forget to call PHYSFS_freeList() with the return value from this
  *  function when you are done with it.
  *
- *    @param dir directory in platform-independent notation to enumerate.
- *   @return Null-terminated array of null-terminated strings.
+ *    \param dir directory in platform-independent notation to enumerate.
+ *   \return Null-terminated array of null-terminated strings.
  */
 __EXPORT__ char **PHYSFS_enumerateFiles(const char *dir);
 
 
 /**
- * Determine if there is an entry anywhere in the search path by the
+ * \fn int PHYSFS_exists(const char *fname)
+ * \brief Determine if a file exists in the search path.
+ *
+ * Reports true if there is an entry anywhere in the search path by the
  *  name of (fname).
  *
  * Note that entries that are symlinks are ignored if
  *  PHYSFS_permitSymbolicLinks(1) hasn't been called, so you
  *  might end up further down in the search path than expected.
  *
- *    @param fname filename in platform-independent notation.
- *   @return non-zero if filename exists. zero otherwise.
+ *    \param fname filename in platform-independent notation.
+ *   \return non-zero if filename exists. zero otherwise.
+ *
+ * \sa PHYSFS_isDirectory
+ * \sa PHYSFS_isSymbolicLink
  */
 __EXPORT__ int PHYSFS_exists(const char *fname);
 
 
 /**
+ * \fn int PHYSFS_isDirectory(const char *fname)
+ * \brief Determine if a file in the search path is really a directory.
+ *
  * Determine if the first occurence of (fname) in the search path is
  *  really a directory entry.
  *
@@ -696,13 +927,19 @@ __EXPORT__ int PHYSFS_exists(const char *fname);
  *  PHYSFS_permitSymbolicLinks(1) hasn't been called, so you
  *  might end up further down in the search path than expected.
  *
- *    @param fname filename in platform-independent notation.
- *   @return non-zero if filename exists and is a directory.  zero otherwise.
+ *    \param fname filename in platform-independent notation.
+ *   \return non-zero if filename exists and is a directory.  zero otherwise.
+ *
+ * \sa PHYSFS_exists
+ * \sa PHYSFS_isSymbolicLink
  */
 __EXPORT__ int PHYSFS_isDirectory(const char *fname);
 
 
 /**
+ * \fn int PHYSFS_isSymbolicLink(const char *fname)
+ * \brief Determine if a file in the search path is really a symbolic link.
+ *
  * Determine if the first occurence of (fname) in the search path is
  *  really a symbolic link.
  *
@@ -710,13 +947,19 @@ __EXPORT__ int PHYSFS_isDirectory(const char *fname);
  *  PHYSFS_permitSymbolicLinks(1) hasn't been called, and as such,
  *  this function will always return 0 in that case.
  *
- *    @param fname filename in platform-independent notation.
- *   @return non-zero if filename exists and is a symlink.  zero otherwise.
+ *    \param fname filename in platform-independent notation.
+ *   \return non-zero if filename exists and is a symlink.  zero otherwise.
+ *
+ * \sa PHYSFS_exists
+ * \sa PHYSFS_isDirectory
  */
 __EXPORT__ int PHYSFS_isSymbolicLink(const char *fname);
 
 
 /**
+ * \fn PHYSFS_file *PHYSFS_openWrite(const char *filename)
+ * \brief Open a file for writing.
+ *
  * Open a file for writing, in platform-independent notation and in relation
  *  to the write dir as the root of the writable filesystem. The specified
  *  file is created if it doesn't exist. If it does exist, it is truncated to
@@ -726,14 +969,22 @@ __EXPORT__ int PHYSFS_isSymbolicLink(const char *fname);
  *  PHYSFS_permitSymbolicLinks(1) hasn't been called, and opening a
  *  symlink with this function will fail in such a case.
  *
- *   @param filename File to open.
- *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
+ *   \param filename File to open.
+ *  \return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_openRead
+ * \sa PHYSFS_openAppend
+ * \sa PHYSFS_write
+ * \sa PHYSFS_close
  */
 __EXPORT__ PHYSFS_file *PHYSFS_openWrite(const char *filename);
 
 
 /**
+ * \fn PHYSFS_file *PHYSFS_openAppend(const char *filename)
+ * \brief Open a file for appending.
+ *
  * Open a file for writing, in platform-independent notation and in relation
  *  to the write dir as the root of the writable filesystem. The specified
  *  file is created if it doesn't exist. If it does exist, the writing offset
@@ -744,14 +995,22 @@ __EXPORT__ PHYSFS_file *PHYSFS_openWrite(const char *filename);
  *  PHYSFS_permitSymbolicLinks(1) hasn't been called, and opening a
  *  symlink with this function will fail in such a case.
  *
- *   @param filename File to open.
- *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
+ *   \param filename File to open.
+ *  \return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_openRead
+ * \sa PHYSFS_openWrite
+ * \sa PHYSFS_write
+ * \sa PHYSFS_close
  */
 __EXPORT__ PHYSFS_file *PHYSFS_openAppend(const char *filename);
 
 
 /**
+ * \fn PHYSFS_file *PHYSFS_openRead(const char *filename)
+ * \brief Open a file for reading.
+ *
  * Open a file for reading, in platform-independent notation. The search path
  *  is checked one at a time until a matching file is found, in which case an
  *  abstract filehandle is associated with it, and reading may be done.
@@ -761,51 +1020,70 @@ __EXPORT__ PHYSFS_file *PHYSFS_openAppend(const char *filename);
  *  PHYSFS_permitSymbolicLinks(1) hasn't been called, and opening a
  *  symlink with this function will fail in such a case.
  *
- *   @param filename File to open.
- *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
+ *   \param filename File to open.
+ *  \return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_openWrite
+ * \sa PHYSFS_openAppend
+ * \sa PHYSFS_read
+ * \sa PHYSFS_close
  */
 __EXPORT__ PHYSFS_file *PHYSFS_openRead(const char *filename);
 
 
 /**
- * Close a PhysicsFS filehandle. This call is capable of failing if the
- *  operating system was buffering writes to this file, and (now forced to
- *  write those changes to physical media) can not store the data for any
- *  reason. In such a case, the filehandle stays open. A well-written program
- *  should ALWAYS check the return value from the close call in addition to
- *  every writing call!
+ * \fn int PHYSFS_close(PHYSFS_file *handle)
+ * \brief Close a PhysicsFS filehandle.
  *
- *   @param handle handle returned from PHYSFS_open*().
- *  @return nonzero on success, zero on error. Specifics of the error can be
+ * This call is capable of failing if the operating system was buffering
+ *  writes to the physical media, and, now forced to write those changes to
+ *  physical media, can not store the data for some reason. In such a case,
+ *  the filehandle stays open. A well-written program should ALWAYS check the
+ *  return value from the close call in addition to every writing call!
+ *
+ *   \param handle handle returned from PHYSFS_open*().
+ *  \return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_openRead
+ * \sa PHYSFS_openWrite
+ * \sa PHYSFS_openAppend
  */
 __EXPORT__ int PHYSFS_close(PHYSFS_file *handle);
 
 
 /**
- * Get the last modification time of a file. This is returned as a
- *  number of seconds since the epoch (Jan 1, 1970). The exact derivation
- *  and accuracy of this time depends on the particular archiver. If there
- *  is no reasonable way to obtain this information for a particular archiver,
- *  or there was some sort of error, this function returns (-1).
+ * \fn PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename)
+ * \brief Get the last modification time of a file.
  *
- *   @param filename filename to check.
- *  @return last modified time of the file. -1 if it can't be determined.
+ * The modtime is returned as a number of seconds since the epoch
+ *  (Jan 1, 1970). The exact derivation and accuracy of this time depends on
+ *  the particular archiver. If there is no reasonable way to obtain this
+ *  information for a particular archiver, or there was some sort of error,
+ *  this function returns (-1).
+ *
+ *   \param filename filename to check, in platform-independent notation.
+ *  \return last modified time of the file. -1 if it can't be determined.
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
 
 
 /**
- * Read data from a PhysicsFS filehandle. The file must be opened for reading.
+ * \fn PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle, void *buffer, PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+ * \brief Read data from a PhysicsFS filehandle
  *
- *   @param handle handle returned from PHYSFS_openRead().
- *   @param buffer buffer to store read data into.
- *   @param objSize size in bytes of objects being read from (handle).
- *   @param objCount number of (objSize) objects to read from (handle).
- *  @return number of objects read. PHYSFS_getLastError() can shed light on
+ * The file must be opened for reading.
+ *
+ *   \param handle handle returned from PHYSFS_openRead().
+ *   \param buffer buffer to store read data into.
+ *   \param objSize size in bytes of objects being read from (handle).
+ *   \param objCount number of (objSize) objects to read from (handle).
+ *  \return number of objects read. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount), as can PHYSFS_eof().
  *            -1 if complete failure.
+ *
+ * \sa PHYSFS_eof
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle,
                                      void *buffer,
@@ -813,13 +1091,16 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle,
                                      PHYSFS_uint32 objCount);
 
 /**
- * Write data to a PhysicsFS filehandle. The file must be opened for writing.
+ * \fn PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer, PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+ * \brief Write data to a PhysicsFS filehandle
  *
- *   @param handle retval from PHYSFS_openWrite() or PHYSFS_openAppend().
- *   @param buffer buffer to store read data into.
- *   @param objSize size in bytes of objects being read from (handle).
- *   @param objCount number of (objSize) objects to read from (handle).
- *  @return number of objects written. PHYSFS_getLastError() can shed light on
+ * The file must be opened for writing.
+ *
+ *   \param handle retval from PHYSFS_openWrite() or PHYSFS_openAppend().
+ *   \param buffer buffer to store read data into.
+ *   \param objSize size in bytes of objects being read from (handle).
+ *   \param objCount number of (objSize) objects to read from (handle).
+ *  \return number of objects written. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount). -1 if complete failure.
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle,
@@ -828,47 +1109,65 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle,
                                       PHYSFS_uint32 objCount);
 
 /**
+ * \fn int PHYSFS_eof(PHYSFS_file *handle)
+ * \brief Check for end-of-file state on a PhysicsFS filehandle.
+ *
  * Determine if the end of file has been reached in a PhysicsFS filehandle.
  *
- *   @param handle handle returned from PHYSFS_openRead().
- *  @return nonzero if EOF, zero if not.
+ *   \param handle handle returned from PHYSFS_openRead().
+ *  \return nonzero if EOF, zero if not.
+ *
+ * \sa PHYSFS_read
+ * \sa PHYSFS_tell
  */
 __EXPORT__ int PHYSFS_eof(PHYSFS_file *handle);
 
 
 /**
- * Determine current position within a PhysicsFS filehandle.
+ * \fn PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle)
+ * \brief Determine current position within a PhysicsFS filehandle.
  *
- *   @param handle handle returned from PHYSFS_open*().
- *  @return offset in bytes from start of file. -1 if error occurred.
+ *   \param handle handle returned from PHYSFS_open*().
+ *  \return offset in bytes from start of file. -1 if error occurred.
  *           Specifics of the error can be gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_seek
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle);
 
 
 /**
- * Seek to a new position within a PhysicsFS filehandle. The next read or write
- *  will occur at that place. Seeking past the beginning or end of the file is
- *  not allowed.
+ * \fn int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
+ * \brief Seek to a new position within a PhysicsFS filehandle.
  *
- *   @param handle handle returned from PHYSFS_open*().
- *   @param pos number of bytes from start of file to seek to.
- *  @return nonzero on success, zero on error. Specifics of the error can be
+ * The next read or write will occur at that place. Seeking past the
+ *  beginning or end of the file is not allowed, and causes an error.
+ *
+ *   \param handle handle returned from PHYSFS_open*().
+ *   \param pos number of bytes from start of file to seek to.
+ *  \return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_tell
  */
 __EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos);
 
 
 /**
- * Get total length of a file in bytes. Note that if the file size can't
- *  be determined (since the archive is "streamed" or whatnot) than this
- *  will report (-1). Also note that if another process/thread is writing
- *  to this file at the same time, then the information this function
- *  supplies could be incorrect before you get it. Use with caution, or
- *  better yet, don't use at all.
+ * \fn PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
+ * \brief Get total length of a file in bytes.
  *
- *   @param handle handle returned from PHYSFS_open*().
- *  @return size in bytes of the file. -1 if can't be determined.
+ * Note that if the file size can't be determined (since the archive is
+ *  "streamed" or whatnot) than this will report (-1). Also note that if
+ *  another process/thread is writing to this file at the same time, then
+ *  the information this function supplies could be incorrect before you
+ *  get it. Use with caution, or better yet, don't use at all.
+ *
+ *   \param handle handle returned from PHYSFS_open*().
+ *  \return size in bytes of the file. -1 if can't be determined.
+ *
+ * \sa PHYSFS_tell
+ * \sa PHYSFS_seek
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle);
 
@@ -876,118 +1175,166 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle);
 /* Byteorder stuff... */
 
 /**
+ * \fn PHYSFS_sint16 PHYSFS_swapSLE16(PHYSFS_sint16 val)
+ * \brief Swap littleendian signed 16 to platform's native byte order.
+ *
  * Take a 16-bit signed value in littleendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
  */
 __EXPORT__ PHYSFS_sint16 PHYSFS_swapSLE16(PHYSFS_sint16 val);
 
 
 /**
+ * \fn PHYSFS_uint16 PHYSFS_swapULE16(PHYSFS_uint16 val)
+ * \brief Swap littleendian unsigned 16 to platform's native byte order.
+ *
  * Take a 16-bit unsigned value in littleendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
  */
 __EXPORT__ PHYSFS_uint16 PHYSFS_swapULE16(PHYSFS_uint16 val);
 
 /**
+ * \fn PHYSFS_sint32 PHYSFS_swapSLE32(PHYSFS_sint32 val)
+ * \brief Swap littleendian signed 32 to platform's native byte order.
+ *
  * Take a 32-bit signed value in littleendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
  */
 __EXPORT__ PHYSFS_sint32 PHYSFS_swapSLE32(PHYSFS_sint32 val);
 
 
 /**
+ * \fn PHYSFS_uint32 PHYSFS_swapULE32(PHYSFS_uint32 val)
+ * \brief Swap littleendian unsigned 32 to platform's native byte order.
+ *
  * Take a 32-bit unsigned value in littleendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
  */
 __EXPORT__ PHYSFS_uint32 PHYSFS_swapULE32(PHYSFS_uint32 val);
 
 /**
+ * \fn PHYSFS_sint64 PHYSFS_swapSLE64(PHYSFS_sint64 val)
+ * \brief Swap littleendian signed 64 to platform's native byte order.
+ *
  * Take a 64-bit signed value in littleendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_swapSLE64(PHYSFS_sint64 val);
 
 
 /**
+ * \fn PHYSFS_uint64 PHYSFS_swapULE64(PHYSFS_uint64 val)
+ * \brief Swap littleendian unsigned 64 to platform's native byte order.
+ *
  * Take a 64-bit unsigned value in littleendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
  */
 __EXPORT__ PHYSFS_uint64 PHYSFS_swapULE64(PHYSFS_uint64 val);
 
 
 /**
+ * \fn PHYSFS_sint16 PHYSFS_swapSBE16(PHYSFS_sint16 val)
+ * \brief Swap bigendian signed 16 to platform's native byte order.
+ *
  * Take a 16-bit signed value in bigendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
  */
 __EXPORT__ PHYSFS_sint16 PHYSFS_swapSBE16(PHYSFS_sint16 val);
 
 
 /**
+ * \fn PHYSFS_uint16 PHYSFS_swapUBE16(PHYSFS_uint16 val)
+ * \brief Swap bigendian unsigned 16 to platform's native byte order.
+ *
  * Take a 16-bit unsigned value in bigendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
  */
 __EXPORT__ PHYSFS_uint16 PHYSFS_swapUBE16(PHYSFS_uint16 val);
 
 /**
+ * \fn PHYSFS_sint32 PHYSFS_swapSBE32(PHYSFS_sint32 val)
+ * \brief Swap bigendian signed 32 to platform's native byte order.
+ *
  * Take a 32-bit signed value in bigendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
  */
 __EXPORT__ PHYSFS_sint32 PHYSFS_swapSBE32(PHYSFS_sint32 val);
 
 
 /**
+ * \fn PHYSFS_uint32 PHYSFS_swapUBE32(PHYSFS_uint32 val)
+ * \brief Swap bigendian unsigned 32 to platform's native byte order.
+ *
  * Take a 32-bit unsigned value in bigendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
  */
 __EXPORT__ PHYSFS_uint32 PHYSFS_swapUBE32(PHYSFS_uint32 val);
 
 
 /**
+ * \fn PHYSFS_sint64 PHYSFS_swapSBE64(PHYSFS_sint64 val)
+ * \brief Swap bigendian signed 64 to platform's native byte order.
+ *
  * Take a 64-bit signed value in bigendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_swapSBE64(PHYSFS_sint64 val);
 
 
 /**
+ * \fn PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val)
+ * \brief Swap bigendian unsigned 64 to platform's native byte order.
+ *
  * Take a 64-bit unsigned value in bigendian format and convert it to
  *  the platform's native byte order.
  *
- *    @param val value to convert
- *   @return converted value.
+ *    \param val value to convert
+ *   \return converted value.
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
  */
 __EXPORT__ PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val);
 
