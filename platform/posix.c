@@ -43,6 +43,10 @@
 #include <fcntl.h>
 #include <assert.h>
 
+#ifdef PHYSFS_HAVE_LLSEEK
+#include <linux/unistd.h>
+#endif
+
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
@@ -429,8 +433,15 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
     int fd = *((int *) opaque);
 
-    /* !!! FIXME: Use llseek where available. */
-    BAIL_IF_MACRO(lseek(fd, (int) pos, SEEK_SET) == -1, strerror(errno), 0);
+    #ifdef PHYSFS_HAVE_LLSEEK
+      unsigned long offset_high = ((pos >> 32) & 0xFFFFFFFF);
+      unsigned long offset_low = (pos & 0xFFFFFFFF);
+      loff_t retoffset;
+      int rc = llseek(fd, offset_high, offset_low, &retoffset, SEEK_SET);
+      BAIL_IF_MACRO(rc == -1, strerror(errno), 0);
+    #else
+      BAIL_IF_MACRO(lseek(fd, (int) pos, SEEK_SET) == -1, strerror(errno), 0);
+    #endif
 
     return(1);
 } /* __PHYSFS_platformSeek */
@@ -439,8 +450,18 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
     int fd = *((int *) opaque);
-    PHYSFS_sint64 retval = lseek(fd, 0, SEEK_CUR);
-    BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
+    PHYSFS_sint64 retval;
+
+    #ifdef PHYSFS_HAVE_LLSEEK
+      loff_t retoffset;
+      int rc = llseek(fd, 0, &retoffset, SEEK_CUR);
+      BAIL_IF_MACRO(rc == -1, strerror(errno), -1);
+      retval = (PHYSFS_sint64) retoffset;
+    #else
+      retval = (PHYSFS_sint64) lseek(fd, 0, SEEK_CUR);
+      BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
+    #endif
+
     return(retval);
 } /* __PHYSFS_platformTell */
 
