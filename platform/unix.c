@@ -12,6 +12,10 @@
 
 #if (!defined __BEOS__) /* BeOS uses beos.cpp and posix.c ... */
 
+#if (defined WIN32) /* cygwin/mingw32? */
+#include "win32.c"  /* !!! FIXME: holy friggin' hack. */
+#else
+
 #if ((defined __APPLE__) && (defined __MACH__))
 #  if (!defined __DARWIN__)
 #    define __DARWIN__
@@ -301,6 +305,8 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 {
     pthread_mutex_unlock((pthread_mutex_t *) mutex);
 } /* __PHYSFS_platformReleaseMutex */
+
+#endif /* win32 check. */
 
 #endif /* !defined __BEOS__ */
 

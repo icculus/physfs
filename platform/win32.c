@@ -20,6 +20,10 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
+#ifndef _MSC_VER /* for Cygwin, etc. */
+#define _alloca alloca
+#endif
+
 #define LOWORDER_UINT64(pos)       (PHYSFS_uint32)(pos & 0x00000000FFFFFFFF)
 #define HIGHORDER_UINT64(pos)      (PHYSFS_uint32)(pos & 0xFFFFFFFF00000000)
 
@@ -701,7 +705,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     return retval;
 }
 
-PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, void *buffer,
+PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint32 size, PHYSFS_uint32 count)
 {
     HANDLE FileHandle;

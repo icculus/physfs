@@ -205,6 +205,16 @@ fi
 
 AC_MSG_RESULT([$this_is_beos])
 
+AC_MSG_CHECKING([if this is Cygwin])
+if test x$build_os = xcygwin; then
+  this_is_cygwin=yes
+  CFLAGS="$CFLAGS -DWIN32"
+else
+  this_is_cygwin=no
+fi
+
+AC_MSG_RESULT([$this_is_cygwin])
+
 this_is_macosx=no
 if test x$we_have_sed = xyes; then
   AC_MSG_CHECKING([if this is MacOS X])
@@ -237,6 +247,7 @@ AM_CONDITIONAL(BUILD_ZLIB, test x$enable_internal_zlib = xyes)
 AM_CONDITIONAL(BUILD_TEST_PHYSFS, test x$enable_testprog = xyes)
 AM_CONDITIONAL(BUILD_MACOSX, test x$this_is_macosx = xyes)
 AM_CONDITIONAL(BUILD_BEOS, test x$this_is_beos = xyes)
+AM_CONDITIONAL(BUILD_CYGWIN, test x$this_is_cygwin = xyes)
 
 LDFLAGS="$LDFLAGS -no-undefined"
 
