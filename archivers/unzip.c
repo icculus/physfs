@@ -145,7 +145,7 @@ local int unzlocal_getByte(fin,pi)
 	int *pi;
 {
     PHYSFS_uint8 c;
-	PHYSFS_sint64 err = __PHYSFS_platformRead(fin, &c, 1, 1);
+	PHYSFS_sint64 err = __PHYSFS_platformRead(fin, &c, sizeof (c), 1);
     if (err==1)
     {
         *pi = (int)c;
@@ -161,7 +161,6 @@ local int unzlocal_getByte(fin,pi)
 }
 
 
-/* !!! FIXME: Use PhysFS byteswap routines. */
 /* ===========================================================================
    Reads a long in LSB order from the given gz_stream. Sets 
 */
@@ -169,57 +168,55 @@ local int unzlocal_getShort (fin,pX)
 	void* fin;
     uLong *pX;
 {
-    uLong x ;
-    int i;
-    int err;
-
-    err = unzlocal_getByte(fin,&i);
-    x = (uLong)i;
-    
-    if (err==UNZ_OK)
-        err = unzlocal_getByte(fin,&i);
-    x += ((uLong)i)<<8;
-   
-    if (err==UNZ_OK)
-        *pX = x;
+    PHYSFS_uint16 val;
+	PHYSFS_sint64 err = __PHYSFS_platformRead(fin, &val, sizeof (val), 1);
+    if (err==1)
+    {
+        *pX = (uLong) PHYSFS_swapULE16(val);
+        return UNZ_OK;
+    }
     else
+    {
         *pX = 0;
-    return err;
+        if (__PHYSFS_platformEOF(fin)) 
+            return UNZ_EOF;
+        else
+            return UNZ_ERRNO;
+    }
+
+    return(UNZ_ERRNO);  /* shouldn't ever hit this. */
 }
 
-/* !!! FIXME: Use PhysFS byteswap routines. */
 local int unzlocal_getLong (fin,pX)
 	void* fin;
     uLong *pX;
 {
-    uLong x ;
-    int i;
-    int err;
-
-    err = unzlocal_getByte(fin,&i);
-    x = (uLong)i;
-    
-    if (err==UNZ_OK)
-        err = unzlocal_getByte(fin,&i);
-    x += ((uLong)i)<<8;
-
-    if (err==UNZ_OK)
-        err = unzlocal_getByte(fin,&i);
-    x += ((uLong)i)<<16;
-
-    if (err==UNZ_OK)
-        err = unzlocal_getByte(fin,&i);
-    x += ((uLong)i)<<24;
-   
-    if (err==UNZ_OK)
-        *pX = x;
+    PHYSFS_uint32 val;
+	PHYSFS_sint64 err = __PHYSFS_platformRead(fin, &val, sizeof (val), 1);
+    if (err==1)
+    {
+        *pX = (uLong) PHYSFS_swapULE32(val);
+        return UNZ_OK;
+    }
     else
+    {
         *pX = 0;
-    return err;
+        if (__PHYSFS_platformEOF(fin)) 
+            return UNZ_EOF;
+        else
+            return UNZ_ERRNO;
+    }
+
+    return(UNZ_ERRNO);  /* shouldn't ever hit this. */
 }
 
 
 /* My own strcmpi / strcasecmp */
+#if 1
+
+#define strcmpcasenosensitive_internal(x,y) __PHYSFS_platformStricmp(x,y)
+
+#else
 local int strcmpcasenosensitive_internal (fileName1,fileName2)
 	const char* fileName1;
 	const char* fileName2;
@@ -242,7 +239,7 @@ local int strcmpcasenosensitive_internal (fileName1,fileName2)
 			return 1;
 	}
 }
-
+#endif
 
 #ifdef  CASESENSITIVITYDEFAULT_NO
 #define CASESENSITIVITYDEFAULTVALUE 2
