@@ -207,6 +207,9 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h, const char *dirname)
     LinkedStringList *l = NULL;
     LinkedStringList *prev = NULL;
 
+    if (*dirname != '\0')   /* no directories in GRP files. */
+        return(NULL);
+
         /* jump to first file entry... */
     errno = 0;
     BAIL_IF_MACRO(fseek(fh, 16, SEEK_SET) == -1, strerror(errno), NULL);
