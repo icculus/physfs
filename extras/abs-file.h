@@ -1,5 +1,5 @@
 /*
- * stdio/physfs abstraction layer 2002-12-03
+ * stdio/physfs abstraction layer 2003-04-02
  *
  * Adam D. Moss <adam@gimp.org> <aspirin@icculus.org>
  *
@@ -15,7 +15,7 @@ you may embed this wrapper code within commercial software); PhysicsFS itself
 is (at the time of writing) released under a different license with
 additional restrictions.
 
-Copyright (C) 2002 Adam D. Moss (the "Author").  All Rights Reserved.
+Copyright (C) 2002-2003 Adam D. Moss (the "Author").  All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,8 @@ from the Author.
  * MY_GETC              fgetc(...)
  * MY_GETS              fgets(...)
  * MY_ATEOF             feof(...)
+ * MY_TELL              ftell(...)
+ * MY_SEEK              fseek(..., SEEK_SET)
  * MY_REWIND            rewind(...)
  * MY_SETBUFFER         (not a standard for stdio, does nothing there)
  */
@@ -140,7 +142,9 @@ static char * MY_GETS(char * const str, const int size,
 }
 #define MY_CLOSE(fp) PHYSFS_close(fp)
 #define MY_ATEOF(fp) PHYSFS_eof(fp)
-#define MY_REWIND(fp) PHYSFS_seek(fp,0)
+#define MY_TELL(fp) PHYSFS_tell(fp)
+#define MY_SEEK(fp,o) PHYSFS_seek(fp,o)
+#define MY_REWIND(fp) MY_SEEK(fp,0)
 
 #else
 
@@ -151,8 +155,11 @@ static char * MY_GETS(char * const str, const int size,
 #define MY_GETS(str,size,fp) fgets(str,size,fp)
 #define MY_CLOSE(fp) fclose(fp)
 #define MY_ATEOF(fp) feof(fp)
+#define MY_TELL(fp) ftell(fp)
+#define MY_SEEK(fp,o) fseek(fp,o, SEEK_SET)
 #define MY_REWIND(fp) rewind(fp)
-static void MY_SETBUFFER(const MY_FILETYPE *const file, const int num) { }
+/*static void MY_SETBUFFER(const MY_FILETYPE *const file, const int num) { }*/
+#define MY_SETBUFFER(fp,size)
 #endif
 
 #endif
