@@ -803,7 +803,7 @@ char * __PHYSFS_convertToDependent(const char *prepend,
     } /* if */
 
     return(str);
-} /* __PHYSFS_convertToDependentNotation */
+} /* __PHYSFS_convertToDependent */
 
 
 int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
@@ -1231,8 +1231,8 @@ int PHYSFS_close(PHYSFS_file *handle)
 } /* PHYSFS_close */
 
 
-int PHYSFS_read(PHYSFS_file *handle, void *buffer,
-                unsigned int objSize, unsigned int objCount)
+PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle, void *buffer,
+                          PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
@@ -1242,8 +1242,8 @@ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
 } /* PHYSFS_read */
 
 
-int PHYSFS_write(PHYSFS_file *handle, const void *buffer,
-                 unsigned int objSize, unsigned int objCount)
+PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer,
+                           PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
@@ -1263,7 +1263,7 @@ int PHYSFS_eof(PHYSFS_file *handle)
 } /* PHYSFS_eof */
 
 
-int PHYSFS_tell(PHYSFS_file *handle)
+PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
@@ -1273,7 +1273,7 @@ int PHYSFS_tell(PHYSFS_file *handle)
 } /* PHYSFS_tell */
 
 
-int PHYSFS_seek(PHYSFS_file *handle, int pos)
+int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
@@ -1284,7 +1284,7 @@ int PHYSFS_seek(PHYSFS_file *handle, int pos)
 } /* PHYSFS_seek */
 
 
-int PHYSFS_fileLength(PHYSFS_file *handle)
+PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);

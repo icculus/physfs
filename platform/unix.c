@@ -282,9 +282,9 @@ char *__PHYSFS_platformGetUserDir(void)
 } /* __PHYSFS_platformGetUserDir */
 
 
-int __PHYSFS_platformGetThreadID(void)
+PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 {
-    return((int) pthread_self());
+    return((PHYSFS_uint64) pthread_self());
 } /* __PHYSFS_platformGetThreadID */
 
 
@@ -481,15 +481,6 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
 } /* __PHYSFS_platformEnumerateFiles */
 
 
-int __PHYSFS_platformFileLength(FILE *handle)
-{
-    struct stat statbuf;
-    errno = 0;
-    BAIL_IF_MACRO(fstat(fileno(handle), &statbuf) == -1, strerror(errno), -1);
-    return(statbuf.st_size);
-} /* __PHYSFS_platformFileLength */
-
-
 char *__PHYSFS_platformCurrentDir(void)
 {
     int allocSize = 0;
@@ -504,20 +495,24 @@ char *__PHYSFS_platformCurrentDir(void)
         {
             if (retval != NULL)
                 free(retval);
-            BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+            BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
         } /* if */
-	
+
         retval = ptr;
         ptr = getcwd(retval, allocSize);
     } while (ptr == NULL && errno == ERANGE);
-    if(ptr == NULL && errno) {
-	/* getcwd() failed for some reason, for example current
-	 * directory not existing.
-	 */
-	if (retval != NULL)
-	    free(retval);
-	BAIL_IF_MACRO(1, ERR_NO_SUCH_FILE, NULL);
-    }
+
+    if (ptr == NULL && errno)
+    {
+            /*
+             * getcwd() failed for some reason, for example current
+             * directory not existing.
+             */
+        if (retval != NULL)
+            free(retval);
+        BAIL_MACRO(ERR_NO_SUCH_FILE, NULL);
+    } /* if */
+
     return(retval);
 } /* __PHYSFS_platformCurrentDir */
 
@@ -544,6 +539,119 @@ int __PHYSFS_platformMkDir(const char *path)
     BAIL_IF_MACRO(rc == -1, strerror(errno), 0);
     return(1);
 } /* __PHYSFS_platformMkDir */
+
+
+static void *doOpen(const char *filename, const char *mode)
+{
+    FILE *retval;
+    errno = 0;
+
+    retval = fopen(filename, mode);
+    if (retval == NULL)
+        __PHYSFS_setError(strerror(errno));
+
+    return((void *) retval);
+} /* doOpen */
+
+
+void *__PHYSFS_platformOpenRead(const char *filename)
+{
+    return(doOpen(filename, "rb"));
+} /* __PHYSFS_platformOpenRead */
+
+
+void *__PHYSFS_platformOpenWrite(const char *filename)
+{
+    return(doOpen(filename, "wb"));
+} /* __PHYSFS_platformOpenWrite */
+
+
+void *__PHYSFS_platformOpenAppend(const char *filename)
+{
+    return(doOpen(filename, "wb+"));
+} /* __PHYSFS_platformOpenAppend */
+
+
+PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
+                                    PHYSFS_uint32 size, PHYSFS_uint32 count)
+{
+    FILE *io = (FILE *) opaque;
+    int rc = fread(buffer, size, count, io);
+    if (rc < count)
+    {
+        int err = errno;
+        BAIL_IF_MACRO(ferror(io), strerror(err), rc);
+        BAIL_MACRO(ERR_PAST_EOF, rc);
+    } /* if */
+
+    return(rc);
+} /* __PHYSFS_platformRead */
+
+
+PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, void *buffer,
+                                     PHYSFS_uint32 size, PHYSFS_uint32 count)
+{
+    FILE *io = (FILE *) opaque;
+    int rc = fwrite(buffer, size, count, io);
+    if (rc < count)
+        __PHYSFS_setError(strerror(errno));
+
+    return(rc);
+} /* __PHYSFS_platformWrite */
+
+
+int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
+{
+    FILE *io = (FILE *) opaque;
+
+    /* !!! FIXME: Use llseek where available. */
+    errno = 0;
+    BAIL_IF_MACRO(fseek(io, pos, SEEK_SET) != 0, strerror(errno), 0);
+
+    return(1);
+} /* __PHYSFS_platformSeek */
+
+
+PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
+{
+    FILE *io = (FILE *) opaque;
+    PHYSFS_sint64 retval = ftell(io);
+    BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
+    return(retval);
+} /* __PHYSFS_platformTell */
+
+
+PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
+{
+    FILE *io = (FILE *) opaque;
+    struct stat statbuf;
+    errno = 0;
+    BAIL_IF_MACRO(fstat(fileno(io), &statbuf) == -1, strerror(errno), -1);
+    return((PHYSFS_sint64) statbuf.st_size);
+} /* __PHYSFS_platformFileLength */
+
+
+int __PHYSFS_platformEOF(void *opaque)
+{
+    return(feof((FILE *) opaque));
+} /* __PHYSFS_platformEOF */
+
+
+int __PHYSFS_platformFlush(void *opaque)
+{
+    int rc = fflush((FILE *) opaque);
+    BAIL_IF_MACRO(rc == EOF, strerror(errno), 0);
+    return(1);
+} /* __PHYSFS_platformFlush */
+
+
+int __PHYSFS_platformClose(void *opaque)
+{
+    int rc = fclose((FILE *) opaque);
+    BAIL_IF_MACRO(rc == EOF, strerror(errno), 0);
+    return(1);
+} /* __PHYSFS_platformClose */
+
 
 /* end of unix.c ... */
 

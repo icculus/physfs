@@ -16,14 +16,14 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-static int DIR_read(FileHandle *handle, void *buffer,
-                    unsigned int objSize, unsigned int objCount);
-static int DIR_write(FileHandle *handle, const void *buffer,
-                     unsigned int objSize, unsigned int objCount);
+static PHYSFS_sint64 DIR_read(FileHandle *handle, void *buffer,
+                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+static PHYSFS_sint64 DIR_write(FileHandle *handle, const void *buffer,
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static int DIR_eof(FileHandle *handle);
-static int DIR_tell(FileHandle *handle);
-static int DIR_seek(FileHandle *handle, int offset);
-static int DIR_fileLength(FileHandle *handle);
+static PHYSFS_sint64 DIR_tell(FileHandle *handle);
+static int DIR_seek(FileHandle *handle, PHYSFS_uint64 offset);
+static PHYSFS_sint64 DIR_fileLength(FileHandle *handle);
 static int DIR_fileClose(FileHandle *handle);
 static int DIR_isArchive(const char *filename, int forWriting);
 static DirHandle *DIR_openArchive(const char *name, int forWriting);
@@ -94,8 +94,8 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 #endif
 
 
-static int DIR_read(FileHandle *handle, void *buffer,
-                    unsigned int objSize, unsigned int objCount)
+static PHYSFS_sint64 DIR_read(FileHandle *handle, void *buffer,
+                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FILE *h = (FILE *) (handle->opaque);
     size_t retval;
@@ -109,8 +109,8 @@ static int DIR_read(FileHandle *handle, void *buffer,
 } /* DIR_read */
 
 
-static int DIR_write(FileHandle *handle, const void *buffer,
-                     unsigned int objSize, unsigned int objCount)
+static PHYSFS_sint64 DIR_write(FileHandle *handle, const void *buffer,
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FILE *h = (FILE *) (handle->opaque);
     size_t retval;
@@ -130,19 +130,19 @@ static int DIR_eof(FileHandle *handle)
 } /* DIR_eof */
 
 
-static int DIR_tell(FileHandle *handle)
+static PHYSFS_sint64 DIR_tell(FileHandle *handle)
 {
     return(ftell((FILE *) (handle->opaque)));
 } /* DIR_tell */
 
 
-static int DIR_seek(FileHandle *handle, int offset)
+static int DIR_seek(FileHandle *handle, PHYSFS_uint64 offset)
 {
     return(fseek((FILE *) (handle->opaque), offset, SEEK_SET) == 0);
 } /* DIR_seek */
 
 
-static int DIR_fileLength(FileHandle *handle)
+static PHYSFS_sint64 DIR_fileLength(FileHandle *handle)
 {
     return(__PHYSFS_platformFileLength((FILE *) (handle->opaque)));
 } /* DIR_fileLength */

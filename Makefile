@@ -136,7 +136,8 @@ BINDIR := bin
 SRCDIR := .
 
 CFLAGS += $(use_asm) -I$(SRCDIR) -I/usr/include/readline -D_REENTRANT -fsigned-char -DPLATFORM_UNIX
-CFLAGS += -Wall -Werror -fno-exceptions -fno-rtti -ansi -pedantic
+CFLAGS += -Wall -Werror -fno-exceptions -fno-rtti -ansi
+#-pedantic
 
 LDFLAGS += -lm
 

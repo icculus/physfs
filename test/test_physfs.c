@@ -41,8 +41,8 @@ static void output_versions(void)
            " Compiled against PhysicsFS version %d.%d.%d,\n"
            " and linked against %d.%d.%d.\n\n",
             TEST_VERSION_MAJOR, TEST_VERSION_MINOR, TEST_VERSION_PATCH,
-            compiled.major, compiled.minor, compiled.patch,
-            linked.major, linked.minor, linked.patch);
+            (int) compiled.major, (int) compiled.minor, (int) compiled.patch,
+            (int) linked.major, (int) linked.minor, (int) linked.patch);
 } /* output_versions */
 
 
@@ -336,8 +336,8 @@ static int cmd_cat(char *args)
         while (1)
         {
             char buffer[128];
-            int rc;
-            int i;
+            PHYSFS_sint64 rc;
+            PHYSFS_sint64 i;
             rc = PHYSFS_read(f, buffer, 1, sizeof (buffer));
 
             for (i = 0; i < rc; i++)
@@ -347,7 +347,10 @@ static int cmd_cat(char *args)
             {
                 printf("\n\n");
                 if (!PHYSFS_eof(f))
-                    printf("\n (Error condition in reading.)\n\n");
+                {
+                    printf("\n (Error condition in reading. Reason: [%s])\n\n",
+                           PHYSFS_getLastError());
+                } /* if */
                 PHYSFS_close(f);
                 return(1);
             } /* if */
