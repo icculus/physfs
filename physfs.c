@@ -12,11 +12,6 @@
 #  include <config.h>
 #endif
 
-#if (defined PHYSFS_PROFILING)
-#include <sys/time.h>
-#include <unistd.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -306,164 +301,6 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
      */
     __PHYSFS_quick_sort(entries, 0, max - 1, cmpfn, swapfn);
 } /* __PHYSFS_sort */
-
-
-
-#if (defined PHYSFS_PROFILING)
-
-#define PHYSFS_TEST_SORT_ITERATIONS 150
-#define PHYSFS_TEST_SORT_ELEMENTS   (64 * 1024)
-
-static int __PHYSFS_test_sort_cmp(void *_a, PHYSFS_uint32 x, PHYSFS_uint32 y)
-{
-    PHYSFS_sint32 *a = (PHYSFS_sint32 *) _a;
-    PHYSFS_sint32 one = a[x];
-    PHYSFS_sint32 two = a[y];
-
-    if (one < two)
-        return(-1);
-    else if (one > two)
-        return(1);
-
-    return(0);
-} /* __PHYSFS_test_sort_cmp */
-
-
-static void __PHYSFS_test_sort_swap(void *_a, PHYSFS_uint32 x, PHYSFS_uint32 y)
-{
-    PHYSFS_sint32 *a = (PHYSFS_sint32 *) _a;
-    PHYSFS_sint32 tmp;
-    tmp = a[x];
-    a[x] = a[y];
-    a[y] = tmp;
-} /* __PHYSFS_test_sort_swap */
-
-
-static int __PHYSFS_test_sort_do(PHYSFS_uint32 *timer,
-                         PHYSFS_sint32 *a, PHYSFS_uint32 max,
-                         int (*cmpfn)(void *, PHYSFS_uint32, PHYSFS_uint32),
-                         void (*swapfn)(void *, PHYSFS_uint32, PHYSFS_uint32))
-{
-    PHYSFS_uint32 i;
-    struct timeval starttime, endtime;
-
-    gettimeofday(&starttime, NULL);
-    __PHYSFS_sort(a, max, cmpfn, swapfn);
-    gettimeofday(&endtime, NULL);
-
-    for (i = 1; i < max; i++)
-    {
-        if (a[i] < a[i - 1])
-            return(0);
-    } /* for */
-
-    if (timer != NULL)
-    {
-        *timer = ( ((endtime.tv_sec  - starttime.tv_sec) * 1000) +
-                   ((endtime.tv_usec - starttime.tv_usec) / 1000) );
-    } /* if */
-
-    return(1);
-} /* __PHYSFS_test_sort_time */
-
-
-static void __PHYSFS_test_sort(void)
-{
-    PHYSFS_uint32 elasped[PHYSFS_TEST_SORT_ITERATIONS];
-    PHYSFS_sint32 iter;
-    PHYSFS_sint32 a[PHYSFS_TEST_SORT_ELEMENTS];
-    PHYSFS_sint32 i, x;
-    int success;
-
-    printf("Testing __PHYSFS_sort (linear presorted) ... ");
-    for (iter = 0; iter < PHYSFS_TEST_SORT_ITERATIONS; iter++)
-    {
-        /* set up array to sort. */
-        for (i = 0; i < PHYSFS_TEST_SORT_ELEMENTS; i++)
-            a[i] = i;
-
-        /* sort it. */
-        success = __PHYSFS_test_sort_do(&elasped[iter],
-                                        a, PHYSFS_TEST_SORT_ELEMENTS,
-                                        __PHYSFS_test_sort_cmp,
-                                        __PHYSFS_test_sort_swap);
-        if (!success)
-            break;
-    } /* for */
-
-    if (!success)
-        printf("Failed!\n");
-    else
-    {
-        for (x = 0, iter = 0; iter < PHYSFS_TEST_SORT_ITERATIONS; iter++)
-            x += elasped[iter];
-
-        x /= PHYSFS_TEST_SORT_ITERATIONS;
-        printf("Average run (%lu) ms.\n", (unsigned long) x);
-    } /* else */
-
-    printf("Testing __PHYSFS_sort (linear presorted reverse) ... ");
-    for (iter = 0; iter < PHYSFS_TEST_SORT_ITERATIONS; iter++)
-    {
-        /* set up array to sort. */
-        for (i = 0, x = PHYSFS_TEST_SORT_ELEMENTS;
-             i < PHYSFS_TEST_SORT_ELEMENTS;
-             i++, x--)
-        {
-            a[i] = x;
-        } /* for */
-
-        /* sort it. */
-        success = __PHYSFS_test_sort_do(&elasped[iter],
-                                        a, PHYSFS_TEST_SORT_ELEMENTS,
-                                        __PHYSFS_test_sort_cmp,
-                                        __PHYSFS_test_sort_swap);
-        if (!success)
-            break;
-    } /* for */
-
-    if (!success)
-        printf("Failed!\n");
-    else
-    {
-        for (x = 0, iter = 0; iter < PHYSFS_TEST_SORT_ITERATIONS; iter++)
-            x += elasped[iter];
-
-        x /= PHYSFS_TEST_SORT_ITERATIONS;
-        printf("Average run (%lu) ms.\n", (unsigned long) x);
-    } /* else */
-
-
-    printf("Testing __PHYSFS_sort (randomized) ... ");
-    for (iter = 0; iter < PHYSFS_TEST_SORT_ITERATIONS; iter++)
-    {
-        /* set up array to sort. */
-        for (i = 0; i < PHYSFS_TEST_SORT_ELEMENTS; i++)
-            a[i] = (PHYSFS_uint32) rand();
-
-        /* sort it. */
-        success = __PHYSFS_test_sort_do(&elasped[iter],
-                                        a, PHYSFS_TEST_SORT_ELEMENTS,
-                                        __PHYSFS_test_sort_cmp,
-                                        __PHYSFS_test_sort_swap);
-        if (!success)
-            break;
-    } /* for */
-
-    if (!success)
-        printf("Failed!\n");
-    else
-    {
-        for (x = 0, iter = 0; iter < PHYSFS_TEST_SORT_ITERATIONS; iter++)
-            x += elasped[iter];
-
-        x /= PHYSFS_TEST_SORT_ITERATIONS;
-        printf("Average run (%lu) ms.\n", (unsigned long) x);
-    } /* else */
-
-    printf("__PHYSFS_test_sort() complete.\n\n");
-} /* __PHYSFS_test_sort */
-#endif
 
 
 static ErrMsg *findErrorForCurrentThread(void)
@@ -864,18 +701,6 @@ int PHYSFS_init(const char *argv0)
 
     /* This makes sure that the error subsystem is initialized. */
     __PHYSFS_setError(PHYSFS_getLastError());
-
-#if (defined PHYSFS_PROFILING)
-    srand(time(NULL));
-    setbuf(stdout, NULL);
-    printf("\n");
-    printf("********************************************************\n");
-    printf("Warning! Profiling is built into this copy of PhysicsFS!\n");
-    printf("********************************************************\n");
-    printf("\n");
-    printf("\n");
-    __PHYSFS_test_sort();
-#endif
 
     return(1);
 } /* PHYSFS_init */
