@@ -309,14 +309,14 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h,
         if (l == NULL)
             break;
 
-        l->str = (char *) malloc(strlen(buf) + 1);
+        l->str = (char *) malloc(strlen((const char *) buf) + 1);
         if (l->str == NULL)
         {
             free(l);
             break;
         } /* if */
 
-        strcpy(l->str, buf);
+        strcpy(l->str, (const char *) buf);
 
         if (retval == NULL)
             retval = l;
@@ -332,7 +332,7 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h,
 
 
 static PHYSFS_sint32 getFileEntry(DirHandle *h, const char *name,
-                                  PHYSFS_sint32 *size)
+                                  PHYSFS_uint32 *size)
 {
     PHYSFS_uint8 buf[16];
     GRPinfo *g = (GRPinfo *) (h->opaque);
@@ -364,7 +364,7 @@ static PHYSFS_sint32 getFileEntry(DirHandle *h, const char *name,
 
         buf[12] = '\0';  /* FILENAME.EXT is all you get. */
 
-        if (__PHYSFS_platformStricmp(buf, name) == 0)
+        if (__PHYSFS_platformStricmp((const char *) buf, name) == 0)
         {
             if (size != NULL)
                 *size = l;
