@@ -711,6 +711,12 @@ int __PHYSFS_platformDeinit(void)
         userDir = NULL;
     } /* if */
 
+    if (libKernel32)
+    {
+        FreeLibrary(libKernel32);
+        libKernel32 = NULL;
+    } /* if */
+
     return(1); /* It's all good */
 } /* __PHYSFS_platformDeinit */
 
@@ -1044,6 +1050,7 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
     WIN32_FILE_ATTRIBUTE_DATA attrData;
     memset(&attrData, '\0', sizeof (attrData));
 
+    /* GetFileAttributesEx didn't show up until Win98 and NT4. */
     if (pGetFileAttributesEx != NULL)
     {
         if (pGetFileAttributesEx(fname, GetFileExInfoStandard, &attrData))
@@ -1057,14 +1064,23 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
         } /* if */
     } /* if */
 
+    /* GetFileTime() has been in the Win32 API since the start. */
     if (retval == -1)  /* try a fallback... */
     {
-        /* !!! FIXME: uhh...? */
+        FILETIME ft;
+        BOOL rc;
+        const char *err;
+        win32file *f = (win32file *) __PHYSFS_platformOpenRead(fname);
+        BAIL_IF_MACRO(f == NULL, NULL, -1)
+        rc = GetFileTime(f->handle, NULL, NULL, &ft);
+        err = win32strerror();
+        CloseHandle(f->handle);
+        free(f);
+        BAIL_IF_MACRO(!rc, err, -1);
+        retval = FileTimeToPhysfsTime(&ft);
     } /* if */
 
     return(retval);
-
-    /*return(FileTimeToPhysfsTime(&attrData.ftCreationTime));*/
 } /* __PHYSFS_platformGetLastModTime */
 
 /* end of win32.c ... */
