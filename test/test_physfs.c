@@ -714,10 +714,17 @@ static void trim_command(const char *orig, char *copy)
 static int process_command(char *complete_cmd)
 {
     const command_info *i;
-    char *cmd_copy = malloc(strlen(complete_cmd) + 1);
+    char *cmd_copy;
     char *args;
     int rc = 1;
 
+    if (complete_cmd == NULL)  /* can happen if user hits CTRL-D, etc. */
+    {
+        printf("\n");
+        return(0);
+    } /* if */
+
+    cmd_copy = malloc(strlen(complete_cmd) + 1);
     if (cmd_copy == NULL)
     {
         printf("\n\n\nOUT OF MEMORY!\n\n\n");
@@ -877,7 +884,8 @@ int main(int argc, char **argv)
 #endif
 
         rc = process_command(buf);
-        free(buf);
+        if (buf != NULL)
+            free(buf);
     } while (rc);
 
     if (!PHYSFS_deinit())
