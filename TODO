@@ -10,7 +10,6 @@ These are in no particular order. A 1.0 release is reliant on doing some of
   support so that both "archives" look identical to an application; might be
   nice for an email program. That's blue sky, unless someone wants to tackle
   it.
-- Need PHYSFS_LANG_GERMAN.
 - I'm a little nervous about the use of linked lists in qpak.c.
 - Add qpak.c and PHYSFS_SUPPORTS_QPAK to mac classic projects.
 - macclassic.c :
