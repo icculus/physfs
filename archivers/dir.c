@@ -97,82 +97,54 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 static PHYSFS_sint64 DIR_read(FileHandle *handle, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
-    FILE *h = (FILE *) (handle->opaque);
-    size_t retval;
-
-    errno = 0;
-    retval = fread(buffer, objSize, objCount, h);
-    BAIL_IF_MACRO((retval < (size_t) objCount) && (ferror(h)),
-                   strerror(errno), (int) retval);
-
-    return((int) retval);
+    PHYSFS_sint64 retval;
+    retval = __PHYSFS_platformRead(handle->opaque, buffer, objSize, objCount);
+    return(retval);
 } /* DIR_read */
 
 
 static PHYSFS_sint64 DIR_write(FileHandle *handle, const void *buffer,
                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
-    FILE *h = (FILE *) (handle->opaque);
-    size_t retval;
-
-    errno = 0;
-    retval = fwrite(buffer, (size_t) objSize, objCount, h);
-    if ( (retval < (signed int) objCount) && (ferror(h)) )
-        __PHYSFS_setError(strerror(errno));
-
-    return((int) retval);
+    PHYSFS_sint64 retval;
+    retval = __PHYSFS_platformWrite(handle->opaque, buffer, objSize, objCount);
+    return(retval);
 } /* DIR_write */
 
 
 static int DIR_eof(FileHandle *handle)
 {
-    return(feof((FILE *) (handle->opaque)));
+    return(__PHYSFS_platformEOF(handle->opaque));
 } /* DIR_eof */
 
 
 static PHYSFS_sint64 DIR_tell(FileHandle *handle)
 {
-    return(ftell((FILE *) (handle->opaque)));
+    return(__PHYSFS_platformTell(handle->opaque));
 } /* DIR_tell */
 
 
 static int DIR_seek(FileHandle *handle, PHYSFS_uint64 offset)
 {
-    return(fseek((FILE *) (handle->opaque), offset, SEEK_SET) == 0);
+    return(__PHYSFS_platformSeek(handle->opaque, offset));
 } /* DIR_seek */
 
 
 static PHYSFS_sint64 DIR_fileLength(FileHandle *handle)
 {
-    return(__PHYSFS_platformFileLength((FILE *) (handle->opaque)));
+    return(__PHYSFS_platformFileLength(handle->opaque));
 } /* DIR_fileLength */
 
 
 static int DIR_fileClose(FileHandle *handle)
 {
-    FILE *h = (FILE *) (handle->opaque);
-
-#if 0
     /*
-     * we manually fflush() the buffer, since that's the place fclose() will
+     * we manually flush the buffer, since that's the place a close will
      *  most likely fail, but that will leave the file handle in an undefined
-     *  state if it fails. fflush() failures we can recover from.
+     *  state if it fails. Flush failures we can recover from.
      */
-
-    /* keep trying until there's success or an unrecoverable error... */
-    do {
-        __PHYSFS_platformTimeslice();
-        errno = 0;
-    } while ( (fflush(h) == EOF) && ((errno == EAGAIN) || (errno == EINTR)) );
-
-    /* EBADF == "Not open for writing". That's fine. */
-    BAIL_IF_MACRO((errno != 0) && (errno != EBADF), strerror(errno), 0);
-#endif
-
-    /* if fclose fails anyhow, we just have to pray that it's still usable. */
-    errno = 0;
-    BAIL_IF_MACRO(fclose(h) == EOF, strerror(errno), 0);  /* (*shrug*) */
-
+    BAIL_IF_MACRO(!__PHYSFS_platformFlush(handle->opaque), NULL, 0);
+    BAIL_IF_MACRO(!__PHYSFS_platformClose(handle->opaque), NULL, 0);
     free(handle);
     return(1);
 } /* DIR_fileClose */
@@ -265,10 +237,12 @@ static int DIR_isSymLink(DirHandle *h, const char *name)
 } /* DIR_isSymLink */
 
 
-static FileHandle *doOpen(DirHandle *h, const char *name, const char *mode)
+static FileHandle *doOpen(DirHandle *h, const char *name,
+                          void *(*openFunc)(const char *filename),
+                          const FileFunctions *fileFuncs)
 {
     char *f = __PHYSFS_platformCvtToDependent((char *)(h->opaque), name, NULL);
-    FILE *rc;
+    void *rc;
     FileHandle *retval;
     char *str;
 
@@ -278,43 +252,44 @@ static FileHandle *doOpen(DirHandle *h, const char *name, const char *mode)
     if (!retval)
     {
         free(f);
-        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
-    errno = 0;
-    rc = fopen(f, mode);
-    str = strerror(errno);
+    rc = openFunc(f);
     free(f);
 
     if (!rc)
     {
         free(retval);
-        BAIL_IF_MACRO(1, str, NULL);
+        BAIL_MACRO(str, NULL);
     } /* if */
 
     retval->opaque = (void *) rc;
     retval->dirHandle = h;
-    retval->funcs = (mode[0] == 'r') ?
-                &__PHYSFS_FileFunctions_DIR : &__PHYSFS_FileFunctions_DIRW;
+    retval->funcs = fileFuncs;
+
     return(retval);
 } /* doOpen */
 
 
 static FileHandle *DIR_openRead(DirHandle *h, const char *filename)
 {
-    return(doOpen(h, filename, "rb"));
+    return(doOpen(h, filename, __PHYSFS_platformOpenRead,
+                  &__PHYSFS_FileFunctions_DIR));
 } /* DIR_openRead */
 
 
 static FileHandle *DIR_openWrite(DirHandle *h, const char *filename)
 {
-    return(doOpen(h, filename, "wb"));
+    return(doOpen(h, filename, __PHYSFS_platformOpenWrite,
+                  &__PHYSFS_FileFunctions_DIRW));
 } /* DIR_openWrite */
 
 
 static FileHandle *DIR_openAppend(DirHandle *h, const char *filename)
 {
-    return(doOpen(h, filename, "ab"));
+    return(doOpen(h, filename, __PHYSFS_platformOpenAppend,
+                  &__PHYSFS_FileFunctions_DIRW));
 } /* DIR_openAppend */
 
 
@@ -325,6 +300,7 @@ static int DIR_remove(DirHandle *h, const char *name)
 
     BAIL_IF_MACRO(f == NULL, NULL, 0);
 
+    /* !!! FIXME: Abstract in platform drivers. */
     errno = 0;
     retval = (remove(f) == 0);
     if (!retval)
@@ -341,12 +317,7 @@ static int DIR_mkdir(DirHandle *h, const char *name)
     int retval;
 
     BAIL_IF_MACRO(f == NULL, NULL, 0);
-
-    errno = 0;
     retval = __PHYSFS_platformMkDir(f);
-    if (!retval)
-        __PHYSFS_setError(strerror(errno));
-
     free(f);
     return(retval);
 } /* DIR_mkdir */
