@@ -1281,6 +1281,7 @@ int PHYSFS_seek(PHYSFS_file *handle, int pos)
     assert(h != NULL);
     assert(h->funcs != NULL);
     BAIL_IF_MACRO(h->funcs->seek == NULL, ERR_NOT_SUPPORTED, 0);
+    BAIL_IF_MACRO(pos < 0, ERR_INVALID_ARGUMENT, 0);
     return(h->funcs->seek(h, pos));
 } /* PHYSFS_seek */
 
