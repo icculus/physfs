@@ -270,7 +270,6 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     rc = DosQueryCurrentDisk(&dummy, &drivemap);
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, retval);
 
-    /* !!! FIXME: the a, b, and c drives are almost certainly NOT cdroms... */
     for (i = 0, bit = 1; i < 26; i++, bit <<= 1)
     {
         if (drivemap & bit)  /* this logical drive exists. */
