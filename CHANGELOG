@@ -2,6 +2,10 @@
  * CHANGELOG.
  */
 
+06152002 - Autoconf build system will now generate shared libraries on BeOS,
+           and (supposedly) Cygwin.
+06142002 - Rewrote autoconf build system. It now works around the MacOS X bug
+           that prevented shared libraries from building.
 06112002 - Updated CodeWarrior projects and added them to CVS. _Finally_
            officially released 0.1.6.
 06102002 - Major overhauls to platform/win32.c ... should work on all Windows
