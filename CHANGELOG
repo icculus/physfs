@@ -3,7 +3,9 @@
  */
 
 06062002 - Fixed __PHYSFS_platformSeek() in archivers/posix.c. Implemented the
-           getLastModTime method in archivers/zip.c.
+           getLastModTime method in archivers/zip.c (returns legitimate info)
+           and archivers/grp.c (returns lastmodtime of GRPfile itself in the
+           physical filesystem).
 06012002 - Added -Wall to debug builds. Removed ANSI stdio calls from
            platform/posix.c, and replaced them with actual POSIX calls (that
            is, fopen() became open(), fseek() became lseek(), etc...)
