@@ -63,6 +63,7 @@ use_asm = -DUSE_PORTABLE_C
 #-----------------------------------------------------------------------------#
 #-----------------------------------------------------------------------------#
 
+curdate := $(shell date +%m%d%Y)
 
 #-----------------------------------------------------------------------------#
 # CygWin autodetect.
@@ -240,7 +241,7 @@ BINSCOMMON := LICENSE.TXT physfs.h
 
 .PHONY: package msbins win32bins nocygwin
 package: clean
-	cd .. ; zip -9rz ./physfs-src-$(shell date +%m%d%Y).zip physfs -x "*CVS*" < physfs/FILEID.DIZ
+	cd .. ; mv physfs physfs-$(curdate) ; tar -cyvvf ./physfs-$(curdate).tar.bz2 --exclude="*CVS*" physfs-$(curdate) ; mv physfs-$(curdate) physfs
 
 
 ifeq ($(strip $(cygwin)),true)
