@@ -1441,7 +1441,6 @@ static void ZIP_dirClose(DirHandle *h)
 {
     ZIPinfo *zi = (ZIPinfo *) (h->opaque);
     zip_free_entries(zi->entries, zi->entryCount);
-    free(zi->entries);
     free(zi->archiveName);
     free(zi);
     free(h);
