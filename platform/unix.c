@@ -39,7 +39,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <errno.h>
-
+#include <mntent.h>
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -49,11 +49,41 @@ const char *__PHYSFS_platformDirSeparator = "/";
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
 {
-    /* !!! write me. */
-    char **retval = malloc(sizeof (char *));
-    if (retval != NULL)
-        *retval = NULL;
+    char **retval = (char **) malloc(sizeof (char *));
+    int cd_count = 1;  /* We count the NULL entry. */
+    FILE *mounts = NULL;
+    struct mntent *ent = NULL;
 
+    *retval = NULL;
+    mounts = setmntent("/etc/mtab", "r");
+    BAIL_IF_MACRO(mounts == NULL, ERR_IO_ERROR, retval);
+
+    while ( (ent = getmntent(mounts)) != NULL )
+    {
+        int add_it = 0;
+        if (strcmp(ent->mnt_type, "iso9660") == 0)
+            add_it = 1;
+        /* !!! other mount types? */
+
+        if (add_it)
+        {
+            char **tmp = realloc(retval, sizeof (char *) * cd_count + 1);
+            if (tmp)
+            {
+                retval = tmp;
+                retval[cd_count-1] = (char *) malloc(strlen(ent->mnt_dir) + 1);
+                if (retval[cd_count-1])
+                {
+                    strcpy(retval[cd_count-1], ent->mnt_dir);
+                    cd_count++;
+                } /* if */
+            } /* if */
+        } /* if */
+    } /* while */
+
+    endmntent(mounts);
+
+    retval[cd_count - 1] = NULL;
     return(retval);
 } /* __PHYSFS_detectAvailableCDs */
 
