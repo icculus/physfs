@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+04242002 - Updated win32 info in INSTALL to discuss Platform SDK issues.
 04202002 - Added a (very) quick and (very) dirty http server to the
            extras directory (public domain), as another example of using
            the library.
