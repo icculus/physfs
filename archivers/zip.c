@@ -351,6 +351,9 @@ static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset)
             if (zlib_err(inflateInit2(&str, -MAX_WBITS)) != Z_OK)
                 return(0);
 
+            if (!__PHYSFS_platformSeek(in, entry->offset))
+                return(0);
+
             inflateEnd(&finfo->stream);
             memcpy(&finfo->stream, &str, sizeof (z_stream));
             finfo->uncompressed_position = finfo->compressed_position = 0;
@@ -1086,7 +1089,7 @@ static int ZIP_exists(DirHandle *h, const char *name)
 
     /* if it's a symlink, then we ran into a possible symlink loop. */
     is_sym = ( ((ZIPinfo *)(h->opaque))->entries[pos].symlink != NULL );
-    BAIL_IF_MACRO(is_sym, ERR_TOO_MANY_SYMLINKS, 0);
+    BAIL_IF_MACRO(is_sym, ERR_SYMLINK_LOOP, 0);
 
     return(1);
 } /* ZIP_exists */
@@ -1103,7 +1106,7 @@ static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h, const char *name)
     entry = &zi->entries[pos];
 
     /* if it's a symlink, then we ran into a possible symlink loop. */
-    BAIL_IF_MACRO(entry->symlink != NULL, ERR_TOO_MANY_SYMLINKS, 0);
+    BAIL_IF_MACRO(entry->symlink != NULL, ERR_SYMLINK_LOOP, 0);
 
     return(entry->last_mod_time);
 } /* ZIP_getLastModTime */
@@ -1119,7 +1122,7 @@ static int ZIP_isDirectory(DirHandle *h, const char *name)
 
     /* if it's a symlink, then we ran into a possible symlink loop. */
     is_sym = ( ((ZIPinfo *)(h->opaque))->entries[pos].symlink != NULL );
-    BAIL_IF_MACRO(is_sym, ERR_TOO_MANY_SYMLINKS, 0);
+    BAIL_IF_MACRO(is_sym, ERR_SYMLINK_LOOP, 0);
 
     dlen = strlen(name);
 
@@ -1147,7 +1150,7 @@ static FileHandle *ZIP_openRead(DirHandle *h, const char *filename)
     BAIL_IF_MACRO(pos == -1, ERR_NO_SUCH_FILE, NULL);
 
     /* if it's a symlink, then we ran into a possible symlink loop. */
-    BAIL_IF_MACRO(zi->entries[pos].symlink != NULL, ERR_TOO_MANY_SYMLINKS, 0);
+    BAIL_IF_MACRO(zi->entries[pos].symlink != NULL, ERR_SYMLINK_LOOP, 0);
 
     in = __PHYSFS_platformOpenRead(zi->archiveName);
     BAIL_IF_MACRO(in == NULL, ERR_IO_ERROR, NULL);
