@@ -9,7 +9,8 @@
            with LoadLibrary() at runtime now, and handled if not present. This
            now builds correctly on a freshly installed Visual Studio 6.0, and
            the DLL it builds works everywhere. Plus, a bunch of other bugs
-           and incorrect behaviours were squashed.
+           and incorrect behaviours were squashed. Visual Studio 6.0 project
+           file added to CVS.
 06082002 - Fixes to __PHYSFS_platformEnumerateFiles() in win32.c: cleaned up
            memory leak, handles paths more robustly, and prevents possible
            skipped file entries. Removed AC_C_CONST and AC_TYPE_SIZE_T checks
