@@ -516,12 +516,6 @@ static int ZIP_exists_symcheck(DirHandle *h, const char *name, int follow)
 } /* ZIP_exists_symcheck */
 
 
-static int ZIP_exists_nofollow(DirHandle *h, const char *name)
-{
-    return(ZIP_exists_symcheck(h, name, 0));
-} /* ZIP_exists_nofollow */
-
-
 static int ZIP_exists(DirHandle *h, const char *name)
 {
     int retval = ZIP_exists_symcheck(h, name, SYMLINK_RECURSE_COUNT);
@@ -560,7 +554,7 @@ static int ZIP_isDirectory(DirHandle *h, const char *name)
 
 static int ZIP_isSymLink(DirHandle *h, const char *name)
 {
-    int retval = ZIP_exists_nofollow(h, name);
+    int retval = ZIP_exists_symcheck(h, name, 0);
     if (retval == -1)
         return(0);
 
@@ -574,15 +568,30 @@ static FileHandle *ZIP_openRead(DirHandle *h, const char *filename)
     FileHandle *retval = NULL;
     ZIPinfo *zi = ((ZIPinfo *) (h->opaque));
     ZIPfileinfo *finfo = NULL;
+    int pos = ZIP_exists_symcheck(h, filename, SYMLINK_RECURSE_COUNT);
     unzFile f;
 
-    BAIL_IF_MACRO(!ZIP_exists(h, filename), ERR_NO_SUCH_FILE, NULL);
+    BAIL_IF_MACRO(pos == -1, ERR_NO_SUCH_FILE, NULL);
 
     f = unzOpen(zi->archiveName);
     BAIL_IF_MACRO(f == NULL, ERR_IO_ERROR, NULL);
 
-    if ( (unzLocateFile(f, filename, 2) != UNZ_OK) ||
-         (unzOpenCurrentFile(f) != UNZ_OK) ||
+    if (unzGoToFirstFile(f) != UNZ_OK)
+    {
+        unzClose(f);
+        BAIL_IF_MACRO(1, ERR_IO_ERROR, NULL);
+    } /* if */
+
+    for (; pos > 0; pos--)
+    {
+        if (unzGoToNextFile(f) != UNZ_OK)
+        {
+            unzClose(f);
+            BAIL_IF_MACRO(1, ERR_IO_ERROR, NULL);
+        } /* if */
+    } /* for */
+
+    if ( (unzOpenCurrentFile(f) != UNZ_OK) ||
          ( (finfo = (ZIPfileinfo *) malloc(sizeof (ZIPfileinfo))) == NULL ) )
     {
         unzClose(f);
