@@ -23,6 +23,7 @@
 #define INCL_DOSMISC
 #include <os2.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -61,11 +62,11 @@ static const char *get_os2_error_string(APIRET rc)
         case ERROR_NO_MORE_SEARCH_HANDLES: return(ERR_TOO_MANY_HANDLES);
         case ERROR_SEEK_ON_DEVICE: return(ERR_SEEK_ERROR);
         case ERROR_NEGATIVE_SEEK: return(ERR_SEEK_OUT_OF_RANGE);
-        case ERROR_DEL_CURRENT_DIRECTORY: return(ERR_DEL_CWD);
+        /*!!! FIXME: Where did this go?  case ERROR_DEL_CURRENT_DIRECTORY: return(ERR_DEL_CWD);*/
         case ERROR_WRITE_PROTECT: return(ERR_WRITE_PROTECT_ERROR);
         case ERROR_WRITE_FAULT: return(ERR_WRITE_FAULT);
         case ERROR_LOCK_VIOLATION: return(ERR_LOCK_VIOLATION);
-        case ERROR_GEN_FAILURE: return(ERR_GENERAL_FAILURE);
+        case ERROR_GEN_FAILURE: return(ERR_GEN_FAILURE);
         case ERROR_UNCERTAIN_MEDIA: return(ERR_UNCERTAIN_MEDIA);
         case ERROR_PROTECTION_VIOLATION: return(ERR_PROT_VIOLATION);
         case ERROR_BROKEN_PIPE: return(ERR_BROKEN_PIPE);
@@ -98,14 +99,14 @@ static APIRET os2err(APIRET retval)
     const char *err = get_os2_error_string(retval);
     if (err == ERR_OS2_GENERIC)
     {
-        snprintf(buf, ERR_OS2_GENERIC, (int) retval);
+        snprintf(buf, sizeof (buf), ERR_OS2_GENERIC, (int) retval);
         err = buf;
     } /* if */
 
     if (err != NULL)
         __PHYSFS_setError(err);
 
-    return(err);
+    return(retval);
 } /* os2err */
 
 
