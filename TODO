@@ -5,7 +5,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 
 - Include the Visual Studio.NET project file in CVS directly.
 - Favor archivers that have the same extension as an archive when opening.
-- Remove extra exists() calls where possible.
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
@@ -14,6 +13,7 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   nice for an email program. That's blue sky, unless someone wants to tackle
   it.
 - Try to remove ERR_OS_ERROR from macclassic.c where possible.
+- Figure out that pesky pthread casting problem.
 - Platforms to be verified as working: Solaris, WinNT 3.1, WinME, WinXP,
   MacOS 8.1
 - Platforms to port to: NetBSD (needs pthreads), OS/2 (needs platform driver),
