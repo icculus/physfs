@@ -75,7 +75,7 @@ static char *txt404 =
 
 static void feed_file_http(const char *ipstr, int sock, const char *fname)
 {
-    PHYSFS_file *in = PHYSFS_openRead(fname);
+    PHYSFS_File *in = PHYSFS_openRead(fname);
     char buffer[1024];
     printf("%s: requested [%s].\n", ipstr, fname);
     if (in == NULL)

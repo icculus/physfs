@@ -1644,7 +1644,7 @@ int PHYSFS_isSymbolicLink(const char *fname)
 } /* PHYSFS_isSymbolicLink */
 
 
-static PHYSFS_file *doOpenWrite(const char *fname, int appending)
+static PHYSFS_File *doOpenWrite(const char *fname, int appending)
 {
     void *opaque = NULL;
     FileHandle *fh = NULL;
@@ -1687,23 +1687,23 @@ static PHYSFS_file *doOpenWrite(const char *fname, int appending)
     } /* else */
 
     __PHYSFS_platformReleaseMutex(stateLock);
-    return((PHYSFS_file *) fh);
+    return((PHYSFS_File *) fh);
 } /* doOpenWrite */
 
 
-PHYSFS_file *PHYSFS_openWrite(const char *filename)
+PHYSFS_File *PHYSFS_openWrite(const char *filename)
 {
     return(doOpenWrite(filename, 0));
 } /* PHYSFS_openWrite */
 
 
-PHYSFS_file *PHYSFS_openAppend(const char *filename)
+PHYSFS_File *PHYSFS_openAppend(const char *filename)
 {
     return(doOpenWrite(filename, 1));
 } /* PHYSFS_openAppend */
 
 
-PHYSFS_file *PHYSFS_openRead(const char *fname)
+PHYSFS_File *PHYSFS_openRead(const char *fname)
 {
     FileHandle *fh = NULL;
     int fileExists = 0;
@@ -1748,7 +1748,7 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
     openReadList = fh;
     __PHYSFS_platformReleaseMutex(stateLock);
 
-    return((PHYSFS_file *) fh);
+    return((PHYSFS_File *) fh);
 } /* PHYSFS_openRead */
 
 
@@ -1763,7 +1763,7 @@ static int closeHandleInOpenList(FileHandle **list, FileHandle *handle)
         if (i == handle)  /* handle is in this list? */
         {
             PHYSFS_uint8 *tmp = handle->buffer;
-            rc = PHYSFS_flush((PHYSFS_file *) handle);
+            rc = PHYSFS_flush((PHYSFS_File *) handle);
             if (rc)
                 rc = handle->funcs->fileClose(handle->opaque);
             if (!rc)
@@ -1787,7 +1787,7 @@ static int closeHandleInOpenList(FileHandle **list, FileHandle *handle)
 } /* closeHandleInOpenList */
 
 
-int PHYSFS_close(PHYSFS_file *_handle)
+int PHYSFS_close(PHYSFS_File *_handle)
 {
     FileHandle *handle = (FileHandle *) _handle;
     int rc;
@@ -1853,7 +1853,7 @@ static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
 } /* doBufferedRead */
 
 
-PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle, void *buffer,
+PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle, void *buffer,
                           PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FileHandle *fh = (FileHandle *) handle;
@@ -1866,7 +1866,7 @@ PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle, void *buffer,
 } /* PHYSFS_read */
 
 
-static PHYSFS_sint64 doBufferedWrite(PHYSFS_file *handle, const void *buffer,
+static PHYSFS_sint64 doBufferedWrite(PHYSFS_File *handle, const void *buffer,
                                      PHYSFS_uint32 objSize,
                                      PHYSFS_uint32 objCount)
 {
@@ -1886,7 +1886,7 @@ static PHYSFS_sint64 doBufferedWrite(PHYSFS_file *handle, const void *buffer,
 } /* doBufferedWrite */
 
 
-PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer,
+PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle, const void *buffer,
                            PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FileHandle *fh = (FileHandle *) handle;
@@ -1899,7 +1899,7 @@ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer,
 } /* PHYSFS_write */
 
 
-int PHYSFS_eof(PHYSFS_file *handle)
+int PHYSFS_eof(PHYSFS_File *handle)
 {
     FileHandle *fh = (FileHandle *) handle;
 
@@ -1911,7 +1911,7 @@ int PHYSFS_eof(PHYSFS_file *handle)
 } /* PHYSFS_eof */
 
 
-PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle)
+PHYSFS_sint64 PHYSFS_tell(PHYSFS_File *handle)
 {
     FileHandle *fh = (FileHandle *) handle;
     PHYSFS_sint64 pos = fh->funcs->tell(fh->opaque);
@@ -1922,7 +1922,7 @@ PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle)
 } /* PHYSFS_tell */
 
 
-int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
+int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos)
 {
     FileHandle *fh = (FileHandle *) handle;
     BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, 0);
@@ -1946,14 +1946,14 @@ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
 } /* PHYSFS_seek */
 
 
-PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
+PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_File *handle)
 {
     FileHandle *fh = (FileHandle *) handle;
     return(fh->funcs->fileLength(fh->opaque));
 } /* PHYSFS_filelength */
 
 
-int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 _bufsize)
+int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 _bufsize)
 {
     FileHandle *fh = (FileHandle *) handle;
     PHYSFS_uint32 bufsize;
@@ -1999,7 +1999,7 @@ int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 _bufsize)
 } /* PHYSFS_setBuffer */
 
 
-int PHYSFS_flush(PHYSFS_file *handle)
+int PHYSFS_flush(PHYSFS_File *handle)
 {
     FileHandle *fh = (FileHandle *) handle;
     PHYSFS_sint64 rc;

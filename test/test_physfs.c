@@ -328,7 +328,7 @@ static int cmd_stressbuffer(char *args)
         printf("buffer must be greater than or equal to zero.\n");
     else
     {
-        PHYSFS_file *f;
+        PHYSFS_File *f;
         int rndnum;
 
         printf("Stress testing with (%d) byte buffer...\n", num);
@@ -645,7 +645,7 @@ static int cmd_issymlink(char *args)
 
 static int cmd_cat(char *args)
 {
-    PHYSFS_file *f;
+    PHYSFS_File *f;
 
     if (*args == '\"')
     {
@@ -699,7 +699,7 @@ static int cmd_cat(char *args)
 
 static int cmd_filelength(char *args)
 {
-    PHYSFS_file *f;
+    PHYSFS_File *f;
 
     if (*args == '\"')
     {
@@ -729,7 +729,7 @@ static int cmd_filelength(char *args)
 
 static int cmd_append(char *args)
 {
-    PHYSFS_file *f;
+    PHYSFS_File *f;
 
     if (*args == '\"')
     {
@@ -777,7 +777,7 @@ static int cmd_append(char *args)
 
 static int cmd_write(char *args)
 {
-    PHYSFS_file *f;
+    PHYSFS_File *f;
 
     if (*args == '\"')
     {
