@@ -105,6 +105,11 @@ rem goto :dolinking
 @echo  "PHYSFS_setBuffer" >> bin\physfs.def
 @echo  "PHYSFS_flush" >> bin\physfs.def
 @echo  "PHYSFS_mount" >> bin\physfs.def
+@echo  "PHYSFS_getMountPoint" >> bin\physfs.def
+@echo  "PHYSFS_setAllocator" >> bin\physfs.def
+@echo  "PHYSFS_getCdRomDirsCallback" >> bin\physfs.def
+@echo  "PHYSFS_getSearchPathCallback" >> bin\physfs.def
+@echo  "PHYSFS_enumerateFilesCallback" >> bin\physfs.def
 
 @echo Building export library...
 emximp -o bin/physfs.lib bin/physfs.def
