@@ -195,6 +195,17 @@ if test x$have_llseek = xyes; then
 fi
 
 
+dnl determine if we should use the stubbed pthread code.
+AC_ARG_ENABLE(pthreads,
+[  --enable-pthreads          include POSIX threads support [default=yes]],
+              , enable_pthreads=yes)
+if test x$enable_pthreads = xyes; then
+  AC_CHECK_HEADER(pthread.h, have_pthread_hdr=yes)
+  if test x$have_pthread_hdr != xyes; then
+    enable_pthreads=no
+  fi
+fi
+
 dnl determine if we should use the stubbed CD-ROM detection code.
 AC_ARG_ENABLE(cdrom,
 [  --enable-cdrom             include CD-ROM support [default=yes]],
@@ -218,10 +229,14 @@ if test x$enable_cdrom = xyes; then
   fi
 fi
 
+have_non_posix_threads=no
+
 dnl AC_CHECK_HEADER(be/kernel/OS.h, this_is_beos=yes)
 AC_MSG_CHECKING([if this is BeOS])
 if test x$build_os = xbeos; then
   this_is_beos=yes
+  enable_pthreads=no
+  have_non_posix_threads=yes
   LIBS="$LIBS -lroot -lbe"
 else
   this_is_beos=no
@@ -233,6 +248,8 @@ AC_MSG_CHECKING([if this is Cygwin])
 if test x$build_os = xcygwin; then
   this_is_cygwin=yes
   CFLAGS="$CFLAGS -DWIN32"
+  enable_pthreads=no
+  have_non_posix_threads=yes
 else
   this_is_cygwin=no
 fi
@@ -281,7 +298,7 @@ if test x$we_have_sed = xyes; then
   if test x$x = xatheos; then
     this_is_atheos=yes
     enable_cdrom=no
-    LDFLAGS="$LDFLAGS -lpthread"
+    enable_pthreads=no
   fi
 
   AC_MSG_RESULT([$this_is_atheos])
@@ -292,9 +309,24 @@ if test x$enable_cdrom != xyes; then
   AC_DEFINE([PHYSFS_NO_CDROM_SUPPORT], 1, [define if we have no CD support])
   AC_MSG_WARN([***])
   AC_MSG_WARN([*** There is no CD-ROM support in this build!])
-  AC_MSG_WARN([*** PhysicsFS will just pretend there are no discs!])
-  AC_MSG_WARN([*** Is this what you really wanted?])
+  AC_MSG_WARN([*** PhysicsFS will just pretend there are no discs.])
+  AC_MSG_WARN([*** This may be fine, depending on how PhysicsFS is used,])
+  AC_MSG_WARN([***   but is this what you REALLY wanted?])
+  AC_MSG_WARN([*** (Maybe fix configure.in, or write a platform driver?)])
   AC_MSG_WARN([***])
+fi
+
+if test x$enable_pthreads != xyes; then
+  AC_DEFINE([PHYSFS_NO_PTHREADS_SUPPORT], 1, [define if we have no POSIX threads support])
+  if test x$have_non_posix_threads != xyes; then
+    AC_MSG_WARN([***])
+    AC_MSG_WARN([*** There is no thread support in this build!])
+    AC_MSG_WARN([*** PhysicsFS will NOT be reentrant!])
+    AC_MSG_WARN([*** This may be fine, depending on how PhysicsFS is used,])
+    AC_MSG_WARN([***   but is this what you REALLY wanted?])
+    AC_MSG_WARN([*** (Maybe fix configure.in, or write a platform driver?)])
+    AC_MSG_WARN([***])
+  fi
 fi
 
 
