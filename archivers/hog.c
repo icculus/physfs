@@ -233,7 +233,7 @@ static int HOG_isArchive(const char *filename, int forWriting)
 static int hog_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     HOGentry *a = (HOGentry *) _a;
-    return(strcmp(a[one].name, a[two].name));
+    return(__PHYSFS_platformStricmp(a[one].name, a[two].name));
 } /* hog_entry_cmp */
 
 
