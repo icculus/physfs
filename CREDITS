@@ -1,0 +1,19 @@
+Initial API interface and implementation,
+GRP driver,
+DIR driver,
+Unix support,
+Win32 support,
+ZIP driver:
+    Ryan C. Gordon
+
+Tons of win32 help:
+    Adam Gates
+
+Fixes for missing current working directories:
+    David Hedbor
+
+Other stuff:
+    Your name here! Patches go to icculus@clutteredmind.org ...
+
+/* end of CREDITS ... */
+
