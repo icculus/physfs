@@ -104,6 +104,7 @@ rem goto :dolinking
 @echo  "PHYSFS_writeUBE64" >> bin\physfs.def
 @echo  "PHYSFS_setBuffer" >> bin\physfs.def
 @echo  "PHYSFS_flush" >> bin\physfs.def
+@echo  "PHYSFS_mount" >> bin\physfs.def
 
 @echo Building export library...
 emximp -o bin/physfs.lib bin/physfs.def
