@@ -652,17 +652,21 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
 
     if (!PHYSFS_setWriteDir(str))
     {
-        if ( (!PHYSFS_setWriteDir(userdir)) ||
-             (!PHYSFS_mkdir(str + strlen(userdir))) )
+        if ( (PHYSFS_setWriteDir(userdir)) &&
+             (PHYSFS_mkdir(str + strlen(userdir))) )
+        {
+            PHYSFS_setWriteDir(str);
+        } /* if */
+        else
         {
             PHYSFS_setWriteDir(NULL);
             free(str);
             BAIL_IF_MACRO(1, ERR_CANT_SET_WRITE_DIR, 0);
-        } /* if */
+        } /* else */
     } /* if */
 
-        /* Put write dir related dirs on search path... */
-    PHYSFS_addToSearchPath(str, 1);
+    /* Put write dir first in search path... */
+    PHYSFS_addToSearchPath(str, 0);
     free(str);
 
         /* Put base path on search path... */
