@@ -978,12 +978,6 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_swapSBE64(PHYSFS_sint64 val);
  */
 __EXPORT__ PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val);
 
-
-
-#if 0 /* !!! FIXME: add this? */
-#undef __EXPORT__
-#endif
-
 #ifdef __cplusplus
 }
 #endif

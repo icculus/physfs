@@ -350,7 +350,7 @@ static char *calculateBaseDir(const char *argv0)
             p = strstr(p + 1, dirsep);
         } /* while */
 
-        size = (size_t) (ptr - argv0);  /* !!! is this portable? */
+        size = (size_t) (ptr - argv0);
         retval = (char *) malloc(size + 1);
         BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
         memcpy(retval, argv0, size);
@@ -1202,8 +1202,6 @@ int PHYSFS_isSymbolicLink(const char *fname)
             } /* if */
         } /* if */
     } /* for */
-
-/* !!! FIXME: setError ERR_FILE_NOT_FOUND? */
     __PHYSFS_platformReleaseMutex(stateLock);
 
     return(0);

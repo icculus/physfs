@@ -234,7 +234,7 @@ static int DIR_isSymLink(DirHandle *h, const char *name)
     char *f = __PHYSFS_platformCvtToDependent((char *)(h->opaque), name, NULL);
     int retval;
 
-    BAIL_IF_MACRO(f == NULL, NULL, 0); /* !!! might be a problem. */
+    BAIL_IF_MACRO(f == NULL, NULL, 0);
     retval = __PHYSFS_platformIsSymLink(f);
     free(f);
     return(retval);
