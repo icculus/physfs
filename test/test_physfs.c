@@ -132,6 +132,59 @@ static int cmd_addarchive(char *args)
 } /* cmd_addarchive */
 
 
+static int cmd_mount(char *args)
+{
+    char *ptr;
+    char *mntpoint = NULL;
+    int appending = 0;
+
+    if (*args == '\"')
+    {
+        args++;
+        ptr = strchr(args, '\"');
+        if (ptr == NULL)
+        {
+            printf("missing string terminator in argument.\n");
+            return(1);
+        } /* if */
+        *(ptr) = '\0';
+    } /* if */
+    else
+    {
+        ptr = strchr(args, ' ');
+        *ptr = '\0';
+    } /* else */
+
+    mntpoint = ptr + 1;
+    if (*mntpoint == '\"')
+    {
+        mntpoint++;
+        ptr = strchr(mntpoint, '\"');
+        if (ptr == NULL)
+        {
+            printf("missing string terminator in argument.\n");
+            return(1);
+        } /* if */
+        *(ptr) = '\0';
+    } /* if */
+    else
+    {
+        ptr = strchr(mntpoint, ' ');
+        *(ptr) = '\0';
+    } /* else */
+    appending = atoi(ptr + 1);
+
+    printf("[%s], [%s], [%d]\n", args, mntpoint, appending);
+
+    if (PHYSFS_mount(args, mntpoint, appending))
+        printf("Successful.\n");
+    else
+        printf("Failure. reason: %s.\n", PHYSFS_getLastError());
+
+    return(1);
+} /* cmd_mount */
+
+
 static int cmd_removearchive(char *args)
 {
     if (*args == '\"')
@@ -888,6 +941,7 @@ static const command_info commands[] =
     { "init",           cmd_init,           1, "<argv0>"                    },
     { "deinit",         cmd_deinit,         0, NULL                         },
     { "addarchive",     cmd_addarchive,     2, "<archiveLocation> <append>" },
+    { "mount",          cmd_mount,          3, "<archiveLocation> <mntpoint> <append>" },
     { "removearchive",  cmd_removearchive,  1, "<archiveLocation>"          },
     { "enumerate",      cmd_enumerate,      1, "<dirToEnumerate>"           },
     { "ls",             cmd_enumerate,      1, "<dirToEnumerate>"           },
