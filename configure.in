@@ -96,26 +96,6 @@ dnl ---------------------------------------------------------------------
 dnl Checks for libraries.
 dnl ---------------------------------------------------------------------
 
-dnl !!! FIXME: Not sure how to detect this...
-dnl check for 64-bit llseek()...
-dnl AC_CHECK_LIB(c, llseek, have_llseek=yes)
-if test x$have_llseek = xyes; then
-  AC_DEFINE([PHYSFS_HAVE_LLSEEK], 1, [define if we have llseek])
-fi
-
-dnl BSD systems use sys/ucred.h for getting mounted volumes.
-dnl Linux and others use mntent.h.
-AC_CHECK_HEADER(sys/ucred.h, have_ucred_hdr=yes)
-if test x$have_ucred_hdr = xyes; then
-  AC_DEFINE([PHYSFS_HAVE_SYS_UCRED_H], 1, [define if we have sys/ucred.h])
-fi
-
-AC_CHECK_HEADER(mntent.h, have_mntent_hdr=yes)
-if test x$have_mntent_hdr = xyes; then
-  AC_DEFINE([PHYSFS_HAVE_MNTENT_H], 1, [define if we have mntent.h])
-fi
-
-
 require_zlib="no"
 
 dnl Check for zip archiver inclusion...
@@ -207,11 +187,33 @@ if test x$enable_readline = xyes; then
   fi
 fi
 
+dnl !!! FIXME: Not sure how to detect this...
+dnl check for 64-bit llseek()...
+dnl AC_CHECK_LIB(c, llseek, have_llseek=yes)
+if test x$have_llseek = xyes; then
+  AC_DEFINE([PHYSFS_HAVE_LLSEEK], 1, [define if we have llseek])
+fi
+
+enable_cdrom=no
 dnl determine if we should use the stubbed CD-ROM detection code.
 dnl AC_ARG_ENABLE(cdrom,
 dnl [  --enable-cdrom             try standard CD-ROM support [default=yes]],
 dnl               , enable_cdrom=yes)
-enable_cdrom=yes
+
+
+dnl BSD systems use sys/ucred.h for getting mounted volumes.
+dnl Linux and others use mntent.h.
+AC_CHECK_HEADER(sys/ucred.h, have_ucred_hdr=yes)
+if test x$have_ucred_hdr = xyes; then
+  AC_DEFINE([PHYSFS_HAVE_SYS_UCRED_H], 1, [define if we have sys/ucred.h])
+  enable_cdrom=yes
+fi
+
+AC_CHECK_HEADER(mntent.h, have_mntent_hdr=yes)
+if test x$have_mntent_hdr = xyes; then
+  AC_DEFINE([PHYSFS_HAVE_MNTENT_H], 1, [define if we have mntent.h])
+  enable_cdrom=yes
+fi
 
 
 dnl AC_CHECK_HEADER(be/kernel/OS.h, this_is_beos=yes)
