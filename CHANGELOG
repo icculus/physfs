@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+05062002 - Edward Rudd also caught an embarrassing screwup by me in
+           unix.c: the open-for-append call was using "wb+" instead of
+           "ab" when calling fopen(). Doh!
 05152002 - configure script now deals with systems that have a readline
            lib, but require it to be linked with curses. Thanks to Edward
            Rudd for the patch.
