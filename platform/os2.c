@@ -243,7 +243,7 @@ int __PHYSFS_platformInit(void)
     {
         if (buf[len] == '\\')
         {
-            buf[++len] = '\0';
+            buf[len] = '\0';
             break;
         } /* if */
     } /* for */
