@@ -22,7 +22,6 @@ Some might be dupes, some might be done already.
 - Cygwin should use unix/posix and not win32 platform code.
 - Add "mount points"
 - Expose the archiver registration mechanism to the outside world.
-- Set up a mechanism for file enumeration that employs a callback.
 - Allow the application to provide allocation services.
 - Find some way to relax or remove the security model for external tools.
 - Non-blocking I/O
@@ -41,7 +40,6 @@ Some might be dupes, some might be done already.
 - Deprecate PHYSFS_setSaneConfig and move it to extras?
 - (Re)move the profiling code in physfs.c.
 - Why is physfsrwops.c cut-and-pasted into the ruby bindings?
-- Get rid of addToLinkedStringList
 - Replace code from SDL...
 - MIX grabs all archives that no other archivers claim.
 - MIX enumerates files as hash values.

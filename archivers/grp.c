@@ -72,9 +72,9 @@ static PHYSFS_sint64 GRP_fileLength(fvoid *opaque);
 static int GRP_fileClose(fvoid *opaque);
 static int GRP_isArchive(const char *filename, int forWriting);
 static void *GRP_openArchive(const char *name, int forWriting);
-static LinkedStringList *GRP_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks);
+static void GRP_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata);
 static int GRP_exists(dvoid *opaque, const char *name);
 static int GRP_isDirectory(dvoid *opaque, const char *name, int *fileExists);
 static int GRP_isSymLink(dvoid *opaque, const char *name, int *fileExists);
@@ -359,23 +359,21 @@ GRP_openArchive_failed:
 } /* GRP_openArchive */
 
 
-static LinkedStringList *GRP_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks)
+static void GRP_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata)
 {
-    GRPinfo *info = (GRPinfo *) opaque;
-    GRPentry *entry = info->entries;
-    LinkedStringList *retval = NULL, *p = NULL;
-    PHYSFS_uint32 max = info->entryCount;
-    PHYSFS_uint32 i;
-
     /* no directories in GRP files. */
-    BAIL_IF_MACRO(*dirname != '\0', ERR_NOT_A_DIR, NULL);
+    if (*dname != '\0')
+    {
+        GRPinfo *info = (GRPinfo *) opaque;
+        GRPentry *entry = info->entries;
+        PHYSFS_uint32 max = info->entryCount;
+        PHYSFS_uint32 i;
 
-    for (i = 0; i < max; i++, entry++)
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, entry->name, -1);
-
-    return(retval);
+        for (i = 0; i < max; i++, entry++)
+            cb(callbackdata, entry->name);
+    } /* if */
 } /* GRP_enumerateFiles */
 
 

@@ -91,9 +91,9 @@ static PHYSFS_sint64 MIX_fileLength(fvoid *opaque);
 static int MIX_fileClose(fvoid *opaque);
 static int MIX_isArchive(const char *filename, int forWriting);
 static void *MIX_openArchive(const char *name, int forWriting);
-static LinkedStringList *MIX_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks);
+static void MIX_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata)
 static int MIX_exists(dvoid *opaque, const char *name);
 static int MIX_isDirectory(dvoid *opaque, const char *name, int *fileExists);
 static int MIX_isSymLink(dvoid *opaque, const char *name, int *fileExists);
@@ -354,23 +354,24 @@ MIX_openArchive_failed:
 } /* MIX_openArchive */
 
 
-static LinkedStringList *MIX_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks)
+static void MIX_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata)
 {
-    LinkedStringList *retval = NULL, *p = NULL;
-    MIXinfo *info = (MIXinfo*) opaque;
-    MIXentry *entry = info->entry;
-    int i;
-    char buffer[32];
-    
-    for (i = 0; i < info->header.num_files; i++, entry++)
+    /* no directories in MIX files. */
+    if (*dirname != '\0')
     {
-        sprintf(buffer, "%X", entry->hash);
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, buffer, -1);
-    } /* for */
-
-    return(retval);
+        MIXinfo *info = (MIXinfo*) opaque;
+        MIXentry *entry = info->entry;
+        int i;
+        char buffer[32];
+    
+        for (i = 0; i < info->header.num_files; i++, entry++)
+        {
+            sprintf(buffer, "%X", entry->hash);
+            cb(callbackdata, buffer);
+        } /* for */
+    } /* if */
 } /* MIX_enumerateFiles */
 
 

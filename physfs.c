@@ -189,6 +189,54 @@ static PHYSFS_Allocator allocator;
 
 /* functions ... */
 
+typedef struct
+{
+    char **list;
+    PHYSFS_uint32 size;
+    const char *errorstr;
+} EnumStringListCallbackData;
+
+static void enumStringListCallback(void *data, const char *str)
+{
+    void *ptr;
+    char *newstr;
+    EnumStringListCallbackData *pecd = (EnumStringListCallbackData *) data;
+
+    if (pecd->errorstr)
+        return;
+
+    ptr = realloc(pecd->list, (pecd->size + 2) * sizeof (char *));
+    newstr = malloc(strlen(str) + 1);
+    if (ptr != NULL)
+        pecd->list = (char **) ptr;
+
+    if ((ptr == NULL) || (newstr == NULL))
+    {
+        pecd->errorstr = ERR_OUT_OF_MEMORY;
+        pecd->list[pecd->size] = NULL;
+        PHYSFS_freeList(pecd->list);
+        return;
+    } /* if */
+
+    strcpy(newstr, str);
+    pecd->list[pecd->size] = newstr;
+    pecd->size++;
+} /* enumStringListCallback */
+
+
+static char **doEnumStringList(void (*func)(PHYSFS_StringCallback, void *))
+{
+    EnumStringListCallbackData ecd;
+    memset(&ecd, '\0', sizeof (ecd));
+    ecd.list = (char **) malloc(sizeof (char *));
+    BAIL_IF_MACRO(ecd.list == NULL, ERR_OUT_OF_MEMORY, NULL);
+    func(enumStringListCallback, &ecd);
+    BAIL_IF_MACRO(ecd.errorstr != NULL, ecd.errorstr, NULL);
+    ecd.list[ecd.size] = NULL;
+    return(ecd.list);
+} /* doEnumStringList */
+
+
 static void __PHYSFS_bubble_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
                          int (*cmpfn)(void *, PHYSFS_uint32, PHYSFS_uint32),
                          void (*swapfn)(void *, PHYSFS_uint32, PHYSFS_uint32))
@@ -838,7 +886,6 @@ static int closeFileHandleList(FileHandle **list)
 {
     FileHandle *i;
     FileHandle *next = NULL;
-    FileHandle *h;
 
     for (i = *list; i != NULL; i = next)
     {
@@ -937,8 +984,14 @@ const char *PHYSFS_getDirSeparator(void)
 
 char **PHYSFS_getCdRomDirs(void)
 {
-    return(__PHYSFS_platformDetectAvailableCDs());
+    return(doEnumStringList(__PHYSFS_platformDetectAvailableCDs));
 } /* PHYSFS_getCdRomDirs */
+
+
+void PHYSFS_getCdRomDirsCallback(PHYSFS_StringCallback callback, void *data)
+{
+    __PHYSFS_platformDetectAvailableCDs(callback, data);
+} /* PHYSFS_getCdRomDirsCallback */
 
 
 const char *PHYSFS_getBaseDir(void)
@@ -1060,42 +1113,21 @@ int PHYSFS_removeFromSearchPath(const char *oldDir)
 
 char **PHYSFS_getSearchPath(void)
 {
-    int count = 1;
-    int x;
+    return(doEnumStringList(PHYSFS_getSearchPathCallback));
+} /* PHYSFS_getSearchPath */
+
+
+void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback callback, void *data)
+{
     DirHandle *i;
-    char **retval;
 
     __PHYSFS_platformGrabMutex(stateLock);
 
     for (i = searchPath; i != NULL; i = i->next)
-        count++;
-
-    retval = (char **) malloc(sizeof (char *) * count);
-    BAIL_IF_MACRO_MUTEX(!retval, ERR_OUT_OF_MEMORY, stateLock, NULL);
-    count--;
-    retval[count] = NULL;
-
-    for (i = searchPath, x = 0; x < count; i = i->next, x++)
-    {
-        retval[x] = (char *) malloc(strlen(i->dirName) + 1);
-        if (retval[x] == NULL)  /* this is friggin' ugly. */
-        {
-            while (x > 0)
-            {
-                x--;
-                free(retval[x]);
-            } /* while */
-
-            free(retval);
-            BAIL_MACRO_MUTEX(ERR_OUT_OF_MEMORY, stateLock, NULL);
-        } /* if */
-
-        strcpy(retval[x], i->dirName);
-    } /* for */
+        callback(data, i->dirName);
 
     __PHYSFS_platformReleaseMutex(stateLock);
-    return(retval);
-} /* PHYSFS_getSearchPath */
+} /* PHYSFS_getSearchPathCallback */
 
 
 int PHYSFS_setSaneConfig(const char *organization, const char *appName,
@@ -1441,7 +1473,7 @@ const char *PHYSFS_getRealDir(const char *filename)
     return(retval);
 } /* PHYSFS_getRealDir */
 
-
+#if 0
 static int countList(LinkedStringList *list)
 {
     int retval = 0;
@@ -1529,34 +1561,114 @@ static void interpolateStringLists(LinkedStringList **final,
         newList = next;
     } /* while */
 } /* interpolateStringLists */
+#endif
+
+
+static int locateInStringList(const char *str,
+                              char **list,
+                              PHYSFS_uint32 *pos)
+{
+    PHYSFS_uint32 hi = *pos - 1;
+    PHYSFS_uint32 lo = 0;
+    PHYSFS_uint32 i = hi / 2;
+    int cmp;
+
+    while (hi != lo)
+    {
+        cmp = strcmp(list[i], str);
+        if (cmp == 0)  /* it's in the list already. */
+            return(1);
+        else if (cmp < 0)
+            hi = i;
+        else
+            lo = i;
+        i = lo + ((hi - lo) / 2);
+    } /* while */
+
+    /* hi == lo, check it in case it's the match... */
+    cmp = strcmp(list[lo], str);
+    if (cmp == 0)
+        return(1);
+
+    /* not in the list, set insertion point... */
+    *pos = (cmp < 0) ? lo : lo + 1;
+    return(0);
+} /* locateInStringList */
+
+
+static void enumFilesCallback(void *data, const char *str)
+{
+    PHYSFS_uint32 pos;
+    void *ptr;
+    char *newstr;
+    EnumStringListCallbackData *pecd = (EnumStringListCallbackData *) data;
+
+    /*
+     * See if file is in the list already, and if not, insert it in there
+     *  alphabetically...
+     */
+    pos = pecd->size;
+    if (pos > 0)
+    {
+        if (locateInStringList(str, pecd->list, &pos))
+            return;  /* already in the list. */
+    } /* if */
+
+    ptr = realloc(pecd->list, (pecd->size + 2) * sizeof (char *));
+    newstr = malloc(strlen(str) + 1);
+    if (ptr != NULL)
+        pecd->list = (char **) ptr;
+
+    if ((ptr == NULL) || (newstr == NULL))
+        return;  /* better luck next time. */
+
+    strcpy(newstr, str);
+
+    if (pos != pecd->size)
+    {
+        memmove(&pecd->list[pos+1], &pecd->list[pos],
+                 sizeof (char *) * ((pecd->size) - pos));
+    } /* if */
+
+    pecd->list[pos] = newstr;
+    pecd->size++;
+} /* enumFilesCallback */
 
 
 char **PHYSFS_enumerateFiles(const char *path)
 {
-    DirHandle *i;
-    char **retval = NULL;
-    LinkedStringList *rc;
-    LinkedStringList *finalList = NULL;
-    int omitSymLinks = !allowSymLinks;
+    EnumStringListCallbackData ecd;
+    memset(&ecd, '\0', sizeof (ecd));
+    ecd.list = (char **) malloc(sizeof (char *));
+    BAIL_IF_MACRO(ecd.list == NULL, ERR_OUT_OF_MEMORY, NULL);
+    PHYSFS_enumerateFilesCallback(path, enumFilesCallback, &ecd);
+    ecd.list[ecd.size] = NULL;
+    return(ecd.list);
+} /* PHYSFS_enumerateFiles */
 
-    BAIL_IF_MACRO(path == NULL, ERR_INVALID_ARGUMENT, NULL);
+
+void PHYSFS_enumerateFilesCallback(const char *path,
+                                   PHYSFS_StringCallback callback,
+                                   void *data)
+{
+    DirHandle *i;
+    int noSyms;
+
+    if ((path == NULL) || (callback == NULL))
+        return;
+
     while (*path == '/')
         path++;
 
     __PHYSFS_platformGrabMutex(stateLock);
+    noSyms = !allowSymLinks;
     for (i = searchPath; i != NULL; i = i->next)
     {
         if (__PHYSFS_verifySecurity(i, path, 0))
-        {
-            rc = i->funcs->enumerateFiles(i->opaque, path, omitSymLinks);
-            interpolateStringLists(&finalList, rc);
-        } /* if */
+            i->funcs->enumerateFiles(i->opaque, path, noSyms, callback, data);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
-
-    retval = convertStringListToPhysFSList(finalList);
-    return(retval);
-} /* PHYSFS_enumerateFiles */
+} /* PHYSFS_enumerateFilesCallback */
 
 
 int PHYSFS_exists(const char *fname)
@@ -2076,7 +2188,6 @@ PHYSFS_Allocator *__PHYSFS_getAllocator(void)
 {
     return(&allocator);
 } /* __PHYFS_getAllocator */
-
 
 /* end of physfs.c ... */
 

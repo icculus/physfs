@@ -2,6 +2,13 @@
  * CHANGELOG.
  */
 
+09292004 - Every API that can return a list of strings can now use a
+           callback mechanism if the application wants to do it's own
+           allocation or handling on a per-item basis. The guts of those
+           APIs that create string lists now use the callbacks themselves to
+           build the lists, too. The callback functionality goes all the way
+           down to the archivers and platform drivers where appropriate, which
+           cleans things up and simplifies some internal tasks very nicely.
 09262004 - Did the same thing to FileHandles than I did to DirHandles, but
            this triggered massive tweaking in physfs.c. A lot of code got
            little cleanups, which was nice. Less malloc pressure, too, since

@@ -979,17 +979,18 @@ typedef struct
     void *(*openArchive)(const char *name, int forWriting);
 
         /*
-         * Returns a list of all files in dirname. Each element of this list
-         *  (and its "str" field) will be deallocated with the system's free()
-         *  function by the caller, so be sure to explicitly malloc() each
-         *  chunk. Omit symlinks if (omitSymLinks) is non-zero.
-         * If you have a memory failure, return as much as you can.
-         *  This dirname is in platform-independent notation.
+         * List all files in (dirname). Each file is passed to (callback),
+         *  where a copy is made if appropriate, so you should dispose of
+         *  it properly upon return from the callback.
+         * You should omit symlinks if (omitSymLinks) is non-zero.
+         * If you have a failure, report as much as you can.
+         *  (dirname) is in platform-independent notation.
          */
-    LinkedStringList *(*enumerateFiles)(dvoid *opaque,
-                                        const char *dirname,
-                                        int omitSymLinks);
-
+    void (*enumerateFiles)(dvoid *opaque,
+                            const char *dirname,
+                            int omitSymLinks,
+                            PHYSFS_StringCallback callback,
+                            void *callbackdata);
 
         /*
          * Returns non-zero if filename can be opened for reading.
@@ -1445,10 +1446,13 @@ int __PHYSFS_platformFlush(void *opaque);
 int __PHYSFS_platformClose(void *opaque);
 
 /*
- * Platform implementation of PHYSFS_getCdRomDirs()...
- *  See physfs.h. The retval should be freeable via PHYSFS_freeList().
+ * Platform implementation of PHYSFS_getCdRomDirsCallback()...
+ *  CD directories are discovered and reported to the callback one at a time.
+ *  Pointers passed to the callback are assumed to be invalid to the
+ *  application after the callback returns, so you can free them or whatever.
+ *  Callback does not assume results will be sorted in any meaningful way.
  */
-char **__PHYSFS_platformDetectAvailableCDs(void);
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data);
 
 /*
  * Calculate the base dir, if your platform needs special consideration.
@@ -1559,8 +1563,10 @@ void __PHYSFS_platformTimeslice(void);
  *  uses platform-independent notation. Note that ".", "..", and other
  *  metaentries should always be ignored.
  */
-LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
-                                                  int omitSymLinks);
+void __PHYSFS_platformEnumerateFiles(const char *dirname,
+                                     int omitSymLinks,
+                                     PHYSFS_StringCallback callback,
+                                     void *callbackdata);
 
 
 /*

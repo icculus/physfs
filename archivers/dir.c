@@ -29,9 +29,9 @@ static PHYSFS_sint64 DIR_fileLength(fvoid *opaque);
 static int DIR_fileClose(fvoid *opaque);
 static int DIR_isArchive(const char *filename, int forWriting);
 static void *DIR_openArchive(const char *name, int forWriting);
-static LinkedStringList *DIR_enumerateFiles(dvoid *opaque,
-                                            const char *dname,
-                                            int omitSymLinks);
+static void DIR_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata);
 static int DIR_exists(dvoid *opaque, const char *name);
 static int DIR_isDirectory(dvoid *opaque, const char *name, int *fileExists);
 static int DIR_isSymLink(dvoid *opaque, const char *name, int *fileExists);
@@ -165,17 +165,16 @@ static void *DIR_openArchive(const char *name, int forWriting)
 } /* DIR_openArchive */
 
 
-static LinkedStringList *DIR_enumerateFiles(dvoid *opaque,
-                                            const char *dname,
-                                            int omitSymLinks)
+static void DIR_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata)
 {
     char *d = __PHYSFS_platformCvtToDependent((char *)opaque, dname, NULL);
-    LinkedStringList *retval;
-
-    BAIL_IF_MACRO(d == NULL, NULL, NULL);
-    retval = __PHYSFS_platformEnumerateFiles(d, omitSymLinks);
-    free(d);
-    return(retval);
+    if (d != NULL)
+    {
+        __PHYSFS_platformEnumerateFiles(d, omitSymLinks, cb, callbackdata);
+        free(d);
+    } /* if */
 } /* DIR_enumerateFiles */
 
 

@@ -268,33 +268,17 @@ static BOOL mediaInDrive(const char *drive)
 } /* mediaInDrive */
 
 
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-    char **retval = (char **) malloc(sizeof (char *));
-    int cd_count = 1;  /* We count the NULL entry. */
     char drive_str[4] = "x:\\";
-
-    for (drive_str[0] = 'A'; drive_str[0] <= 'Z'; drive_str[0]++)
+    char ch;
+    for (ch = 'A'; ch <= 'Z'; ch++)
     {
+        drive_str[0] = ch;
         if (GetDriveType(drive_str) == DRIVE_CDROM && mediaInDrive(drive_str))
-        {
-            char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
-            if (tmp)
-            {
-                retval = tmp;
-                retval[cd_count - 1] = (char *) malloc(4);
-                if (retval[cd_count - 1])
-                {
-                    strcpy(retval[cd_count - 1], drive_str);
-                    cd_count++;
-                } /* if */
-            } /* if */
-        } /* if */
+            cb(data, drive_str);
     } /* for */
-
-    retval[cd_count - 1] = NULL;
-    return(retval);
-} /* __PHYSFS_detectAvailableCDs */
+} /* __PHYSFS_platformDetectAvailableCDs */
 
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
@@ -454,18 +438,20 @@ void __PHYSFS_platformTimeslice(void)
 } /* __PHYSFS_platformTimeslice */
 
 
-LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
-                                                  int omitSymLinks)
+void __PHYSFS_platformEnumerateFiles(const char *dirname,
+                                     int omitSymLinks,
+                                     PHYSFS_StringCallback callback,
+                                     void *callbackdata)
 {
-    LinkedStringList *retval = NULL, *p = NULL;
     HANDLE dir;
     WIN32_FIND_DATA ent;
-    char *SearchPath;
     size_t len = strlen(dirname);
+    char *SearchPath;
 
     /* Allocate a new string for path, maybe '\\', "*", and NULL terminator */
     SearchPath = (char *) alloca(len + 3);
-    BAIL_IF_MACRO(SearchPath == NULL, ERR_OUT_OF_MEMORY, NULL);
+    if (SearchPath == NULL)
+        return;
 
     /* Copy current dirname */
     strcpy(SearchPath, dirname);
@@ -481,11 +467,8 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     strcat(SearchPath, "*");
 
     dir = FindFirstFile(SearchPath, &ent);
-    BAIL_IF_MACRO
-    (
-        dir == INVALID_HANDLE_VALUE,
-        win32strerror(), NULL
-    );
+    if (dir == INVALID_HANDLE_VALUE)
+        return;
 
     do
     {
@@ -495,11 +478,10 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
         if (strcmp(ent.cFileName, "..") == 0)
             continue;
 
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, ent.cFileName, -1);
+        callback(callbackdata, ent.cFileName);
     } while (FindNextFile(dir, &ent) != 0);
 
     FindClose(dir);
-    return(retval);
 } /* __PHYSFS_platformEnumerateFiles */
 
 

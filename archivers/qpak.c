@@ -89,9 +89,9 @@ static PHYSFS_sint64 QPAK_fileLength(fvoid *opaque);
 static int QPAK_fileClose(fvoid *opaque);
 static int QPAK_isArchive(const char *filename, int forWriting);
 static void *QPAK_openArchive(const char *name, int forWriting);
-static LinkedStringList *QPAK_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks);
+static void QPAK_enumerateFiles(dvoid *opaque, const char *dname,
+                                int omitSymLinks, PHYSFS_StringCallback cb,
+                                void *callbackdata);
 static int QPAK_exists(dvoid *opaque, const char *name);
 static int QPAK_isDirectory(dvoid *opaque, const char *name, int *fileExists);
 static int QPAK_isSymLink(dvoid *opaque, const char *name, int *fileExists);
@@ -443,19 +443,36 @@ static PHYSFS_sint32 qpak_find_start_of_dir(QPAKinfo *info, const char *path,
 } /* qpak_find_start_of_dir */
 
 
-static LinkedStringList *QPAK_enumerateFiles(dvoid *opaque,
-                                             const char *dirname,
-                                             int omitSymLinks)
+/*
+ * Moved to seperate function so we can use alloca then immediately throw
+ *  away the allocated stack space...
+ */
+static void doEnumCallback(PHYSFS_StringCallback cb, void *callbackdata,
+                           const char *str, PHYSFS_sint32 ln)
+{
+    char *newstr = alloca(ln + 1);
+    if (newstr == NULL)
+        return;
+
+    memcpy(newstr, str, ln);
+    newstr[ln] = '\0';
+    cb(callbackdata, newstr);
+} /* doEnumCallback */
+
+
+static void QPAK_enumerateFiles(dvoid *opaque, const char *dname,
+                                int omitSymLinks, PHYSFS_StringCallback cb,
+                                void *callbackdata)
 {
     QPAKinfo *info = ((QPAKinfo *) opaque);
-    LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_sint32 dlen, dlen_inc, max, i;
 
-    i = qpak_find_start_of_dir(info, dirname, 0);
-    BAIL_IF_MACRO(i == -1, ERR_NO_SUCH_FILE, NULL);
+    i = qpak_find_start_of_dir(info, dname, 0);
+    if (i == -1)  /* no such directory. */
+        return;
 
-    dlen = strlen(dirname);
-    if ((dlen > 0) && (dirname[dlen - 1] == '/')) /* ignore trailing slash. */
+    dlen = strlen(dname);
+    if ((dlen > 0) && (dname[dlen - 1] == '/')) /* ignore trailing slash. */
         dlen--;
 
     dlen_inc = ((dlen > 0) ? 1 : 0) + dlen;
@@ -466,13 +483,13 @@ static LinkedStringList *QPAK_enumerateFiles(dvoid *opaque,
         char *ptr;
         PHYSFS_sint32 ln;
         char *e = info->entries[i].name;
-        if ((dlen) && ((QPAK_strncmp(e, dirname, dlen)) || (e[dlen] != '/')))
+        if ((dlen) && ((QPAK_strncmp(e, dname, dlen)) || (e[dlen] != '/')))
             break;  /* past end of this dir; we're done. */
 
         add = e + dlen_inc;
         ptr = strchr(add, '/');
         ln = (PHYSFS_sint32) ((ptr) ? ptr-add : strlen(add));
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, add, ln);
+        doEnumCallback(cb, callbackdata, add, ln);
         ln += dlen_inc;  /* point past entry to children... */
 
         /* increment counter and skip children of subdirs... */
@@ -483,8 +500,6 @@ static LinkedStringList *QPAK_enumerateFiles(dvoid *opaque,
                 break;
         } /* while */
     } /* while */
-
-    return(retval);
 } /* QPAK_enumerateFiles */
 
 

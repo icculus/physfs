@@ -225,22 +225,24 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 
 
 
-LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
-                                                  int omitSymLinks)
+void __PHYSFS_platformEnumerateFiles(const char *dirname,
+                                     int omitSymLinks,
+                                     PHYSFS_StringCallback callback,
+                                     void *callbackdata)
 {
-    LinkedStringList *retval = NULL, *p = NULL;
     DIR *dir;
     struct dirent *ent;
     int bufsize = 0;
     char *buf = NULL;
     int dlen = 0;
 
-    if (omitSymLinks)
+    if (omitSymLinks)  /* !!! FIXME: this malloc sucks. */
     {
         dlen = strlen(dirname);
         bufsize = dlen + 256;
         buf = (char *) malloc(bufsize);
-        BAIL_IF_MACRO(buf == NULL, ERR_OUT_OF_MEMORY, NULL);
+        if (buf == NULL)
+            return;
         strcpy(buf, dirname);
         if (buf[dlen - 1] != '/')
         {
@@ -255,7 +257,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     {
         if (buf != NULL)
             free(buf);
-        BAIL_IF_MACRO(1, strerror(errno), NULL);
+        return;
     } /* if */
 
     while ((ent = readdir(dir)) != NULL)
@@ -284,14 +286,13 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
                 continue;
         } /* if */
 
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, ent->d_name, -1);
+        callback(callbackdata, ent->d_name);
     } /* while */
 
     if (buf != NULL)
         free(buf);
 
     closedir(dir);
-    return(retval);
 } /* __PHYSFS_platformEnumerateFiles */
 
 

@@ -86,9 +86,9 @@ static PHYSFS_sint64 HOG_fileLength(fvoid *opaque);
 static int HOG_fileClose(fvoid *opaque);
 static int HOG_isArchive(const char *filename, int forWriting);
 static void *HOG_openArchive(const char *name, int forWriting);
-static LinkedStringList *HOG_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks);
+static void HOG_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata);
 static int HOG_exists(dvoid *opaque, const char *name);
 static int HOG_isDirectory(dvoid *opaque, const char *name, int *fileExists);
 static int HOG_isSymLink(dvoid *opaque, const char *name, int *fileExists);
@@ -398,23 +398,21 @@ HOG_openArchive_failed:
 } /* HOG_openArchive */
 
 
-static LinkedStringList *HOG_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks)
+static void HOG_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata)
 {
-    HOGinfo *info = ((HOGinfo *) opaque);
-    HOGentry *entry = info->entries;
-    LinkedStringList *retval = NULL, *p = NULL;
-    PHYSFS_uint32 max = info->entryCount;
-    PHYSFS_uint32 i;
-
     /* no directories in HOG files. */
-    BAIL_IF_MACRO(*dirname != '\0', ERR_NOT_A_DIR, NULL);
+    if (*dname != '\0')
+    {
+        HOGinfo *info = (HOGinfo *) opaque;
+        HOGentry *entry = info->entries;
+        PHYSFS_uint32 max = info->entryCount;
+        PHYSFS_uint32 i;
 
-    for (i = 0; i < max; i++, entry++)
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, entry->name, -1);
-
-    return(retval);
+        for (i = 0; i < max; i++, entry++)
+            cb(callbackdata, entry->name);
+    } /* if */
 } /* HOG_enumerateFiles */
 
 

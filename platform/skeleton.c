@@ -32,9 +32,8 @@ int __PHYSFS_platformDeinit(void)
 } /* __PHYSFS_platformDeinit */
 
 
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, NULL);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
@@ -105,10 +104,11 @@ void __PHYSFS_platformTimeslice(void)
 } /* __PHYSFS_platformTimeslice */
 
 
-LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
-                                                  int omitSymLinks)
+void __PHYSFS_platformEnumerateFiles(const char *dirname,
+                                     int omitSymLinks,
+                                     PHYSFS_StringCallback callback,
+                                     void *callbackdata)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, NULL);
 } /* __PHYSFS_platformEnumerateFiles */
 
 

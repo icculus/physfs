@@ -177,17 +177,12 @@ int __PHYSFS_platformDeinit(void)
  * CD detection code is borrowed from Apple Technical Q&A DV18.
  *  http://developer.apple.com/qa/dv/dv18.html
  */
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
+    
     DriverGestaltParam pb;
     DrvQEl *dqp;
     OSErr status;
-    char **retval = (char **) malloc(sizeof (char *));
-    int cd_count = 1;
-
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-
-    *retval = NULL;
 
     pb.csCode = kDriverGestaltCode;
     pb.driverGestaltSelector = kdgDeviceType;
@@ -201,6 +196,7 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
         if ((status == noErr) && (pb.driverGestaltResponse == kdgCDType))
         {
             Str63 volName;
+            size_t size;
             HParamBlockRec hpbr;
             memset(&hpbr, '\0', sizeof (HParamBlockRec));
             hpbr.volumeParam.ioNamePtr = volName;
@@ -208,27 +204,15 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
             hpbr.volumeParam.ioVolIndex = 0;
             if (PBHGetVInfoSync(&hpbr) == noErr)
             {
-                char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
-                if (tmp)
-                {
-                    char *str = (char *) malloc(volName[0] + 1);
-                    retval = tmp;
-                    if (str != NULL)
-                    {
-                        memcpy(str, &volName[1], volName[0]);
-                        str[volName[0]] = '\0';
-                        retval[cd_count-1] = str;
-                        cd_count++;
-                    } /* if */
-                } /* if */
+                size = (size_t) volName[0];  /* convert to ASCIZ string... */
+                memmove(&volName[0], &volName[1], size);
+                volName[size] = '\0';
+                cb(data, volName);
             } /* if */
         } /* if */
 
         dqp = (DrvQEl *) dqp->qLink;
     } /* while */
-
-    retval[cd_count - 1] = NULL;
-    return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
@@ -577,10 +561,12 @@ void __PHYSFS_platformTimeslice(void)
 } /* __PHYSFS_platformTimeslice */
 
 
-LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
-                                                  int omitSymLinks)
+/* returns int so we can use BAIL*MACRO... */
+static int macClassicEnumerateFiles(const char *dirname,
+                                     int omitSymLinks,
+                                     PHYSFS_StringCallback callback,
+                                     void *callbackdata)
 {
-    LinkedStringList *ret = NULL, *p = NULL;
     UInt16 i;
     UInt16 max;
     FSSpec spec;
@@ -606,6 +592,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
 
     for (i = 1; i <= max; i++)
     {
+        size_t size;
         FSSpec aliasspec;
         Boolean alias = 0;
         Boolean folder = 0;
@@ -629,10 +616,20 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
             continue;
 
         /* still here? Add it to the list. */
-        ret = __PHYSFS_addToLinkedStringList(ret, &p, (const char *) &str255[1], str255[0]);
+        size = (size_t) str255[0];  /* (convert to ASCIZ string...) */
+        memmove(&str255[0], &str255[1], size);
+        str255[size] = '\0';
+        callback(callbackdata, str255);
     } /* for */
+} /* macClassicEnumerateFiles */
 
-    return(ret);
+
+void __PHYSFS_platformEnumerateFiles(const char *dirname,
+                                     int omitSymLinks,
+                                     PHYSFS_StringCallback callback,
+                                     void *callbackdata)
+{
+    macClassicEnumerateFiles(dirname, omitSymLinks, callback, callbackdata);
 } /* __PHYSFS_platformEnumerateFiles */
 
 
