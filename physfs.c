@@ -279,12 +279,12 @@ static char *calculateUserDir(void)
 
         str = (uname != NULL) ? uname : "default";
         retval = (char *) malloc(strlen(baseDir) + strlen(str) +
-                                 (strlen(dirsep) * 2) + 6);
+                                 strlen(dirsep) + 6);
 
         if (retval == NULL)
             __PHYSFS_setError(ERR_OUT_OF_MEMORY);
         else
-            sprintf(retval, "%s%susers%s%s", baseDir, dirsep, dirsep, str);
+            sprintf(retval, "%susers%s%s", baseDir, dirsep, str);
 
         if (uname != NULL)
             free((void *) uname);
@@ -398,7 +398,6 @@ int PHYSFS_init(const char *argv0)
     char *ptr;
 
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
-    BAIL_IF_MACRO(argv0 == NULL, ERR_INVALID_ARGUMENT, 0);
     BAIL_IF_MACRO(!__PHYSFS_platformInit(), NULL, 0);
 
     BAIL_IF_MACRO(!initializeMutexes(), NULL, 0);
