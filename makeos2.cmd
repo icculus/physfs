@@ -107,7 +107,7 @@ gcc %CFLAGS% -o bin/os2.obj platform/os2.c
 gcc %CFLAGS% -o bin/dir.obj archivers/dir.c
 gcc %CFLAGS% -o bin/grp.obj archivers/grp.c
 gcc %CFLAGS% -o bin/zip.obj archivers/zip.c
-gcc %CFLAGS% -o bin/zip.obj archivers/qpak.c
+gcc %CFLAGS% -o bin/qpak.obj archivers/qpak.c
 
 gcc %CFLAGS% -o bin/adler32.obj zlib114/adler32.c
 gcc %CFLAGS% -o bin/compress.obj zlib114/compress.c
