@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /WX /Gm /ZI /Od /I "." /I "zlibwin32" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_ZIP" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /Ze /W3 /WX /Gm /ZI /Od /I "." /I "zlib114" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_ZIP" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /WX /Gm /ZI /Od /I "." /I "zlib114" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_ZIP" /D "PHYSFS_SUPPORTS_QPAK" /YX /FD /GZ /c
 # SUBTRACT CPP /X
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -74,7 +74,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /WX /O2 /I "." /I "zlibwin32" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_ZIP" /YX /FD /c
-# ADD CPP /nologo /MD /Ze /W3 /WX /O2 /I "." /I "zlib114" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_ZIP" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /WX /O2 /I "." /I "zlib114" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_ZIP" /D "PHYSFS_SUPPORTS_QPAK" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -150,6 +150,10 @@ SOURCE=.\physfs.c
 # Begin Source File
 
 SOURCE=.\physfs_byteorder.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\archivers\qpak.c
 # End Source File
 # Begin Source File
 
