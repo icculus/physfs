@@ -48,6 +48,9 @@ French translation:
 Debian package support:
     Colin Bayer
 
+"abs-file.h" in "extras" dir:
+    Adam D. Moss
+
 Other stuff:
     Your name here! Patches go to icculus@clutteredmind.org ...
 
