@@ -419,13 +419,13 @@ static int ZIP_fileClose(FileHandle *handle)
 static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
 {
     PHYSFS_uint8 buf[256];
-    PHYSFS_sint32 i;
+    PHYSFS_sint32 i = 0;
     PHYSFS_sint64 filelen;
     PHYSFS_sint64 filepos;
     PHYSFS_sint32 maxread;
     PHYSFS_sint32 totalread = 0;
     int found = 0;
-    PHYSFS_uint32 extra;
+    PHYSFS_uint32 extra = 0;
 
     filelen = __PHYSFS_platformFileLength(in);
     BAIL_IF_MACRO(filelen == -1, NULL, 0);
