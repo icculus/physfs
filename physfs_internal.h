@@ -28,8 +28,8 @@ extern "C" {
 #  define PHYSFS_LANG PHYSFS_LANG_ENGLISH
 #endif
 
-#define PHYSFS_LANG_ENGLISH 1  /* English text by Ryan C. Gordon */
-#define PHYSFS_LANG_RUSSIAN 2  /* Russian text by Ed Sinjiashvili */
+#define PHYSFS_LANG_ENGLISH        1  /* English text by Ryan C. Gordon */
+#define PHYSFS_LANG_RUSSIAN_KOI8_R 2  /* Russian text by Ed Sinjiashvili */
 
 
 #if (PHYSFS_LANG == PHYSFS_LANG_ENGLISH)
@@ -126,7 +126,7 @@ extern "C" {
  #define ERR_PROT_VIOLATION       "Protection violation"
  #define ERR_BROKEN_PIPE          "Broken pipe"
 
-#elif (PHYSFS_LANG == PHYSFS_LANG_RUSSIAN)
+#elif (PHYSFS_LANG == PHYSFS_LANG_RUSSIAN_KOI8_R)
  #define DIR_ARCHIVE_DESCRIPTION  "Не архив, непосредственный ввод/вывод файловой системы"
  #define GRP_ARCHIVE_DESCRIPTION  "Формат группового файла Build engine"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip совместимый"
