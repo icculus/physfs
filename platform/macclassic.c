@@ -60,6 +60,93 @@
 
 const char *__PHYSFS_platformDirSeparator = ":";
 
+
+static const char *get_os_error_string(OSErr err)
+{
+    if (err == noErr)
+        return(NULL);
+
+    switch (err)
+    {
+        case fnfErr: return("File not found");
+        case notOpenErr: return("Volume not found");
+        case dirFulErr: return("Directory full");
+        case dskFulErr: return("Disk full");
+        case nsvErr: return("Volume not found");
+        case ioErr: return(ERR_IO_ERROR);
+        case bdNamErr: return(ERR_BAD_FILENAME);
+        case fnOpnErr: return(ERR_NOT_A_HANDLE);
+        case eofErr: return(ERR_PAST_EOF);
+        case posErr: return(ERR_SEEK_OUT_OF_RANGE);
+        case tmfoErr: return("Too many files open");
+        case wPrErr: return("Volume is locked through hardware");
+        case fLckdErr: return("File is locked");
+        case vLckdErr: return("Volume is locked through software");
+        case fBsyErr: return("File/directory is busy");
+        case dupFNErr: return(FILE_ALREADY_EXISTS);
+        case opWrErr: return("File already open for writing");
+        case rfNumErr: return("Invalid reference number");
+        case gfpErr: return("Error getting file position");
+        case volOffLinErr: return("Volume is offline");
+        case permErr: return("Permission denied");
+        case volOnLinErr: return("Volume already online");
+        case nsDrvErr: return("No such drive");
+        case noMacDskErr: return("Not a Macintosh disk");
+        case extFSErr: return("Volume belongs to an external file system");
+        case fsRnErr: return("Problem during rename");
+        case badMDBErr: return("Bad master directory block");
+        case wrPermErr: return("Write permission denied");
+        case memFullErr: return(ERR_OUT_OF_MEMORY);
+        case dirNFErr: return("Directory not found or incomplete pathname");
+        case tmwdoErr: return("Too many working directories open");
+        case badMovErr: return("Attempt to move forbidden");
+        case wrgVolTypErr: return("Wrong volume type");
+        case volGoneErr: return("Server volume has been disconnected");
+        case errFSNameTooLong: return(ERR_BAD_FILENAME);
+        case errFSNotAFolder: return("Not a folder");
+        case errFSNotAFile: return("Not a file");
+        case fidNotFound: return("File ID not found");
+        case fidExists: return("File ID already exists");
+        case afpAccessDenied: return("Access denied");
+        case afpNoServer: return("Server not responding");
+        case afpUserNotAuth: return("User authentication failed");
+        case afpPwdExpiredErr: return("Password has expired on server");
+
+        case paramErr:
+        case errFSBadFSRef:
+        case errFSBadBuffer:
+        case errFSMissingName:
+        case errFSBadPosMode:
+        case errFSBadAllocFlags:
+        case errFSBadItemCount
+        case errFSBadSearchParams
+        case afpDenyConflict
+            return("(BUG) PhysicsFS gave wrong params to the OS.");
+
+        default: return(ERR_OS_ERROR);
+    } /* switch */
+
+    return(NULL);
+} /* get_os_error_string */
+
+
+static OSErr oserr(OSErr err)
+{
+    char buf[128];
+    const char *errstr = get_os_error_string(err);
+    if (err == ERR_OS_ERROR)
+    {
+        snprintf(buf, "MacOS reported error (%d)", (int) err);
+        errstr = buf;
+    } /* if */
+
+    if (errstr != NULL)
+        __PHYSFS_SetError(errstr);
+
+    return(err);
+} /* oserr */
+
+
 static struct ProcessInfoRec procInfo;
 static FSSpec procfsspec;
 
@@ -67,13 +154,13 @@ int __PHYSFS_platformInit(void)
 {
     OSErr err;
     ProcessSerialNumber psn;
-    BAIL_IF_MACRO(GetCurrentProcess(&psn) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(GetCurrentProcess(&psn)) != noErr, NULL, 0);
     memset(&procInfo, '\0', sizeof (ProcessInfoRec));
     memset(&procfsspec, '\0', sizeof (FSSpec));
     procInfo.processInfoLength = sizeof (ProcessInfoRec);
     procInfo.processAppSpec = &procfsspec;
     err = GetProcessInformation(&psn, &procInfo);
-    BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(err) != noErr, NULL, 0);
     return(1);  /* we're golden. */
 } /* __PHYSFS_platformInit */
 
@@ -165,11 +252,11 @@ static char *convFSSpecToPath(FSSpec *spec, int includeFile)
     {
         /* check parent dir of what we last looked at... */
         infoPB.dirInfo.ioDrDirID = infoPB.dirInfo.ioDrParID;
-        if (PBGetCatInfoSync(&infoPB) != noErr)
+        if (oserr(PBGetCatInfoSync(&infoPB)) != noErr)
         {
             if (retval != NULL)
                 free(retval);
-            BAIL_MACRO(ERR_OS_ERROR, NULL);
+            return(NULL);
         } /* if */
 
         infoPB.dirInfo.ioFDirIndex = -1;  /* look at parent dir next time. */
@@ -219,9 +306,9 @@ char *__PHYSFS_platformGetUserName(void)
     /* use the System resource file. */
     UseResFile(0);
     /* apparently, -16096 specifies the username. */
-    strHandle = GetString(-16096);
+    strHandle = oserr(GetString(-16096));
     UseResFile(origResourceFile);
-    BAIL_IF_MACRO(strHandle == NULL, ERR_OS_ERROR, NULL);
+    BAIL_IF_MACRO(strHandle == NULL, NULL, NULL);
 
     HLock((Handle) strHandle);
     retval = (char *) malloc((*strHandle)[0] + 1);
@@ -280,7 +367,7 @@ static OSErr fnameToFSSpecNoAlias(const char *fname, FSSpec *spec)
     if (needColon)
         str255[len] = ':';
 
-    err = FSMakeFSSpec(0, 0, str255, spec);
+    err = oserr(FSMakeFSSpec(0, 0, str255, spec));
     return(err);
 } /* fnameToFSSpecNoAlias */
 
@@ -308,7 +395,7 @@ static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
         BAIL_IF_MACRO(!ptr, ERR_NO_SUCH_FILE, err); /* just in case */
         *ptr = '\0';
         err = fnameToFSSpecNoAlias(path, spec); /* get first dir. */
-        BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, err);
+        BAIL_IF_MACRO(oserr(err) != noErr, NULL, err);
         start = ptr;
         ptr = strchr(start + 1, ':');
 
@@ -349,9 +436,9 @@ static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
 
     else /* there's something there; make sure final file is not an alias. */
     {
-        BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, err);
+        BAIL_IF_MACRO(oserr(err) != noErr, NULL, err);
         err = ResolveAliasFileWithMountFlags(spec, 1, &folder, &alias, 0);
-        BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, err);
+        BAIL_IF_MACRO(oserr(err) != noErr, NULL, err);
     } /* else */
 
     return(noErr);  /* w00t. */
@@ -390,12 +477,12 @@ int __PHYSFS_platformIsSymLink(const char *fname)
     infoPB.dirInfo.ioVRefNum = spec.vRefNum;
     infoPB.dirInfo.ioDrDirID = spec.parID;
     infoPB.dirInfo.ioFDirIndex = 0;
-    BAIL_IF_MACRO(PBGetCatInfoSync(&infoPB) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(PBGetCatInfoSync(&infoPB)) != noErr, NULL, 0);
 
     err = FSMakeFSSpec(spec.vRefNum, infoPB.dirInfo.ioDrDirID,
                        (const unsigned char *) ptr, &spec);
-    BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, 0);
-    BAIL_IF_MACRO(IsAliasFile(&spec, &a, &f) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(err) != noErr, NULL, 0);
+    BAIL_IF_MACRO(oserr(IsAliasFile(&spec, &a, &f)) != noErr, NULL, 0);
     return(a);
 } /* __PHYSFS_platformIsSymlink */
 
@@ -413,7 +500,7 @@ int __PHYSFS_platformIsDirectory(const char *fname)
     infoPB.dirInfo.ioDrDirID = spec.parID;    /* ID of bin's dir.        */
     infoPB.dirInfo.ioFDirIndex = 0;           /* file (not parent) info. */
     err = PBGetCatInfoSync(&infoPB);
-    BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(err) != noErr, NULL, 0);
     return((infoPB.dirInfo.ioFlAttrib & kioFlAttribDirMask) != 0);
 } /* __PHYSFS_platformIsDirectory */
 
@@ -474,7 +561,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     infoPB.dirInfo.ioVRefNum = spec.vRefNum;  /* ID of file's volume.    */ 
     infoPB.dirInfo.ioDrDirID = spec.parID;    /* ID of dir.              */
     infoPB.dirInfo.ioFDirIndex = 0;           /* file (not parent) info. */
-    BAIL_IF_MACRO(PBGetCatInfoSync(&infoPB) != noErr, ERR_OS_ERROR, NULL);
+    BAIL_IF_MACRO(oserr(PBGetCatInfoSync(&infoPB)) != noErr, NULL, NULL);
 
     if ((infoPB.dirInfo.ioFlAttrib & kioFlAttribDirMask) == 0)
         BAIL_MACRO(ERR_NOT_A_DIR, NULL);
@@ -551,7 +638,7 @@ int __PHYSFS_platformMkDir(const char *path)
     BAIL_IF_MACRO(err != fnfErr, NULL, 0);
 
     err = DirCreate(spec.vRefNum, spec.parID, spec.name, &val);
-    BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(err) != noErr, NULL, 0);
     return(1);
 } /* __PHYSFS_platformMkDir */
 
@@ -568,7 +655,7 @@ static SInt16 *macDoOpen(const char *fname, SInt8 perm, int createIfMissing)
         BAIL_IF_MACRO(!createIfMissing, ERR_NO_SUCH_FILE, NULL);
         err = HCreate(spec.vRefNum, spec.parID, spec.name,
                       procInfo.processSignature, 'BINA');
-        BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, NULL);
+        BAIL_IF_MACRO(oserr(err) != noErr, NULL, NULL);
         created = 1;
     } /* if */
 
@@ -580,12 +667,13 @@ static SInt16 *macDoOpen(const char *fname, SInt8 perm, int createIfMissing)
         BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
-    if (HOpenDF(spec.vRefNum, spec.parID, spec.name, perm, retval) != noErr)
+    err = HOpenDF(spec.vRefNum, spec.parID, spec.name, perm, retval)
+    if (oserr(err) != noErr)
     {
         free(retval);
         if (created)
             HDelete(spec.vRefNum, spec.parID, spec.name);
-        BAIL_MACRO(ERR_OS_ERROR, NULL);
+        return(NULL);
     } /* if */
 
     return(retval);
@@ -597,10 +685,10 @@ void *__PHYSFS_platformOpenRead(const char *filename)
     SInt16 *retval = macDoOpen(filename, fsRdPerm, 0);
     if (retval != NULL)   /* got a file; seek to start. */
     {
-        if (SetFPos(*retval, fsFromStart, 0) != noErr)
+        if (oserr(SetFPos(*retval, fsFromStart, 0)) != noErr)
         {
             FSClose(*retval);
-            BAIL_MACRO(ERR_OS_ERROR, NULL);
+            return(NULL);
         } /* if */
     } /* if */
 
@@ -613,11 +701,11 @@ void *__PHYSFS_platformOpenWrite(const char *filename)
     SInt16 *retval = macDoOpen(filename, fsRdWrPerm, 1);
     if (retval != NULL)   /* got a file; truncate it. */
     {
-        if ((SetEOF(*retval, 0) != noErr) ||
-            (SetFPos(*retval, fsFromStart, 0) != noErr))
+        if ((oserr(SetEOF(*retval, 0)) != noErr) ||
+            (oserr(SetFPos(*retval, fsFromStart, 0)) != noErr))
         {
             FSClose(*retval);
-            BAIL_MACRO(ERR_OS_ERROR, NULL);
+            return(NULL);
         } /* if */
     } /* if */
 
@@ -630,10 +718,10 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
     SInt16 *retval = macDoOpen(filename, fsRdWrPerm, 1);
     if (retval != NULL)   /* got a file; seek to end. */
     {
-        if (SetFPos(*retval, fsFromLEOF, 0) != noErr)
+        if (oserr(SetFPos(*retval, fsFromLEOF, 0)) != noErr)
         {
             FSClose(*retval);
-            BAIL_MACRO(ERR_OS_ERROR, NULL);
+            return(NULL);
         } /* if */
     } /* if */
 
@@ -651,8 +739,8 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     for (i = 0; i < count; i++)
     {
         br = size;
-        BAIL_IF_MACRO(FSRead(ref, &br, buffer) != noErr, ERR_OS_ERROR, i);
-        BAIL_IF_MACRO(br != size, ERR_OS_ERROR, i);
+        BAIL_IF_MACRO(oserr(FSRead(ref, &br, buffer)) != noErr, NULL, i);
+        BAIL_IF_MACRO(br != size, NULL, i);  /* !!! FIXME: seek back if only read part of an object! */
         buffer = ((PHYSFS_uint8 *) buffer) + size;
     } /* for */
 
@@ -670,8 +758,8 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
     for (i = 0; i < count; i++)
     {
         bw = size;
-        BAIL_IF_MACRO(FSWrite(ref, &bw, buffer) != noErr, ERR_OS_ERROR, i);
-        BAIL_IF_MACRO(bw != size, ERR_OS_ERROR, i);
+        BAIL_IF_MACRO(oserr(FSWrite(ref, &bw, buffer)) != noErr, NULL, i);
+        BAIL_IF_MACRO(bw != size, NULL, i); /* !!! FIXME: seek back if only wrote part of an object! */
         buffer = ((PHYSFS_uint8 *) buffer) + size;
     } /* for */
 
@@ -683,7 +771,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
     SInt16 ref = *((SInt16 *) opaque);
     OSErr err = SetFPos(ref, fsFromStart, (SInt32) pos);
-    BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(err) != noErr, NULL, 0);
     return(1);
 } /* __PHYSFS_platformSeek */
 
@@ -692,7 +780,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
     SInt16 ref = *((SInt16 *) opaque);
     SInt32 curPos;
-    BAIL_IF_MACRO(GetFPos(ref, &curPos) != noErr, ERR_OS_ERROR, -1);
+    BAIL_IF_MACRO(oserr(GetFPos(ref, &curPos)) != noErr, NULL, -1);
     return((PHYSFS_sint64) curPos);
 } /* __PHYSFS_platformTell */
 
@@ -701,7 +789,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
     SInt16 ref = *((SInt16 *) opaque);
     SInt32 eofPos;
-    BAIL_IF_MACRO(GetEOF(ref, &eofPos) != noErr, ERR_OS_ERROR, -1);
+    BAIL_IF_MACRO(oserr(GetEOF(ref, &eofPos)) != noErr, NULL, -1);
     return((PHYSFS_sint64) eofPos);
 } /* __PHYSFS_platformFileLength */
 
@@ -710,8 +798,8 @@ int __PHYSFS_platformEOF(void *opaque)
 {
     SInt16 ref = *((SInt16 *) opaque);
     SInt32 eofPos, curPos;
-    BAIL_IF_MACRO(GetEOF(ref, &eofPos) != noErr, ERR_OS_ERROR, 1);
-    BAIL_IF_MACRO(GetFPos(ref, &curPos) != noErr, ERR_OS_ERROR, 1);
+    BAIL_IF_MACRO(oserr(GetEOF(ref, &eofPos)) != noErr, NULL, 1);
+    BAIL_IF_MACRO(oserr(GetFPos(ref, &curPos)) != noErr, NULL, 1);
     return(curPos >= eofPos);
 } /* __PHYSFS_platformEOF */
 
@@ -722,7 +810,7 @@ int __PHYSFS_platformFlush(void *opaque)
     ParamBlockRec pb;
     memset(&pb, '\0', sizeof (ParamBlockRec));
     pb.ioParam.ioRefNum = ref;
-    BAIL_IF_MACRO(PBFlushFileSync(&pb) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(PBFlushFileSync(&pb)) != noErr, NULL, 0);
     return(1);
 } /* __PHYSFS_platformFlush */
 
@@ -731,21 +819,26 @@ int __PHYSFS_platformClose(void *opaque)
 {
     SInt16 ref = *((SInt16 *) opaque);
     SInt16 vRefNum;
-    HParamBlockRec hpbr;
     Str63 volName;
+    int flushVol = 0;
 
-    BAIL_IF_MACRO(GetVRefNum(ref, &vRefNum) != noErr, ERR_OS_ERROR, 0);
+    if (GetVRefNum(ref, &vRefNum) == noErr)
+    {
+        HParamBlockRec hpbr;
+        memset(&hpbr, '\0', sizeof (HParamBlockRec));
+        hpbr.volumeParam.ioNamePtr = volName;
+        hpbr.volumeParam.ioVRefNum = vRefNum;
+        hpbr.volumeParam.ioVolIndex = 0;
+        if (PBHGetVInfoSync(&hpbr) == noErr)
+            flushVol = 1;
+    } /* if */
 
-    memset(&hpbr, '\0', sizeof (HParamBlockRec));
-    hpbr.volumeParam.ioNamePtr = volName;
-    hpbr.volumeParam.ioVRefNum = vRefNum;
-    hpbr.volumeParam.ioVolIndex = 0;
-    BAIL_IF_MACRO(PBHGetVInfoSync(&hpbr) != noErr, ERR_OS_ERROR, 0);
-
-    BAIL_IF_MACRO(FSClose(ref) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(FSClose(ref)) != noErr, NULL, 0);
     free(opaque);
 
-    FlushVol(volName, vRefNum);
+    if (flushVol)
+        FlushVol(volName, vRefNum);  /* update catalog info, etc. */
+
     return(1);
 } /* __PHYSFS_platformClose */
 
@@ -756,7 +849,7 @@ int __PHYSFS_platformDelete(const char *path)
     OSErr err;
     BAIL_IF_MACRO(fnameToFSSpec(path, &spec) != noErr, NULL, 0);
     err = HDelete(spec.vRefNum, spec.parID, spec.name);
-    BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(oserr(err) != noErr, NULL, 0);
     return(1);
 } /* __PHYSFS_platformDelete */
 
@@ -799,7 +892,7 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
     infoPB.dirInfo.ioVRefNum = spec.vRefNum;
     infoPB.dirInfo.ioDrDirID = spec.parID;
     infoPB.dirInfo.ioFDirIndex = 0;
-    BAIL_IF_MACRO(PBGetCatInfoSync(&infoPB) != noErr, ERR_OS_ERROR, -1);
+    BAIL_IF_MACRO(oserr(PBGetCatInfoSync(&infoPB)) != noErr, NULL, -1);
 
     modDate = ((infoPB.dirInfo.ioFlAttrib & kioFlAttribDirMask) != 0) ?
                    infoPB.dirInfo.ioDrMdDat : infoPB.hFileInfo.ioFlMdDat;
