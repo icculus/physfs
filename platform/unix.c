@@ -6,6 +6,12 @@
  *  This file written by Ryan C. Gordon.
  */
 
+#if ((defined __APPLE__) && (defined __MACH__))
+#  if (!defined __DARWIN__)
+#    define __DARWIN__
+#  endif
+#endif
+
 #if (defined __STRICT_ANSI__)
 #define __PHYSFS_DOING_STRICT_ANSI__
 #endif
@@ -40,12 +46,64 @@
 #include <time.h>
 #include <errno.h>
 #include <mntent.h>
+#include <sys/mount.h>
+
+#if (defined __DARWIN__)
+#include <sys/ucred.h>
+#endif
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
 
 const char *__PHYSFS_platformDirSeparator = "/";
+
+
+#if (defined __DARWIN__)
+
+char **__PHYSFS_platformDetectAvailableCDs(void)
+{
+    char **retval = (char **) malloc(sizeof (char *));
+    int cd_count = 1;  /* We count the NULL entry. */
+    struct statfs* mntbufp = NULL;
+    int mounts;
+    int ii;
+
+    mounts = getmntinfo( &mntbufp, MNT_WAIT );
+
+    for ( ii=0; ii < mounts; ++ii ) {
+        int add_it = 0;
+
+        if ( strcmp( mntbufp[ii].f_fstypename, "iso9660") == 0 )
+            add_it = 1;
+        /* !!! other mount types? */
+
+        if (add_it)
+        {
+            char **tmp = realloc(retval, sizeof (char *) * cd_count + 1);
+            if (tmp)
+            {
+                retval = tmp;
+                retval[cd_count-1] = (char *)
+                                malloc(strlen(mntbufp[ ii ].f_mntonname) + 1);
+                if (retval[cd_count-1])
+                {
+                    strcpy(retval[cd_count-1], mntbufp[ ii ].f_mntonname);
+                    cd_count++;
+                } /* if */
+            } /* if */
+        } /* if */
+    }
+
+    free( mntbufp );
+
+    retval[cd_count - 1] = NULL;
+    return(retval);
+} /* __PHYSFS_platformDetectAvailableCDs */
+
+
+#else  /* non-Darwin implementation... */
+
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
 {
@@ -85,7 +143,9 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 
     retval[cd_count - 1] = NULL;
     return(retval);
-} /* __PHYSFS_detectAvailableCDs */
+} /* __PHYSFS_platformDetectAvailableCDs */
+
+#endif
 
 
 static char *copyEnvironmentVariable(const char *varname)
