@@ -9,7 +9,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   don't. Ugh!
 - Maybe a configure option to disable CD-ROM detection is in order. The API
   would remain, but just report no mounted discs every time.
-- Rewrite ZIP_enumerateFiles().
 - Change platform detection so it doesn't need sed?
 - Deal with Unix platforms without POSIX threads (NetBSD, etc).
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
@@ -19,8 +18,8 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   support so that both "archives" look identical to an application; might be
   nice for an email program. That's blue sky, unless someone wants to tackle
   it.
-- Platforms to be verified as working: OpenBSD, Solaris, WinNT 3.1, WinME,
-  WinXP, MacOS 8.1
+- Platforms to be verified as working: Solaris, WinNT 3.1, WinME, WinXP,
+  MacOS 8.1
 - Platforms to port to: NetBSD (needs pthreads), OS/2 (needs platform driver),
   PocketPC (Maybe can just use win32.c?), Amiga (needs platform driver),
   AtheOS (needs platform driver, maybe can use unix.c and posix.c?)
