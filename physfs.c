@@ -189,6 +189,8 @@ static DirHandle *openDirectory(const char *d, int forWriting)
 {
     const DirFunctions **i;
 
+    BAIL_IF_MACRO(!__PHYSFS_platformExists(d), ERR_NO_SUCH_FILE, NULL);
+
     for (i = dirFunctions; *i != NULL; i++)
     {
         if ((*i)->isArchive(d, forWriting))
@@ -1057,6 +1059,9 @@ int PHYSFS_isDirectory(const char *fname)
 
     while (*fname == '/')
         fname++;
+
+    if (*fname == '\0')
+        return(1);
 
     for (i = searchPath; i != NULL; i = i->next)
     {
