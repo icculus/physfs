@@ -4,7 +4,8 @@
 
 03302003 - Fixed seeking in uncompressed ZIP entries, and handle a
            misbehaviour in Java's JAR creation tools. Thanks to "Tree" for
-           pointing these bugs out.
+           pointing these bugs out. Added HOG and MVL archive support for
+           Descent I and II (Thanks, Bradley Bell!).
 03192003 - Fixed problem in PHYSFS_mkdir() when dirs to be created already
            exist. Fixed problem where PHYSFS_mkdir() incorrectly tripped an
            alarm in __PHYSFS_verifySecurity().
