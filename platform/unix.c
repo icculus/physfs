@@ -91,15 +91,15 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 
         if (add_it)
         {
-            char **tmp = realloc(retval, sizeof (char *) * cd_count + 1);
+            char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
             if (tmp)
             {
                 retval = tmp;
-                retval[cd_count-1] = (char *)
-                                malloc(strlen(mntbufp[ ii ].f_mntonname) + 1);
-                if (retval[cd_count-1])
+                retval[cd_count - 1] = (char *)
+                                malloc(strlen(mntbufp[ii].f_mntonname) + 1);
+                if (retval[cd_count - 1])
                 {
-                    strcpy(retval[cd_count-1], mntbufp[ ii ].f_mntonname);
+                    strcpy(retval[cd_count - 1], mntbufp[ii].f_mntonname);
                     cd_count++;
                 } /* if */
             } /* if */
@@ -137,14 +137,14 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 
         if (add_it)
         {
-            char **tmp = realloc(retval, sizeof (char *) * cd_count + 1);
+            char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
             if (tmp)
             {
                 retval = tmp;
                 retval[cd_count-1] = (char *) malloc(strlen(ent->mnt_dir) + 1);
-                if (retval[cd_count-1])
+                if (retval[cd_count - 1])
                 {
-                    strcpy(retval[cd_count-1], ent->mnt_dir);
+                    strcpy(retval[cd_count - 1], ent->mnt_dir);
                     cd_count++;
                 } /* if */
             } /* if */

@@ -119,7 +119,7 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
             hpbr.volumeParam.ioVolIndex = 0;
             if (PBHGetVInfoSync(&hpbr) == noErr)
             {
-                char **tmp = realloc(retval, sizeof (char *) * cd_count + 1);
+                char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
                 if (tmp)
                 {
                     char *str = (char *) malloc(volName[0] + 1);
