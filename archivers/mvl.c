@@ -67,9 +67,9 @@ typedef struct
 static void MVL_dirClose(dvoid *opaque)
 {
     MVLinfo *info = ((MVLinfo *) opaque);
-    free(info->filename);
-    free(info->entries);
-    free(info);
+    allocator.Free(info->filename);
+    allocator.Free(info->entries);
+    allocator.Free(info);
 } /* MVL_dirClose */
 
 
@@ -141,7 +141,7 @@ static int MVL_fileClose(fvoid *opaque)
 {
     MVLfileinfo *finfo = (MVLfileinfo *) opaque;
     BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
-    free(finfo);
+    allocator.Free(finfo);
     return(1);
 } /* MVL_fileClose */
 
@@ -223,7 +223,7 @@ static int mvl_load_entries(const char *name, int forWriting, MVLinfo *info)
 
     BAIL_IF_MACRO(!mvl_open(name, forWriting, &fh, &fileCount), NULL, 0);
     info->entryCount = fileCount;
-    info->entries = (MVLentry *) malloc(sizeof (MVLentry) * fileCount);
+    info->entries = (MVLentry *) allocator.Malloc(sizeof(MVLentry)*fileCount);
     if (info->entries == NULL)
     {
         __PHYSFS_platformClose(fh);
@@ -262,12 +262,12 @@ static int mvl_load_entries(const char *name, int forWriting, MVLinfo *info)
 static void *MVL_openArchive(const char *name, int forWriting)
 {
     PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
-    MVLinfo *info = malloc(sizeof (MVLinfo));
+    MVLinfo *info = (MVLinfo *) allocator.Malloc(sizeof (MVLinfo));
 
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (MVLinfo));
 
-    info->filename = (char *) malloc(strlen(name) + 1);
+    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
     GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, MVL_openArchive_failed);
     if (!mvl_load_entries(name, forWriting, info))
         goto MVL_openArchive_failed;
@@ -280,10 +280,10 @@ MVL_openArchive_failed:
     if (info != NULL)
     {
         if (info->filename != NULL)
-            free(info->filename);
+            allocator.Free(info->filename);
         if (info->entries != NULL)
-            free(info->entries);
-        free(info);
+            allocator.Free(info->entries);
+        allocator.Free(info);
     } /* if */
 
     return(NULL);
@@ -386,14 +386,14 @@ static fvoid *MVL_openRead(dvoid *opaque, const char *fnm, int *fileExists)
     *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, NULL);
 
-    finfo = (MVLfileinfo *) malloc(sizeof (MVLfileinfo));
+    finfo = (MVLfileinfo *) allocator.Malloc(sizeof (MVLfileinfo));
     BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     finfo->handle = __PHYSFS_platformOpenRead(info->filename);
     if ( (finfo->handle == NULL) ||
          (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
     {
-        free(finfo);
+        allocator.Free(finfo);
         return(NULL);
     } /* if */
 

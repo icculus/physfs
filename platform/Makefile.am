@@ -19,6 +19,7 @@ EXTRA_DIST =      \
 	skeleton.c    \
 	macclassic.c  \
 	win32.c       \
+	pocketpc.c    \
 	unix.c        \
 	os2.c         \
     beos.cpp

@@ -59,7 +59,7 @@ char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
 
     if (envr != NULL)
     {
-        retval = (char *) malloc(strlen(envr) + 1);
+        retval = (char *) allocator.Malloc(strlen(envr) + 1);
         if (retval != NULL)
             strcpy(retval, envr);
     } /* if */
@@ -77,7 +77,7 @@ static char *getUserNameByUID(void)
     pw = getpwuid(uid);
     if ((pw != NULL) && (pw->pw_name != NULL))
     {
-        retval = (char *) malloc(strlen(pw->pw_name) + 1);
+        retval = (char *) allocator.Malloc(strlen(pw->pw_name) + 1);
         if (retval != NULL)
             strcpy(retval, pw->pw_name);
     } /* if */
@@ -95,7 +95,7 @@ static char *getUserDirByUID(void)
     pw = getpwuid(uid);
     if ((pw != NULL) && (pw->pw_dir != NULL))
     {
-        retval = (char *) malloc(strlen(pw->pw_dir) + 1);
+        retval = (char *) allocator.Malloc(strlen(pw->pw_dir) + 1);
         if (retval != NULL)
             strcpy(retval, pw->pw_dir);
     } /* if */
@@ -204,7 +204,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     int len = ((prepend) ? strlen(prepend) : 0) +
               ((append) ? strlen(append) : 0) +
               strlen(dirName) + 1;
-    char *retval = (char *) malloc(len);
+    char *retval = (char *) allocator.Malloc(len);
 
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
@@ -240,7 +240,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     {
         dlen = strlen(dirname);
         bufsize = dlen + 256;
-        buf = (char *) malloc(bufsize);
+        buf = (char *) allocator.Malloc(bufsize);
         if (buf == NULL)
             return;
         strcpy(buf, dirname);
@@ -256,7 +256,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     if (dir == NULL)
     {
         if (buf != NULL)
-            free(buf);
+            allocator.Free(buf);
         return;
     } /* if */
 
@@ -274,7 +274,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
             int len = strlen(ent->d_name) + dlen + 1;
             if (len > bufsize)
             {
-                p = realloc(buf, len);
+                p = (char *) allocator.Realloc(buf, len);
                 if (p == NULL)
                     continue;
                 buf = p;
@@ -290,7 +290,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     } /* while */
 
     if (buf != NULL)
-        free(buf);
+        allocator.Free(buf);
 
     closedir(dir);
 } /* __PHYSFS_platformEnumerateFiles */
@@ -305,11 +305,11 @@ char *__PHYSFS_platformCurrentDir(void)
     do
     {
         allocSize += 100;
-        ptr = (char *) realloc(retval, allocSize);
+        ptr = (char *) allocator.Realloc(retval, allocSize);
         if (ptr == NULL)
         {
             if (retval != NULL)
-                free(retval);
+                allocator.Free(retval);
             BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
         } /* if */
 
@@ -324,7 +324,7 @@ char *__PHYSFS_platformCurrentDir(void)
              * directory not existing.
              */
         if (retval != NULL)
-            free(retval);
+            allocator.Free(retval);
         BAIL_MACRO(ERR_NO_SUCH_FILE, NULL);
     } /* if */
 
@@ -352,7 +352,7 @@ static void *doOpen(const char *filename, int mode)
     fd = open(filename, mode, S_IRUSR | S_IWUSR);
     BAIL_IF_MACRO(fd < 0, strerror(errno), NULL);
 
-    retval = (int *) malloc(sizeof (int));
+    retval = (int *) allocator.Malloc(sizeof (int));
     if (retval == NULL)
     {
         close(fd);
@@ -482,7 +482,7 @@ int __PHYSFS_platformClose(void *opaque)
 {
     int fd = *((int *) opaque);
     BAIL_IF_MACRO(close(fd) == -1, strerror(errno), 0);
-    free(opaque);
+    allocator.Free(opaque);
     return(1);
 } /* __PHYSFS_platformClose */
 
@@ -516,18 +516,21 @@ void __PHYSFS_platformAllocatorDeinit(void)
 
 void *__PHYSFS_platformAllocatorMalloc(size_t s)
 {
+    #undef malloc
     return(malloc(s));
 } /* __PHYSFS_platformMalloc */
 
 
 void *__PHYSFS_platformAllocatorRealloc(void *ptr, size_t s)
 {
+    #undef realloc
     return(realloc(ptr, s));
 } /* __PHYSFS_platformRealloc */
 
 
 void __PHYSFS_platformAllocatorFree(void *ptr)
 {
+    #undef free
     free(ptr);
 } /* __PHYSFS_platformAllocatorFree */
 

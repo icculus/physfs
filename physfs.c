@@ -180,7 +180,7 @@ static void *stateLock = NULL;     /* protects other PhysFS static state. */
 
 /* allocator ... */
 static int externalAllocator = 0;
-static PHYSFS_Allocator allocator;
+PHYSFS_Allocator allocator;
 
 
 /* functions ... */
@@ -201,8 +201,8 @@ static void enumStringListCallback(void *data, const char *str)
     if (pecd->errorstr)
         return;
 
-    ptr = realloc(pecd->list, (pecd->size + 2) * sizeof (char *));
-    newstr = malloc(strlen(str) + 1);
+    ptr = allocator.Realloc(pecd->list, (pecd->size + 2) * sizeof (char *));
+    newstr = (char *) allocator.Malloc(strlen(str) + 1);
     if (ptr != NULL)
         pecd->list = (char **) ptr;
 
@@ -224,7 +224,7 @@ static char **doEnumStringList(void (*func)(PHYSFS_StringCallback, void *))
 {
     EnumStringListCallbackData ecd;
     memset(&ecd, '\0', sizeof (ecd));
-    ecd.list = (char **) malloc(sizeof (char *));
+    ecd.list = (char **) allocator.Malloc(sizeof (char *));
     BAIL_IF_MACRO(ecd.list == NULL, ERR_OUT_OF_MEMORY, NULL);
     func(enumStringListCallback, &ecd);
     BAIL_IF_MACRO(ecd.errorstr != NULL, ecd.errorstr, NULL);
@@ -345,7 +345,7 @@ void __PHYSFS_setError(const char *str)
 
     if (err == NULL)
     {
-        err = (ErrMsg *) malloc(sizeof (ErrMsg));
+        err = (ErrMsg *) allocator.Malloc(sizeof (ErrMsg));
         if (err == NULL)
             return;   /* uhh...? */
 
@@ -389,7 +389,7 @@ static void freeErrorMessages(void)
     for (i = errorMessages; i != NULL; i = next)
     {
         next = i->next;
-        free(i);
+        allocator.Free(i);
     } /* for */
 
     errorMessages = NULL;
@@ -435,7 +435,7 @@ static DirHandle *tryOpenDir(const PHYSFS_Archiver *funcs,
         void *opaque = funcs->openArchive(d, forWriting);
         if (opaque != NULL)
         {
-            retval = (DirHandle *) allocator.malloc(sizeof (DirHandle));
+            retval = (DirHandle *) allocator.Malloc(sizeof (DirHandle));
             if (retval == NULL)
                 funcs->dirClose(opaque);
             else
@@ -592,13 +592,13 @@ static DirHandle *createDirHandle(const char *newDir,
     dirHandle = openDirectory(newDir, forWriting);
     GOTO_IF_MACRO(!dirHandle, NULL, badDirHandle);
 
-    dirHandle->dirName = (char *) malloc(strlen(newDir) + 1);
+    dirHandle->dirName = (char *) allocator.Malloc(strlen(newDir) + 1);
     GOTO_IF_MACRO(!dirHandle->dirName, ERR_OUT_OF_MEMORY, badDirHandle);
     strcpy(dirHandle->dirName, newDir);
 
     if ((mountPoint != NULL) && (*mountPoint != '\0'))
     {
-        dirHandle->mountPoint = (char *) malloc(strlen(mountPoint) + 2);
+        dirHandle->mountPoint = (char *)allocator.Malloc(strlen(mountPoint)+2);
         GOTO_IF_MACRO(!dirHandle->mountPoint, ERR_OUT_OF_MEMORY, badDirHandle);
         strcpy(dirHandle->mountPoint, mountPoint);
         strcat(dirHandle->mountPoint, "/");
@@ -610,9 +610,9 @@ badDirHandle:
     if (dirHandle != NULL)
     {
         dirHandle->funcs->dirClose(dirHandle->opaque);
-        free(dirHandle->dirName);
-        free(dirHandle->mountPoint);
-        free(dirHandle);
+        allocator.Free(dirHandle->dirName);
+        allocator.Free(dirHandle->mountPoint);
+        allocator.Free(dirHandle);
     } /* if */
 
     return(NULL);
@@ -631,9 +631,9 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
         BAIL_IF_MACRO(i->dirHandle == dh, ERR_FILES_STILL_OPEN, 0);
     
     dh->funcs->dirClose(dh->opaque);
-    free(dh->dirName);
-    free(dh->mountPoint);
-    free(dh);
+    allocator.Free(dh->dirName);
+    allocator.Free(dh->mountPoint);
+    allocator.Free(dh);
     return(1);
 } /* freeDirHandle */
 
@@ -652,8 +652,8 @@ static char *calculateUserDir(void)
         const char *uname = __PHYSFS_platformGetUserName();
 
         str = (uname != NULL) ? uname : "default";
-        retval = (char *) malloc(strlen(baseDir) + strlen(str) +
-                                 strlen(dirsep) + 6);
+        retval = (char *) allocator.Malloc(strlen(baseDir) + strlen(str) +
+                                           strlen(dirsep) + 6);
 
         if (retval == NULL)
             __PHYSFS_setError(ERR_OUT_OF_MEMORY);
@@ -661,7 +661,7 @@ static char *calculateUserDir(void)
             sprintf(retval, "%susers%s%s", baseDir, dirsep, str);
 
         if (uname != NULL)
-            free((void *) uname);
+            allocator.Free((void *) uname);
     } /* else */
 
     return(retval);
@@ -676,10 +676,10 @@ static int appendDirSep(char **dir)
     if (strcmp((*dir + strlen(*dir)) - strlen(dirsep), dirsep) == 0)
         return(1);
 
-    ptr = realloc(*dir, strlen(*dir) + strlen(dirsep) + 1);
+    ptr = (char *) allocator.Realloc(*dir, strlen(*dir) + strlen(dirsep) + 1);
     if (!ptr)
     {
-        free(*dir);
+        allocator.Free(*dir);
         return(0);
     } /* if */
 
@@ -717,7 +717,7 @@ static char *calculateBaseDir(const char *argv0)
         } /* while */
 
         size = (size_t) (ptr - argv0);
-        retval = (char *) malloc(size + 1);
+        retval = (char *) allocator.Malloc(size + 1);
         BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
         memcpy(retval, argv0, size);
         retval[size] = '\0';
@@ -736,7 +736,7 @@ static char *calculateBaseDir(const char *argv0)
      * Not a good alternative, but it only happens if the current
      * directory was deleted from under the program.
      */
-    retval = (char *) malloc(strlen(dirsep) + 1);
+    retval = (char *) allocator.Malloc(strlen(dirsep) + 1);
     strcpy(retval, dirsep);
     return(retval);
 } /* calculateBaseDir */
@@ -777,7 +777,7 @@ int PHYSFS_init(const char *argv0)
     if (!externalAllocator)
         setDefaultAllocator();
 
-    BAIL_IF_MACRO(!allocator.init(), NULL, 0);
+    BAIL_IF_MACRO(!allocator.Init(), NULL, 0);
 
     BAIL_IF_MACRO(!__PHYSFS_platformInit(), NULL, 0);
 
@@ -787,7 +787,7 @@ int PHYSFS_init(const char *argv0)
     BAIL_IF_MACRO(baseDir == NULL, NULL, 0);
 
     ptr = __PHYSFS_platformRealPath(baseDir);
-    free(baseDir);
+    allocator.Free(baseDir);
     BAIL_IF_MACRO(ptr == NULL, NULL, 0);
     baseDir = ptr;
 
@@ -797,13 +797,13 @@ int PHYSFS_init(const char *argv0)
     if (userDir != NULL)
     {
         ptr = __PHYSFS_platformRealPath(userDir);
-        free(userDir);
+        allocator.Free(userDir);
         userDir = ptr;
     } /* if */
 
     if ((userDir == NULL) || (!appendDirSep(&userDir)))
     {
-        free(baseDir);
+        allocator.Free(baseDir);
         baseDir = NULL;
         return(0);
     } /* if */
@@ -832,7 +832,7 @@ static int closeFileHandleList(FileHandle **list)
             return(0);
         } /* if */
 
-        free(i);
+        allocator.Free(i);
     } /* for */
 
     *list = NULL;
@@ -873,13 +873,13 @@ int PHYSFS_deinit(void)
 
     if (baseDir != NULL)
     {
-        free(baseDir);
+        allocator.Free(baseDir);
         baseDir = NULL;
     } /* if */
 
     if (userDir != NULL)
     {
-        free(userDir);
+        allocator.Free(userDir);
         userDir = NULL;
     } /* if */
 
@@ -889,7 +889,7 @@ int PHYSFS_deinit(void)
     __PHYSFS_platformDestroyMutex(errorLock);
     __PHYSFS_platformDestroyMutex(stateLock);
 
-    allocator.deinit();
+    allocator.Deinit();
 
     errorLock = stateLock = NULL;
     return(1);
@@ -906,9 +906,9 @@ void PHYSFS_freeList(void *list)
 {
     void **i;
     for (i = (void **) list; *i != NULL; i++)
-        free(*i);
+        allocator.Free(*i);
 
-    free(list);
+    allocator.Free(list);
 } /* PHYSFS_freeList */
 
 
@@ -1106,8 +1106,10 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
     BAIL_IF_MACRO(!initialized, ERR_NOT_INITIALIZED, 0);
 
         /* set write dir... */
-    str = malloc(strlen(userdir) + (strlen(organization) * 2) +
-                 (strlen(appName) * 2) + (strlen(dirsep) * 3) + 2);
+    str = (char *) allocator.Malloc(
+            strlen(userdir) + (strlen(organization) * 2) +
+            (strlen(appName) * 2) + (strlen(dirsep) * 3) + 2);
+
     BAIL_IF_MACRO(str == NULL, ERR_OUT_OF_MEMORY, 0);
     sprintf(str, "%s.%s%s%s", userdir, organization, dirsep, appName);
 
@@ -1130,14 +1132,14 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
         if (no_write)
         {
             PHYSFS_setWriteDir(NULL);   /* just in case. */
-            free(str);
+            allocator.Free(str);
             BAIL_MACRO(ERR_CANT_SET_WRITE_DIR, 0);
         } /* if */
     } /* if */
 
     /* Put write dir first in search path... */
     PHYSFS_addToSearchPath(str, 0);
-    free(str);
+    allocator.Free(str);
 
         /* Put base path on search path... */
     PHYSFS_addToSearchPath(basedir, 1);
@@ -1170,12 +1172,13 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
                 if (__PHYSFS_platformStricmp(ext, archiveExt) == 0)
                 {
                     const char *d = PHYSFS_getRealDir(*i);
-                    str = malloc(strlen(d) + strlen(dirsep) + l + 1);
+                    size_t allocsize = strlen(d) + strlen(dirsep) + l + 1;
+                    str = (char *) allocator.Malloc(allocsize);
                     if (str != NULL)
                     {
                         sprintf(str, "%s%s%s", d, dirsep, *i);
                         PHYSFS_addToSearchPath(str, archivesFirst == 0);
-                        free(str);
+                        allocator.Free(str);
                     } /* if */
                 } /* if */
             } /* if */
@@ -1195,9 +1198,9 @@ void PHYSFS_permitSymbolicLinks(int allow)
 
 
 /* string manipulation in C makes my ass itch. */
-char * __PHYSFS_convertToDependent(const char *prepend,
-                                              const char *dirName,
-                                              const char *append)
+char *__PHYSFS_convertToDependent(const char *prepend,
+                                  const char *dirName,
+                                  const char *append)
 {
     const char *dirsep = __PHYSFS_platformDirSeparator;
     size_t sepsize = strlen(dirsep);
@@ -1206,7 +1209,7 @@ char * __PHYSFS_convertToDependent(const char *prepend,
     char *i2;
     size_t allocSize;
 
-    while (*dirName == '/')
+    while (*dirName == '/')  /* !!! FIXME: pass through sanitize function. */
         dirName++;
 
     allocSize = strlen(dirName) + 1;
@@ -1230,7 +1233,7 @@ char * __PHYSFS_convertToDependent(const char *prepend,
         } while (str != NULL);
     } /* if */
 
-    str = (char *) malloc(allocSize);
+    str = (char *) allocator.Malloc(allocSize);
     BAIL_IF_MACRO(str == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     if (prepend == NULL)
@@ -1504,8 +1507,8 @@ static void enumFilesCallback(void *data, const char *str)
             return;  /* already in the list. */
     } /* if */
 
-    ptr = realloc(pecd->list, (pecd->size + 2) * sizeof (char *));
-    newstr = malloc(strlen(str) + 1);
+    ptr = allocator.Realloc(pecd->list, (pecd->size + 2) * sizeof (char *));
+    newstr = (char *) allocator.Malloc(strlen(str) + 1);
     if (ptr != NULL)
         pecd->list = (char **) ptr;
 
@@ -1529,7 +1532,7 @@ char **PHYSFS_enumerateFiles(const char *path)
 {
     EnumStringListCallbackData ecd;
     memset(&ecd, '\0', sizeof (ecd));
-    ecd.list = (char **) malloc(sizeof (char *));
+    ecd.list = (char **) allocator.Malloc(sizeof (char *));
     BAIL_IF_MACRO(ecd.list == NULL, ERR_OUT_OF_MEMORY, NULL);
     PHYSFS_enumerateFilesCallback(path, enumFilesCallback, &ecd);
     ecd.list[ecd.size] = NULL;
@@ -1690,7 +1693,7 @@ static PHYSFS_File *doOpenWrite(const char *_fname, int appending)
 
     BAIL_IF_MACRO_MUTEX(opaque == NULL, NULL, stateLock, NULL);
 
-    fh = (FileHandle *) malloc(sizeof (FileHandle));
+    fh = (FileHandle *) allocator.Malloc(sizeof (FileHandle));
     if (fh == NULL)
     {
         f->fileClose(opaque);
@@ -1736,7 +1739,7 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
 
     __PHYSFS_platformGrabMutex(stateLock);
 
-    BAIL_IF_MACRO_MUTEX(!searchPath, ERR_PATH_NOT_FOUND, stateLock, NULL);
+    BAIL_IF_MACRO_MUTEX(!searchPath, ERR_NO_SUCH_PATH, stateLock, NULL);
 
     /* !!! FIXME: Why aren't we using a for loop here? */
     i = searchPath;
@@ -1755,7 +1758,7 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
 
     BAIL_IF_MACRO_MUTEX(opaque == NULL, NULL, stateLock, NULL);
 
-    fh = (FileHandle *) malloc(sizeof (FileHandle));
+    fh = (FileHandle *) allocator.Malloc(sizeof (FileHandle));
     if (fh == NULL)
     {
         i->funcs->fileClose(opaque);
@@ -1793,14 +1796,14 @@ static int closeHandleInOpenList(FileHandle **list, FileHandle *handle)
                 return(-1);
 
             if (tmp != NULL)  /* free any associated buffer. */
-                free(tmp);
+                allocator.Free(tmp);
 
             if (prev == NULL)
                 *list = handle->next;
             else
                 prev->next = handle->next;
 
-            free(handle);
+            allocator.Free(handle);
             return(1);
         } /* if */
         prev = i;
@@ -2005,14 +2008,15 @@ int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 _bufsize)
     {
         if (fh->buffer != NULL)
         {
-            free(fh->buffer);
+            allocator.Free(fh->buffer);
             fh->buffer = NULL;
         } /* if */
     } /* if */
 
     else
     {
-        PHYSFS_uint8 *newbuf = realloc(fh->buffer, bufsize);
+        PHYSFS_uint8 *newbuf;
+        newbuf = (PHYSFS_uint8 *) allocator.Realloc(fh->buffer, bufsize);
         BAIL_IF_MACRO(newbuf == NULL, ERR_OUT_OF_MEMORY, 0);
         fh->buffer = newbuf;
     } /* else */
@@ -2054,11 +2058,11 @@ int PHYSFS_setAllocator(PHYSFS_Allocator *a)
 static void setDefaultAllocator(void)
 {
     assert(!externalAllocator);
-    allocator.init = __PHYSFS_platformAllocatorInit;
-    allocator.deinit = __PHYSFS_platformAllocatorDeinit;
-    allocator.malloc = __PHYSFS_platformAllocatorMalloc;
-    allocator.realloc = __PHYSFS_platformAllocatorRealloc;
-    allocator.free = __PHYSFS_platformAllocatorFree;
+    allocator.Init = __PHYSFS_platformAllocatorInit;
+    allocator.Deinit = __PHYSFS_platformAllocatorDeinit;
+    allocator.Malloc = __PHYSFS_platformAllocatorMalloc;
+    allocator.Realloc = __PHYSFS_platformAllocatorRealloc;
+    allocator.Free = __PHYSFS_platformAllocatorFree;
 } /* setDefaultAllocator */
 
 

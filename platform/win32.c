@@ -111,7 +111,7 @@ static char *getExePath(const char *argv0)
     DWORD buflen;
     int success = 0;
     char *ptr = NULL;
-    char *retval = (char *) malloc(sizeof (TCHAR) * (MAX_PATH + 1));
+    char *retval = (char *) allocator.Malloc(sizeof (TCHAR) * (MAX_PATH + 1));
 
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
@@ -159,12 +159,12 @@ static char *getExePath(const char *argv0)
 
     if (!success)
     {
-        free(retval);
+        allocator.Free(retval);
         return(NULL);  /* physfs error message will be set, above. */
     } /* if */
 
     /* free up the bytes we didn't actually use. */
-    ptr = (char *) realloc(retval, strlen(retval) + 1);
+    ptr = (char *) allocator.Realloc(retval, strlen(retval) + 1);
     if (ptr != NULL)
         retval = ptr;
 
@@ -221,12 +221,12 @@ static int determineUserDir(void)
                 assert(!rc);  /* success?! */
 
                 /* Allocate memory for the profile directory */
-                userDir = (char *) malloc(psize);
+                userDir = (char *) allocator.Malloc(psize);
                 if (userDir != NULL)
                 {
                     if (!GetUserProfileDirectory(accessToken, userDir, &psize))
                     {
-                        free(userDir);
+                        allocator.Free(userDir);
                         userDir = NULL;
                     } /* if */
                 } /* else */
@@ -297,12 +297,12 @@ char *__PHYSFS_platformGetUserName(void)
 
     if (GetUserName(NULL, &bufsize) == 0)  /* This SHOULD fail. */
     {
-        retval = (LPTSTR) malloc(bufsize);
+        retval = (LPTSTR) allocator.Malloc(bufsize);
         BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
         if (GetUserName(retval, &bufsize) == 0)  /* ?! */
         {
             __PHYSFS_setError(win32strerror());
-            free(retval);
+            allocator.Free(retval);
             retval = NULL;
         } /* if */
     } /* if */
@@ -313,7 +313,7 @@ char *__PHYSFS_platformGetUserName(void)
 
 char *__PHYSFS_platformGetUserDir(void)
 {
-    char *retval = (char *) malloc(strlen(userDir) + 1);
+    char *retval = (char *) allocator.Malloc(strlen(userDir) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, userDir); /* calculated at init time. */
     return(retval);
@@ -409,7 +409,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     int len = ((prepend) ? strlen(prepend) : 0) +
               ((append) ? strlen(append) : 0) +
               strlen(dirName) + 1;
-    char *retval = malloc(len);
+    char *retval = (char *) allocator.Malloc(len);
     char *p;
 
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -491,7 +491,7 @@ char *__PHYSFS_platformCurrentDir(void)
     DWORD buflen = 0;
 
     buflen = GetCurrentDirectory(buflen, NULL);
-    retval = (LPTSTR) malloc(sizeof (TCHAR) * (buflen + 2));
+    retval = (LPTSTR) allocator.Malloc(sizeof (TCHAR) * (buflen + 2));
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     GetCurrentDirectory(buflen, retval);
 
@@ -511,7 +511,7 @@ char *__PHYSFS_platformRealPath(const char *path)
     BAIL_IF_MACRO(path == NULL, ERR_INVALID_ARGUMENT, NULL);
     BAIL_IF_MACRO(*path == '\0', ERR_INVALID_ARGUMENT, NULL);
 
-    retval = (char *) malloc(MAX_PATH);
+    retval = (char *) allocator.Malloc(MAX_PATH);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
         /*
@@ -526,7 +526,7 @@ char *__PHYSFS_platformRealPath(const char *path)
         char *currentDir = __PHYSFS_platformCurrentDir();
         if (currentDir == NULL)
         {
-            free(retval);
+            allocator.Free(retval);
             BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
         } /* if */
 
@@ -572,7 +572,7 @@ char *__PHYSFS_platformRealPath(const char *path)
             } /* else */
         } /* else */
 
-        free(currentDir);
+        allocator.Free(currentDir);
     } /* else */
 
     /* (whew.) Ok, now take out "." and ".." path entries... */
@@ -615,7 +615,7 @@ char *__PHYSFS_platformRealPath(const char *path)
     } /* while */
 
         /* shrink the retval's memory block if possible... */
-    p = (char *) realloc(retval, strlen(retval) + 1);
+    p = (char *) allocator.Realloc(retval, strlen(retval) + 1);
     if (p != NULL)
         retval = p;
 
@@ -708,7 +708,7 @@ int __PHYSFS_platformDeinit(void)
 {
     if (userDir != NULL)
     {
-        free(userDir);
+        allocator.Free(userDir);
         userDir = NULL;
     } /* if */
 
@@ -736,7 +736,7 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
         win32strerror(), NULL
     );
 
-    retval = malloc(sizeof (win32file));
+    retval = (win32file *) allocator.Malloc(sizeof (win32file));
     if (retval == NULL)
     {
         CloseHandle(fileHandle);
@@ -772,7 +772,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
         {
             const char *err = win32strerror();
             CloseHandle(h);
-            free(retval);
+            allocator.Free(retval);
             BAIL_MACRO(err, NULL);
         } /* if */
     } /* if */
@@ -946,7 +946,7 @@ int __PHYSFS_platformClose(void *opaque)
 {
     HANDLE Handle = ((win32file *) opaque)->handle;
     BAIL_IF_MACRO(!CloseHandle(Handle), win32strerror(), 0);
-    free(opaque);
+    allocator.Free(opaque);
     return(1);
 } /* __PHYSFS_platformClose */
 
@@ -1100,13 +1100,47 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
         rc = GetFileTime(f->handle, NULL, NULL, &ft);
         err = win32strerror();
         CloseHandle(f->handle);
-        free(f);
+        allocator.Free(f);
         BAIL_IF_MACRO(!rc, err, -1);
         retval = FileTimeToPhysfsTime(&ft);
     } /* if */
 
     return(retval);
 } /* __PHYSFS_platformGetLastModTime */
+
+
+/* !!! FIXME: Don't use C runtime for allocators? */
+int __PHYSFS_platformAllocatorInit(void)
+{
+    return(1);  /* always succeeds. */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void __PHYSFS_platformAllocatorDeinit(void)
+{
+    /* no-op */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void *__PHYSFS_platformAllocatorMalloc(size_t s)
+{
+    #undef malloc
+    return(malloc(s));
+} /* __PHYSFS_platformMalloc */
+
+
+void *__PHYSFS_platformAllocatorRealloc(void *ptr, size_t s)
+{
+    #undef realloc
+    return(realloc(ptr, s));
+} /* __PHYSFS_platformRealloc */
+
+
+void __PHYSFS_platformAllocatorFree(void *ptr)
+{
+    #undef free
+    free(ptr);
+} /* __PHYSFS_platformAllocatorFree */
 
 #endif
 

@@ -91,7 +91,7 @@ static void *DIR_openArchive(const char *name, int forWriting)
     BAIL_IF_MACRO(!DIR_isArchive(name, forWriting),
                     ERR_UNSUPPORTED_ARCHIVE, 0);
 
-    retval = malloc(namelen + seplen + 1);
+    retval = allocator.Malloc(namelen + seplen + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
         /* make sure there's a dir separator at the end of the string */
@@ -111,7 +111,7 @@ static void DIR_enumerateFiles(dvoid *opaque, const char *dname,
     if (d != NULL)
     {
         __PHYSFS_platformEnumerateFiles(d, omitSymLinks, cb, callbackdata);
-        free(d);
+        allocator.Free(d);
     } /* if */
 } /* DIR_enumerateFiles */
 
@@ -123,7 +123,7 @@ static int DIR_exists(dvoid *opaque, const char *name)
 
     BAIL_IF_MACRO(f == NULL, NULL, 0);
     retval = __PHYSFS_platformExists(f);
-    free(f);
+    allocator.Free(f);
     return(retval);
 } /* DIR_exists */
 
@@ -137,7 +137,7 @@ static int DIR_isDirectory(dvoid *opaque, const char *name, int *fileExists)
     *fileExists = __PHYSFS_platformExists(d);
     if (*fileExists)
         retval = __PHYSFS_platformIsDirectory(d);
-    free(d);
+    allocator.Free(d);
     return(retval);
 } /* DIR_isDirectory */
 
@@ -151,7 +151,7 @@ static int DIR_isSymLink(dvoid *opaque, const char *name, int *fileExists)
     *fileExists = __PHYSFS_platformExists(f);
     if (*fileExists)
         retval = __PHYSFS_platformIsSymLink(f);
-    free(f);
+    allocator.Free(f);
     return(retval);
 } /* DIR_isSymLink */
 
@@ -167,7 +167,7 @@ static PHYSFS_sint64 DIR_getLastModTime(dvoid *opaque,
     *fileExists = __PHYSFS_platformExists(d);
     if (*fileExists)
         retval = __PHYSFS_platformGetLastModTime(d);
-    free(d);
+    allocator.Free(d);
     return(retval);
 } /* DIR_getLastModTime */
 
@@ -186,13 +186,13 @@ static fvoid *doOpen(dvoid *opaque, const char *name,
         *fileExists = __PHYSFS_platformExists(f);
         if (!(*fileExists))
         {
-            free(f);
+            allocator.Free(f);
             return(NULL);
         } /* if */
     } /* if */
 
     rc = openFunc(f);
-    free(f);
+    allocator.Free(f);
 
     return((fvoid *) rc);
 } /* doOpen */
@@ -223,7 +223,7 @@ static int DIR_remove(dvoid *opaque, const char *name)
 
     BAIL_IF_MACRO(f == NULL, NULL, 0);
     retval = __PHYSFS_platformDelete(f);
-    free(f);
+    allocator.Free(f);
     return(retval);
 } /* DIR_remove */
 
@@ -235,14 +235,14 @@ static int DIR_mkdir(dvoid *opaque, const char *name)
 
     BAIL_IF_MACRO(f == NULL, NULL, 0);
     retval = __PHYSFS_platformMkDir(f);
-    free(f);
+    allocator.Free(f);
     return(retval);
 } /* DIR_mkdir */
 
 
 static void DIR_dirClose(dvoid *opaque)
 {
-    free(opaque);
+    allocator.Free(opaque);
 } /* DIR_dirClose */
 
 

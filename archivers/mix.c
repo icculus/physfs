@@ -116,8 +116,8 @@ static PHYSFS_uint32 MIX_hash(const char *name)
 static void MIX_dirClose(dvoid *opaque)
 {
     MIXinfo *info = ((MIXinfo *) opaque);
-    free(info->entry);
-    free(info->filename);
+    allocator.Free(info->entry);
+    allocator.Free(info->filename);
 } /* MIX_dirClose */
 
 
@@ -186,7 +186,7 @@ static int MIX_fileClose(fvoid *opaque)
 {
     MIXfileinfo *finfo = (MIXfileinfo *) opaque;
     __PHYSFS_platformClose(finfo->handle);
-    free(finfo);
+    allocator.Free(finfo);
     return(1);
 } /* MIX_fileClose */
 
@@ -231,11 +231,11 @@ static void *MIX_openArchive(const char *name, int forWriting)
     MIXinfo *info = NULL;
     void *handle = NULL;
 
-    info = (MIXinfo *) malloc(sizeof (MIXinfo));
+    info = (MIXinfo *) allocator.Malloc(sizeof (MIXinfo));
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, 0);
     memset(info, '\0', sizeof (MIXinfo));
 
-    info->filename = (char *) malloc(strlen(name) + 1);
+    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
     GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, MIX_openArchive_failed);
 
     /* store filename */
@@ -254,7 +254,7 @@ static void *MIX_openArchive(const char *name, int forWriting)
     info->delta = 6 + (info->header.num_files * 12);
 
     /* allocate space for the entries and read the entries */
-    info->entry = malloc(sizeof (MIXentry) * info->header.num_files);
+    info->entry = allocator.Malloc(sizeof (MIXentry) * info->header.num_files);
     GOTO_IF_MACRO(!info->entry, ERR_OUT_OF_MEMORY, MIX_openArchive_failed);
 
     /* read the directory list */
@@ -274,10 +274,10 @@ MIX_openArchive_failed:
     if (info != NULL)
     {
         if (info->filename != NULL)
-            free(info->filename);
+            allocator.Free(info->filename);
         if (info->entry != NULL)
-            free(info->entry);
-        free(info);
+            allocator.Free(info->entry);
+        allocator.Free(info);
     } /* if */
 
     if (handle != NULL)
@@ -367,14 +367,14 @@ static fvoid *MIX_openRead(dvoid *opaque, const char *fnm, int *fileExists)
     BAIL_IF_MACRO(entry == NULL, ERR_NO_SUCH_FILE, NULL);
     
     /* allocate a MIX handle */
-    finfo = (MIXfileinfo *) malloc(sizeof (MIXfileinfo));
+    finfo = (MIXfileinfo *) allocator.Malloc(sizeof (MIXfileinfo));
     BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     /* open the archive */
     finfo->handle = __PHYSFS_platformOpenRead(info->filename);
     if(!finfo->handle)
     {
-        free(finfo);
+        allocator.Free(finfo);
         return(NULL);
     } /* if */
     

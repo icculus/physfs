@@ -241,7 +241,7 @@ static char *convFSSpecToPath(FSSpec *spec, int includeFile)
         if (oserr(PBGetCatInfoSync(&infoPB)) != noErr)
         {
             if (retval != NULL)
-                free(retval);
+                allocator.Free(retval);
             return(NULL);
         } /* if */
 
@@ -249,11 +249,11 @@ static char *convFSSpecToPath(FSSpec *spec, int includeFile)
 
         /* allocate more space for the retval... */
         retLength += str255[0] + 1; /* + 1 for a ':' or null char... */
-        ptr = (char *) malloc(retLength);
+        ptr = (char *) allocator.Malloc(retLength);
         if (ptr == NULL)
         {
             if (retval != NULL)
-                free(retval);
+                allocator.Free(retval);
             BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
         } /* if */
 
@@ -264,7 +264,7 @@ static char *convFSSpecToPath(FSSpec *spec, int includeFile)
         {
             strcat(ptr, ":");
             strcat(ptr, retval);
-            free(retval);
+            allocator.Free(retval);
         } /* if */
         retval = ptr;
     } while (infoPB.dirInfo.ioDrDirID != fsRtDirID);
@@ -297,7 +297,7 @@ char *__PHYSFS_platformGetUserName(void)
     BAIL_IF_MACRO(strHandle == NULL, NULL, NULL);
 
     HLock((Handle) strHandle);
-    retval = (char *) malloc((*strHandle)[0] + 1);
+    retval = (char *) allocator.Malloc((*strHandle)[0] + 1);
     if (retval == NULL)
     {
         HUnlock((Handle) strHandle);
@@ -533,7 +533,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
               strlen(dirName) + 1;
     const char *src;
     char *dst;
-    char *retval = malloc(len);
+    char *retval = (char *) allocator.Malloc(len);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     if (prepend != NULL)
@@ -691,7 +691,7 @@ static SInt16 *macDoOpen(const char *fname, SInt8 perm, int createIfMissing)
         created = 1;
     } /* if */
 
-    retval = (SInt16 *) malloc(sizeof (SInt16));
+    retval = (SInt16 *) allocator.Malloc(sizeof (SInt16));
     if (retval == NULL)
     {
         if (created)
@@ -702,7 +702,7 @@ static SInt16 *macDoOpen(const char *fname, SInt8 perm, int createIfMissing)
     err = HOpenDF(spec.vRefNum, spec.parID, spec.name, perm, retval);
     if (oserr(err) != noErr)
     {
-        free(retval);
+        allocator.Free(retval);
         if (created)
             HDelete(spec.vRefNum, spec.parID, spec.name);
         return(NULL);
@@ -866,7 +866,7 @@ int __PHYSFS_platformClose(void *opaque)
     } /* if */
 
     BAIL_IF_MACRO(oserr(FSClose(ref)) != noErr, NULL, 0);
-    free(opaque);
+    allocator.Free(opaque);
 
     if (flushVol)
         FlushVol(volName, vRefNum);  /* update catalog info, etc. */
@@ -935,6 +935,40 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 
     return((PHYSFS_sint64) modDate);
 } /* __PHYSFS_platformGetLastModTime */
+
+
+/* !!! FIXME: Don't use C runtime for allocators? */
+int __PHYSFS_platformAllocatorInit(void)
+{
+    return(1);  /* always succeeds. */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void __PHYSFS_platformAllocatorDeinit(void)
+{
+    /* no-op */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void *__PHYSFS_platformAllocatorMalloc(size_t s)
+{
+    #undef malloc
+    return(malloc(s));
+} /* __PHYSFS_platformMalloc */
+
+
+void *__PHYSFS_platformAllocatorRealloc(void *ptr, size_t s)
+{
+    #undef realloc
+    return(realloc(ptr, s));
+} /* __PHYSFS_platformRealloc */
+
+
+void __PHYSFS_platformAllocatorFree(void *ptr)
+{
+    #undef free
+    free(ptr);
+} /* __PHYSFS_platformAllocatorFree */
 
 /* end of macclassic.c ... */
 
