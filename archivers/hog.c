@@ -75,67 +75,6 @@ typedef struct
 } HOGfileinfo;
 
 
-static PHYSFS_sint64 HOG_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 HOG_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int HOG_eof(fvoid *opaque);
-static PHYSFS_sint64 HOG_tell(fvoid *opaque);
-static int HOG_seek(fvoid *opaque, PHYSFS_uint64 offset);
-static PHYSFS_sint64 HOG_fileLength(fvoid *opaque);
-static int HOG_fileClose(fvoid *opaque);
-static int HOG_isArchive(const char *filename, int forWriting);
-static void *HOG_openArchive(const char *name, int forWriting);
-static void HOG_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata);
-static int HOG_exists(dvoid *opaque, const char *name);
-static int HOG_isDirectory(dvoid *opaque, const char *name, int *fileExists);
-static int HOG_isSymLink(dvoid *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 HOG_getLastModTime(dvoid *opaque, const char *n, int *e);
-static fvoid *HOG_openRead(dvoid *opaque, const char *name, int *exist);
-static fvoid *HOG_openWrite(dvoid *opaque, const char *name);
-static fvoid *HOG_openAppend(dvoid *opaque, const char *name);
-static int HOG_remove(dvoid *opaque, const char *name);
-static int HOG_mkdir(dvoid *opaque, const char *name);
-static void HOG_dirClose(dvoid *opaque);
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_HOG =
-{
-    "HOG",
-    HOG_ARCHIVE_DESCRIPTION,
-    "Bradley Bell <btb@icculus.org>",
-    "http://icculus.org/physfs/",
-};
-
-
-const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
-{
-    &__PHYSFS_ArchiveInfo_HOG,
-    HOG_isArchive,          /* isArchive() method      */
-    HOG_openArchive,        /* openArchive() method    */
-    HOG_enumerateFiles,     /* enumerateFiles() method */
-    HOG_exists,             /* exists() method         */
-    HOG_isDirectory,        /* isDirectory() method    */
-    HOG_isSymLink,          /* isSymLink() method      */
-    HOG_getLastModTime,     /* getLastModTime() method */
-    HOG_openRead,           /* openRead() method       */
-    HOG_openWrite,          /* openWrite() method      */
-    HOG_openAppend,         /* openAppend() method     */
-    HOG_remove,             /* remove() method         */
-    HOG_mkdir,              /* mkdir() method          */
-    HOG_dirClose,           /* dirClose() method       */
-    HOG_read,               /* read() method           */
-    HOG_write,              /* write() method          */
-    HOG_eof,                /* eof() method            */
-    HOG_tell,               /* tell() method           */
-    HOG_seek,               /* seek() method           */
-    HOG_fileLength,         /* fileLength() method     */
-    HOG_fileClose           /* fileClose() method      */
-};
-
-
-
 static void HOG_dirClose(dvoid *opaque)
 {
     HOGinfo *info = ((HOGinfo *) opaque);
@@ -533,6 +472,41 @@ static int HOG_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* HOG_mkdir */
+
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_HOG =
+{
+    "HOG",
+    HOG_ARCHIVE_DESCRIPTION,
+    "Bradley Bell <btb@icculus.org>",
+    "http://icculus.org/physfs/",
+};
+
+
+const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
+{
+    &__PHYSFS_ArchiveInfo_HOG,
+    HOG_isArchive,          /* isArchive() method      */
+    HOG_openArchive,        /* openArchive() method    */
+    HOG_enumerateFiles,     /* enumerateFiles() method */
+    HOG_exists,             /* exists() method         */
+    HOG_isDirectory,        /* isDirectory() method    */
+    HOG_isSymLink,          /* isSymLink() method      */
+    HOG_getLastModTime,     /* getLastModTime() method */
+    HOG_openRead,           /* openRead() method       */
+    HOG_openWrite,          /* openWrite() method      */
+    HOG_openAppend,         /* openAppend() method     */
+    HOG_remove,             /* remove() method         */
+    HOG_mkdir,              /* mkdir() method          */
+    HOG_dirClose,           /* dirClose() method       */
+    HOG_read,               /* read() method           */
+    HOG_write,              /* write() method          */
+    HOG_eof,                /* eof() method            */
+    HOG_tell,               /* tell() method           */
+    HOG_seek,               /* seek() method           */
+    HOG_fileLength,         /* fileLength() method     */
+    HOG_fileClose           /* fileClose() method      */
+};
 
 #endif  /* defined PHYSFS_SUPPORTS_HOG */
 

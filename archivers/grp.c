@@ -61,67 +61,6 @@ typedef struct
 } GRPfileinfo;
 
 
-static PHYSFS_sint64 GRP_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 GRP_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int GRP_eof(fvoid *opaque);
-static PHYSFS_sint64 GRP_tell(fvoid *opaque);
-static int GRP_seek(fvoid *opaque, PHYSFS_uint64 offset);
-static PHYSFS_sint64 GRP_fileLength(fvoid *opaque);
-static int GRP_fileClose(fvoid *opaque);
-static int GRP_isArchive(const char *filename, int forWriting);
-static void *GRP_openArchive(const char *name, int forWriting);
-static void GRP_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata);
-static int GRP_exists(dvoid *opaque, const char *name);
-static int GRP_isDirectory(dvoid *opaque, const char *name, int *fileExists);
-static int GRP_isSymLink(dvoid *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 GRP_getLastModTime(dvoid *opaque, const char *n, int *e);
-static fvoid *GRP_openRead(dvoid *opaque, const char *name, int *exist);
-static fvoid *GRP_openWrite(dvoid *opaque, const char *name);
-static fvoid *GRP_openAppend(dvoid *opaque, const char *name);
-static int GRP_remove(dvoid *opaque, const char *name);
-static int GRP_mkdir(dvoid *opaque, const char *name);
-static void GRP_dirClose(dvoid *opaque);
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
-{
-    "GRP",
-    GRP_ARCHIVE_DESCRIPTION,
-    "Ryan C. Gordon <icculus@clutteredmind.org>",
-    "http://icculus.org/physfs/",
-};
-
-
-const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
-{
-    &__PHYSFS_ArchiveInfo_GRP,
-    GRP_isArchive,          /* isArchive() method      */
-    GRP_openArchive,        /* openArchive() method    */
-    GRP_enumerateFiles,     /* enumerateFiles() method */
-    GRP_exists,             /* exists() method         */
-    GRP_isDirectory,        /* isDirectory() method    */
-    GRP_isSymLink,          /* isSymLink() method      */
-    GRP_getLastModTime,     /* getLastModTime() method */
-    GRP_openRead,           /* openRead() method       */
-    GRP_openWrite,          /* openWrite() method      */
-    GRP_openAppend,         /* openAppend() method     */
-    GRP_remove,             /* remove() method         */
-    GRP_mkdir,              /* mkdir() method          */
-    GRP_dirClose,           /* dirClose() method       */
-    GRP_read,               /* read() method           */
-    GRP_write,              /* write() method          */
-    GRP_eof,                /* eof() method            */
-    GRP_tell,               /* tell() method           */
-    GRP_seek,               /* seek() method           */
-    GRP_fileLength,         /* fileLength() method     */
-    GRP_fileClose           /* fileClose() method      */
-};
-
-
-
 static void GRP_dirClose(dvoid *opaque)
 {
     GRPinfo *info = ((GRPinfo *) opaque);
@@ -494,6 +433,41 @@ static int GRP_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* GRP_mkdir */
+
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
+{
+    "GRP",
+    GRP_ARCHIVE_DESCRIPTION,
+    "Ryan C. Gordon <icculus@clutteredmind.org>",
+    "http://icculus.org/physfs/",
+};
+
+
+const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
+{
+    &__PHYSFS_ArchiveInfo_GRP,
+    GRP_isArchive,          /* isArchive() method      */
+    GRP_openArchive,        /* openArchive() method    */
+    GRP_enumerateFiles,     /* enumerateFiles() method */
+    GRP_exists,             /* exists() method         */
+    GRP_isDirectory,        /* isDirectory() method    */
+    GRP_isSymLink,          /* isSymLink() method      */
+    GRP_getLastModTime,     /* getLastModTime() method */
+    GRP_openRead,           /* openRead() method       */
+    GRP_openWrite,          /* openWrite() method      */
+    GRP_openAppend,         /* openAppend() method     */
+    GRP_remove,             /* remove() method         */
+    GRP_mkdir,              /* mkdir() method          */
+    GRP_dirClose,           /* dirClose() method       */
+    GRP_read,               /* read() method           */
+    GRP_write,              /* write() method          */
+    GRP_eof,                /* eof() method            */
+    GRP_tell,               /* tell() method           */
+    GRP_seek,               /* seek() method           */
+    GRP_fileLength,         /* fileLength() method     */
+    GRP_fileClose           /* fileClose() method      */
+};
 
 #endif  /* defined PHYSFS_SUPPORTS_GRP */
 

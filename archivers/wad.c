@@ -80,67 +80,6 @@ typedef struct
 } WADfileinfo;
 
 
-static PHYSFS_sint64 WAD_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 WAD_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int WAD_eof(fvoid *opaque);
-static PHYSFS_sint64 WAD_tell(fvoid *opaque);
-static int WAD_seek(fvoid *opaque, PHYSFS_uint64 offset);
-static PHYSFS_sint64 WAD_fileLength(fvoid *opaque);
-static int WAD_fileClose(fvoid *opaque);
-static int WAD_isArchive(const char *filename, int forWriting);
-static void *WAD_openArchive(const char *name, int forWriting);
-static void WAD_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata);
-static int WAD_exists(dvoid *opaque, const char *name);
-static int WAD_isDirectory(dvoid *opaque, const char *name, int *fileExists);
-static int WAD_isSymLink(dvoid *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 WAD_getLastModTime(dvoid *opaque, const char *n, int *e);
-static fvoid *WAD_openRead(dvoid *opaque, const char *name, int *exist);
-static fvoid *WAD_openWrite(dvoid *opaque, const char *name);
-static fvoid *WAD_openAppend(dvoid *opaque, const char *name);
-static int WAD_remove(dvoid *opaque, const char *name);
-static int WAD_mkdir(dvoid *opaque, const char *name);
-static void WAD_dirClose(dvoid *opaque);
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_WAD =
-{
-    "WAD",
-    /* !!! FIXME WAD_ARCHIVE_DESCRIPTION, */ "DOOM engine format",
-    "Travis Wells <traviswells@mchsi.com>",
-    "http://www.3dmm2.com/doom/",
-};
-
-
-const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
-{
-    &__PHYSFS_ArchiveInfo_WAD,
-    WAD_isArchive,          /* isArchive() method      */
-    WAD_openArchive,        /* openArchive() method    */
-    WAD_enumerateFiles,     /* enumerateFiles() method */
-    WAD_exists,             /* exists() method         */
-    WAD_isDirectory,        /* isDirectory() method    */
-    WAD_isSymLink,          /* isSymLink() method      */
-    WAD_getLastModTime,     /* getLastModTime() method */
-    WAD_openRead,           /* openRead() method       */
-    WAD_openWrite,          /* openWrite() method      */
-    WAD_openAppend,         /* openAppend() method     */
-    WAD_remove,             /* remove() method         */
-    WAD_mkdir,              /* mkdir() method          */
-    WAD_dirClose,           /* dirClose() method       */
-    WAD_read,               /* read() method           */
-    WAD_write,              /* write() method          */
-    WAD_eof,                /* eof() method            */
-    WAD_tell,               /* tell() method           */
-    WAD_seek,               /* seek() method           */
-    WAD_fileLength,         /* fileLength() method     */
-    WAD_fileClose           /* fileClose() method      */
-};
-
-
-
 static void WAD_dirClose(dvoid *opaque)
 {
     WADinfo *info = ((WADinfo *) opaque);
@@ -553,6 +492,41 @@ static int WAD_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* WAD_mkdir */
+
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_WAD =
+{
+    "WAD",
+    /* !!! FIXME WAD_ARCHIVE_DESCRIPTION, */ "DOOM engine format",
+    "Travis Wells <traviswells@mchsi.com>",
+    "http://www.3dmm2.com/doom/",
+};
+
+
+const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
+{
+    &__PHYSFS_ArchiveInfo_WAD,
+    WAD_isArchive,          /* isArchive() method      */
+    WAD_openArchive,        /* openArchive() method    */
+    WAD_enumerateFiles,     /* enumerateFiles() method */
+    WAD_exists,             /* exists() method         */
+    WAD_isDirectory,        /* isDirectory() method    */
+    WAD_isSymLink,          /* isSymLink() method      */
+    WAD_getLastModTime,     /* getLastModTime() method */
+    WAD_openRead,           /* openRead() method       */
+    WAD_openWrite,          /* openWrite() method      */
+    WAD_openAppend,         /* openAppend() method     */
+    WAD_remove,             /* remove() method         */
+    WAD_mkdir,              /* mkdir() method          */
+    WAD_dirClose,           /* dirClose() method       */
+    WAD_read,               /* read() method           */
+    WAD_write,              /* write() method          */
+    WAD_eof,                /* eof() method            */
+    WAD_tell,               /* tell() method           */
+    WAD_seek,               /* seek() method           */
+    WAD_fileLength,         /* fileLength() method     */
+    WAD_fileClose           /* fileClose() method      */
+};
 
 #endif  /* defined PHYSFS_SUPPORTS_WAD */
 
