@@ -116,31 +116,31 @@ typedef struct
 #define UNIX_FILETYPE_SYMLINK 0120000
 
 
-static PHYSFS_sint64 ZIP_read(FileHandle *handle, void *buffer,
+static PHYSFS_sint64 ZIP_read(fvoid *opaque, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 ZIP_write(FileHandle *handle, const void *buffer,
+static PHYSFS_sint64 ZIP_write(fvoid *opaque, const void *buffer,
                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int ZIP_eof(FileHandle *handle);
-static PHYSFS_sint64 ZIP_tell(FileHandle *handle);
-static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset);
-static PHYSFS_sint64 ZIP_fileLength(FileHandle *handle);
-static int ZIP_fileClose(FileHandle *handle);
+static int ZIP_eof(fvoid *opaque);
+static PHYSFS_sint64 ZIP_tell(fvoid *opaque);
+static int ZIP_seek(fvoid *opaque, PHYSFS_uint64 offset);
+static PHYSFS_sint64 ZIP_fileLength(fvoid *opaque);
+static int ZIP_fileClose(fvoid *opaque);
 static int ZIP_isArchive(const char *filename, int forWriting);
 static void *ZIP_openArchive(const char *name, int forWriting);
-static LinkedStringList *ZIP_enumerateFiles(void *opaque,
+static LinkedStringList *ZIP_enumerateFiles(dvoid *opaque,
                                             const char *dirname,
                                             int omitSymLinks);
-static int ZIP_exists(void *opaque, const char *name);
-static int ZIP_isDirectory(void *opaque, const char *name, int *fileExists);
-static int ZIP_isSymLink(void *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 ZIP_getLastModTime(void *opaque, const char *n, int *e);
-static FileHandle *ZIP_openRead(void *opaque, const char *filename, int *e);
-static FileHandle *ZIP_openWrite(void *opaque, const char *filename);
-static FileHandle *ZIP_openAppend(void *opaque, const char *filename);
-static void ZIP_dirClose(void *opaque);
+static int ZIP_exists(dvoid *opaque, const char *name);
+static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists);
+static int ZIP_isSymLink(dvoid *opaque, const char *name, int *fileExists);
+static PHYSFS_sint64 ZIP_getLastModTime(dvoid *opaque, const char *n, int *e);
+static fvoid *ZIP_openRead(dvoid *opaque, const char *filename, int *e);
+static fvoid *ZIP_openWrite(dvoid *opaque, const char *filename);
+static fvoid *ZIP_openAppend(dvoid *opaque, const char *filename);
+static void ZIP_dirClose(dvoid *opaque);
 static int zip_resolve(void *in, ZIPinfo *info, ZIPentry *entry);
-static int ZIP_remove(void *opaque, const char *name);
-static int ZIP_mkdir(void *opaque, const char *name);
+static int ZIP_remove(dvoid *opaque, const char *name);
+static int ZIP_mkdir(dvoid *opaque, const char *name);
 
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
@@ -151,19 +151,8 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
     "http://icculus.org/physfs/",
 };
 
-static const FileFunctions __PHYSFS_FileFunctions_ZIP =
-{
-    ZIP_read,       /* read() method       */
-    ZIP_write,      /* write() method      */
-    ZIP_eof,        /* eof() method        */
-    ZIP_tell,       /* tell() method       */
-    ZIP_seek,       /* seek() method       */
-    ZIP_fileLength, /* fileLength() method */
-    ZIP_fileClose   /* fileClose() method  */
-};
 
-
-const DirFunctions __PHYSFS_DirFunctions_ZIP =
+const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
 {
     &__PHYSFS_ArchiveInfo_ZIP,
     ZIP_isArchive,          /* isArchive() method      */
@@ -178,7 +167,14 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
     ZIP_openAppend,         /* openAppend() method     */
     ZIP_remove,             /* remove() method         */
     ZIP_mkdir,              /* mkdir() method          */
-    ZIP_dirClose            /* dirClose() method       */
+    ZIP_dirClose,           /* dirClose() method       */
+    ZIP_read,               /* read() method           */
+    ZIP_write,              /* write() method          */
+    ZIP_eof,                /* eof() method            */
+    ZIP_tell,               /* tell() method           */
+    ZIP_seek,               /* seek() method           */
+    ZIP_fileLength,         /* fileLength() method     */
+    ZIP_fileClose           /* fileClose() method      */
 };
 
 
@@ -188,7 +184,7 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
  */
 static voidpf zlibPhysfsAlloc(voidpf opaque, uInt items, uInt size)
 {
-    return(((PHYSFS_allocator *) opaque)->malloc(items * size));
+    return(((PHYSFS_Allocator *) opaque)->malloc(items * size));
 } /* zlibPhysfsAlloc */
 
 /*
@@ -196,7 +192,7 @@ static voidpf zlibPhysfsAlloc(voidpf opaque, uInt items, uInt size)
  */
 static void zlibPhysfsFree(voidpf opaque, voidpf address)
 {
-    ((PHYSFS_allocator *) opaque)->free(address);
+    ((PHYSFS_Allocator *) opaque)->free(address);
 } /* zlibPhysfsFree */
 
 
@@ -269,10 +265,10 @@ static int readui16(void *in, PHYSFS_uint16 *val)
 } /* readui16 */
 
 
-static PHYSFS_sint64 ZIP_read(FileHandle *handle, void *buf,
+static PHYSFS_sint64 ZIP_read(fvoid *opaque, void *buf,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
-    ZIPfileinfo *finfo = (ZIPfileinfo *) (handle->opaque);
+    ZIPfileinfo *finfo = (ZIPfileinfo *) opaque;
     ZIPentry *entry = finfo->entry;
     PHYSFS_sint64 retval = 0;
     PHYSFS_sint64 maxread = ((PHYSFS_sint64) objSize) * objCount;
@@ -343,29 +339,29 @@ static PHYSFS_sint64 ZIP_read(FileHandle *handle, void *buf,
 } /* ZIP_read */
 
 
-static PHYSFS_sint64 ZIP_write(FileHandle *handle, const void *buf,
+static PHYSFS_sint64 ZIP_write(fvoid *opaque, const void *buf,
                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* ZIP_write */
 
 
-static int ZIP_eof(FileHandle *handle)
+static int ZIP_eof(fvoid *opaque)
 {
-    ZIPfileinfo *finfo = ((ZIPfileinfo *) (handle->opaque));
+    ZIPfileinfo *finfo = (ZIPfileinfo *) opaque;
     return(finfo->uncompressed_position >= finfo->entry->uncompressed_size);
 } /* ZIP_eof */
 
 
-static PHYSFS_sint64 ZIP_tell(FileHandle *handle)
+static PHYSFS_sint64 ZIP_tell(fvoid *opaque)
 {
-    return(((ZIPfileinfo *) (handle->opaque))->uncompressed_position);
+    return(((ZIPfileinfo *) opaque)->uncompressed_position);
 } /* ZIP_tell */
 
 
-static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset)
+static int ZIP_seek(fvoid *opaque, PHYSFS_uint64 offset)
 {
-    ZIPfileinfo *finfo = (ZIPfileinfo *) (handle->opaque);
+    ZIPfileinfo *finfo = (ZIPfileinfo *) opaque;
     ZIPentry *entry = finfo->entry;
     void *in = finfo->handle;
 
@@ -411,7 +407,7 @@ static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset)
             if (maxread > sizeof (buf))
                 maxread = sizeof (buf);
 
-            if (ZIP_read(handle, buf, maxread, 1) != 1)
+            if (ZIP_read(finfo, buf, maxread, 1) != 1)
                 return(0);
         } /* while */
     } /* else */
@@ -420,16 +416,16 @@ static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset)
 } /* ZIP_seek */
 
 
-static PHYSFS_sint64 ZIP_fileLength(FileHandle *handle)
+static PHYSFS_sint64 ZIP_fileLength(fvoid *opaque)
 {
-    ZIPfileinfo *finfo = (ZIPfileinfo *) (handle->opaque);
+    ZIPfileinfo *finfo = (ZIPfileinfo *) opaque;
     return(finfo->entry->uncompressed_size);
 } /* ZIP_fileLength */
 
 
-static int ZIP_fileClose(FileHandle *handle)
+static int ZIP_fileClose(fvoid *opaque)
 {
-    ZIPfileinfo *finfo = (ZIPfileinfo *) (handle->opaque);
+    ZIPfileinfo *finfo = (ZIPfileinfo *) opaque;
     BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
 
     if (finfo->entry->compression_method != COMPMETH_NONE)
@@ -439,7 +435,6 @@ static int ZIP_fileClose(FileHandle *handle)
         free(finfo->buffer);
 
     free(finfo);
-    free(handle);
     return(1);
 } /* ZIP_fileClose */
 
@@ -1240,7 +1235,7 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
 } /* zip_find_start_of_dir */
 
 
-static LinkedStringList *ZIP_enumerateFiles(void *opaque,
+static LinkedStringList *ZIP_enumerateFiles(dvoid *opaque,
                                             const char *dirname,
                                             int omitSymLinks)
 {
@@ -1287,7 +1282,7 @@ static LinkedStringList *ZIP_enumerateFiles(void *opaque,
 } /* ZIP_enumerateFiles */
 
 
-static int ZIP_exists(void *opaque, const char *name)
+static int ZIP_exists(dvoid *opaque, const char *name)
 {
     int isDir;    
     ZIPinfo *info = (ZIPinfo *) opaque;
@@ -1296,7 +1291,7 @@ static int ZIP_exists(void *opaque, const char *name)
 } /* ZIP_exists */
 
 
-static PHYSFS_sint64 ZIP_getLastModTime(void *opaque,
+static PHYSFS_sint64 ZIP_getLastModTime(dvoid *opaque,
                                         const char *name,
                                         int *fileExists)
 {
@@ -1313,7 +1308,7 @@ static PHYSFS_sint64 ZIP_getLastModTime(void *opaque,
 } /* ZIP_getLastModTime */
 
 
-static int ZIP_isDirectory(void *opaque, const char *name, int *fileExists)
+static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 {
     ZIPinfo *info = (ZIPinfo *) opaque;
     int isDir;
@@ -1344,7 +1339,7 @@ static int ZIP_isDirectory(void *opaque, const char *name, int *fileExists)
 } /* ZIP_isDirectory */
 
 
-static int ZIP_isSymLink(void *opaque, const char *name, int *fileExists)
+static int ZIP_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 {
     int isDir;
     ZIPentry *entry = zip_find_entry((ZIPinfo *) opaque, name, &isDir);
@@ -1378,11 +1373,10 @@ static void *zip_get_file_handle(const char *fn, ZIPinfo *inf, ZIPentry *entry)
 } /* zip_get_file_handle */
 
 
-static FileHandle *ZIP_openRead(void *opaque, const char *fnm, int *fileExists)
+static fvoid *ZIP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     ZIPinfo *info = (ZIPinfo *) opaque;
     ZIPentry *entry = zip_find_entry(info, fnm, NULL);
-    FileHandle *retval = NULL;
     ZIPfileinfo *finfo = NULL;
     void *in;
 
@@ -1392,17 +1386,12 @@ static FileHandle *ZIP_openRead(void *opaque, const char *fnm, int *fileExists)
     in = zip_get_file_handle(info->archiveName, info, entry);
     BAIL_IF_MACRO(in == NULL, NULL, NULL);
 
-    if ( ((retval = (FileHandle *) malloc(sizeof (FileHandle))) == NULL) ||
-         ((finfo = (ZIPfileinfo *) malloc(sizeof (ZIPfileinfo))) == NULL) )
+    finfo = (ZIPfileinfo *) malloc(sizeof (ZIPfileinfo));
+    if (finfo == NULL)
     {
-        if (retval)
-            free(retval);
         __PHYSFS_platformClose(in);
         BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     } /* if */
-
-    retval->opaque = (void *) finfo;
-    retval->funcs = &__PHYSFS_FileFunctions_ZIP;
 
     memset(finfo, '\0', sizeof (ZIPfileinfo));
     finfo->handle = in;
@@ -1412,35 +1401,35 @@ static FileHandle *ZIP_openRead(void *opaque, const char *fnm, int *fileExists)
     {
         if (zlib_err(inflateInit2(&finfo->stream, -MAX_WBITS)) != Z_OK)
         {
-            ZIP_fileClose(retval);
+            ZIP_fileClose(finfo);
             return(NULL);
         } /* if */
 
         finfo->buffer = (PHYSFS_uint8 *) malloc(ZIP_READBUFSIZE);
         if (finfo->buffer == NULL)
         {
-            ZIP_fileClose(retval);
+            ZIP_fileClose(finfo);
             BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
         } /* if */
     } /* if */
 
-    return(retval);
+    return(finfo);
 } /* ZIP_openRead */
 
 
-static FileHandle *ZIP_openWrite(void *opaque, const char *filename)
+static fvoid *ZIP_openWrite(dvoid *opaque, const char *filename)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* ZIP_openWrite */
 
 
-static FileHandle *ZIP_openAppend(void *opaque, const char *filename)
+static fvoid *ZIP_openAppend(dvoid *opaque, const char *filename)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* ZIP_openAppend */
 
 
-static void ZIP_dirClose(void *opaque)
+static void ZIP_dirClose(dvoid *opaque)
 {
     ZIPinfo *zi = (ZIPinfo *) (opaque);
     zip_free_entries(zi->entries, zi->entryCount);
@@ -1449,13 +1438,13 @@ static void ZIP_dirClose(void *opaque)
 } /* ZIP_dirClose */
 
 
-static int ZIP_remove(void *opaque, const char *name)
+static int ZIP_remove(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* ZIP_remove */
 
 
-static int ZIP_mkdir(void *opaque, const char *name)
+static int ZIP_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* ZIP_mkdir */

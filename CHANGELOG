@@ -2,6 +2,12 @@
  * CHANGELOG.
  */
 
+09262004 - Did the same thing to FileHandles than I did to DirHandles, but
+           this triggered massive tweaking in physfs.c. A lot of code got
+           little cleanups, which was nice. Less malloc pressure, too, since
+           opening a file used to allocate a ton of crap and mush it
+           together...now it's basically down to one structure and the
+           instance data in whatever archiver.
 09252004 - Cleaned up archiver interface to not deal with DirHandles anymore,
            which simplifies things, removes some responsibility and code
            duplication from the archivers, and trims some malloc pressure.

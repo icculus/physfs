@@ -931,112 +931,31 @@ typedef struct __PHYSFS_LINKEDSTRINGLIST__
 } LinkedStringList;
 
 
-typedef struct __PHYSFS_FILEHANDLE__
+/* !!! FIXME: find something better than "dvoid" and "fvoid" ... */
+/* Opaque data for file and dir handlers... */
+typedef void dvoid;
+typedef void fvoid;
+
+
+typedef struct
 {
         /*
-         * This is reserved for the driver to store information.
+         * Basic info about this archiver...
          */
-    void *opaque;
-
-        /*
-         * Non-zero if file opened for reading, zero if write/append.
-         */
-    PHYSFS_uint8 forReading;
-
-        /*
-         * This is the buffer, if one is set (NULL otherwise). Don't touch.
-         */
-    PHYSFS_uint8 *buffer;
-
-        /*
-         * This is the buffer size, if one is set (0 otherwise). Don't touch.
-         */
-    PHYSFS_uint32 bufsize;
-
-        /*
-         * This is the buffer fill size. Don't touch.
-         */
-    PHYSFS_uint32 buffill;
-
-        /*
-         * This is the buffer position. Don't touch.
-         */
-    PHYSFS_uint32 bufpos;
-
-        /*
-         * This should be the DirHandle that created this FileHandle.
-         */
-    const struct __PHYSFS_DIRHANDLE__ *dirHandle;
-
-        /*
-         * Pointer to the file i/o functions for this filehandle.
-         */
-    const struct __PHYSFS_FILEFUNCTIONS__ *funcs;
-} FileHandle;
-
-
-typedef struct __PHYSFS_FILEFUNCTIONS__
-{
-        /*
-         * Read more from the file.
-         * Returns number of objects of (objSize) bytes read from file, -1
-         *  if complete failure.
-         * On failure, call __PHYSFS_setError().
-         */
-    PHYSFS_sint64 (*read)(FileHandle *handle, void *buffer,
-                          PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-
-        /*
-         * Write more to the file. Archives don't have to implement this.
-         *  (Set it to NULL if not implemented).
-         * Returns number of objects of (objSize) bytes written to file, -1
-         *  if complete failure.
-         * On failure, call __PHYSFS_setError().
-         */
-    PHYSFS_sint64 (*write)(FileHandle *handle, const void *buffer,
-                 PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-
-        /*
-         * Returns non-zero if at end of file.
-         */
-    int (*eof)(FileHandle *handle);
-
-        /*
-         * Returns byte offset from start of file.
-         */
-    PHYSFS_sint64 (*tell)(FileHandle *handle);
-
-        /*
-         * Move read/write pointer to byte offset from start of file.
-         *  Returns non-zero on success, zero on error.
-         * On failure, call __PHYSFS_setError().
-         */
-    int (*seek)(FileHandle *handle, PHYSFS_uint64 offset);
-
-        /*
-         * Return number of bytes available in the file, or -1 if you
-         *  aren't able to determine.
-         * On failure, call __PHYSFS_setError().
-         */
-    PHYSFS_sint64 (*fileLength)(FileHandle *handle);
-
-        /*
-         * Close the file, and free the FileHandle structure (including "opaque").
-         *  returns non-zero on success, zero if can't close file.
-         * On failure, call __PHYSFS_setError().
-         */
-    int (*fileClose)(FileHandle *handle);
-} FileFunctions;
-
-
-/*
- * Symlinks should always be followed; PhysicsFS will use
- *  DirFunctions->isSymLink() and make a judgement on whether to
- *  continue to call other methods based on that.
- */
-typedef struct __PHYSFS_DIRFUNCTIONS__
-{
     const PHYSFS_ArchiveInfo *info;
+
+
+    /*
+     * DIRECTORY ROUTINES:
+     * These functions are for dir handles. Generate a handle with the
+     *  openArchive() method, then pass it as the "opaque" dvoid to the
+     *  others.
+     *
+     * Symlinks should always be followed; PhysicsFS will use the
+     *  isSymLink() method and make a judgement on whether to
+     *  continue to call other methods based on that.
+     */
+
 
         /*
          * Returns non-zero if (filename) is a valid archive that this
@@ -1067,7 +986,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          * If you have a memory failure, return as much as you can.
          *  This dirname is in platform-independent notation.
          */
-    LinkedStringList *(*enumerateFiles)(void *opaque,
+    LinkedStringList *(*enumerateFiles)(dvoid *opaque,
                                         const char *dirname,
                                         int omitSymLinks);
 
@@ -1077,7 +996,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  This filename is in platform-independent notation.
          *  You should not follow symlinks.
          */
-    int (*exists)(void *opaque, const char *name);
+    int (*exists)(dvoid *opaque, const char *name);
 
         /*
          * Returns non-zero if filename is really a directory.
@@ -1089,7 +1008,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
          */
-    int (*isDirectory)(void *opaque, const char *name, int *fileExists);
+    int (*isDirectory)(dvoid *opaque, const char *name, int *fileExists);
 
         /*
          * Returns non-zero if filename is really a symlink.
@@ -1099,7 +1018,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
          */
-    int (*isSymLink)(void *opaque, const char *name, int *fileExists);
+    int (*isSymLink)(dvoid *opaque, const char *name, int *fileExists);
 
         /*
          * Retrieve the last modification time (mtime) of a file.
@@ -1111,46 +1030,50 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
          */
-    PHYSFS_sint64 (*getLastModTime)(void *opaque, const char *fnm, int *exist);
+    PHYSFS_sint64 (*getLastModTime)(dvoid *opaque, const char *fnm, int *exist);
 
         /*
-         * Open file for reading, and return a FileHandle.
+         * Open file for reading.
          *  This filename is in platform-independent notation.
          * If you can't handle multiple opens of the same file,
          *  you can opt to fail for the second call.
          * Fail if the file does not exist.
          * Returns NULL on failure, and calls __PHYSFS_setError().
+         *  Returns non-NULL on success. The pointer returned will be
+         *  passed as the "opaque" parameter for later file calls.
          *
          * Regardless of success or failure, please set *fileExists to
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
          */
-    FileHandle *(*openRead)(void *opaque, const char *fname, int *fileExists);
+    fvoid *(*openRead)(dvoid *opaque, const char *fname, int *fileExists);
 
         /*
-         * Open file for writing, and return a FileHandle.
+         * Open file for writing.
          * If the file does not exist, it should be created. If it exists,
          *  it should be truncated to zero bytes. The writing
          *  offset should be the start of the file.
          * This filename is in platform-independent notation.
-         *  This method may be NULL.
          * If you can't handle multiple opens of the same file,
          *  you can opt to fail for the second call.
          * Returns NULL on failure, and calls __PHYSFS_setError().
+         *  Returns non-NULL on success. The pointer returned will be
+         *  passed as the "opaque" parameter for later file calls.
          */
-    FileHandle *(*openWrite)(void *opaque, const char *filename);
+    fvoid *(*openWrite)(dvoid *opaque, const char *filename);
 
         /*
-         * Open file for appending, and return a FileHandle.
+         * Open file for appending.
          * If the file does not exist, it should be created. The writing
          *  offset should be the end of the file.
          * This filename is in platform-independent notation.
-         *  This method may be NULL.
          * If you can't handle multiple opens of the same file,
          *  you can opt to fail for the second call.
          * Returns NULL on failure, and calls __PHYSFS_setError().
+         *  Returns non-NULL on success. The pointer returned will be
+         *  passed as the "opaque" parameter for later file calls.
          */
-    FileHandle *(*openAppend)(void *opaque, const char *filename);
+    fvoid *(*openAppend)(dvoid *opaque, const char *filename);
 
         /*
          * Delete a file in the archive/directory.
@@ -1159,7 +1082,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  This method may be NULL.
          * On failure, call __PHYSFS_setError().
          */
-    int (*remove)(void *opaque, const char *filename);
+    int (*remove)(dvoid *opaque, const char *filename);
 
         /*
          * Create a directory in the archive/directory.
@@ -1171,7 +1094,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  This method may be NULL.
          * On failure, call __PHYSFS_setError().
          */
-    int (*mkdir)(void *opaque, const char *filename);
+    int (*mkdir)(dvoid *opaque, const char *filename);
 
         /*
          * Close directories/archives, and free any associated memory,
@@ -1179,8 +1102,67 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  that it won't be called if there are still files open from
          *  this archive.
          */
-    void (*dirClose)(void *opaque);
-} DirFunctions;
+    void (*dirClose)(dvoid *opaque);
+
+
+
+    /*
+     * FILE ROUTINES:
+     * These functions are for file handles generated by the open*() methods.
+     *  They are distinguished by taking a "fvoid" instead of a "dvoid" for
+     *  the opaque handle.
+     */
+
+        /*
+         * Read more from the file.
+         * Returns number of objects of (objSize) bytes read from file, -1
+         *  if complete failure.
+         * On failure, call __PHYSFS_setError().
+         */
+    PHYSFS_sint64 (*read)(fvoid *opaque, void *buffer,
+                          PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+
+        /*
+         * Write more to the file. Archives don't have to implement this.
+         *  (Set it to NULL if not implemented).
+         * Returns number of objects of (objSize) bytes written to file, -1
+         *  if complete failure.
+         * On failure, call __PHYSFS_setError().
+         */
+    PHYSFS_sint64 (*write)(fvoid *opaque, const void *buffer,
+                 PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+
+        /*
+         * Returns non-zero if at end of file.
+         */
+    int (*eof)(fvoid *opaque);
+
+        /*
+         * Returns byte offset from start of file.
+         */
+    PHYSFS_sint64 (*tell)(fvoid *opaque);
+
+        /*
+         * Move read/write pointer to byte offset from start of file.
+         *  Returns non-zero on success, zero on error.
+         * On failure, call __PHYSFS_setError().
+         */
+    int (*seek)(fvoid *opaque, PHYSFS_uint64 offset);
+
+        /*
+         * Return number of bytes available in the file, or -1 if you
+         *  aren't able to determine.
+         * On failure, call __PHYSFS_setError().
+         */
+    PHYSFS_sint64 (*fileLength)(fvoid *opaque);
+
+        /*
+         * Close the file, and free associated resources, including (opaque)
+         *  if applicable. Returns non-zero on success, zero if can't close
+         *  file. On failure, call __PHYSFS_setError().
+         */
+    int (*fileClose)(fvoid *opaque);
+} PHYSFS_Archiver;
 
 
 /*
@@ -1272,7 +1254,7 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 /*
  * Get the current allocator. Not valid before PHYSFS_init is called!
  */
-PHYSFS_allocator *__PHYSFS_getAllocator(void);
+PHYSFS_Allocator *__PHYSFS_getAllocator(void);
 
 
 /*--------------------------------------------------------------------------*/
@@ -1571,9 +1553,9 @@ void __PHYSFS_platformTimeslice(void);
 
 /*
  * Enumerate a directory of files. This follows the rules for the
- *  DirFunctions->enumerateFiles() method (see above), except that the
+ *  PHYSFS_Archiver->enumerateFiles() method (see above), except that the
  *  (dirName) that is passed to this function is converted to
- *  platform-DEPENDENT notation by the caller. The DirFunctions version
+ *  platform-DEPENDENT notation by the caller. The PHYSFS_Archiver version
  *  uses platform-independent notation. Note that ".", "..", and other
  *  metaentries should always be ignored.
  */

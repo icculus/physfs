@@ -80,30 +80,30 @@ typedef struct
     void *handle; /* filehandle */
 } MIXfileinfo;
 
-static void MIX_dirClose(void *opaque);
-static PHYSFS_sint64 MIX_read(FileHandle *handle, void *buffer,
+static PHYSFS_sint64 MIX_read(fvoid *opaque, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 MIX_write(FileHandle *handle, const void *buffer,
+static PHYSFS_sint64 MIX_write(fvoid *opaque, const void *buffer,
                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int MIX_eof(FileHandle *handle);
-static PHYSFS_sint64 MIX_tell(FileHandle *handle);
-static int MIX_seek(FileHandle *handle, PHYSFS_uint64 offset);
-static PHYSFS_sint64 MIX_fileLength(FileHandle *handle);
-static int MIX_fileClose(FileHandle *handle);
+static int MIX_eof(fvoid *opaque);
+static PHYSFS_sint64 MIX_tell(fvoid *opaque);
+static int MIX_seek(fvoid *opaque, PHYSFS_uint64 offset);
+static PHYSFS_sint64 MIX_fileLength(fvoid *opaque);
+static int MIX_fileClose(fvoid *opaque);
 static int MIX_isArchive(const char *filename, int forWriting);
 static void *MIX_openArchive(const char *name, int forWriting);
-static LinkedStringList *MIX_enumerateFiles(void *opaque,
+static LinkedStringList *MIX_enumerateFiles(dvoid *opaque,
                                             const char *dirname,
                                             int omitSymLinks);
-static int MIX_exists(void *opaque, const char *name);
-static int MIX_isDirectory(void *opaque, const char *name, int *fileExists);
-static int MIX_isSymLink(void *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 MIX_getLastModTime(void *opaque, const char *n, int *e);
-static FileHandle *MIX_openRead(void *opaque, const char *name, int *exist);
-static FileHandle *MIX_openWrite(void *opaque, const char *name);
-static FileHandle *MIX_openAppend(void *opaque, const char *name);
-static int MIX_remove(void *opaque, const char *name);
-static int MIX_mkdir(void *opaque, const char *name);
+static int MIX_exists(dvoid *opaque, const char *name);
+static int MIX_isDirectory(dvoid *opaque, const char *name, int *fileExists);
+static int MIX_isSymLink(dvoid *opaque, const char *name, int *fileExists);
+static PHYSFS_sint64 MIX_getLastModTime(dvoid *opaque, const char *n, int *e);
+static fvoid *MIX_openRead(dvoid *opaque, const char *name, int *exist);
+static fvoid *MIX_openWrite(dvoid *opaque, const char *name);
+static fvoid *MIX_openAppend(dvoid *opaque, const char *name);
+static int MIX_remove(dvoid *opaque, const char *name);
+static int MIX_mkdir(dvoid *opaque, const char *name);
+static void MIX_dirClose(dvoid *opaque);
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MIX =
 {
@@ -114,19 +114,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MIX =
 };
 
 
-static const FileFunctions __PHYSFS_FileFunctions_MIX =
-{
-    MIX_read,       /* read() method       */
-    MIX_write,      /* write() method      */
-    MIX_eof,        /* eof() method        */
-    MIX_tell,       /* tell() method       */
-    MIX_seek,       /* seek() method       */
-    MIX_fileLength, /* fileLength() method */
-    MIX_fileClose   /* fileClose() method  */
-};
-
-
-const DirFunctions __PHYSFS_DirFunctions_MIX =
+const PHYSFS_Archiver __PHYSFS_Archiver_MIX =
 {
     &__PHYSFS_ArchiveInfo_MIX,
     MIX_isArchive,          /* isArchive() method      */
@@ -141,8 +129,16 @@ const DirFunctions __PHYSFS_DirFunctions_MIX =
     MIX_openAppend,         /* openAppend() method     */
     MIX_remove,             /* remove() method         */
     MIX_mkdir,              /* mkdir() method          */
-    MIX_dirClose            /* dirClose() method       */
+    MIX_dirClose,           /* dirClose() method       */
+    MIX_read,               /* read() method           */
+    MIX_write,              /* write() method          */
+    MIX_eof,                /* eof() method            */
+    MIX_tell,               /* tell() method           */
+    MIX_seek,               /* seek() method           */
+    MIX_fileLength,         /* fileLength() method     */
+    MIX_fileClose           /* fileClose() method      */
 };
+
 
 static PHYSFS_uint32 MIX_hash(const char *name)
 {
@@ -176,7 +172,7 @@ static PHYSFS_uint32 MIX_hash(const char *name)
 } /* MIX_hash */
 
 
-static void MIX_dirClose(void *opaque)
+static void MIX_dirClose(dvoid *opaque)
 {
     MIXinfo *info = ((MIXinfo *) opaque);
     free(info->entry);
@@ -184,10 +180,10 @@ static void MIX_dirClose(void *opaque)
 } /* MIX_dirClose */
 
 
-static PHYSFS_sint64 MIX_read(FileHandle *handle, void *buffer,
+static PHYSFS_sint64 MIX_read(fvoid *opaque, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
-    MIXfileinfo *finfo = (MIXfileinfo*)handle->opaque;
+    MIXfileinfo *finfo = (MIXfileinfo *) opaque;
     MIXentry *entry = finfo->entry;
     PHYSFS_uint32 read;
     
@@ -208,29 +204,29 @@ static PHYSFS_sint64 MIX_read(FileHandle *handle, void *buffer,
 } /* MIX_read */
 
 
-static PHYSFS_sint64 MIX_write(FileHandle *handle, const void *buffer,
+static PHYSFS_sint64 MIX_write(fvoid *opaque, const void *buffer,
                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* MIX_write */
 
 
-static int MIX_eof(FileHandle *handle)
+static int MIX_eof(fvoid *opaque)
 {
-    MIXfileinfo *fifo = (MIXfileinfo *) handle->opaque;
+    MIXfileinfo *fifo = (MIXfileinfo *) opaque;
     return(fifo->cur_pos >= fifo->size);
 } /* MIX_eof */
 
 
-static PHYSFS_sint64 MIX_tell(FileHandle *handle)
+static PHYSFS_sint64 MIX_tell(fvoid *opaque)
 {
-    return(((MIXfileinfo *) (handle->opaque))->cur_pos);
+    return(((MIXfileinfo *) opaque)->cur_pos);
 } /* MIX_tell */
 
 
-static int MIX_seek(FileHandle *handle, PHYSFS_uint64 offset)
+static int MIX_seek(fvoid *opaque, PHYSFS_uint64 offset)
 {
-    MIXfileinfo *h = (MIXfileinfo *) (handle->opaque);
+    MIXfileinfo *h = (MIXfileinfo *) opaque;
     
     BAIL_IF_MACRO(offset < 0, ERR_INVALID_ARGUMENT, 0);
     BAIL_IF_MACRO(offset >= h->size, ERR_PAST_EOF, 0);
@@ -239,25 +235,24 @@ static int MIX_seek(FileHandle *handle, PHYSFS_uint64 offset)
 } /* MIX_seek */
 
 
-static PHYSFS_sint64 MIX_fileLength(FileHandle *handle)
+static PHYSFS_sint64 MIX_fileLength(fvoid *opaque)
 {
-    return (((MIXfileinfo *) (handle->opaque))->size);
+    return (((MIXfileinfo *) opaque)->size);
 } /* MIX_fileLength */
 
 
-static int MIX_fileClose(FileHandle *handle)
+static int MIX_fileClose(fvoid *opaque)
 {
-    MIXfileinfo *finfo = (MIXfileinfo *) handle->opaque;
+    MIXfileinfo *finfo = (MIXfileinfo *) opaque;
     __PHYSFS_platformClose(finfo->handle);
     free(finfo);
-    free(handle);
     return(1);
 } /* MIX_fileClose */
 
 
 static int MIX_isArchive(const char *filename, int forWriting)
 {
-    /* TODO:
+    /* !!! FIXME:
             write a simple detection routine for MIX files.
             Unfortunaly MIX files have no ID in the header.
     */
@@ -359,7 +354,7 @@ MIX_openArchive_failed:
 } /* MIX_openArchive */
 
 
-static LinkedStringList *MIX_enumerateFiles(void *opaque,
+static LinkedStringList *MIX_enumerateFiles(dvoid *opaque,
                                             const char *dirname,
                                             int omitSymLinks)
 {
@@ -399,27 +394,27 @@ static MIXentry *MIX_find_entry(MIXinfo *info, const char *name)
 } /* MIX_find_entry */
 
 
-static int MIX_exists(void *opaque, const char *name)
+static int MIX_exists(dvoid *opaque, const char *name)
 {
     return(MIX_find_entry(((MIXinfo *) opaque), name) != NULL);
 } /* MIX_exists */
 
 
-static int MIX_isDirectory(void *opaque, const char *name, int *fileExists)
+static int MIX_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 {
     *fileExists = MIX_exists(opaque, name);
     return(0);  /* never directories in a MIX */
 } /* MIX_isDirectory */
 
 
-static int MIX_isSymLink(void *opaque, const char *name, int *fileExists)
+static int MIX_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 {
     *fileExists = MIX_exists(opaque, name);
     return(0);  /* never symlinks in a MIX. */
 } /* MIX_isSymLink */
 
 
-static PHYSFS_sint64 MIX_getLastModTime(void *opaque,
+static PHYSFS_sint64 MIX_getLastModTime(dvoid *opaque,
                                         const char *name,
                                         int *fileExists)
 {
@@ -427,9 +422,8 @@ static PHYSFS_sint64 MIX_getLastModTime(void *opaque,
 } /* MIX_getLastModTime */
 
 
-static FileHandle *MIX_openRead(void *opaque, const char *fnm, int *fileExists)
+static fvoid *MIX_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
-    FileHandle *retval;
     MIXinfo *info = ((MIXinfo*) opaque);
     MIXfileinfo *finfo;
     MIXentry *entry;
@@ -441,56 +435,44 @@ static FileHandle *MIX_openRead(void *opaque, const char *fnm, int *fileExists)
     /* allocate a MIX handle */
     finfo = (MIXfileinfo *) malloc(sizeof (MIXfileinfo));
     BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
-    
-    /* allocate a filehandle */
-    retval = (FileHandle*) malloc(sizeof (FileHandle));
-    if (!retval)
-    {
-        free(finfo);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
-    } /* if */
 
     /* open the archive */
     finfo->handle = __PHYSFS_platformOpenRead(info->filename);
     if(!finfo->handle)
     {
         free(finfo);
-        free(retval);
         return(NULL);
-    };
+    } /* if */
     
     /* setup structures */
     finfo->cur_pos = 0;
     finfo->info = info;
     finfo->entry = entry;
     finfo->size = entry->end_offset - entry->start_offset;
-    
-    retval->opaque = (void *) finfo;
-    retval->funcs = &__PHYSFS_FileFunctions_MIX;
 
-    return(retval);
+    return(finfo);
 } /* MIX_openRead */
 
 
-static FileHandle *MIX_openWrite(void *opaque, const char *name)
+static fvoid *MIX_openWrite(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* MIX_openWrite */
 
 
-static FileHandle *MIX_openAppend(void *opaque, const char *name)
+static fvoid *MIX_openAppend(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* MIX_openAppend */
 
 
-static int MIX_remove(void *opaque, const char *name)
+static int MIX_remove(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* MIX_remove */
 
 
-static int MIX_mkdir(void *opaque, const char *name)
+static int MIX_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* MIX_mkdir */
