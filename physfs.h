@@ -478,7 +478,7 @@ __EXPORT__ char **PHYSFS_getSearchPath(void);
  * Helper function.
  *
  * Set up sane, default paths. The write dir will be set to
- *  "userdir/.appName", which is created if it doesn't exist.
+ *  "userdir/.organization/appName", which is created if it doesn't exist.
  *
  * The above is sufficient to make sure your program's configuration directory
  *  is separated from other clutter, and platform-independent. The period
@@ -487,11 +487,8 @@ __EXPORT__ char **PHYSFS_getSearchPath(void);
  *  The search path will be:
  *
  *    - The Write Dir (created if it doesn't exist)
- *    - The Write Dir/appName (created if it doesn't exist)
  *    - The Base Dir (PHYSFS_getBaseDir())
- *    - The Base Dir/appName (if it exists)
  *    - All found CD-ROM dirs (optionally)
- *    - All found CD-ROM dirs/appName (optionally, and if they exist)
  *
  * These directories are then searched for files ending with the extension
  *  (archiveExt), which, if they are valid and supported archives, will also
@@ -502,6 +499,9 @@ __EXPORT__ char **PHYSFS_getSearchPath(void);
  *
  * All of this can be accomplished from the application, but this just does it
  *  all for you. Feel free to add more to the search path manually, too.
+ *
+ *    @param organization Name of your company/group/etc to be used as a
+ *                         dirname, so keep it small, and no-frills.
  *
  *    @param appName Program-specific name of your program, to separate it
  *                   from other programs using PhysicsFS.
@@ -524,10 +524,12 @@ __EXPORT__ char **PHYSFS_getSearchPath(void);
  *
  *    @param archivesFirst Non-zero to prepend the archives to the search path.
  *                          Zero to append them. Ignored if !(archiveExt).
+ *
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-__EXPORT__ int PHYSFS_setSaneConfig(const char *appName,
+__EXPORT__ int PHYSFS_setSaneConfig(const char *organization,
+                                    const char *appName,
                                     const char *archiveExt,
                                     int includeCdRoms,
                                     int archivesFirst);

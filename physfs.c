@@ -635,8 +635,9 @@ char **PHYSFS_getSearchPath(void)
 } /* PHYSFS_getSearchPath */
 
 
-int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
-                                     int includeCdRoms, int archivesFirst)
+int PHYSFS_setSaneConfig(const char *organization, const char *appName,
+                         const char *archiveExt, int includeCdRoms,
+                         int archivesFirst)
 {
     const char *basedir = PHYSFS_getBaseDir();
     const char *userdir = PHYSFS_getUserDir();
@@ -644,10 +645,10 @@ int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
     char *str;
 
         /* set write dir... */
-    str = malloc(strlen(userdir) + (strlen(appName) * 2) +
-                 (strlen(dirsep) * 2) + 2);
+    str = malloc(strlen(userdir) + (strlen(organization) * 2) +
+                 (strlen(appName) * 2) + (strlen(dirsep) * 3) + 2);
     BAIL_IF_MACRO(str == NULL, ERR_OUT_OF_MEMORY, 0);
-    sprintf(str, "%s.%s", userdir, appName);
+    sprintf(str, "%s.%s%s%s", userdir, organization, dirsep, appName);
 
     if (!PHYSFS_setWriteDir(str))
     {
@@ -660,31 +661,12 @@ int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
         } /* if */
     } /* if */
 
-    if (!PHYSFS_setWriteDir(str))
-    {
-        PHYSFS_setWriteDir(NULL);
-        free(str);
-        BAIL_IF_MACRO(1, ERR_CANT_SET_WRITE_DIR, 0);
-    } /* if */
-
         /* Put write dir related dirs on search path... */
-    PHYSFS_addToSearchPath(str, 1);
-    PHYSFS_mkdir(appName); /* don't care if this fails. */
-    strcat(str, dirsep);
-    strcat(str, appName);
     PHYSFS_addToSearchPath(str, 1);
     free(str);
 
-        /* Put base path stuff on search path... */
+        /* Put base path on search path... */
     PHYSFS_addToSearchPath(basedir, 1);
-    str = malloc(strlen(basedir) + (strlen(appName) * 2) +
-                 (strlen(dirsep) * 2) + 2);
-    if (str != NULL)
-    {
-        sprintf(str, "%s.%s", basedir, appName);
-        PHYSFS_addToSearchPath(str, 1);
-        free(str);
-    } /* if */
 
         /* handle CD-ROMs... */
     if (includeCdRoms)
@@ -692,16 +674,8 @@ int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
         char **cds = PHYSFS_getCdRomDirs();
         char **i;
         for (i = cds; *i != NULL; i++)
-        {
             PHYSFS_addToSearchPath(*i, 1);
-            str = malloc(strlen(*i) + strlen(appName) + strlen(dirsep) + 1);
-            if (str != NULL)
-            {
-                sprintf(str, "%s%s%s", *i, dirsep, appName);
-                PHYSFS_addToSearchPath(str, 1);
-                free(str);
-            } /* if */
-        } /* for */
+
         PHYSFS_freeList(cds);
     } /* if */
 

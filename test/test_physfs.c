@@ -242,6 +242,7 @@ static int cmd_permitsyms(char *args)
 
 static int cmd_setsaneconfig(char *args)
 {
+    char *org;
     char *appName;
     char *arcExt;
     int inclCD;
@@ -249,18 +250,16 @@ static int cmd_setsaneconfig(char *args)
     char *ptr = args;
 
         /* ugly. */
-    appName = ptr;
+    org = ptr;
+    ptr = strchr(ptr, ' '); *ptr = '\0'; ptr++; appName = ptr;
     ptr = strchr(ptr, ' '); *ptr = '\0'; ptr++; arcExt = ptr;
     ptr = strchr(ptr, ' '); *ptr = '\0'; ptr++; inclCD = atoi(arcExt);
     arcsFirst = atoi(ptr);
 
-    if (strcmp(appName, "!") == 0)
-        appName = NULL;
-
     if (strcmp(arcExt, "!") == 0)
         arcExt = NULL;
 
-    if (PHYSFS_setSaneConfig(appName, arcExt, inclCD, arcsFirst))
+    if (PHYSFS_setSaneConfig(org, appName, arcExt, inclCD, arcsFirst))
         printf("Successful.\n");
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
