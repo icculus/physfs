@@ -273,7 +273,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     dir = FindFirstFile(dirname, &ent);
     BAIL_IF_MACRO(dir == INVALID_HANDLE_VALUE, win32strerror(), NULL);
 
-    for (; FindNextFile(dir, &ent) != 0; )
+    while (FindNextFile(dir, &ent) != 0)
     {
         if (strcmp(ent.cFileName, ".") == 0)
             continue;
