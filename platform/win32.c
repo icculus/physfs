@@ -142,22 +142,6 @@ char *__PHYSFS_platformGetUserName(void)
 } /* __PHYSFS_platformGetUserName */
 
 
-static char *copyEnvironmentVariable(const char *varname)
-{
-    const char *envr = getenv(varname);
-    char *retval = NULL;
-
-    if (envr != NULL)
-    {
-        retval = malloc(strlen(envr) + 1);
-        if (retval != NULL)
-            strcpy(retval, envr);
-    } /* if */
-
-    return(retval);
-} /* copyEnvironmentVariable */
-
-
 char *__PHYSFS_platformGetUserDir(void)
 {
     char *userdir = NULL;
