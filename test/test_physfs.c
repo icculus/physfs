@@ -25,6 +25,8 @@
 #include <readline/history.h>
 #endif
 
+#include <time.h>
+
 #include "physfs.h"
 
 #define TEST_VERSION_MAJOR  0
@@ -557,6 +559,31 @@ static int cmd_write(char *args)
 } /* cmd_write */
 
 
+static void modTimeToStr(PHYSFS_sint64 modtime, char *modstr, size_t strsize)
+{
+    time_t t = (time_t) modtime;
+    char *str = ctime(&t);
+    strncpy(modstr, str, strsize);
+    modstr[strsize-1] = '\0';
+} /* modTimeToStr */
+
+
+static int cmd_getlastmodtime(char *args)
+{
+    PHYSFS_sint64 rc = PHYSFS_getLastModTime(args);
+    if (rc == -1)
+        printf("Failed to determine. Reason: [%s].\n", PHYSFS_getLastError());
+    else
+    {
+        char modstr[64];
+        modTimeToStr(rc, modstr, sizeof (modstr));
+        printf("Last modified: %s (%ld).\n", modstr, (long) rc);
+    } /* else */
+
+    return(1);
+} /* cmd_getLastModTime */
+
+
 /* must have spaces trimmed prior to this call. */
 static int count_args(const char *str)
 {
@@ -619,8 +646,10 @@ static const command_info commands[] =
     { "filelength",     cmd_filelength,     1, "<fileToCheck>"              },
     { "append",         cmd_append,         1, "<fileToAppend>"             },
     { "write",          cmd_write,          1, "<fileToCreateOrTrash>"      },
+    { "getlastmodtime", cmd_getlastmodtime, 1, "<fileToExamine>"            },
     { NULL,             NULL,              -1, NULL                         }
 };
+
 
 static void output_usage(const char *intro, const command_info *cmdinfo)
 {
