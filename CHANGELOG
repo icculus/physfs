@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+10062004 - Removed profiling code from physfs.c.
 09292004 - Every API that can return a list of strings can now use a
            callback mechanism if the application wants to do it's own
            allocation or handling on a per-item basis. The guts of those
