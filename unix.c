@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_internal.h"
+
+
 const char *__PHYSFS_PlatformDirSeparator = "/";
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
@@ -27,6 +31,12 @@ int __PHYSFS_platformGetThreadID(void)
 {
     return((int) pthread_self());
 } /* __PHYSFS_platformGetThreadID */
+
+
+int __PHYSFS_platformStricmp(const char *str1, const char *str2)
+{
+    return(strcasecmp(str1, str2));
+} /* __PHYSFS_platformStricmp */
 
 /* end of unix.c ... */
 
