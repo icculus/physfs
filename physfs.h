@@ -202,7 +202,7 @@ typedef struct __PHYSFS_VERSION__
 
 #define PHYSFS_VER_MAJOR 0
 #define PHYSFS_VER_MINOR 1
-#define PHYSFS_VER_PATCH 5
+#define PHYSFS_VER_PATCH 6
 
 #define PHYSFS_VERSION(x) { \
                             (x)->major = PHYSFS_VER_MAJOR; \
