@@ -28,6 +28,8 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   work with it as-is. Might compile as-is with the current Makefile.)
 - Probably other stuff. Requests and recommendations are welcome.
 - Fill in __PHYSFS_platformGetLastModTime() in all the platform drivers.
+- Implement getlastmodtime for zip.c ... zipfiles contain file modtimes.
+- Implement getlastmodtime for grp.c ... all files report modtime of archive?
 
 // end of TODO ...
 
