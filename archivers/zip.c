@@ -1253,8 +1253,11 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
                                             const char *dirname,
                                             int omitSymLinks)
 {
+#if 1
+    return(NULL);  /* !!! FIXME */
+#else
     ZIPinfo *info = ((ZIPinfo *) h->opaque);
-    PHYSFS_sint32 i, max = (PHYSFS_sint32) info->entryCount;
+    PHYSFS_sint32 i, tmp, max;
     LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_uint32 dlen = strlen(dirname);
 
@@ -1264,46 +1267,46 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
     i = zip_find_start_of_dir(info, dirname, 0);
     BAIL_IF_MACRO(i == -1, ERR_NO_SUCH_FILE, NULL);
 
-    while (1)
+    for (max = (PHYSFS_sint32) info->entryCount; i < max; i++)
     {
         ZIPentry *entry = &info->entries[i];
         const char *add_file;
         size_t strsize;
         char *slash;
 
+        if ((dlen > 0) && (strncmp(entry->name, dirname, dlen) != 0))
+            break; /* we're past this dir's entries. */
+
         add_file = entry->name + dlen + ((dlen > 0) ? 1 : 0);
         if ( ((omitSymLinks) && (zip_entry_is_symlink(entry))) ||
              (*add_file == '\0') ) /* skip links and the dir entry itself. */
         {
-            if (++i >= max) break; else continue;
+            continue;
         } /* if */
 
         slash = strchr(add_file, '/'); /* handle subdirs under dirname... */
         strsize = (size_t) ((slash) ? (slash - add_file) : strlen(add_file));
-
         retval = __PHYSFS_addToLinkedStringList(retval, &p, add_file, strsize);
 
-        if (++i >= max)
-            break; /* we're at the end of the entries array. */
-
-        if ((dlen > 0) && (strncmp(info->entries[i].name, dirname, dlen) != 0))
-            break; /* we're past this dir's entries. */
-
+        tmp = i;
         /* We added a subdir? Skip its children. */
-        while (slash != NULL)
+        while ((slash != NULL) && (i < max))
         {
-            if (strncmp(info->entries[i].name, dirname, dlen) == 0)
+            if (strncmp(info->entries[i].name, info->entries[tmp].name, dlen + strsize + 1) == 0)
             {
-                if (info->entries[i].name[dlen] == '/')
+                if (info->entries[i].name[dlen + strsize + 1] == '/')
                 {
-                    if (++i >= max) break; else continue;
+                    i++;
+                    continue;
                 } /* if */
             } /* if */
+            i--;  /* for loop will increment. */
             slash = NULL;
         } /* while */
     } /* while */
 
     return(retval);
+#endif
 } /* ZIP_enumerateFiles */
 
 
