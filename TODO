@@ -1,6 +1,6 @@
 Stuff that needs to be done and wishlist:
 
-These are in no particular order. A 1.0 release is reliant on doing most of
+These are in no particular order. A 1.0 release is reliant on doing some of
  this stuff. Some might be dupes, some might be done already.
 
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
@@ -22,7 +22,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - profile string list interpolation.
 - We have two different ways to find dir entries in zip.c.
 - Do symlinks in zip archiver work when they point to dirs?
-- Is building internal zlib broken?
 - Enable more warnings?
 - Use __cdecl in physfs.h?
 - Look for FIXMEs (many marked with "!!!" in comments).

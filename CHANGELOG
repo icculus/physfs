@@ -2,6 +2,13 @@
  * CHANGELOG.
  */
 
+12012002 - Minor fix to configure.in: reported --enable-debug's default
+           setting incorrectly. Added buffering to the API: you can now
+           buffer a file with PHYSFS_setBuffer(), and flush the buffer to
+           disk with PHYSFS_flush(). PhysicsFS file handles are unbuffered
+           by default (as they were before this API addition), so this does
+           not break the API. Other fixes for bugs I stumbled upon during
+           this work are in CVS, too.
 11292002 - Minor fix for strange PATH strings in unix.c (thanks, Alexander!)
 11222002 - Initial PocketPC port by Corona688.
 10222002 - Fixed segfault in test_physfs.c when user hits CTRL-D (and
