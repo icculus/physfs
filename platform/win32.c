@@ -29,8 +29,10 @@
     #define alloca(x) __builtin_alloca(x) 
 #endif
 
-#define LOWORDER_UINT64(pos)       (PHYSFS_uint32)(pos & 0x00000000FFFFFFFF)
-#define HIGHORDER_UINT64(pos)      (PHYSFS_uint32)(pos & 0xFFFFFFFF00000000)
+#define LOWORDER_UINT64(pos) (PHYSFS_uint32) \
+    (pos & 0x00000000FFFFFFFF)
+#define HIGHORDER_UINT64(pos) (PHYSFS_uint32) \
+    (((pos & 0xFFFFFFFF00000000) >> 32) & 0x00000000FFFFFFFF)
 
 /* GetUserProfileDirectory() is only available on >= NT4 (no 9x/ME systems!) */
 typedef BOOL (STDMETHODCALLTYPE FAR * LPFNGETUSERPROFILEDIR) (
@@ -60,14 +62,11 @@ static char *userDir = NULL;
  *  for SetFilePointer() just said to compare with 0xFFFFFFFF, so this should
  *  work as desired
  */
-#ifndef INVALID_SET_FILE_POINTER
-#  define INVALID_SET_FILE_POINTER  0xFFFFFFFF
-#endif
+#define PHYSFS_INVALID_SET_FILE_POINTER  0xFFFFFFFF
 
 /* just in case... */
-#ifndef INVALID_FILE_ATTRIBUTES
-#  define INVALID_FILE_ATTRIBUTES   0xFFFFFFFF
-#endif
+#define PHYSFS_INVALID_FILE_ATTRIBUTES   0xFFFFFFFF
+
 
 
 /*
@@ -256,7 +255,7 @@ static BOOL mediaInDrive(const char *drive)
     DWORD tmp;
     BOOL retval;
 
-    /* Prevent windows warning message to appear when checking media size */
+    /* Prevent windows warning message appearing when checking media size */
     oldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     
     /* If this function succeeds, there's media in the drive */
@@ -398,8 +397,11 @@ int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 len)
 
 int __PHYSFS_platformExists(const char *fname)
 {
-    BAIL_IF_MACRO(GetFileAttributes(fname) == INVALID_FILE_ATTRIBUTES,
-                  win32strerror(), 0);
+    BAIL_IF_MACRO
+    (
+        GetFileAttributes(fname) == PHYSFS_INVALID_FILE_ATTRIBUTES,
+        win32strerror(), 0
+    );
     return(1);
 } /* __PHYSFS_platformExists */
 
@@ -479,7 +481,11 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     strcat(SearchPath, "*");
 
     dir = FindFirstFile(SearchPath, &ent);
-    BAIL_IF_MACRO(dir == INVALID_HANDLE_VALUE, win32strerror(), NULL);
+    BAIL_IF_MACRO
+    (
+        dir == PHYSFS_INVALID_HANDLE_VALUE,
+        win32strerror(), NULL
+    );
 
     do
     {
@@ -742,7 +748,11 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
     fileHandle = CreateFile(fname, mode, FILE_SHARE_READ, NULL,
                             creation, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    BAIL_IF_MACRO(fileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
+    BAIL_IF_MACRO
+    (
+        fileHandle == PHYSFS_INVALID_HANDLE_VALUE,
+        win32strerror(), NULL
+    );
 
     retval = malloc(sizeof (win32file));
     if (retval == NULL)
@@ -775,7 +785,8 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
     if (retval != NULL)
     {
         HANDLE h = ((win32file *) retval)->handle;
-        if (SetFilePointer(h, 0, NULL, FILE_END) == INVALID_SET_FILE_POINTER)
+        DWORD rc = SetFilePointer(h, 0, NULL, FILE_END);
+        if (rc == PHYSFS_INVALID_SET_FILE_POINTER)
         {
             const char *err = win32strerror();
             CloseHandle(h);
@@ -840,19 +851,36 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
     HANDLE FileHandle = ((win32file *) opaque)->handle;
     DWORD HighOrderPos;
+    DWORD *pHighOrderPos;
     DWORD rc;
 
     /* Get the high order 32-bits of the position */
     HighOrderPos = HIGHORDER_UINT64(pos);
 
-    /* !!! FIXME: SetFilePointer needs a signed 64-bit value. */
+    /*
+     * MSDN: "If you do not need the high-order 32 bits, this
+     *         pointer must be set to NULL."
+     */
+    pHighOrderPos = (HighOrderPos) ? &HighOrderPos : NULL;
+
+    /*
+     * !!! FIXME: MSDN: "Windows Me/98/95:  If the pointer
+     * !!! FIXME:  lpDistanceToMoveHigh is not NULL, then it must
+     * !!! FIXME:  point to either 0, INVALID_SET_FILE_POINTER, or
+     * !!! FIXME:  the sign extension of the value of lDistanceToMove.
+     * !!! FIXME:  Any other value will be rejected."
+     */
+
     /* Move pointer "pos" count from start of file */
     rc = SetFilePointer(FileHandle, LOWORDER_UINT64(pos),
-                        &HighOrderPos, FILE_BEGIN);
+                        pHighOrderPos, FILE_BEGIN);
 
-    if ((rc == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
+    if ( (rc == PHYSFS_INVALID_SET_FILE_POINTER) &&
+         (GetLastError() != NO_ERROR) )
+    {
         BAIL_MACRO(win32strerror(), 0);
-
+    } /* if */
+    
     return(1);  /* No error occured */
 } /* __PHYSFS_platformSeek */
 
@@ -866,7 +894,8 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 
     /* Get current position */
     LowPos = SetFilePointer(FileHandle, 0, &HighPos, FILE_CURRENT);
-    if ((LowPos == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
+    if ( (LowPos == PHYSFS_INVALID_SET_FILE_POINTER) &&
+         (GetLastError() != NO_ERROR) )
     {
         BAIL_MACRO(win32strerror(), 0);
     } /* if */
@@ -889,7 +918,8 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
     PHYSFS_sint64 retval;
 
     SizeLow = GetFileSize(FileHandle, &SizeHigh);
-    if ((SizeLow == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
+    if ( (SizeLow == PHYSFS_INVALID_SET_FILE_POINTER) &&
+         (GetLastError() != NO_ERROR) )
     {
         BAIL_MACRO(win32strerror(), -1);
     } /* if */
