@@ -45,12 +45,15 @@
 #include <dirent.h>
 #include <time.h>
 #include <errno.h>
-#include <mntent.h>
-#include <sys/mount.h>
 
-#if (defined __DARWIN__)
+#if (!defined __DARWIN__)
+#include <mntent.h>
+#else
 #include <sys/ucred.h>
 #endif
+
+#include <sys/mount.h>
+
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -288,7 +291,7 @@ char *__PHYSFS_platformGetUserDir(void)
 
 PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 {
-    return((PHYSFS_uint64) pthread_self());
+    return((PHYSFS_uint64) ((PHYSFS_uint32) pthread_self()));
 } /* __PHYSFS_platformGetThreadID */
 
 
