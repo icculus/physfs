@@ -54,6 +54,14 @@ use_asm = -DUSE_PORTABLE_C
 
 
 #-----------------------------------------------------------------------------#
+# Set this to where you want PhysicsFS installed. It will put the
+#  files in $(install_prefix)/bin, $(install_prefix)/lib, and
+#  $(install_prefix)/include  ...
+#-----------------------------------------------------------------------------#
+install_prefix := /usr/local
+
+
+#-----------------------------------------------------------------------------#
 #-----------------------------------------------------------------------------#
 #-----------------------------------------------------------------------------#
 #-----------------------------------------------------------------------------#
@@ -62,8 +70,6 @@ use_asm = -DUSE_PORTABLE_C
 #-----------------------------------------------------------------------------#
 #-----------------------------------------------------------------------------#
 #-----------------------------------------------------------------------------#
-
-curdate := $(shell date +%m%d%Y)
 
 #-----------------------------------------------------------------------------#
 # CygWin autodetect.
@@ -110,6 +116,19 @@ LIB_EXT := $(STATICLIB_EXT)
 endif
 
 #-----------------------------------------------------------------------------#
+# Version crapola.
+#-----------------------------------------------------------------------------#
+VERMAJOR := $(shell grep "define PHYSFS_VER_MAJOR" physfs.h | sed "s/\#define PHYSFS_VER_MAJOR //")
+VERMINOR := $(shell grep "define PHYSFS_VER_MINOR" physfs.h | sed "s/\#define PHYSFS_VER_MINOR //")
+VERPATCH := $(shell grep "define PHYSFS_VER_PATCH" physfs.h | sed "s/\#define PHYSFS_VER_PATCH //")
+
+VERMAJOR := $(strip $(VERMAJOR))
+VERMINOR := $(strip $(VERMINOR))
+VERPATCH := $(strip $(VERPATCH))
+
+VERFULL := $(VERMAJOR).$(VERMINOR).$(VERPATCH)
+
+#-----------------------------------------------------------------------------#
 # General compiler, assembler, and linker flags.
 #-----------------------------------------------------------------------------#
 
@@ -138,6 +157,10 @@ TESTLDFLAGS := -lreadline
 #-----------------------------------------------------------------------------#
 
 BASELIBNAME := physfs
+ifneq ($(strip $(cygwin)),true)
+BASELIBNAME := lib$(strip $(BASELIBNAME))
+endif
+
 MAINLIB := $(BINDIR)/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
 
 TESTSRCS := test/test_physfs.c
@@ -190,7 +213,7 @@ $(BINDIR)/%.o: $(SRCDIR)/%.c
 $(BINDIR)/%.o: $(SRCDIR)/%.asm
 	$(ASM) $(ASMFLAGS) -o $@ $<
 
-.PHONY: all clean distclean listobjs
+.PHONY: all clean distclean listobjs install
 
 all: $(BINDIR) $(MAINLIB) $(TESTEXE)
 
@@ -200,6 +223,22 @@ $(MAINLIB) : $(BINDIR) $(MAINOBJS)
 $(TESTEXE) : $(MAINLIB) $(TESTOBJS)
 	$(LINKER) -o $(TESTEXE) $(LDFLAGS) $(TESTLDFLAGS) $(TESTOBJS) $(MAINLIB)
 
+
+install: all
+	mkdir -p $(install_prefix)/bin
+	mkdir -p $(install_prefix)/lib
+	mkdir -p $(install_prefix)/include
+	cp $(SRCDIR)/physfs.h $(install_prefix)/include
+	cp $(TESTEXE) $(install_prefix)/bin
+ifeq ($(strip $(cygwin)),true)
+	cp $(MAINLIB) $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
+else
+	cp $(MAINLIB) $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERFULL))
+	ln -sf $(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERFULL)) $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
+	ln -sf $(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERFULL)) $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERMAJOR))
+	chmod 0755 $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERFULL))
+	chmod 0644 $(install_prefix)/include/physfs.h
+endif
 
 $(BINDIR):
 	mkdir -p $(BINDIR)
@@ -228,6 +267,8 @@ showcfg:
 	@echo "Debugging      : $(debugging)"
 	@echo "ASM flag       : $(use_asm)"
 	@echo "Building DLLs  : $(build_dll)"
+	@echo "Install prefix : $(install_prefix)"
+	@echo "PhysFS version : $(VERFULL)"
 	@echo "Supports .ZIP  : $(use_archive_zip)"
 
 #-----------------------------------------------------------------------------#
@@ -241,7 +282,7 @@ BINSCOMMON := LICENSE.TXT physfs.h
 
 .PHONY: package msbins win32bins nocygwin
 package: clean
-	cd .. ; mv physfs physfs-$(curdate) ; tar -cyvvf ./physfs-$(curdate).tar.bz2 --exclude="*CVS*" physfs-$(curdate) ; mv physfs-$(curdate) physfs
+	cd .. ; mv physfs physfs-$(VERFULL) ; tar -cyvvf ./physfs-$(VERFULL).tar.bz2 --exclude="*CVS*" physfs-$(VERFULL) ; mv physfs-$(VERFULL) physfs
 
 
 ifeq ($(strip $(cygwin)),true)
