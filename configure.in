@@ -219,7 +219,7 @@ if test x$enable_readline = xyes; then
   if test x$have_readline_hdr = xyes -a x$have_readline_lib = xyes; then
     if test x$have_history_hdr = xyes -a x$have_history_lib = xyes; then
       AC_DEFINE([PHYSFS_HAVE_READLINE], 1, [define if we have readline])
-      LIBS="$LIBS -lreadline -lcurses"
+      have_readline="yes"
     fi
   fi
 fi
@@ -489,6 +489,7 @@ AM_CONDITIONAL(BUILD_TEST_PHYSFS, test x$enable_testprog = xyes)
 AM_CONDITIONAL(BUILD_MACOSX, test x$this_is_macosx = xyes)
 AM_CONDITIONAL(BUILD_BEOS, test x$this_is_beos = xyes)
 AM_CONDITIONAL(BUILD_CYGWIN, test x$this_is_cygwin = xyes)
+AM_CONDITIONAL(BUILD_READLINE, test x$have_readline = xyes)
 
 AC_OUTPUT([
 Makefile
