@@ -98,6 +98,8 @@ erase /N bin\*.*
 @echo  "PHYSFS_writeUBE32" >> bin\physfs.def
 @echo  "PHYSFS_writeSBE64" >> bin\physfs.def
 @echo  "PHYSFS_writeUBE64" >> bin\physfs.def
+@echo  "PHYSFS_setBuffer" >> bin\physfs.def
+@echo  "PHYSFS_flush" >> bin\physfs.def
 
 emximp -o bin/physfs.lib bin/physfs.def
 
