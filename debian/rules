@@ -33,6 +33,7 @@ major=0
 config.status: configure
 	dh_testdir
 	# Add here commands to configure the package.
+	./bootstrap
 	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
 
 
@@ -70,12 +71,12 @@ install: build
 	# Add here commands to install the package into debian/tmp
 	$(MAKE) install prefix=$(CURDIR)/debian/tmp/usr
 	install -d $(CURDIR)/debian/tmp/usr/share/doc/libphysfs0-dev/latex
-	install -d $(CURDIR)/debian/tmp/usr/share/doc/libphysfs0-dev/man/man3
 	install -d $(CURDIR)/debian/tmp/usr/share/doc/libphysfs0-dev/html
-	install -D docs/README $(CURDIR)/debian/tmp/usr/share/doc/libphysfs0-dev/README
+	install -d $(CURDIR)/debian/tmp/usr/share/man/man3
+	# install -D docs/README $(CURDIR)/debian/tmp/usr/share/doc/libphysfs0-dev/README
 	install -D docs/latex/* $(CURDIR)/debian/tmp/usr/share/doc/libphysfs0-dev/latex
 	install -D docs/html/* $(CURDIR)/debian/tmp/usr/share/doc/libphysfs0-dev/html
-	install -D docs/man/man3/* $(CURDIR)/debian/tmp/usr/share/doc/libphysfs0-dev/man/man3
+	install -D docs/man/man3/* $(CURDIR)/debian/tmp/usr/share/man/man3
 
 # Build architecture-independent files here.
 binary-indep: build install
