@@ -7,10 +7,13 @@
  */
 
 #include <windows.h>
-#include <userenv.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+#ifndef DISABLE_NT_SUPPORT
+#include <userenv.h>
+#endif
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -25,9 +28,14 @@ static HANDLE AccessTokenHandle = NULL; /* Security handle to process */
 static DWORD ProcessID;                 /* ID assigned to current process */
 static int runningNT;                   /* TRUE if NT derived OS */
 static OSVERSIONINFO OSVersionInfo;     /* Information about the OS */
-
-/* NT specific information */
 static char *ProfileDirectory = NULL;   /* User profile folder */
+
+/* Users without the platform SDK don't have this defined.  The original docs
+   for SetFilePointer() just said to compare with 0xFFFFFFF, so this should
+   work as desired */
+#ifndef INVALID_SET_FILE_POINTER
+#define INVALID_SET_FILE_POINTER 0xFFFFFFFF
+#endif
 
 static const char *win32strerror(void)
 {
@@ -143,18 +151,7 @@ char *__PHYSFS_platformGetUserName(void)
 
 char *__PHYSFS_platformGetUserDir(void)
 {
-    char *userdir = NULL;
-
-    if (runningNT)
-    {
-        userdir = ProfileDirectory;
-    }
-    else
-    {
-        /*!!!TODO - Need to return something for Win9x/ME */
-    }
-
-    return userdir;
+	return ProfileDirectory;
 } /* __PHYSFS_platformGetUserDir */
 
 
@@ -435,42 +432,6 @@ int __PHYSFS_platformMkDir(const char *path)
     return(1);
 } /* __PHYSFS_platformMkDir */
 
-/*
- * Initialize any NT specific stuff.  This includes any OS based on NT.
- *
- * Return zero if there was a catastrophic failure and non-zero otherwise.
- */
-static int doNTInit(void)
-{
-    DWORD pathsize = 0;
-    char TempProfileDirectory[1];
-
-    /* Create a process access token handle */
-    if(!OpenProcessToken(ProcessHandle, TOKEN_QUERY, &AccessTokenHandle))
-    {
-        /* Access token is required by other win32 functions */
-        return 0;
-    }
-
-    /* Should fail.  Will write the size of the profile path in pathsize*/
-    /*!!! Second parameter can't be NULL or the function fails??? */
-    if(!GetUserProfileDirectory(AccessTokenHandle, TempProfileDirectory, &pathsize))
-    {
-        /* Allocate memory for the profile directory */
-        ProfileDirectory = (char *)malloc(pathsize);
-        BAIL_IF_MACRO(ProfileDirectory == NULL, ERR_OUT_OF_MEMORY, 0);
-        /* Try to get the profile directory */
-        if(!GetUserProfileDirectory(AccessTokenHandle, ProfileDirectory, &pathsize))
-        {
-            free(ProfileDirectory);
-            return 0;
-        }
-    }
-
-    /* Everything initialized okay */
-    return 1;
-}
-
 /* 
  * Get OS info and save it.
  *
@@ -510,6 +471,11 @@ int __PHYSFS_platformInit(void)
         return 0;
     }
 
+    /* TODO - Probably want to change this to something like the basedir */
+    /* Default profile directory */
+	ProfileDirectory = "C:\\";
+
+#ifndef DISABLE_NT_SUPPORT
     /* If running an NT system (NT/Win2k/XP, etc...) */
     if(runningNT)
     {
@@ -519,24 +485,7 @@ int __PHYSFS_platformInit(void)
             return 0;
         }
     }
-
-    /* It's all good */
-    return 1;
-}
-
-/*
- * Uninitialize any NT specific stuff done in doNTInit().
- *
- * Return zero if there was a catastrophic failure and non-zero otherwise.
- */
-static int doNTDeinit(void)
-{
-    if(CloseHandle(AccessTokenHandle) != S_OK)
-    {
-        return 0;
-    }
-
-    free(ProfileDirectory);
+#endif
 
     /* It's all good */
     return 1;
@@ -544,8 +493,10 @@ static int doNTDeinit(void)
 
 int __PHYSFS_platformDeinit(void)
 {
+#ifndef DISABLE_NT_SUPPORT
     if(!doNTDeinit())
         return 0;
+#endif
 
     if(CloseHandle(ProcessHandle) != S_OK)
         return 0;
@@ -875,5 +826,61 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     ReleaseMutex((HANDLE)mutex);
 }
 
+/* NT specific functions go in here so they don't get compiled when not NT */
+#ifndef DISABLE_NT_SUPPORT
+/*
+ * Uninitialize any NT specific stuff done in doNTInit().
+ *
+ * Return zero if there was a catastrophic failure and non-zero otherwise.
+ */
+static int doNTDeinit(void)
+{
+    if(CloseHandle(AccessTokenHandle) != S_OK)
+    {
+        return 0;
+    }
+
+    free(ProfileDirectory);
+
+    /* It's all good */
+    return 1;
+}
+
+/*
+ * Initialize any NT specific stuff.  This includes any OS based on NT.
+ *
+ * Return zero if there was a catastrophic failure and non-zero otherwise.
+ */
+static int doNTInit(void)
+{
+    DWORD pathsize = 0;
+    char TempProfileDirectory[1];
+
+    /* Create a process access token handle */
+    if(!OpenProcessToken(ProcessHandle, TOKEN_QUERY, &AccessTokenHandle))
+    {
+        /* Access token is required by other win32 functions */
+        return 0;
+    }
+
+    /* Should fail.  Will write the size of the profile path in pathsize*/
+    /*!!! Second parameter can't be NULL or the function fails??? */
+    if(!GetUserProfileDirectory(AccessTokenHandle, TempProfileDirectory, &pathsize))
+    {
+        /* Allocate memory for the profile directory */
+        ProfileDirectory = (char *)malloc(pathsize);
+        BAIL_IF_MACRO(ProfileDirectory == NULL, ERR_OUT_OF_MEMORY, 0);
+        /* Try to get the profile directory */
+        if(!GetUserProfileDirectory(AccessTokenHandle, ProfileDirectory, &pathsize))
+        {
+            free(ProfileDirectory);
+            return 0;
+        }
+    }
+
+    /* Everything initialized okay */
+    return 1;
+}
+#endif
 /* end of win32.c ... */
 
