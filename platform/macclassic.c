@@ -10,6 +10,7 @@
 #  include <config.h>
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <alloca.h>
@@ -83,7 +84,7 @@ static const char *get_macos_error_string(OSErr err)
         case fLckdErr: return(ERR_FILE_LOCKED);
         case vLckdErr: return(ERR_VOL_LOCKED_SW);
         case fBsyErr: return(ERR_FILE_OR_DIR_BUSY);
-        case dupFNErr: return(ERR_FILE_ALREADY_EXISTS);
+        case dupFNErr: return(ERR_FILE_EXISTS);
         case opWrErr: return(ERR_FILE_ALREADY_OPEN_W);
         case rfNumErr: return(ERR_INVALID_REFNUM);
         case gfpErr: return(ERR_GETTING_FILE_POS);
@@ -104,7 +105,7 @@ static const char *get_macos_error_string(OSErr err)
         case volGoneErr: return(ERR_SERVER_VOL_LOST);
         case errFSNameTooLong: return(ERR_BAD_FILENAME);
         case errFSNotAFolder: return(ERR_NOT_A_DIR);
-        case errFSNotAFile: return(ERR_NOT_A_FILE);
+        /*case errFSNotAFile: return(ERR_NOT_A_FILE);*/
         case fidNotFound: return(ERR_FILE_ID_NOT_FOUND);
         case fidExists: return(ERR_FILE_ID_EXISTS);
         case afpAccessDenied: return(ERR_ACCESS_DENIED);
@@ -118,9 +119,9 @@ static const char *get_macos_error_string(OSErr err)
         case errFSMissingName:
         case errFSBadPosMode:
         case errFSBadAllocFlags:
-        case errFSBadItemCount
-        case errFSBadSearchParams
-        case afpDenyConflict
+        case errFSBadItemCount:
+        case errFSBadSearchParams:
+        case afpDenyConflict:
             return(ERR_PHYSFS_BAD_OS_CALL);
 
         default: return(ERR_MACOS_GENERIC);
@@ -132,11 +133,11 @@ static const char *get_macos_error_string(OSErr err)
 
 static OSErr oserr(OSErr retval)
 {
-    char buf[128];
+    char buf[sizeof (ERR_MACOS_GENERIC) + 32];
     const char *errstr = get_macos_error_string(retval);
-    if (errstr == ERR_MACOS_GENERIC)
+    if (strcmp(errstr, ERR_MACOS_GENERIC) == 0)
     {
-        snprintf(buf, ERR_MACOS_GENERIC, (int) retval);
+        snprintf(buf, sizeof (buf), ERR_MACOS_GENERIC, (int) retval);
         errstr = buf;
     } /* if */
 
@@ -306,7 +307,7 @@ char *__PHYSFS_platformGetUserName(void)
     /* use the System resource file. */
     UseResFile(0);
     /* apparently, -16096 specifies the username. */
-    strHandle = oserr(GetString(-16096));
+    strHandle = GetString(-16096);
     UseResFile(origResourceFile);
     BAIL_IF_MACRO(strHandle == NULL, NULL, NULL);
 
@@ -594,7 +595,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
             continue;
 
         /* still here? Add it to the list. */
-        ret = __PHYSFS_addToLinkedStringList(ret, &p, &str255[1], str255[0]);
+        ret = __PHYSFS_addToLinkedStringList(ret, &p, (const char *) &str255[1], str255[0]);
     } /* for */
 
     return(ret);
@@ -667,7 +668,7 @@ static SInt16 *macDoOpen(const char *fname, SInt8 perm, int createIfMissing)
         BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
-    err = HOpenDF(spec.vRefNum, spec.parID, spec.name, perm, retval)
+    err = HOpenDF(spec.vRefNum, spec.parID, spec.name, perm, retval);
     if (oserr(err) != noErr)
     {
         free(retval);
