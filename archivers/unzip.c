@@ -153,10 +153,10 @@ local int unzlocal_getByte(fin,pi)
     }
     else
     {
-        if (ferror(fin)) 
-            return UNZ_ERRNO;
-        else
+        if (__PHYSFS_platformEOF(fin)) 
             return UNZ_EOF;
+        else
+            return UNZ_ERRNO;
     }
 }
 
