@@ -3,12 +3,8 @@
  *
  * Please see the file LICENSE in the source's root directory.
  *
- *  This file written by Ryan C. Gordon.
+ *  This file written by Ryan C. Gordon, and made sane by Gregory S. Read.
  */
-
-#if (defined __STRICT_ANSI__)
-#define __PHYSFS_DOING_STRICT_ANSI__
-#endif
 
 #include <windows.h>
 #include <userenv.h>
@@ -62,6 +58,9 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     {
         if (GetDriveType(drive_str) == DRIVE_CDROM)
         {
+
+            /* !!! FIXME: Make sure there's really a disc in the drive? */
+
             char **tmp = realloc(retval, sizeof (char *) * cd_count + 1);
             if (tmp)
             {
@@ -146,7 +145,7 @@ char *__PHYSFS_platformGetUserDir(void)
 {
     char *userdir = NULL;
 
-    if(runningNT)
+    if (runningNT)
     {
         userdir = ProfileDirectory;
     }
@@ -441,7 +440,7 @@ int __PHYSFS_platformMkDir(const char *path)
  *
  * Return zero if there was a catastrophic failure and non-zero otherwise.
  */
-static int doNTInit()
+static int doNTInit(void)
 {
     DWORD pathsize = 0;
     char TempProfileDirectory[1];
@@ -530,7 +529,7 @@ int __PHYSFS_platformInit(void)
  *
  * Return zero if there was a catastrophic failure and non-zero otherwise.
  */
-static int doNTDeinit()
+static int doNTDeinit(void)
 {
     if(CloseHandle(AccessTokenHandle) != S_OK)
     {
