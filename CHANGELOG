@@ -51,7 +51,11 @@
            of "()" chars. Updated TODO. make install now deletes previous
            revisions of the library. Changed version to 0.1.4.
 09252001 - Changed API: PHYSFS_setSaneConfig() takes an organization name, and
-           sets up less directories. Be warned.
+           sets up less directories. Be warned. Fixes from David Hedbor:
+           make setSaneConfig() set write directory correctly if it had to
+           create the directory, and make sure that the writing functions
+           get used in dir.c when a file is opened for writing/appending.
+           Updated CREDITS.
 
 --ryan. (icculus@clutteredmind.org)
 

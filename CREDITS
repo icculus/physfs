@@ -9,7 +9,9 @@ ZIP driver:
 Tons of win32 help:
     Adam Gates
 
-Fixes for missing current working directories:
+Fixes for missing current working directories,
+PHYSFS_setSaneConfig() improvements,
+other bugfixes,
     David Hedbor
 
 Other stuff:
