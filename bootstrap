@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+echo "Initial preparation...this can take awhile, so sit tight..."
+aclocal
+libtoolize --automake --copy --force
+autoheader
+automake --foreign --add-missing --copy
+autoconf
+
+echo "You are now ready to run ./configure ..."
+
