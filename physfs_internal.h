@@ -619,6 +619,20 @@ char *__PHYSFS_platformRealPath(const char *path);
  */
 int __PHYSFS_platformMkDir(const char *path);
 
+/*
+ * Remove a file or directory entry in the actual filesystem. (path) is
+ *  specified in platform-dependent notation. Note that this deletes files
+ *  _and_ directories, so you might need to do some determination.
+ *  Non-empty directories should report an error and not delete themselves
+ *  or their contents.
+ *
+ * Deleting a symlink should remove the link, not what it points to.
+ *
+ * On error, return zero and set the error message. Return non-zero on success.
+ */
+int __PHYSFS_platformDelete(const char *path);
+
+
 #ifdef __cplusplus
 }
 #endif
