@@ -1234,6 +1234,10 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 #define BAIL_IF_MACRO(c, e, r) if (c) { __PHYSFS_setError(e); return r; }
 #define BAIL_MACRO_MUTEX(e, m, r) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; }
 #define BAIL_IF_MACRO_MUTEX(c, e, m, r) if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; }
+#define GOTO_MACRO(e, g) { __PHYSFS_setError(e); goto g; }
+#define GOTO_IF_MACRO(c, e, g) if (c) { __PHYSFS_setError(e); goto g; }
+#define GOTO_MACRO_MUTEX(e, m, g) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; }
+#define GOTO_IF_MACRO_MUTEX(c, e, m, g) if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; }
 
 
 /*
