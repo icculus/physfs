@@ -60,6 +60,7 @@
            the test program. Apparently I had accidentally removed a rather
            crucial line from dir.c a few revisions ago, and no one noticed. :(
            Fixed. The win32 userdir will default to the base dir, now.
+11142001 - Removed a redundant error check in platform/win32.c
 
 --ryan. (icculus@clutteredmind.org)
 
