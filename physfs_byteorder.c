@@ -42,24 +42,24 @@
 #endif /* linux */
 
 #if (defined _MSC_VER)
-#define inline __inline
+#define __inline__ __inline
 #endif
 
 #ifndef PHYSFS_Swap16
-static inline PHYSFS_uint16 PHYSFS_Swap16(PHYSFS_uint16 D)
+static __inline__ PHYSFS_uint16 PHYSFS_Swap16(PHYSFS_uint16 D)
 {
 	return((D<<8)|(D>>8));
 }
 #endif
 #ifndef PHYSFS_Swap32
-static inline PHYSFS_uint32 PHYSFS_Swap32(PHYSFS_uint32 D)
+static __inline__ PHYSFS_uint32 PHYSFS_Swap32(PHYSFS_uint32 D)
 {
 	return((D<<24)|((D<<8)&0x00FF0000)|((D>>8)&0x0000FF00)|(D>>24));
 }
 #endif
 #ifndef PHYSFS_NO_64BIT_SUPPORT
 #ifndef PHYSFS_Swap64
-static inline PHYSFS_uint64 PHYSFS_Swap64(PHYSFS_uint64 val) {
+static __inline__ PHYSFS_uint64 PHYSFS_Swap64(PHYSFS_uint64 val) {
 	PHYSFS_uint32 hi, lo;
 
 	/* Separate into high and low 32-bit values and swap them */
