@@ -107,7 +107,7 @@ static int DIR_isArchive(const char *filename, int forWriting)
 
 static DirHandle *DIR_openArchive(const char *name, int forWriting)
 {
-    const char *dirsep = __PHYSFS_platformDirSeparator;
+    const char *dirsep = PHYSFS_getDirSeparator();
     DirHandle *retval = NULL;
     int namelen = strlen(name);
     int seplen = strlen(dirsep);
@@ -121,7 +121,7 @@ static DirHandle *DIR_openArchive(const char *name, int forWriting)
     if (retval->opaque == NULL)
     {
         free(retval);
-        BAIL_IF_MACRO(0, ERR_OUT_OF_MEMORY, NULL);
+        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
         /* make sure there's a dir separator at the end of the string */
@@ -195,7 +195,7 @@ static FileHandle *doOpen(DirHandle *h, const char *name, const char *mode)
     if (!retval)
     {
         free(f);
-        BAIL_IF_MACRO(0, ERR_OUT_OF_MEMORY, NULL);
+        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
     errno = 0;
@@ -206,7 +206,7 @@ static FileHandle *doOpen(DirHandle *h, const char *name, const char *mode)
     if (!rc)
     {
         free(retval);
-        BAIL_IF_MACRO(0, str, NULL);
+        BAIL_IF_MACRO(1, str, NULL);
     } /* if */
 
     retval->opaque = (void *) rc;

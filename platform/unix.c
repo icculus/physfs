@@ -57,12 +57,6 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 } /* __PHYSFS_detectAvailableCDs */
 
 
-char *__PHYSFS_platformCalcBaseDir(char *argv0)
-{
-    return(NULL);  /* default PhysicsFS behaviour is acceptable. */
-} /* __PHYSFS_platformCalcBaseDir */
-
-
 static char *copyEnvironmentVariable(const char *varname)
 {
     const char *envr = getenv(varname);
@@ -77,6 +71,57 @@ static char *copyEnvironmentVariable(const char *varname)
 
     return(retval);
 } /* copyEnvironmentVariable */
+
+
+/* !!! this is ugly. */
+char *__PHYSFS_platformCalcBaseDir(const char *argv0)
+{
+    /* If there isn't a path on argv0, then look through the $PATH for it. */
+
+    char *retval = NULL;
+    char *envr;
+    char *start;
+    char *ptr;
+    char *exe;
+
+    if (strchr(argv0, '/') != NULL)   /* default behaviour can handle this. */
+        return(NULL);
+
+    envr = copyEnvironmentVariable("PATH");
+    BAIL_IF_MACRO(!envr, NULL, NULL);
+
+    start = envr;
+    do
+    {
+        ptr = strchr(start, ':');
+        if (ptr)
+            *ptr = '\0';
+
+        exe = (char *) malloc(strlen(start) + strlen(argv0) + 2);
+        if (!exe)
+        {
+            free(envr);
+            BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+        } /* if */
+        strcpy(exe, start);
+        if (start[strlen(start) - 1] != '/')
+            strcat(start, "/");
+        strcat(start, argv0);
+        if (access(exe, X_OK) != 0)
+            free(exe);
+        else
+        {
+            retval = exe;
+            strcpy(retval, start);  /* i'm lazy. piss off. */
+            break;
+        } /* else */
+
+        start = ptr + 1;
+    } while (ptr != NULL);
+
+    free(envr);
+    return(retval);
+} /* __PHYSFS_platformCalcBaseDir */
 
 
 static char *getUserNameByUID(void)

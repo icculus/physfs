@@ -316,7 +316,7 @@ char **__PHYSFS_platformDetectAvailableCDs(void);
  *  calculateBaseDir() in physfs.c ...)
  *  Caller will free() the retval if it's not NULL.
  */
-char *__PHYSFS_platformCalcBaseDir(char *argv0);
+char *__PHYSFS_platformCalcBaseDir(const char *argv0);
 
 /*
  * Get the platform-specific user name.

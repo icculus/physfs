@@ -200,6 +200,9 @@ void PHYSFS_getLinkedVersion(PHYSFS_Version *ver);
  * Initialize PhysicsFS. This must be called before any other PhysicsFS
  *  function.
  *
+ * This should be called prior to any attempts to change your process's
+ *  current working directory.
+ *
  *   @param argv0 the argv[0] string passed to your program's mainline.
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().

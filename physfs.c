@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <assert.h>
 #include "physfs.h"
 
@@ -276,9 +277,82 @@ static char *calculateUserDir(void)
 } /* calculateUserDir */
 
 
+static int appendDirSep(char **dir)
+{
+    const char *dirsep = PHYSFS_getDirSeparator();
+    char *ptr;
+
+    if (strcmp((*dir + strlen(*dir)) - strlen(dirsep), dirsep) == 0)
+        return(1);
+
+    ptr = realloc(*dir, strlen(*dir) + strlen(dirsep) + 1);
+    if (!ptr)
+    {
+        free(*dir);
+        return(0);
+    } /* if */
+
+    strcat(ptr, dirsep);
+    *dir = ptr;
+    return(1);
+} /* appendDirSep */
+
+
 static char *calculateBaseDir(const char *argv0)
 {
-assert(0); return(NULL);
+    const char *dirsep = PHYSFS_getDirSeparator();
+    char *retval;
+    char *ptr;
+    int allocSize = 0;
+
+    /*
+     * See if the platform driver wants to handle this for us...
+     */
+    retval = __PHYSFS_platformCalcBaseDir(argv0);
+    if (retval != NULL)
+        return(retval);
+
+    /*
+     * Determine if there's a path on argv0. If there is, that's the base dir.
+     */
+    ptr = strstr(argv0, dirsep);
+    if (ptr != NULL)
+    {
+        char *p = ptr;
+        size_t size;
+        while (p != NULL)
+        {
+            ptr = p;
+            p = strstr(p + 1, dirsep);
+        } /* while */
+
+        size = (size_t) (ptr - argv0);  /* !!! is this portable? */
+        retval = (char *) malloc(size + 1);
+        BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+        memcpy(retval, argv0, size);
+        retval[size] = '\0';
+        return(retval);
+    } /* if */
+
+    /*
+     * Last ditch effort: it's the current working directory. (*shrug*)
+     */
+    do
+    {
+        allocSize += 100;
+        ptr = (char *) realloc(retval, allocSize);
+        if (ptr == NULL)
+        {
+            if (retval != NULL)
+                free(retval);
+            BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+        } /* if */
+
+        retval = ptr;
+        ptr = getcwd(retval, allocSize);
+    } while (ptr == NULL);
+
+    return(retval);
 } /* calculateBaseDir */
 
 
@@ -289,9 +363,10 @@ int PHYSFS_init(const char *argv0)
 
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(baseDir == NULL, NULL, 0);
+    BAIL_IF_MACRO(!appendDirSep(&baseDir), NULL, 0);
 
     userDir = calculateUserDir();
-    if (userDir == NULL)
+    if ((userDir == NULL) || (!appendDirSep(&userDir)))
     {
         free(baseDir);
         baseDir = NULL;
@@ -450,22 +525,25 @@ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
 
     if (appendToPath)
     {
-        di->next = searchPath;
-        searchPath = di;
-    } /* if */
-    else
-    {
         DirInfo *i = searchPath;
         DirInfo *prev = NULL;
 
         di->next = NULL;
         while (i != NULL)
+        {
             prev = i;
+            i = i->next;
+        } /* while */
 
         if (prev == NULL)
             searchPath = di;
         else
             prev->next = di;
+    } /* if */
+    else
+    {
+        di->next = searchPath;
+        searchPath = di;
     } /* else */
 
     return(1);
@@ -1020,14 +1098,19 @@ PHYSFS_file *PHYSFS_openAppend(const char *filename)
 
 PHYSFS_file *PHYSFS_openRead(const char *fname)
 {
-    PHYSFS_file *retval = (PHYSFS_file *) malloc(sizeof (PHYSFS_file));
+    PHYSFS_file *retval;
     FileHandle *rc = NULL;
     FileHandleList *list;
     DirInfo *i;
 
+    retval = (PHYSFS_file *) malloc(sizeof (PHYSFS_file));
     BAIL_IF_MACRO(!retval, ERR_OUT_OF_MEMORY, NULL);
     list = (FileHandleList *) malloc(sizeof (FileHandleList));
-    BAIL_IF_MACRO(!list, ERR_OUT_OF_MEMORY, NULL);
+    if (!list)
+    {
+        free(retval);
+        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+    } /* if */
 
     for (i = searchPath; i != NULL; i = i->next)
     {
