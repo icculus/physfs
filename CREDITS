@@ -24,11 +24,15 @@ Darwin support,
     Patrick Stein
 
 configure fixes,
+RPM specfile,
     Edward Rudd
 
 GetLastModTime API,
 other stuff,
     John R. Hall
+
+Various support, fixes and suggestions,
+    Alexander Pipelka
 
 Other stuff:
     Your name here! Patches go to icculus@clutteredmind.org ...
