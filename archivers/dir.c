@@ -209,6 +209,8 @@ static DirHandle *DIR_openArchive(const char *name, int forWriting)
     if (strcmp((name + namelen) - seplen, dirsep) != 0)
         strcat((char *) (retval->opaque), dirsep);
 
+    retval->funcs = &__PHYSFS_DirFunctions_DIR;
+
     return(retval);
 } /* DIR_openArchive */
 
