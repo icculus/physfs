@@ -114,19 +114,18 @@ gcc %CFLAGS% -o bin/qpak.obj archivers/qpak.c
 gcc %CFLAGS% -o bin/hog.obj archivers/hog.c
 gcc %CFLAGS% -o bin/mvl.obj archivers/mvl.c
 
-gcc %CFLAGS% -o bin/adler32.obj zlib114/adler32.c
-gcc %CFLAGS% -o bin/compress.obj zlib114/compress.c
-gcc %CFLAGS% -o bin/crc32.obj zlib114/crc32.c
-gcc %CFLAGS% -o bin/deflate.obj zlib114/deflate.c
-gcc %CFLAGS% -o bin/infblock.obj zlib114/infblock.c
-gcc %CFLAGS% -o bin/infcodes.obj zlib114/infcodes.c
-gcc %CFLAGS% -o bin/inffast.obj zlib114/inffast.c
-gcc %CFLAGS% -o bin/inflate.obj zlib114/inflate.c
-gcc %CFLAGS% -o bin/inftrees.obj zlib114/inftrees.c
-gcc %CFLAGS% -o bin/infutil.obj zlib114/infutil.c
-gcc %CFLAGS% -o bin/trees.obj zlib114/trees.c
-gcc %CFLAGS% -o bin/uncompr.obj zlib114/uncompr.c 
-gcc %CFLAGS% -o bin/zutil.obj zlib114/zutil.c
+gcc %CFLAGS% -o bin/adler32.obj zlib121/adler32.c
+gcc %CFLAGS% -o bin/compress.obj zlib121/compress.c
+gcc %CFLAGS% -o bin/crc32.obj zlib121/crc32.c
+gcc %CFLAGS% -o bin/deflate.obj zlib121/deflate.c
+gcc %CFLAGS% -o bin/gzio.obj zlib121/gzio.c
+gcc %CFLAGS% -o bin/infback.obj zlib121/infback.c
+gcc %CFLAGS% -o bin/inffast.obj zlib121/inffast.c
+gcc %CFLAGS% -o bin/inflate.obj zlib121/inflate.c
+gcc %CFLAGS% -o bin/inftrees.obj zlib121/inftrees.c
+gcc %CFLAGS% -o bin/trees.obj zlib121/trees.c
+gcc %CFLAGS% -o bin/uncompr.obj zlib121/uncompr.c
+gcc %CFLAGS% -o bin/zutil.obj zlib121/zutil.c
 
 gcc %DEBUGFLAGS% -Zdll -Zcrtdll -Zomf -Zmt -Zmtd -o bin/physfs.dll bin/*.obj bin/physfs.def
 
