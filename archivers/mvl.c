@@ -288,7 +288,6 @@ static int mvl_load_entries(const char *name, int forWriting, MVLinfo *info)
     PHYSFS_uint32 fileCount;
     PHYSFS_uint32 location = 8;  /* sizeof sig. */
     MVLentry *entry;
-    char *ptr;
 
     BAIL_IF_MACRO(!mvl_open(name, forWriting, &fh, &fileCount), NULL, 0);
     info->entryCount = fileCount;
