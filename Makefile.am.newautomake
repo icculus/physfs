@@ -46,6 +46,7 @@ libphysfs_la_SOURCES =	\
 	physfs_byteorder.c  \
 	archivers/dir.c		\
 	archivers/grp.c		\
+	archivers/wad.c		\
 	archivers/hog.c		\
 	archivers/mvl.c		\
 	archivers/zip.c		\

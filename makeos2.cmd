@@ -7,8 +7,8 @@ rem  Patches go to icculus@clutteredmind.org ...
 
 set PHYSFSLANG=PHYSFS_LANG_ENGLISH
 set DEBUGFLAGS=-D_NDEBUG -O2 -s
-rem set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib114 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DPHYSFS_LANG=%PHYSFSLANG% -DHAVE_ASSERT_H
-set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib114 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DHAVE_ASSERT_H
+rem set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib114 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DPHYSFS_LANG=%PHYSFSLANG% -DHAVE_ASSERT_H
+set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib114 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DHAVE_ASSERT_H
 
 @echo on
 mkdir bin
@@ -109,6 +109,7 @@ gcc %CFLAGS% -o bin/physfs_byteorder.obj physfs_byteorder.c
 gcc %CFLAGS% -o bin/os2.obj platform/os2.c
 gcc %CFLAGS% -o bin/dir.obj archivers/dir.c
 gcc %CFLAGS% -o bin/grp.obj archivers/grp.c
+gcc %CFLAGS% -o bin/wad.obj archivers/wad.c
 gcc %CFLAGS% -o bin/zip.obj archivers/zip.c
 gcc %CFLAGS% -o bin/qpak.obj archivers/qpak.c
 gcc %CFLAGS% -o bin/hog.obj archivers/hog.c
