@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+12072003 - Upgraded internal zlib to 1.2.1 (thanks, Adam!)
 11112003 - Patches to make OS/2 support compile again.
 11092003 - Added __PHYSFS_platformStrnicmp(), and made qpak.c case-insensitive.
 09122003 - Happy September. Actually released current tree as 0.1.9.
