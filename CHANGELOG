@@ -25,6 +25,9 @@
            and falls back to SearchPath() if there were problems. Changed an
            occurence of _MAX_PATH to MAX_PATH, so both CygWin and Visual C can
            handle it.
+08312001 - Built PhysicsFS on Mandrake 8.0 for the PowerPC. Compiles clean,
+           but there's at least one byte-ordering issue in zip.c that needs
+           to be fixed.
 09012001 - Happy September. Moved the Visual C project files and the zlib
            source to a separate download. Look for it at
            http://icculus.org/physfs/downloads/physfs-win32-support.zip ...
@@ -32,7 +35,14 @@
            __PHYSFS_platformRealPath() to not rely on Visual C's runtime lib,
            which was the last Cygwin incompatibility (although the Makefile
            needs to be updated to build a DLL under Cygwin). Tinkered with the
-           Makefile a little, but it needs more work.
+           Makefile a little, but it needs more work. Started working on a
+           MacOS version. All I have is CodeWarrior 4, which is way out of
+           date, and (for what is supposed to be an ultra-user-friendly
+           environment) is completely uninituitive to me. Still, managed to
+           get most everything compiling, which improved the quality of the
+           code somewhat). Haven't tried to compile the zipfile support, and
+           I still can't link the library. Dunno what the hell I'm supposed
+           to do there. Isn't Unix supposed to be hard compared to this?
 
 --ryan. (icculus@clutteredmind.org)
 
