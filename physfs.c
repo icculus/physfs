@@ -1005,11 +1005,13 @@ const char *PHYSFS_getRealDir(const char *filename)
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, filename))
         {
-            if (h->funcs->exists(h, filename))
+            if (!h->funcs->exists(h, filename))
+                __PHYSFS_setError(ERR_NO_SUCH_FILE);
+            else
             {
                 __PHYSFS_platformReleaseMutex(stateLock);
                 return(i->dirName);
-            } /* if */
+            } /* else */
         } /* if */
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
@@ -1163,17 +1165,24 @@ PHYSFS_sint64 PHYSFS_getLastModTime(const char *fname)
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname))
         {
-            if (h->funcs->exists(h, fname))
+            if (!h->funcs->exists(h, fname))
+                __PHYSFS_setError(ERR_NO_SUCH_FILE);
+            else
             {
-                PHYSFS_sint64 retval = h->funcs->getLastModTime(h, fname);
+                PHYSFS_sint64 retval = -1;
+                if (h->funcs->getLastModTime == NULL)
+                    __PHYSFS_setError(ERR_NOT_SUPPORTED);
+                else
+                    retval = h->funcs->getLastModTime(h, fname);
+
                 __PHYSFS_platformReleaseMutex(stateLock);
                 return(retval);
-            } /* if */
+            } /* else */
         } /* if */
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
 
-    return(0);
+    return(-1);  /* error set in verifysecurity/exists */
 } /* PHYSFS_getLastModTime */
 
 
@@ -1194,12 +1203,14 @@ int PHYSFS_isDirectory(const char *fname)
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname))
         {
-            if (h->funcs->exists(h, fname))
+            if (!h->funcs->exists(h, fname))
+                __PHYSFS_setError(ERR_NO_SUCH_FILE);
+            else
             {
                 int retval = h->funcs->isDirectory(h, fname);
                 __PHYSFS_platformReleaseMutex(stateLock);
                 return(retval);
-            } /* if */
+            } /* else */
         } /* if */
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
@@ -1225,12 +1236,14 @@ int PHYSFS_isSymbolicLink(const char *fname)
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname))
         {
-            if (h->funcs->exists(h, fname))
+            if (!h->funcs->exists(h, fname))
+                __PHYSFS_setError(ERR_NO_SUCH_FILE);
+            else
             {
                 int retval = h->funcs->isSymLink(h, fname);
                 __PHYSFS_platformReleaseMutex(stateLock);
                 return(retval);
-            } /* if */
+            } /* else */
         } /* if */
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
