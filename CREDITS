@@ -5,6 +5,7 @@ Unix support,
 Win32 support,
 BeOS support,
 POSIX support,
+OS/2 support,
 ZIP driver,
 MacOS Classic support:
     Ryan C. Gordon
