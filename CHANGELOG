@@ -3,6 +3,12 @@
  */
 
 07242002 - Rewrote ZIP_enumerate(). Hopefully it sucks less this time.
+           unix.c and configure.in now have the infrastructure to disable
+           the CD-ROM detection code, and use a stub that successfully (and
+           unconditionally) reports no detected discs. Currently this is
+           used on AtheOS (which doesn't have CD-ROM support at the moment
+           anyhow), but it will be useful to get the library up on odd,
+           Unix-like systems that don't use either getmntinfo() or getmntent().
 07232002 - Cleaned up the cut-and-pastes in the various file enumeration
            routines and moved it into __PHYSFS_addToLinkedStringList().
            Tons more ZIP file enhancing. I'm fairly certain it's robust and
