@@ -41,13 +41,6 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-/*
- * When sorting the grp entries in an archive, we use a modified QuickSort.
- *  When there are less then GRP_QUICKSORT_THRESHOLD entries left to sort,
- *  we switch over to an InsertionSort for the remainder. Tweak to taste.
- */
-#define GRP_QUICKSORT_THRESHOLD 4
-
 typedef struct
 {
     char name[13];
@@ -258,78 +251,22 @@ static int GRP_isArchive(const char *filename, int forWriting)
 } /* GRP_isArchive */
 
 
-static void grp_entry_swap(GRPentry *a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static int grp_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+{
+    GRPentry *a = (GRPentry *) _a;
+    return(strcmp(a[one].name, a[two].name));
+} /* grp_entry_cmp */
+
+
+static void grp_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     GRPentry tmp;
-    memcpy(&tmp, &a[one], sizeof (GRPentry));
-    memcpy(&a[one], &a[two], sizeof (GRPentry));
-    memcpy(&a[two], &tmp, sizeof (GRPentry));
+    GRPentry *first = &(((GRPentry *) _a)[one]);
+    GRPentry *second = &(((GRPentry *) _a)[two]);
+    memcpy(&tmp, first, sizeof (GRPentry));
+    memcpy(first, second, sizeof (GRPentry));
+    memcpy(second, &tmp, sizeof (GRPentry));
 } /* grp_entry_swap */
-
-
-static void grp_quick_sort(GRPentry *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi)
-{
-    PHYSFS_uint32 i;
-    PHYSFS_uint32 j;
-    GRPentry *v;
-
-	if ((hi - lo) > GRP_QUICKSORT_THRESHOLD)
-	{
-		i = (hi + lo) / 2;
-
-		if (strcmp(a[lo].name, a[i].name) > 0) grp_entry_swap(a, lo, i);
-		if (strcmp(a[lo].name, a[hi].name) > 0) grp_entry_swap(a, lo, hi);
-		if (strcmp(a[i].name, a[hi].name) > 0) grp_entry_swap(a, i, hi);
-
-		j = hi - 1;
-		grp_entry_swap(a, i, j);
-		i = lo;
-		v = &a[j];
-		while (1)
-		{
-			while(strcmp(a[++i].name, v->name) < 0) {}
-			while(strcmp(a[--j].name, v->name) > 0) {}
-			if (j < i)
-                break;
-			grp_entry_swap(a, i, j);
-		} /* while */
-		grp_entry_swap(a, i, hi-1);
-		grp_quick_sort(a, lo, j);
-		grp_quick_sort(a, i+1, hi);
-	} /* if */
-} /* grp_quick_sort */
-
-
-static void grp_insertion_sort(GRPentry *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi)
-{
-    PHYSFS_uint32 i;
-    PHYSFS_uint32 j;
-    GRPentry tmp;
-
-    for (i = lo + 1; i <= hi; i++)
-    {
-        memcpy(&tmp, &a[i], sizeof (GRPentry));
-        j = i;
-        while ((j > lo) && (strcmp(a[j - 1].name, tmp.name) > 0))
-        {
-            memcpy(&a[j], &a[j - 1], sizeof (GRPentry));
-            j--;
-        } /* while */
-        memcpy(&a[j], &tmp, sizeof (GRPentry));
-    } /* for */
-} /* grp_insertion_sort */
-
-
-static void grp_sort_entries(GRPentry *entries, PHYSFS_uint32 max)
-{
-    /*
-     * Fast Quicksort algorithm inspired by code from here:
-     *   http://www.cs.ubc.ca/spider/harrison/Java/sorting-demo.html
-     */
-    if (max <= GRP_QUICKSORT_THRESHOLD)
-        grp_quick_sort(entries, 0, max - 1);
-	grp_insertion_sort(entries, 0, max - 1);
-} /* grp_sort_entries */
 
 
 static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
@@ -376,7 +313,8 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
 
     __PHYSFS_platformClose(fh);
 
-    grp_sort_entries(info->entries, info->entryCount);
+    __PHYSFS_sort(info->entries, info->entryCount,
+                  grp_entry_cmp, grp_entry_swap);
     return(1);
 } /* grp_load_entries */
 

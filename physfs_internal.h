@@ -700,7 +700,6 @@ extern "C" {
 
 /* end LANG section. */
 
-
 struct __PHYSFS_DIRHANDLE__;
 struct __PHYSFS_FILEFUNCTIONS__;
 
@@ -981,6 +980,30 @@ LinkedStringList *__PHYSFS_addToLinkedStringList(LinkedStringList *retval,
                                                  const char *str,
                                                  PHYSFS_sint32 len);
 
+
+/*
+ * When sorting the entries in an archive, we use a modified QuickSort.
+ *  When there are less then PHYSFS_QUICKSORT_THRESHOLD entries left to sort,
+ *  we switch over to a BubbleSort for the remainder. Tweak to taste.
+ *
+ * You can override this setting by defining PHYSFS_QUICKSORT_THRESHOLD
+ *  before #including "physfs_internal.h".
+ */
+#ifndef PHYSFS_QUICKSORT_THRESHOLD
+#define PHYSFS_QUICKSORT_THRESHOLD 4
+#endif
+
+/*
+ * Sort an array (or whatever) of (max) elements. This uses a mixture of
+ *  a QuickSort and BubbleSort internally.
+ * (cmpfn) is used to determine ordering, and (swapfn) does the actual
+ *  swapping of elements in the list.
+ *
+ *  See zip.c for an example.
+ */
+void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
+                   int (*cmpfn)(void *, PHYSFS_uint32, PHYSFS_uint32),
+                   void (*swapfn)(void *, PHYSFS_uint32, PHYSFS_uint32));
 
 
 /* These get used all over for lessening code clutter. */
