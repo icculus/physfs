@@ -46,6 +46,8 @@ extern "C" {
 #if (PHYSFS_LANG == PHYSFS_LANG_ENGLISH)
  #define DIR_ARCHIVE_DESCRIPTION  "Non-archive, direct filesystem I/O"
  #define GRP_ARCHIVE_DESCRIPTION  "Build engine Groupfile format"
+ #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
+ #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip compatible"
 
  #define ERR_IS_INITIALIZED       "Already initialized"
@@ -140,6 +142,8 @@ extern "C" {
 #elif (PHYSFS_LANG == PHYSFS_LANG_GERMAN)
  #define DIR_ARCHIVE_DESCRIPTION  "Kein Archiv, direkte Ein/Ausgabe in das Dateisystem"
  #define GRP_ARCHIVE_DESCRIPTION  "Build engine Groupfile Format"
+ #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
+ #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip kompatibel"
 
  #define ERR_IS_INITIALIZED       "Bereits initialisiert"
@@ -234,6 +238,8 @@ extern "C" {
 #elif (PHYSFS_LANG == PHYSFS_LANG_RUSSIAN_KOI8_R)
  #define DIR_ARCHIVE_DESCRIPTION  "ю┼ ┴╥╚╔╫, ╬┼╨╧╙╥┼─╙╘╫┼╬╬┘╩ ╫╫╧─/╫┘╫╧─ ╞┴╩╠╧╫╧╩ ╙╔╙╘┼═┘"
  #define GRP_ARCHIVE_DESCRIPTION  "ц╧╥═┴╘ ╟╥╒╨╨╧╫╧╟╧ ╞┴╩╠┴ Build engine"
+ #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
+ #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip ╙╧╫═┼╙╘╔═┘╩"
 
  #define ERR_IS_INITIALIZED       "ї╓┼ ╔╬╔├╔┴╠╔┌╔╥╧╫┴╬"
@@ -328,6 +334,8 @@ extern "C" {
 #elif (PHYSFS_LANG == PHYSFS_LANG_RUSSIAN_CP1251)
  #define DIR_ARCHIVE_DESCRIPTION  "═х рЁїшт, эхяюёЁхфёЄтхээ√щ ттюф/т√тюф Їрщыютющ ёшёЄхь√"
  #define GRP_ARCHIVE_DESCRIPTION  "╘юЁьрЄ уЁєяяютюую Їрщыр Build engine"
+ #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
+ #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip ёютьхёЄшь√щ"
 
  #define ERR_IS_INITIALIZED       "╙цх шэшЎшрышчшЁютрэ"
@@ -422,6 +430,8 @@ extern "C" {
 #elif (PHYSFS_LANG == PHYSFS_LANG_RUSSIAN_CP866)
  #define DIR_ARCHIVE_DESCRIPTION  "Не архив, непосредственный ввод/вывод файловой системы"
  #define GRP_ARCHIVE_DESCRIPTION  "Формат группового файла Build engine"
+ #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
+ #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip совместимый"
 
  #define ERR_IS_INITIALIZED       "Уже инициализирован"
@@ -516,6 +526,8 @@ extern "C" {
 #elif (PHYSFS_LANG == PHYSFS_LANG_RUSSIAN_ISO_8859_5)
  #define DIR_ARCHIVE_DESCRIPTION  "╜╒ ╨рх╪╥, ▌╒▀▐ср╒╘ст╥╒▌▌ы┘ ╥╥▐╘/╥ы╥▐╘ ф╨┘█▐╥▐┘ с╪ст╒▄ы"
  #define GRP_ARCHIVE_DESCRIPTION  "─▐р▄╨т ╙ру▀▀▐╥▐╙▐ ф╨┘█╨ Build engine"
+ #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
+ #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip с▐╥▄╒ст╪▄ы┘"
 
  #define ERR_IS_INITIALIZED       "├╓╒ ╪▌╪ц╪╨█╪╫╪р▐╥╨▌"
@@ -610,6 +622,8 @@ extern "C" {
 #elif (PHYSFS_LANG == PHYSFS_LANG_SPANISH)
  #define DIR_ARCHIVE_DESCRIPTION  "No es un archivo, E/S directa al sistema de ficheros"
  #define GRP_ARCHIVE_DESCRIPTION  "Formato Build engine Groupfile"
+ #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
+ #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "Compatible con PkZip/WinZip/Info-Zip"
 
  #define ERR_IS_INITIALIZED       "Ya estaba inicializado"
@@ -704,6 +718,8 @@ extern "C" {
 #elif (PHYSFS_LANG == PHYSFS_LANG_FRENCH)
  #define DIR_ARCHIVE_DESCRIPTION  "Pas d'archive, E/S directes sur systшme de fichiers"
  #define GRP_ARCHIVE_DESCRIPTION  "Format Groupfile du moteur Build"
+ #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
+ #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "Compatible PkZip/WinZip/Info-Zip"
 
  #define ERR_IS_INITIALIZED       "Dщjр initialisщ"
