@@ -9,9 +9,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
+
+#if (!defined WIN32)
+#define HAVE_READLINE
+#endif
+
+#if (defined HAVE_READLINE)
 #include <unistd.h>
 #include <readline.h>
 #include <history.h>
+#endif
+
 #include "physfs.h"
 
 #define TEST_VERSION_MAJOR  0
@@ -473,12 +482,15 @@ static int process_command(char *complete_cmd)
         if (i->cmd == NULL)
             printf("Unknown command. Enter \"help\" for instructions.\n");
 
+#if (defined HAVE_READLINE)
         add_history(complete_cmd);
         if (history_file)
         {
             fprintf(history_file, "%s\n", complete_cmd);
             fflush(history_file);
         } /* if */
+#endif
+
     } /* if */
 
     free(cmd_copy);
@@ -488,6 +500,7 @@ static int process_command(char *complete_cmd)
 
 static void open_history_file(void)
 {
+#if (defined HAVE_READLINE)
 #if 0
     const char *envr = getenv("TESTPHYSFS_HISTORY");
     if (!envr)
@@ -530,6 +543,7 @@ static void open_history_file(void)
                "  Will not be able to record this session's history.\n\n",
                 envr);
     } /* if */
+#endif
 } /* open_history_file */
 
 
@@ -555,7 +569,13 @@ int main(int argc, char **argv)
 
     do
     {
+#if (defined HAVE_READLINE)
         buf = readline("> ");
+#else
+        buf = malloc(512);
+        memset(buf, '\0', 512);
+        scanf("%s", buf);
+#endif
         rc = process_command(buf);
         free(buf);
     } while (rc);
