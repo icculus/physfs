@@ -649,7 +649,8 @@ static int getOSInfo(void)
  */
 static int loadLibraries(void)
 {
-    /* !!! FIXME: Make this table driven? */
+    /* If this get unwieldy, make it table driven. */
+
     int allNeededLibrariesLoaded = 1;  /* flip to zero as needed. */
 
     libKernel32 = LoadLibrary("kernel32.dll");
