@@ -1029,20 +1029,6 @@ typedef struct __PHYSFS_FILEFUNCTIONS__
 } FileFunctions;
 
 
-typedef struct __PHYSFS_DIRHANDLE__
-{
-        /*
-         * This is reserved for the driver to store information.
-         */
-    void *opaque;
-
-        /*
-         * Pointer to the directory i/o functions for this handle.
-         */
-    const struct __PHYSFS_DIRFUNCTIONS__ *funcs;
-} DirHandle;
-
-
 /*
  * Symlinks should always be followed; PhysicsFS will use
  *  DirFunctions->isSymLink() and make a judgement on whether to
@@ -1062,14 +1048,16 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
     int (*isArchive)(const char *filename, int forWriting);
 
         /*
-         * Return a DirHandle for dir/archive (name).
+         * Open a dirhandle for dir/archive (name).
          *  This filename is in platform-dependent notation.
          *  forWriting is non-zero if this is to be used for
          *  the write directory, and zero if this is to be used for an
          *  element of the search path.
          * Returns NULL on failure, and calls __PHYSFS_setError().
+         *  Returns non-NULL on success. The pointer returned will be
+         *  passed as the "opaque" parameter for later calls.
          */
-    DirHandle *(*openArchive)(const char *name, int forWriting);
+    void *(*openArchive)(const char *name, int forWriting);
 
         /*
          * Returns a list of all files in dirname. Each element of this list
@@ -1079,7 +1067,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          * If you have a memory failure, return as much as you can.
          *  This dirname is in platform-independent notation.
          */
-    LinkedStringList *(*enumerateFiles)(DirHandle *r,
+    LinkedStringList *(*enumerateFiles)(void *opaque,
                                         const char *dirname,
                                         int omitSymLinks);
 
@@ -1089,7 +1077,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  This filename is in platform-independent notation.
          *  You should not follow symlinks.
          */
-    int (*exists)(DirHandle *r, const char *name);
+    int (*exists)(void *opaque, const char *name);
 
         /*
          * Returns non-zero if filename is really a directory.
@@ -1101,7 +1089,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
          */
-    int (*isDirectory)(DirHandle *r, const char *name, int *fileExists);
+    int (*isDirectory)(void *opaque, const char *name, int *fileExists);
 
         /*
          * Returns non-zero if filename is really a symlink.
@@ -1111,7 +1099,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
          */
-    int (*isSymLink)(DirHandle *r, const char *name, int *fileExists);
+    int (*isSymLink)(void *opaque, const char *name, int *fileExists);
 
         /*
          * Retrieve the last modification time (mtime) of a file.
@@ -1123,7 +1111,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
          */
-    PHYSFS_sint64 (*getLastModTime)(DirHandle *r, const char *fnm, int *exist);
+    PHYSFS_sint64 (*getLastModTime)(void *opaque, const char *fnm, int *exist);
 
         /*
          * Open file for reading, and return a FileHandle.
@@ -1137,7 +1125,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
          */
-    FileHandle *(*openRead)(DirHandle *r, const char *fname, int *fileExists);
+    FileHandle *(*openRead)(void *opaque, const char *fname, int *fileExists);
 
         /*
          * Open file for writing, and return a FileHandle.
@@ -1150,7 +1138,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  you can opt to fail for the second call.
          * Returns NULL on failure, and calls __PHYSFS_setError().
          */
-    FileHandle *(*openWrite)(DirHandle *r, const char *filename);
+    FileHandle *(*openWrite)(void *opaque, const char *filename);
 
         /*
          * Open file for appending, and return a FileHandle.
@@ -1162,7 +1150,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  you can opt to fail for the second call.
          * Returns NULL on failure, and calls __PHYSFS_setError().
          */
-    FileHandle *(*openAppend)(DirHandle *r, const char *filename);
+    FileHandle *(*openAppend)(void *opaque, const char *filename);
 
         /*
          * Delete a file in the archive/directory.
@@ -1171,7 +1159,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  This method may be NULL.
          * On failure, call __PHYSFS_setError().
          */
-    int (*remove)(DirHandle *r, const char *filename);
+    int (*remove)(void *opaque, const char *filename);
 
         /*
          * Create a directory in the archive/directory.
@@ -1183,14 +1171,15 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  This method may be NULL.
          * On failure, call __PHYSFS_setError().
          */
-    int (*mkdir)(DirHandle *r, const char *filename);
+    int (*mkdir)(void *opaque, const char *filename);
 
         /*
-         * Close directories/archives, and free the handle, including
-         *  the "opaque" entry. This should assume that it won't be called if
-         *  there are still files open from this DirHandle.
+         * Close directories/archives, and free any associated memory,
+         *  including (opaque) itself if applicable. Implementation can assume
+         *  that it won't be called if there are still files open from
+         *  this archive.
          */
-    void (*dirClose)(DirHandle *r);
+    void (*dirClose)(void *opaque);
 } DirFunctions;
 
 
@@ -1220,21 +1209,6 @@ void __PHYSFS_setError(const char *err);
 char *__PHYSFS_convertToDependent(const char *prepend,
                                   const char *dirName,
                                   const char *append);
-
-/*
- * Verify that (fname) (in platform-independent notation), in relation
- *  to (h) is secure. That means that each element of fname is checked
- *  for symlinks (if they aren't permitted). Also, elements such as
- *  ".", "..", or ":" are flagged.
- *
- * With some exceptions (like PHYSFS_mkdir(), which builds multiple subdirs
- *  at a time), you should always pass zero for "allowMissing" for efficiency.
- *
- * Returns non-zero if string is safe, zero if there's a security issue.
- *  PHYSFS_getLastError() will specify what was wrong.
- */
-int __PHYSFS_verifySecurity(DirHandle *h, const char *fname, int allowMissing);
-
 
 /*
  * Use this to build the list that your enumerate function should return.
@@ -1699,33 +1673,39 @@ int __PHYSFS_platformGrabMutex(void *mutex);
 void __PHYSFS_platformReleaseMutex(void *mutex);
 
 /*
- * Implement malloc. It's safe to just pass through from the C runtime.
+ * Called during PHYSFS_init() to initialize the allocator, if the user
+ *  hasn't selected their own allocator via PHYSFS_setAllocator().
+ *  Return zero on initialization error (which will make PHYSFS_init() fail,
+ *  too), non-zero on success.
  */
-PHYSFS_memhandle __PHYSFS_platformMalloc(size_t s);
+int __PHYSFS_platformAllocatorInit(void);
+
+/*
+ * Called during PHYSFS_deinit() to deinitialize the allocator, if the user
+ *  hasn't selected their own allocator via PHYSFS_setAllocator().
+ */
+void __PHYSFS_platformAllocatorDeinit(void);
+
+/*
+ * Implement malloc. It's safe to just pass through from the C runtime.
+ *  This is used for allocation if the user hasn't selected their own
+ *  allocator via PHYSFS_setAllocator().
+ */
+void *__PHYSFS_platformAllocatorMalloc(size_t s);
 
 /*
  * Implement realloc. It's safe to just pass through from the C runtime.
+ *  This is used for allocation if the user hasn't selected their own
+ *  allocator via PHYSFS_setAllocator().
  */
-PHYSFS_memhandle __PHYSFS_platformRealloc(PHYSFS_memhandle h, size_t s);
+void *__PHYSFS_platformAllocatorRealloc(void *ptr, size_t s);
 
 /*
  * Implement free. It's safe to just pass through from the C runtime.
+ *  This is used for deallocation if the user hasn't selected their own
+ *  allocator via PHYSFS_setAllocator().
  */
-void __PHYSFS_platformFree(PHYSFS_memhandle h);
-
-/*
- * Lock a memhandle. If you are just passing through from the C runtime,
- *  it is safe to make this a no-op. Otherwise, convert to a real pointer
- *  in the address space and return it.
- */
-void *__PHYSFS_platformLock(PHYSFS_memhandle h);
-
-/*
- * Unlock a memhandle. If you are just passing through from the C runtime,
- *  it is safe to make this a no-op. Otherwise, you can consider the data in
- *  the address space safe to move around until the handle is relocked.
- */
-void __PHYSFS_platformUnlock(PHYSFS_memhandle h);
+void __PHYSFS_platformAllocatorFree(void *ptr);
 
 #ifdef __cplusplus
 }

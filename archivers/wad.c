@@ -80,7 +80,7 @@ typedef struct
 } WADfileinfo;
 
 
-static void WAD_dirClose(DirHandle *h);
+static void WAD_dirClose(void *opaque);
 static PHYSFS_sint64 WAD_read(FileHandle *handle, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static PHYSFS_sint64 WAD_write(FileHandle *handle, const void *buffer,
@@ -91,19 +91,19 @@ static int WAD_seek(FileHandle *handle, PHYSFS_uint64 offset);
 static PHYSFS_sint64 WAD_fileLength(FileHandle *handle);
 static int WAD_fileClose(FileHandle *handle);
 static int WAD_isArchive(const char *filename, int forWriting);
-static DirHandle *WAD_openArchive(const char *name, int forWriting);
-static LinkedStringList *WAD_enumerateFiles(DirHandle *h,
+static void *WAD_openArchive(const char *name, int forWriting);
+static LinkedStringList *WAD_enumerateFiles(void *opaque,
                                             const char *dirname,
                                             int omitSymLinks);
-static int WAD_exists(DirHandle *h, const char *name);
-static int WAD_isDirectory(DirHandle *h, const char *name, int *fileExists);
-static int WAD_isSymLink(DirHandle *h, const char *name, int *fileExists);
-static PHYSFS_sint64 WAD_getLastModTime(DirHandle *h, const char *n, int *e);
-static FileHandle *WAD_openRead(DirHandle *h, const char *name, int *exist);
-static FileHandle *WAD_openWrite(DirHandle *h, const char *name);
-static FileHandle *WAD_openAppend(DirHandle *h, const char *name);
-static int WAD_remove(DirHandle *h, const char *name);
-static int WAD_mkdir(DirHandle *h, const char *name);
+static int WAD_exists(void *opaque, const char *name);
+static int WAD_isDirectory(void *opaque, const char *name, int *fileExists);
+static int WAD_isSymLink(void *opaque, const char *name, int *fileExists);
+static PHYSFS_sint64 WAD_getLastModTime(void *opaque, const char *n, int *e);
+static FileHandle *WAD_openRead(void *opaque, const char *name, int *exist);
+static FileHandle *WAD_openWrite(void *opaque, const char *name);
+static FileHandle *WAD_openAppend(void *opaque, const char *name);
+static int WAD_remove(void *opaque, const char *name);
+static int WAD_mkdir(void *opaque, const char *name);
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_WAD =
 {
@@ -146,13 +146,12 @@ const DirFunctions __PHYSFS_DirFunctions_WAD =
 
 
 
-static void WAD_dirClose(DirHandle *h)
+static void WAD_dirClose(void *opaque)
 {
-    WADinfo *info = ((WADinfo *) h->opaque);
+    WADinfo *info = ((WADinfo *) opaque);
     free(info->filename);
     free(info->entries);
     free(info);
-    free(h);
 } /* WAD_dirClose */
 
 
@@ -357,20 +356,12 @@ static int wad_load_entries(const char *name, int forWriting, WADinfo *info)
 } /* wad_load_entries */
 
 
-static DirHandle *WAD_openArchive(const char *name, int forWriting)
+static void *WAD_openArchive(const char *name, int forWriting)
 {
-    WADinfo *info;
-    DirHandle *retval = malloc(sizeof (DirHandle));
     PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
+    WADinfo *info = malloc(sizeof (WADinfo));
 
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    info = retval->opaque = malloc(sizeof (WADinfo));
-    if (info == NULL)
-    {
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-        goto WAD_openArchive_failed;
-    } /* if */
-
+    BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (WADinfo));
 
     info->filename = (char *) malloc(strlen(name) + 1);
@@ -385,32 +376,27 @@ static DirHandle *WAD_openArchive(const char *name, int forWriting)
 
     strcpy(info->filename, name);
     info->last_mod_time = modtime;
-    retval->funcs = &__PHYSFS_DirFunctions_WAD;
-    return(retval);
+    return(info);
 
 WAD_openArchive_failed:
-    if (retval != NULL)
+    if (info != NULL)
     {
-        if (retval->opaque != NULL)
-        {
-            if (info->filename != NULL)
-                free(info->filename);
-            if (info->entries != NULL)
-                free(info->entries);
-            free(info);
-        } /* if */
-        free(retval);
+        if (info->filename != NULL)
+            free(info->filename);
+        if (info->entries != NULL)
+            free(info->entries);
+        free(info);
     } /* if */
 
     return(NULL);
 } /* WAD_openArchive */
 
 
-static LinkedStringList *WAD_enumerateFiles(DirHandle *h,
+static LinkedStringList *WAD_enumerateFiles(void *opaque,
                                             const char *dirname,
                                             int omitSymLinks)
 {
-    WADinfo *info = ((WADinfo *) h->opaque);
+    WADinfo *info = ((WADinfo *) opaque);
     WADentry *entry = info->entries;
     LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_uint32 max = info->entryCount;
@@ -472,15 +458,15 @@ static WADentry *wad_find_entry(WADinfo *info, const char *name)
 } /* wad_find_entry */
 
 
-static int WAD_exists(DirHandle *h, const char *name)
+static int WAD_exists(void *opaque, const char *name)
 {
-    return(wad_find_entry(((WADinfo *) h->opaque), name) != NULL);
+    return(wad_find_entry(((WADinfo *) opaque), name) != NULL);
 } /* WAD_exists */
 
 
-static int WAD_isDirectory(DirHandle *h, const char *name, int *fileExists)
+static int WAD_isDirectory(void *opaque, const char *name, int *fileExists)
 {
-    WADentry *entry = wad_find_entry(((WADinfo *) h->opaque), name);
+    WADentry *entry = wad_find_entry(((WADinfo *) opaque), name);
     if (entry != NULL)
     {
         char *n;
@@ -508,31 +494,31 @@ static int WAD_isDirectory(DirHandle *h, const char *name, int *fileExists)
 } /* WAD_isDirectory */
 
 
-static int WAD_isSymLink(DirHandle *h, const char *name, int *fileExists)
+static int WAD_isSymLink(void *opaque, const char *name, int *fileExists)
 {
-    *fileExists = WAD_exists(h, name);
+    *fileExists = WAD_exists(opaque, name);
     return(0);  /* never symlinks in a wad. */
 } /* WAD_isSymLink */
 
 
-static PHYSFS_sint64 WAD_getLastModTime(DirHandle *h,
+static PHYSFS_sint64 WAD_getLastModTime(void *opaque,
                                         const char *name,
                                         int *fileExists)
 {
-    WADinfo *info = ((WADinfo *) h->opaque);
+    WADinfo *info = ((WADinfo *) opaque);
     PHYSFS_sint64 retval = -1;
 
     *fileExists = (wad_find_entry(info, name) != NULL);
     if (*fileExists)  /* use time of WAD itself in the physical filesystem. */
-        retval = ((WADinfo *) h->opaque)->last_mod_time;
+        retval = info->last_mod_time;
 
     return(retval);
 } /* WAD_getLastModTime */
 
 
-static FileHandle *WAD_openRead(DirHandle *h, const char *fnm, int *fileExists)
+static FileHandle *WAD_openRead(void *opaque, const char *fnm, int *fileExists)
 {
-    WADinfo *info = ((WADinfo *) h->opaque);
+    WADinfo *info = ((WADinfo *) opaque);
     FileHandle *retval;
     WADfileinfo *finfo;
     WADentry *entry;
@@ -563,30 +549,29 @@ static FileHandle *WAD_openRead(DirHandle *h, const char *fnm, int *fileExists)
     finfo->entry = entry;
     retval->opaque = (void *) finfo;
     retval->funcs = &__PHYSFS_FileFunctions_WAD;
-    retval->dirHandle = h;
     return(retval);
 } /* WAD_openRead */
 
 
-static FileHandle *WAD_openWrite(DirHandle *h, const char *name)
+static FileHandle *WAD_openWrite(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* WAD_openWrite */
 
 
-static FileHandle *WAD_openAppend(DirHandle *h, const char *name)
+static FileHandle *WAD_openAppend(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* WAD_openAppend */
 
 
-static int WAD_remove(DirHandle *h, const char *name)
+static int WAD_remove(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* WAD_remove */
 
 
-static int WAD_mkdir(DirHandle *h, const char *name)
+static int WAD_mkdir(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* WAD_mkdir */

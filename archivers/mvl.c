@@ -64,7 +64,7 @@ typedef struct
 } MVLfileinfo;
 
 
-static void MVL_dirClose(DirHandle *h);
+static void MVL_dirClose(void *opaque);
 static PHYSFS_sint64 MVL_read(FileHandle *handle, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static PHYSFS_sint64 MVL_write(FileHandle *handle, const void *buffer,
@@ -75,19 +75,19 @@ static int MVL_seek(FileHandle *handle, PHYSFS_uint64 offset);
 static PHYSFS_sint64 MVL_fileLength(FileHandle *handle);
 static int MVL_fileClose(FileHandle *handle);
 static int MVL_isArchive(const char *filename, int forWriting);
-static DirHandle *MVL_openArchive(const char *name, int forWriting);
-static LinkedStringList *MVL_enumerateFiles(DirHandle *h,
+static void *MVL_openArchive(const char *name, int forWriting);
+static LinkedStringList *MVL_enumerateFiles(void *opaque,
                                             const char *dirname,
                                             int omitSymLinks);
-static int MVL_exists(DirHandle *h, const char *name);
-static int MVL_isDirectory(DirHandle *h, const char *name, int *fileExists);
-static int MVL_isSymLink(DirHandle *h, const char *name, int *fileExists);
-static PHYSFS_sint64 MVL_getLastModTime(DirHandle *h, const char *n, int *e);
-static FileHandle *MVL_openRead(DirHandle *h, const char *name, int *exist);
-static FileHandle *MVL_openWrite(DirHandle *h, const char *name);
-static FileHandle *MVL_openAppend(DirHandle *h, const char *name);
-static int MVL_remove(DirHandle *h, const char *name);
-static int MVL_mkdir(DirHandle *h, const char *name);
+static int MVL_exists(void *opaque, const char *name);
+static int MVL_isDirectory(void *opaque, const char *name, int *fileExists);
+static int MVL_isSymLink(void *opaque, const char *name, int *fileExists);
+static PHYSFS_sint64 MVL_getLastModTime(void *opaque, const char *n, int *e);
+static FileHandle *MVL_openRead(void *opaque, const char *name, int *exist);
+static FileHandle *MVL_openWrite(void *opaque, const char *name);
+static FileHandle *MVL_openAppend(void *opaque, const char *name);
+static int MVL_remove(void *opaque, const char *name);
+static int MVL_mkdir(void *opaque, const char *name);
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MVL =
 {
@@ -130,13 +130,12 @@ const DirFunctions __PHYSFS_DirFunctions_MVL =
 
 
 
-static void MVL_dirClose(DirHandle *h)
+static void MVL_dirClose(void *opaque)
 {
-    MVLinfo *info = ((MVLinfo *) h->opaque);
+    MVLinfo *info = ((MVLinfo *) opaque);
     free(info->filename);
     free(info->entries);
     free(info);
-    free(h);
 } /* MVL_dirClose */
 
 
@@ -327,20 +326,12 @@ static int mvl_load_entries(const char *name, int forWriting, MVLinfo *info)
 } /* mvl_load_entries */
 
 
-static DirHandle *MVL_openArchive(const char *name, int forWriting)
+static void *MVL_openArchive(const char *name, int forWriting)
 {
-    MVLinfo *info;
-    DirHandle *retval = malloc(sizeof (DirHandle));
     PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
+    MVLinfo *info = malloc(sizeof (MVLinfo));
 
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    info = retval->opaque = malloc(sizeof (MVLinfo));
-    if (info == NULL)
-    {
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-        goto MVL_openArchive_failed;
-    } /* if */
-
+    BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (MVLinfo));
 
     info->filename = (char *) malloc(strlen(name) + 1);
@@ -355,32 +346,27 @@ static DirHandle *MVL_openArchive(const char *name, int forWriting)
 
     strcpy(info->filename, name);
     info->last_mod_time = modtime;
-    retval->funcs = &__PHYSFS_DirFunctions_MVL;
-    return(retval);
+    return(info);
 
 MVL_openArchive_failed:
-    if (retval != NULL)
+    if (info != NULL)
     {
-        if (retval->opaque != NULL)
-        {
-            if (info->filename != NULL)
-                free(info->filename);
-            if (info->entries != NULL)
-                free(info->entries);
-            free(info);
-        } /* if */
-        free(retval);
+        if (info->filename != NULL)
+            free(info->filename);
+        if (info->entries != NULL)
+            free(info->entries);
+        free(info);
     } /* if */
 
     return(NULL);
 } /* MVL_openArchive */
 
 
-static LinkedStringList *MVL_enumerateFiles(DirHandle *h,
+static LinkedStringList *MVL_enumerateFiles(void *opaque,
                                             const char *dirname,
                                             int omitSymLinks)
 {
-    MVLinfo *info = ((MVLinfo *) h->opaque);
+    MVLinfo *info = ((MVLinfo *) opaque);
     MVLentry *entry = info->entries;
     LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_uint32 max = info->entryCount;
@@ -429,44 +415,44 @@ static MVLentry *mvl_find_entry(MVLinfo *info, const char *name)
 } /* mvl_find_entry */
 
 
-static int MVL_exists(DirHandle *h, const char *name)
+static int MVL_exists(void *opaque, const char *name)
 {
-    return(mvl_find_entry(((MVLinfo *) h->opaque), name) != NULL);
+    return(mvl_find_entry(((MVLinfo *) opaque), name) != NULL);
 } /* MVL_exists */
 
 
-static int MVL_isDirectory(DirHandle *h, const char *name, int *fileExists)
+static int MVL_isDirectory(void *opaque, const char *name, int *fileExists)
 {
-    *fileExists = MVL_exists(h, name);
+    *fileExists = MVL_exists(opaque, name);
     return(0);  /* never directories in a groupfile. */
 } /* MVL_isDirectory */
 
 
-static int MVL_isSymLink(DirHandle *h, const char *name, int *fileExists)
+static int MVL_isSymLink(void *opaque, const char *name, int *fileExists)
 {
-    *fileExists = MVL_exists(h, name);
+    *fileExists = MVL_exists(opaque, name);
     return(0);  /* never symlinks in a groupfile. */
 } /* MVL_isSymLink */
 
 
-static PHYSFS_sint64 MVL_getLastModTime(DirHandle *h,
+static PHYSFS_sint64 MVL_getLastModTime(void *opaque,
                                         const char *name,
                                         int *fileExists)
 {
-    MVLinfo *info = ((MVLinfo *) h->opaque);
+    MVLinfo *info = ((MVLinfo *) opaque);
     PHYSFS_sint64 retval = -1;
 
     *fileExists = (mvl_find_entry(info, name) != NULL);
     if (*fileExists)  /* use time of MVL itself in the physical filesystem. */
-        retval = ((MVLinfo *) h->opaque)->last_mod_time;
+        retval = info->last_mod_time;
 
     return(retval);
 } /* MVL_getLastModTime */
 
 
-static FileHandle *MVL_openRead(DirHandle *h, const char *fnm, int *fileExists)
+static FileHandle *MVL_openRead(void *opaque, const char *fnm, int *fileExists)
 {
-    MVLinfo *info = ((MVLinfo *) h->opaque);
+    MVLinfo *info = ((MVLinfo *) opaque);
     FileHandle *retval;
     MVLfileinfo *finfo;
     MVLentry *entry;
@@ -497,30 +483,29 @@ static FileHandle *MVL_openRead(DirHandle *h, const char *fnm, int *fileExists)
     finfo->entry = entry;
     retval->opaque = (void *) finfo;
     retval->funcs = &__PHYSFS_FileFunctions_MVL;
-    retval->dirHandle = h;
     return(retval);
 } /* MVL_openRead */
 
 
-static FileHandle *MVL_openWrite(DirHandle *h, const char *name)
+static FileHandle *MVL_openWrite(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* MVL_openWrite */
 
 
-static FileHandle *MVL_openAppend(DirHandle *h, const char *name)
+static FileHandle *MVL_openAppend(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* MVL_openAppend */
 
 
-static int MVL_remove(DirHandle *h, const char *name)
+static int MVL_remove(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* MVL_remove */
 
 
-static int MVL_mkdir(DirHandle *h, const char *name)
+static int MVL_mkdir(void *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* MVL_mkdir */

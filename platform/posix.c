@@ -501,35 +501,34 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 } /* __PHYSFS_platformGetLastModTime */
 
 
-PHYSFS_memhandle __PHYSFS_platformMalloc(size_t s)
+int __PHYSFS_platformAllocatorInit(void)
 {
-    assert(sizeof (h) == sizeof (void *));
-    return((PHYSFS_memhandle) malloc(s));
+    return(1);  /* always succeeds. */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void __PHYSFS_platformAllocatorDeinit(void)
+{
+    /* no-op */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void *__PHYSFS_platformAllocatorMalloc(size_t s)
+{
+    return(malloc(s));
 } /* __PHYSFS_platformMalloc */
 
 
-PHYSFS_memhandle __PHYSFS_platformRealloc(PHYSFS_memhandle h, size_t s)
+void *__PHYSFS_platformAllocatorRealloc(void *ptr, size_t s)
 {
-    return((PHYSFS_memhandle) realloc((void *) h, s));
+    return(realloc(ptr, s));
 } /* __PHYSFS_platformRealloc */
 
 
-void __PHYSFS_platformFree(PHYSFS_memhandle h)
+void __PHYSFS_platformAllocatorFree(void *ptr)
 {
-    free((void *) h);
-} /* __PHYSFS_platformFree */
-
-
-void *__PHYSFS_platformLock(PHYSFS_memhandle h)
-{
-    return((void *) h);
-} /* __PHYSFS_platformLock */
-
-
-void __PHYSFS_platformUnlock(PHYSFS_memhandle h)
-{
-    /* no-op. */
-} /* __PHYSFS_platformUnlock */
+    free(ptr);
+} /* __PHYSFS_platformAllocatorFree */
 
 #endif /* !defined WIN32 */
 

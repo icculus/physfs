@@ -1822,28 +1822,6 @@ __EXPORT__ int PHYSFS_writeUBE64(PHYSFS_file *file, PHYSFS_uint64 val);
 
 /* Everything above this line is part of the PhysicsFS 1.0 API. */
 
-
-/**
- * \typedef PHYSFS_memhandle
- * \brief Used to represent memory blocks.
- *
- * (This is for limited, hardcore use. If you don't immediately see a need
- *  for it, you can probably ignore this forever.)
- *
- * The allocator routines will pass these around. They are void pointers
- *  because it's convenient for systems to have handles be the same size
- *  as a pointer, but they shouldn't be assumed to point to valid memory
- *  (or to memory at all). The allocator in use will convert from memhandles
- *  to valid pointers to allocated memory. A memhandle of NULL is considered
- *  to be bogus (so malloc can return a NULL handle), even though it's not
- *  technically a NULL pointer in itself.
- *
- * \sa PHYSFS_allocator
- * \sa PHYSFS_setAllocator
- */
-typedef void *PHYSFS_memhandle;
-
-
 /**
  * \struct PHYSFS_allocator
  * \brief PhysicsFS allocation function pointers.
@@ -1852,28 +1830,18 @@ typedef void *PHYSFS_memhandle;
  *  for it, you can probably ignore this forever.)
  *
  * You create one of these structures for use with PHYSFS_setAllocator.
- *  It should be noted that, in order to accomodate platforms like PalmOS,
- *  we don't just ask for a block of memory and get a pointer. We work on
- *  a "handle" system, which requires PhysicsFS to "lock" before accessing,
- *  and "unlock" when not using. This is also useful for systems that are
- *  concerned about memory fragmentation; you can rearrange unlocked memory
- *  blocks in your address space, since PhysicsFS will re-request the pointer
- *  by relocking the block.
+ *  Allocators are assumed to be reentrant by the caller; please mutex
+ *  accordingly.
  *
- * Locked memory is assumed to be non-reentrant, and locking an already-locked
- *  handle (and unlocking an unlocked handle) has undefined results. Use
- *  mutexes if not sure.
- *
- * \sa PHYSFS_memhandle
  * \sa PHYSFS_setAllocator
  */
 typedef struct
 {
-    PHYSFS_memhandle (*malloc)(size_t);
-    PHYSFS_memhandle (*realloc)(PHYSFS_memhandle, size_t);
-    void (*free)(PHYSFS_memhandle);
-    void *(*lock)(PHYSFS_memhandle);
-    void *(*unlock)(PHYSFS_memhandle);
+    int (*init)(void);
+    void (*deinit)(void);
+    void *(*malloc)(size_t);
+    void *(*realloc)(void *, size_t);
+    void (*free)(void *);
 } PHYSFS_allocator;
 
 
