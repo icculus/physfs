@@ -232,11 +232,12 @@ fi
 dnl determine language.
 physfslang=english
 AC_ARG_ENABLE(language,
-[  --enable-language=lang     english, russian-koi8-r. [default=english]],
+[  --enable-language=lang     Select natural language. [default=english]],
               physfslang=`echo $enable_language |tr A-Z a-z`)
 
 AC_MSG_CHECKING([if language choice is supported])
 physfs_valid_lang=no
+
 if test x$physfslang = xenglish; then
   physfs_valid_lang=yes
   AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_ENGLISH, [define desired natural language])
@@ -247,7 +248,14 @@ if test x$physfslang = xrussian-koi8-r; then
   AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_RUSSIAN_KOI8_R, [define desired natural language])
 fi
 
+if test x$physfslang = xspanish; then
+  physfs_valid_lang=yes
+  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_SPANISH, [define desired natural language])
+fi
+
+
 dnl Add other language checks here...
+
 
 AC_MSG_RESULT([$physfs_valid_lang])
 if test x$physfs_valid_lang = xno; then
@@ -258,6 +266,11 @@ if test x$physfs_valid_lang = xno; then
   AC_MSG_WARN([***   but is this what you REALLY wanted?])
   AC_MSG_WARN([*** Please see the LANG section of physfs_internal.h])
   AC_MSG_WARN([***  for info on writing a translation.])
+  AC_MSG_WARN([***])
+  AC_MSG_WARN([*** Currently known languages:])
+  AC_MSG_WARN([***   --enable-language=english])
+  AC_MSG_WARN([***   --enable-language=spanish])
+  AC_MSG_WARN([***   --enable-language=russian-koi8-r])
   AC_MSG_WARN([***])
   AC_MSG_ERROR([*** unsupported language. stop.])
 fi
