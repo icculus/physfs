@@ -382,7 +382,7 @@ int __PHYSFS_platformIsSymLink(const char *fname)
 
     /* resolve aliases up to the actual file... */
     *ptr = '\0';
-    BAIL_IF_MACRO(fnameToFSSpec(dir, &spec) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(fnameToFSSpec(dir, &spec) != noErr, NULL, 0);
 
     *ptr = strlen(ptr + 1);  /* ptr is now a pascal string. Yikes! */
     memset(&infoPB, '\0', sizeof (CInfoPBRec));
@@ -406,7 +406,7 @@ int __PHYSFS_platformIsDirectory(const char *fname)
     CInfoPBRec infoPB;
     OSErr err;
 
-    BAIL_IF_MACRO(fnameToFSSpec(fname, &spec) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(fnameToFSSpec(fname, &spec) != noErr, NULL, 0);
     memset(&infoPB, '\0', sizeof (CInfoPBRec));
     infoPB.dirInfo.ioNamePtr = spec.name;     /* put name in here.       */
     infoPB.dirInfo.ioVRefNum = spec.vRefNum;  /* ID of file's volume.    */ 
@@ -466,7 +466,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     Str255 str255;
     long dirID;
 
-    BAIL_IF_MACRO(fnameToFSSpec(dirname, &spec) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(fnameToFSSpec(dirname, &spec) != noErr, NULL, 0);
 
     /* get the dir ID of what we want to enumerate... */
     memset(&infoPB, '\0', sizeof (CInfoPBRec));
@@ -536,7 +536,7 @@ char *__PHYSFS_platformRealPath(const char *path)
      */
 
     FSSpec spec;
-    BAIL_IF_MACRO(fnameToFSSpec(path, &spec) != noErr, ERR_OS_ERROR, NULL);
+    BAIL_IF_MACRO(fnameToFSSpec(path, &spec) != noErr, NULL, NULL);
     return(convFSSpecToPath(&spec, 1));
 } /* __PHYSFS_platformRealPath */
 
@@ -548,7 +548,7 @@ int __PHYSFS_platformMkDir(const char *path)
     OSErr err = fnameToFSSpec(path, &spec);
 
     BAIL_IF_MACRO(err == noErr, ERR_FILE_EXISTS, 0);
-    BAIL_IF_MACRO(err != fnfErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(err != fnfErr, NULL, 0);
 
     err = DirCreate(spec.vRefNum, spec.parID, spec.name, &val);
     BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, 0);
@@ -562,7 +562,7 @@ static SInt16 *macDoOpen(const char *fname, SInt8 perm, int createIfMissing)
     SInt16 *retval = NULL;
     FSSpec spec;
     OSErr err = fnameToFSSpec(fname, &spec);
-    BAIL_IF_MACRO((err != noErr) && (err != fnfErr), ERR_OS_ERROR, NULL);
+    BAIL_IF_MACRO((err != noErr) && (err != fnfErr), NULL, NULL);
     if (err == fnfErr)
     {
         BAIL_IF_MACRO(!createIfMissing, ERR_NO_SUCH_FILE, NULL);
@@ -734,7 +734,7 @@ int __PHYSFS_platformClose(void *opaque)
     HParamBlockRec hpbr;
     Str63 volName;
 
-    BAIL_IF_MACRO(GetVRefNum (ref, &vRefNum) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(GetVRefNum(ref, &vRefNum) != noErr, ERR_OS_ERROR, 0);
 
     memset(&hpbr, '\0', sizeof (HParamBlockRec));
     hpbr.volumeParam.ioNamePtr = volName;
@@ -754,7 +754,7 @@ int __PHYSFS_platformDelete(const char *path)
 {
     FSSpec spec;
     OSErr err;
-    BAIL_IF_MACRO(fnameToFSSpec(path, &spec) != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(fnameToFSSpec(path, &spec) != noErr, NULL, 0);
     err = HDelete(spec.vRefNum, spec.parID, spec.name);
     BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, 0);
     return(1);
@@ -791,7 +791,8 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
     CInfoPBRec infoPB;
     UInt32 modDate;
 
-    BAIL_IF_MACRO(fnameToFSSpec(fname, &spec) != noErr, ERR_OS_ERROR, -1);
+    if (fnameToFSSpec(fname, &spec) != noErr)
+        return(-1); /* fnameToFSSpec() sets physfs error message. */
 
     memset(&infoPB, '\0', sizeof (CInfoPBRec));
     infoPB.dirInfo.ioNamePtr = spec.name;

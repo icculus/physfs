@@ -35,8 +35,6 @@
 
 const char *__PHYSFS_platformDirSeparator = "/";
 
-#define get_error_str(x) strerror(x)
-
 
 int __PHYSFS_platformInit(void)
 {
@@ -82,11 +80,11 @@ static char *getMountPoint(const char *devname)
             BPath path;
             status_t rc;
             rc = vol.GetRootDirectory(&directory);
-            BAIL_IF_MACRO(rc < B_OK, get_error_str(rc), NULL);
+            BAIL_IF_MACRO(rc < B_OK, strerror(rc), NULL);
             rc = directory.GetEntry(&entry);
-            BAIL_IF_MACRO(rc < B_OK, get_error_str(rc), NULL);
+            BAIL_IF_MACRO(rc < B_OK, strerror(rc), NULL);
             rc = entry.GetPath(&path);
-            BAIL_IF_MACRO(rc < B_OK, get_error_str(rc), NULL);
+            BAIL_IF_MACRO(rc < B_OK, strerror(rc), NULL);
             const char *str = path.Path();
             BAIL_IF_MACRO(str == NULL, ERR_OS_ERROR, NULL);  /* ?! */
             char *retval = (char *) malloc(strlen(str) + 1);
@@ -188,7 +186,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     BRoster roster; 
     app_info info;
     status_t rc = roster.GetRunningAppInfo(getTeamID(), &info);
-    BAIL_IF_MACRO(rc < B_OK, get_error_str(rc), NULL);
+    BAIL_IF_MACRO(rc < B_OK, strerror(rc), NULL);
     BEntry entry(&(info.ref), true);
     BPath path;
     rc = entry.GetPath(&path);  /* (path) now has binary's path. */
@@ -246,7 +244,7 @@ void *__PHYSFS_platformCreateMutex(void)
     if (rc < B_OK)
     {
         free(retval);
-        BAIL_MACRO(get_error_str(rc), NULL);
+        BAIL_MACRO(strerror(rc), NULL);
     } // if
 
     *retval = rc;
@@ -264,7 +262,7 @@ void __PHYSFS_platformDestroyMutex(void *mutex)
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
     status_t rc = acquire_sem(*((sem_id *) mutex));
-    BAIL_IF_MACRO(rc < B_OK, get_error_str(rc), 0);
+    BAIL_IF_MACRO(rc < B_OK, strerror(rc), 0);
     return(1);
 } /* __PHYSFS_platformGrabMutex */
 
