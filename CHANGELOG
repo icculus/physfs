@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+05182003 - PocketPC fixes (thanks, David Hedbor!)
 05162003 - Compiler warning cleanup in HOG and MVL archivers (Thanks, Bradley!)
 04082003 - Minor changes to extras/abs-file.h (Thanks, Adam!)
 03302003 - Fixed seeking in uncompressed ZIP entries, and handle a
