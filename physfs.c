@@ -1227,12 +1227,22 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
             if (h->funcs->isSymLink(h, str, &retval))
             {
                 __PHYSFS_setError(ERR_SYMLINK_DISALLOWED);
-                retval = 0;
+                free(str);
+                return(0); /* insecure. */
             } /* if */
 
-            /* break out early if path element is missing or it's a symlink. */
+            /* break out early if path element is missing. */
             if (!retval)
+            {
+                /*
+                 * We need to clear it if it's the last element of the path,
+                 *  since this might be a non-existant file we're opening
+                 *  for writing...
+                 */
+                if (end == NULL)
+                    retval = 1;
                 break;
+            } /* if */
         } /* if */
 
         if (end == NULL)
@@ -1569,6 +1579,9 @@ static PHYSFS_file *doOpenWrite(const char *fname, int appending)
         free(list);
     else
     {
+        rc->buffer = NULL;  /* just in case. */
+        rc->buffill = rc->bufpos = rc->bufsize = 0;  /* just in case. */
+        rc->forReading = 0;
         list->handle.opaque = (void *) rc;
         list->next = openWriteList;
         openWriteList = list;
@@ -1615,13 +1628,17 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
     BAIL_IF_MACRO_MUTEX(rc == NULL, NULL, stateLock, NULL);
 
     list = (FileHandleList *) malloc(sizeof (FileHandleList));
-    BAIL_IF_MACRO(!list, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO_MUTEX(!list, ERR_OUT_OF_MEMORY, stateLock, NULL);
     list->handle.opaque = (void *) rc;
     list->next = openReadList;
     openReadList = list;
     retval = &(list->handle);
-
     __PHYSFS_platformReleaseMutex(stateLock);
+
+    rc->buffer = NULL;  /* just in case. */
+    rc->buffill = rc->bufpos = rc->bufsize = 0;  /* just in case. */
+    rc->forReading = 1;
+
     return(retval);
 } /* PHYSFS_openRead */
 
@@ -1631,15 +1648,21 @@ static int closeHandleInOpenList(FileHandleList **list, PHYSFS_file *handle)
     FileHandle *h = (FileHandle *) handle->opaque;
     FileHandleList *prev = NULL;
     FileHandleList *i;
-    int rc;
+    int rc = 1;
 
     for (i = *list; i != NULL; i = i->next)
     {
         if (&i->handle == handle)  /* handle is in this list? */
         {
-            rc = h->funcs->fileClose(h);
+            PHYSFS_uint8 *tmp = h->buffer;
+            rc = PHYSFS_flush(handle);
+            if (rc)
+                rc = h->funcs->fileClose(h);
             if (!rc)
                 return(-1);
+
+            if (tmp != NULL)  /* free any associated buffer. */
+                free(tmp);
 
             if (prev == NULL)
                 *list = i->next;
@@ -1677,18 +1700,92 @@ int PHYSFS_close(PHYSFS_file *handle)
 } /* PHYSFS_close */
 
 
+static PHYSFS_sint64 doBufferedRead(PHYSFS_file *handle, void *buffer,
+                                    PHYSFS_uint32 objSize,
+                                    PHYSFS_uint32 objCount)
+{
+    FileHandle *h = (FileHandle *) handle->opaque;
+    PHYSFS_sint64 retval = 0;
+    PHYSFS_uint32 remainder = 0;
+
+    while (objCount > 0)
+    {
+        PHYSFS_uint64 buffered = h->buffill - h->bufpos;
+        PHYSFS_uint64 mustread = (objSize * objCount) - remainder;
+        PHYSFS_uint32 copied;
+
+        if (buffered == 0) /* need to refill buffer? */
+        {
+            PHYSFS_sint64 rc = h->funcs->read(h, h->buffer, 1, h->bufsize);
+            if (rc <= 0)
+            {
+                h->bufpos -= remainder;
+                return(((rc == -1) && (retval == 0)) ? -1 : retval);
+            } /* if */
+
+            buffered = h->buffill = rc;
+            h->bufpos = 0;
+        } /* if */
+
+        if (buffered > mustread)
+            buffered = mustread;
+
+        memcpy(buffer, h->buffer + h->bufpos, (size_t) buffered);
+        buffer = ((PHYSFS_uint8 *) buffer) + buffered;
+        h->bufpos += buffered;
+        buffered += remainder;  /* take remainder into account. */
+        copied = (buffered / objSize);
+        remainder = (buffered % objSize);
+        retval += copied;
+        objCount -= copied;
+    } /* while */
+
+    return(retval);
+} /* doBufferedRead */
+
+
 PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle, void *buffer,
                           PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
+
+    BAIL_IF_MACRO(!h->forReading, ERR_FILE_ALREADY_OPEN_W, -1);
+    if (h->buffer != NULL)
+        return(doBufferedRead(handle, buffer, objSize, objCount));
+
     return(h->funcs->read(h, buffer, objSize, objCount));
 } /* PHYSFS_read */
+
+
+static PHYSFS_sint64 doBufferedWrite(PHYSFS_file *handle, const void *buffer,
+                                     PHYSFS_uint32 objSize,
+                                     PHYSFS_uint32 objCount)
+{
+    FileHandle *h = (FileHandle *) handle->opaque;
+
+    /* whole thing fits in the buffer? */
+    if (h->buffill + (objSize * objCount) < h->bufsize)
+    {
+        memcpy(h->buffer + h->buffill, buffer, objSize * objCount);
+        h->buffill += (objSize * objCount);
+        return(objCount);
+    } /* if */
+
+    /* would overflow buffer. Flush and then write the new objects, too. */
+    BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, -1);
+    return(h->funcs->write(h, buffer, objSize, objCount));
+} /* doBufferedWrite */
 
 
 PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer,
                            PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
+
+    BAIL_IF_MACRO(h->forReading, ERR_FILE_ALREADY_OPEN_R, -1);
+    if (h->buffer != NULL)
+        return(doBufferedWrite(handle, buffer, objSize, objCount));
+
     return(h->funcs->write(h, buffer, objSize, objCount));
 } /* PHYSFS_write */
 
@@ -1696,20 +1793,29 @@ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer,
 int PHYSFS_eof(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
-    return(h->funcs->eof(h));
+
+    if (!h->forReading)  /* never EOF on files opened for write/append. */
+        return(0);
+
+    /* eof if buffer is empty and archiver says so. */
+    return((h->bufpos == h->buffill) && (h->funcs->eof(h)));
 } /* PHYSFS_eof */
 
 
 PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
-    return(h->funcs->tell(h));
+    PHYSFS_sint64 retval = h->forReading ?
+                            (h->funcs->tell(h) - h->buffill) + h->bufpos :
+                            (h->funcs->tell(h) + h->buffill);
+    return(retval);
 } /* PHYSFS_tell */
 
 
 int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
+    BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, 0);
     return(h->funcs->seek(h, pos));
 } /* PHYSFS_seek */
 
@@ -1719,6 +1825,65 @@ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
     FileHandle *h = (FileHandle *) handle->opaque;
     return(h->funcs->fileLength(h));
 } /* PHYSFS_filelength */
+
+
+int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 bufsize)
+{
+    FileHandle *h = (FileHandle *) handle->opaque;
+
+    BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, 0);
+
+    /*
+     * For reads, we need to move the file pointer to where it would be
+     *  if we weren't buffering, so that the next read will get the
+     *  right chunk of stuff from the file. PHYSFS_flush() handles writes.
+     */
+    if ((h->forReading) && (h->buffill != h->bufpos))
+    {
+        PHYSFS_uint64 pos;
+        PHYSFS_sint64 curpos = h->funcs->tell(h);
+        BAIL_IF_MACRO(curpos == -1, NULL, 0);
+        pos = ((curpos - h->buffill) + h->bufpos);
+        BAIL_IF_MACRO(!h->funcs->seek(h, pos), NULL, 0);
+    } /* if */
+
+    if (bufsize == 0)  /* delete existing buffer. */
+    {
+        if (h->buffer != NULL)
+        {
+            free(h->buffer);
+            h->buffer = NULL;
+        } /* if */
+    } /* if */
+
+    else
+    {
+        PHYSFS_uint8 *newbuf = realloc(h->buffer, bufsize);
+        BAIL_IF_MACRO(newbuf == NULL, ERR_OUT_OF_MEMORY, 0);
+        h->buffer = newbuf;
+    } /* else */
+
+    h->bufsize = bufsize;
+    h->buffill = h->bufpos = 0;
+    return(1);
+} /* PHYSFS_setBuffer */
+
+
+int PHYSFS_flush(PHYSFS_file *handle)
+{
+    FileHandle *h = (FileHandle *) handle->opaque;
+    PHYSFS_sint64 rc;
+
+    if ((h->forReading) || (h->bufpos == h->buffill))
+        return(1);  /* open for read or buffer empty are successful no-ops. */
+
+    /* dump buffer to disk. */
+    rc = h->funcs->write(h, h->buffer + h->bufpos, h->buffill - h->bufpos, 1);
+    BAIL_IF_MACRO(rc <= 0, NULL, 0);
+
+    h->bufpos = h->buffill = 0;
+    return(1);
+} /* PHYSFS_flush */
 
 
 LinkedStringList *__PHYSFS_addToLinkedStringList(LinkedStringList *retval,

@@ -725,6 +725,31 @@ typedef struct __PHYSFS_FILEHANDLE__
     void *opaque;
 
         /*
+         * Non-zero if file opened for reading, zero if write/append.
+         */
+    PHYSFS_uint8 forReading;
+
+        /*
+         * This is the buffer, if one is set (NULL otherwise). Don't touch.
+         */
+    PHYSFS_uint8 *buffer;
+
+        /*
+         * This is the buffer size, if one is set (0 otherwise). Don't touch.
+         */
+    PHYSFS_uint64 bufsize;
+
+        /*
+         * This is the buffer fill size. Don't touch.
+         */
+    PHYSFS_uint64 buffill;
+
+        /*
+         * This is the buffer position. Don't touch.
+         */
+    PHYSFS_uint64 bufpos;
+
+        /*
          * This should be the DirHandle that created this FileHandle.
          */
     const struct __PHYSFS_DIRHANDLE__ *dirHandle;
