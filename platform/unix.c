@@ -290,7 +290,20 @@ void __PHYSFS_platformReleaseMutex(void *mutex) {}
 
 #else
 
-#define PHTREAD_TO_UI64(thr) ((PHYSFS_uint64) (thr))
+/* Just in case; this is a panic value. */
+#if ((!defined SIZEOF_INT) || (SIZEOF_INT <= 0))
+#  define SIZEOF_INT 4
+#endif
+
+#if (SIZEOF_INT == 4)
+#  define PHTREAD_TO_UI64(thr) ( (PHYSFS_uint64) ((PHYSFS_uint32) (thr)) )
+#elif (SIZEOF_INT == 2)
+#  define PHTREAD_TO_UI64(thr) ( (PHYSFS_uint64) ((PHYSFS_uint16) (thr)) )
+#elif (SIZEOF_INT == 1)
+#  define PHTREAD_TO_UI64(thr) ( (PHYSFS_uint64) ((PHYSFS_uint8) (thr)) )
+#else
+#  define PHTREAD_TO_UI64(thr) ((PHYSFS_uint64) (thr))
+#endif
 
 PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 {
