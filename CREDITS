@@ -1,12 +1,13 @@
 Initial API interface and implementation,
-GRP driver,
-DIR driver,
 Unix support,
 Win32 support,
 BeOS support,
 POSIX support,
 OS/2 support,
-ZIP driver,
+GRP archiver,
+DIR archiver,
+ZIP archiver,
+QPAK archiver,
 MacOS Classic support:
     Ryan C. Gordon
 
@@ -40,9 +41,6 @@ Ruby bindings,
 QPAK archiver:
     Ed Sinjiashvili
 
-Spanish translation:
-    Pedro J. Pérez
-
 French translation:
     Stéphane Peter
 
@@ -61,6 +59,10 @@ German translation:
 Apple Project Builder support,
 MacOS X improvements:
     Eric Wing
+
+HOG archiver,
+MVL archiver,
+    Bradley Bell
 
 Other stuff:
     Your name here! Patches go to icculus@clutteredmind.org ...
