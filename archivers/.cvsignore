@@ -5,6 +5,8 @@ unzip.lo
 dir.lo
 Makefile.in
 grp.lo
+hog.lo
+mvl.lo
 zip.lo
 libarchivers.la
 qpak.lo

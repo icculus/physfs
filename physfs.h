@@ -128,6 +128,8 @@
  * Currently supported archive types:
  *   - .ZIP (pkZip/WinZip/Info-ZIP compatible)
  *   - .GRP (Build Engine groupfile archives)
+ *   - .HOG (Descent I/II HOG file archives)
+ *   - .MVL (Descent II movielib archives)
  *
  * Please see the file LICENSE in the source's root directory for licensing
  *  and redistribution rights.
