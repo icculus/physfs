@@ -59,6 +59,11 @@ extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_GRP;
 extern const DirFunctions         __PHYSFS_DirFunctions_GRP;
 #endif
 
+#if (defined PHYSFS_SUPPORTS_QPAK)
+extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_QPAK;
+extern const DirFunctions         __PHYSFS_DirFunctions_QPAK;
+#endif
+
 #if (defined PHYSFS_SUPPORTS_HOG)
 extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_HOG;
 extern const DirFunctions         __PHYSFS_DirFunctions_HOG;
@@ -82,6 +87,10 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
     &__PHYSFS_ArchiveInfo_GRP,
 #endif
 
+#if (defined PHYSFS_SUPPORTS_QPAK)
+    &__PHYSFS_ArchiveInfo_QPAK,
+#endif
+
 #if (defined PHYSFS_SUPPORTS_HOG)
     &__PHYSFS_ArchiveInfo_HOG,
 #endif
@@ -101,6 +110,10 @@ static const DirFunctions *dirFunctions[] =
 
 #if (defined PHYSFS_SUPPORTS_GRP)
     &__PHYSFS_DirFunctions_GRP,
+#endif
+
+#if (defined PHYSFS_SUPPORTS_QPAK)
+    &__PHYSFS_DirFunctions_QPAK,
 #endif
 
 #if (defined PHYSFS_SUPPORTS_HOG)
