@@ -1146,6 +1146,37 @@ int PHYSFS_exists(const char *fname)
 } /* PHYSFS_exists */
 
 
+PHYSFS_sint64 PHYSFS_getLastModTime(const char *fname)
+{
+    PhysDirInfo *i;
+
+    BAIL_IF_MACRO(fname == NULL, ERR_INVALID_ARGUMENT, 0);
+    while (*fname == '/')
+        fname++;
+
+    if (*fname == '\0')   /* eh...punt if it's the root dir. */
+        return(1);
+
+    __PHYSFS_platformGrabMutex(stateLock);
+    for (i = searchPath; i != NULL; i = i->next)
+    {
+        DirHandle *h = i->dirHandle;
+        if (__PHYSFS_verifySecurity(h, fname))
+        {
+            if (h->funcs->exists(h, fname))
+            {
+                PHYSFS_sint64 retval = h->funcs->getLastModTime(h, fname);
+                __PHYSFS_platformReleaseMutex(stateLock);
+                return(retval);
+            } /* if */
+        } /* if */
+    } /* for */
+    __PHYSFS_platformReleaseMutex(stateLock);
+
+    return(0);
+} /* PHYSFS_getLastModTime */
+
+
 int PHYSFS_isDirectory(const char *fname)
 {
     PhysDirInfo *i;
@@ -1405,6 +1436,7 @@ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
     assert(h != NULL);
     assert(h->funcs != NULL);
     BAIL_IF_MACRO(h->funcs->fileLength == NULL, ERR_NOT_SUPPORTED, 0);
+
     return(h->funcs->fileLength(h));
 } /* PHYSFS_filelength */
 

@@ -470,5 +470,13 @@ int __PHYSFS_platformDelete(const char *path)
     return(1);
 } /* __PHYSFS_platformDelete */
 
+
+PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
+{
+    struct stat statbuf;
+    BAIL_IF_MACRO(stat(fname, &statbuf) < 0, strerror(errno), -1);
+    return statbuf.st_mtime;
+} /* __PHYSFS_platformGetLastModTime */
+
 /* end of posix.c ... */
 

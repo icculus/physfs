@@ -805,5 +805,11 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     /* no mutexes on MacOS Classic. */
 } /* __PHYSFS_platformReleaseMutex */
 
+
+PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
+{
+    BAIL_MACRO(ERR_NOT_IMPLEMENTED, -1);  /* !!! FIXME! */
+} /* __PHYSFS_platformGetLastModTime */
+
 /* end of macclassic.c ... */
 

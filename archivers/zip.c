@@ -99,6 +99,7 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
     ZIP_exists,             /* exists() method         */
     ZIP_isDirectory,        /* isDirectory() method    */
     ZIP_isSymLink,          /* isSymLink() method      */
+    NULL,                   /* getLastModTime() method */  /* !!! FIXME: This can be determined in a zipfile. */
     ZIP_openRead,           /* openRead() method       */
     NULL,                   /* openWrite() method      */
     NULL,                   /* openAppend() method     */

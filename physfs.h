@@ -784,6 +784,19 @@ __EXPORT__ int PHYSFS_close(PHYSFS_file *handle);
 
 
 /**
+ * Get the last modification time of a file. This is returned as a
+ *  number of seconds since the epoch (Jan 1, 1970). The exact derivation
+ *  and accuracy of this time depends on the particular archiver. If there
+ *  is no reasonable way to obtain this information for a particular archiver,
+ *  or there was some sort of error, this function returns (-1).
+ *
+ *   @param filename filename to check.
+ *  @return last modified time of the file. -1 if it can't be determined.
+ */
+__EXPORT__ PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
+
+
+/**
  * Read data from a PhysicsFS filehandle. The file must be opened for reading.
  *
  *   @param handle handle returned from PHYSFS_openRead().

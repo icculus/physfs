@@ -38,6 +38,7 @@ static int DIR_exists(DirHandle *h, const char *name);
 static int DIR_isDirectory(DirHandle *h, const char *name);
 static int DIR_isSymLink(DirHandle *h, const char *name);
 static FileHandle *DIR_openRead(DirHandle *h, const char *filename);
+static PHYSFS_sint64 DIR_getLastModTime(DirHandle *h, const char *name);
 static FileHandle *DIR_openWrite(DirHandle *h, const char *filename);
 static FileHandle *DIR_openAppend(DirHandle *h, const char *filename);
 static int DIR_remove(DirHandle *h, const char *name);
@@ -77,6 +78,7 @@ const DirFunctions __PHYSFS_DirFunctions_DIR =
     DIR_exists,             /* exists() method         */
     DIR_isDirectory,        /* isDirectory() method    */
     DIR_isSymLink,          /* isSymLink() method      */
+    DIR_getLastModTime,     /* getLastModTime() method */
     DIR_openRead,           /* openRead() method       */
     DIR_openWrite,          /* openWrite() method      */
     DIR_openAppend,         /* openAppend() method     */
@@ -239,6 +241,18 @@ static int DIR_isSymLink(DirHandle *h, const char *name)
     free(f);
     return(retval);
 } /* DIR_isSymLink */
+
+
+static PHYSFS_sint64 DIR_getLastModTime(DirHandle *h, const char *name)
+{
+    char *d = __PHYSFS_platformCvtToDependent((char *)(h->opaque), name, NULL);
+    PHYSFS_sint64 retval;
+
+    BAIL_IF_MACRO(d == NULL, NULL, 0);
+    retval = __PHYSFS_platformGetMtime(d);
+    free(d);
+    return(retval);
+} /* DIR_getLastModTime */
 
 
 static FileHandle *doOpen(DirHandle *h, const char *name,
