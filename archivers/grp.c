@@ -501,6 +501,10 @@ static int GRP_isSymLink(DirHandle *h, const char *name)
 
 static PHYSFS_sint64 GRP_getLastModTime(DirHandle *h, const char *name)
 {
+    GRPinfo *info = ((GRPinfo *) h->opaque);
+    if (grp_find_entry(info, name) == NULL)
+        return(-1);  /* no such entry. */
+
     /* Just return the time of the GRP itself in the physical filesystem. */
     return(((GRPinfo *) h->opaque)->last_mod_time);
 } /* GRP_getLastModTime */

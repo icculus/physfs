@@ -1210,7 +1210,7 @@ int PHYSFS_isDirectory(const char *fname)
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname))
         {
-            if (!h->funcs->exists(h, fname))  /* !!! FIXME: Let archivers figure this out. */
+            if (!h->funcs->exists(h, fname))
                 __PHYSFS_setError(ERR_NO_SUCH_FILE);
             else
             {
