@@ -25,7 +25,6 @@ typedef struct __PHYSFS_ERRMSGTYPE__
     struct __PHYSFS_ERRMSGTYPE__ *next;
 } ErrMsg;
 
-
 typedef struct __PHYSFS_SEARCHDIRINFO__
 {
     char *dirName;
@@ -33,22 +32,23 @@ typedef struct __PHYSFS_SEARCHDIRINFO__
     struct __PHYSFS_SEARCHDIRINFO__ *next;
 } SearchDirInfo;
 
+typedef struct __PHYSFS_FILEHANDLELIST__
+{
+    FileHandle *handle;
+    struct __PHYSFS_FILEHANDLELIST__ *next;
+} FileHandleList;
 
-static int initialized = 0;
-static ErrMsg *errorMessages = NULL;
-static char *searchPath = NULL;
-static char *baseDir = NULL;
-static char *writeDir = NULL;
-static int allowSymLinks = 0;
+
+/* The various i/o drivers... */
 
 #if (defined PHYSFS_SUPPORTS_ZIP)
-extern const __PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP;
-extern const __PHYSFS_DirReader   __PHYSFS_DirReader_ZIP;
-extern const __PHYSFS_FileHandle  __PHYSFS_FileHandle_ZIP;
+extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_ZIP;
+extern const DirFunctions         __PHYSFS_DirFunctions_ZIP;
 #endif
 
+extern const DirFunctions  __PHYSFS_DirFunctions_DIR;
 
-static const __PHYSFS_ArchiveInfo *supported_types[] =
+static const PHYSFS_ArchiveInfo *supported_types[] =
 {
 #if (defined PHYSFS_SUPPORTS_ZIP)
     &__PHYSFS_ArchiveInfo_ZIP,
@@ -57,8 +57,33 @@ static const __PHYSFS_ArchiveInfo *supported_types[] =
     NULL
 };
 
+static const DirFunctions *dirFunctions[] =
+{
+#if (defined PHYSFS_SUPPORTS_ZIP)
+    &__PHYSFS_DirFunctions_ZIP,
+#endif
+
+    &__PHYSFS_DirFunctions_DIR,
+    NULL
+};
 
 
+
+/* General PhysicsFS state ... */
+
+static int initialized = 0;
+static ErrMsg *errorMessages = NULL;
+static SearchDirInfo *searchPath = NULL;
+static FileHandleList *openWriteList = NULL;
+static FileHandleList *openReadList = NULL;
+static char *baseDir = NULL;
+static char *userDir = NULL;
+static char *writeDir = NULL;
+static int allowSymLinks = 0;
+
+
+
+/* functions ... */
 
 static ErrMsg *findErrorForCurrentThread(void)
 {
@@ -124,12 +149,53 @@ void PHYSFS_getLinkedVersion(PHYSFS_Version *ver)
 } /* PHYSFS_getLinkedVersion */
 
 
+static const char *calculateUserDir(void)
+{
+    char *retval = NULL;
+    const char *str = NULL;
+
+    str = __PHYSFS_platformGetUserDir();
+    if (str != NULL)
+        retval = str;
+    else
+    {
+        const char *dirsep = PHYSFS_getDirSeparator();
+        const char *uname = __PHYSFS_platformGetUserName();
+
+        str = (uname != NULL) ? uname : "default";
+        retval = malloc(strlen(baseDir) + strlen(str) +
+                        (strlen(dirsep) * 2) + 6);
+
+        if (retval == NULL)
+            __PHYSFS_setError(ERR_OUT_OF_MEMORY);
+        else
+            sprintf(retval, "%s%susers%s%s", baseDir, dirsep, dirsep, str);
+
+        if (uname != NULL)
+            free(uname);
+    } /* else */
+
+    return(retval);
+} /* calculateUserDir */
+
+
 int PHYSFS_init(const char *argv0)
 {
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
     BAIL_IF_MACRO(argv0 == NULL, ERR_INVALID_ARGUMENT, 0);
 
-    baseDir = calculateBaseDir();
+    baseDir = calculateBaseDir(argv0);
+    if (baseDir == NULL)
+        return(0);
+
+    userDir = calculateUserDir();
+    if (userDir == NULL)
+    {
+        free(baseDir);
+        baseDir = NULL;
+        return(0);
+    } /* if */
+
     initialized = 1;
     return(1);
 } /* PHYSFS_init */
@@ -137,9 +203,14 @@ int PHYSFS_init(const char *argv0)
 
 static void freeSearchDir(SearchDirInfo *sdi)
 {
-    assert(sdi != NULL);
+    FileHandleList *i;
 
-    /* !!! make sure all files in search dir are closed. */
+    assert(sdi != NULL);
+    for (i = openReadList; i != NULL; i = i->next)
+    {
+        BAIL_IF_MACRO(i->handle->dirReader == sdi->reader,
+                        ERR_FILES_OPEN_READ, 0);
+    } /* for */
 
     sdi->reader->close(sdi->reader);
     free(sdi->dirName);
@@ -147,10 +218,27 @@ static void freeSearchDir(SearchDirInfo *sdi)
 } /* freeSearchDir */
 
 
+static void closeFileHandleList(FileHandleList **list)
+{
+    FileHandleList *i;
+    FileHandleList *next = NULL;
+
+    for (i = *list; i != NULL; i = next)
+    {
+        next = i->next;
+        i->handle->close(i->handle);
+    } /* for */
+
+    *list = NULL;
+} /* closeAllFiles */
+
+
 static void freeSearchPath(void)
 {
     SearchDirInfo *i;
     SearchDirInfo *next = NULL;
+
+    closeFileHandleList(&openReadList);
 
     if (searchPath != NULL)
     {
@@ -164,23 +252,26 @@ static void freeSearchPath(void)
 } /* freeSearchPath */
 
 
-static void closeAllFiles(void)
-{
-} /* closeAllFiles */
-
-
 void PHYSFS_deinit(void)
 {
     BAIL_IF_MACRO(!initialized, ERR_NOT_INITIALIZED, 0);
 
-    closeAllFiles();
-
+    closeFileHandleList(&openWriteList);
     PHYSFS_setWriteDir(NULL);
     freeSearchPath();
     freeErrorMessages();
 
     if (baseDir != NULL)
+    {
         free(baseDir);
+        baseDir = NULL;
+    } /* if */
+
+    if (userDir != NULL)
+    {
+        free(userDir);
+        userDir = NULL;
+    } /* if */
 
     allowSymLinks = 0;
     initialized = 0;
@@ -224,40 +315,7 @@ const char *PHYSFS_getBaseDir(void)
 
 const char *PHYSFS_getUserDir(void)
 {
-    static char *retval = NULL;
-    const char *str = NULL;
-
-    if (retval != NULL)
-        return(retval);
-
-    str = __PHYSFS_platformGetUserDir();
-    if (str != NULL)
-        retval = str;
-    else
-    {
-        const char *dirsep = PHYSFS_getDirSeparator();
-        const char *uname;
-
-        str = getenv("HOME");  /* try a default. */
-        if (str != NULL)
-            retval = str;
-        else
-        {
-            uname = __PHYSFS_platformGetUserName();
-            str = (uname != NULL) ? uname : "default";
-            retval = malloc(strlen(baseDir) + strlen(str) +
-                            (strlen(dirsep) * 2) + 6);
-            if (retval == NULL)
-                retval = baseDir;  /* (*shrug*) */
-            else
-                sprintf(retval, "%s%susers%s%s", baseDir, dirsep, dirsep, uname);
-
-            if (uname != NULL)
-                free(uname);
-        } /* else */
-    } /* if */
-
-    return(baseDir);  /* just in case. */
+    return(userDir);   /* this is calculated in PHYSFS_init()... */
 } /* PHYSFS_getUserDir */
 
 
@@ -269,7 +327,7 @@ const char *PHYSFS_getWriteDir(void)
 
 int PHYSFS_setWriteDir(const char *newDir)
 {
-    BAIL_IF_MACRO(openWriteCount > 0, ERR_FILES_OPEN_WRITE, 0);
+    BAIL_IF_MACRO(openWriteList != NULL, ERR_FILES_OPEN_WRITE, 0);
 
     if (writeDir != NULL)
     {
@@ -291,6 +349,21 @@ int PHYSFS_setWriteDir(const char *newDir)
 } /* PHYSFS_setWriteDir */
 
 
+static DirReader *getDirReader(const char *d)
+{
+    DirFunctions **i;
+
+    for (i = dirFunctions; *i != NULL; i++)
+    {
+        if ((*i)->isArchive(d))
+            return( (*i)->openArchive(d) );
+    } /* for */
+
+    __PHYSFS_setError(ERR_UNSUPPORTED_ARCHIVE);
+    return(NULL);
+} /* getDirReader */
+
+
 int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
 {
     char *str = NULL;
@@ -304,13 +377,15 @@ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
         return(0);
 
     sdi = (SearchDirInfo *) malloc(sizeof (SearchDirInfo));
+    if (sdi == NULL)
+        reader->close(reader);
     BAIL_IF_MACRO(sdi == NULL, ERR_OUT_OF_MEMORY, 0);
 
     sdi->dirName = (char *) malloc(strlen(newDir) + 1);
     if (sdi->dirName == NULL)
     {
         free(sdi);
-        freeReader(reader);
+        reader->close(reader);
         __PHYSFS_setError(ERR_OUT_OF_MEMORY);
         return(0);
     } /* if */
@@ -346,6 +421,7 @@ int PHYSFS_removeFromSearchPath(const char *oldDir)
 {
     SearchDirInfo *i;
     SearchDirInfo *prev = NULL;
+    SearchDirInfo *next = NULL;
 
     BAIL_IF_MACRO(oldDir == NULL, ERR_INVALID_ARGUMENT, 0);
 
@@ -353,14 +429,15 @@ int PHYSFS_removeFromSearchPath(const char *oldDir)
     {
         if (strcmp(i->dirName, oldDir) == 0)
         {
+            next = i->next;
+            if (!freeSearchDir(i))
+                return(0);
+
             if (prev == NULL)
-                searchPath = i->next;
+                searchPath = next;
             else
-                prev->next = i->next;
+                prev->next = next;
 
-            /* !!! make sure all files in search dir are closed. */
-
-            freeSearchDir(i);
             return(1);
         } /* if */
         prev = i;
@@ -409,55 +486,6 @@ char **PHYSFS_getSearchPath(void)
 } /* PHYSFS_getSearchPath */
 
 
-/**
- * Helper function.
- *
- * Set up sane, default paths. The write path will be set to
- *  "userpath/.appName", which is created if it doesn't exist.
- *
- * The above is sufficient to make sure your program's configuration directory
- *  is separated from other clutter, and platform-independent. The period
- *  before "mygame" even hides the directory on Unix systems.
- *
- *  The search path will be:
- *
- *    - The Write Dir (created if it doesn't exist)
- *    - The Write Dir/appName (created if it doesn't exist)
- *    - The Base Dir (PHYSFS_getBaseDir())
- *    - The Base Dir/appName (if it exists)
- *    - All found CD-ROM paths (optionally)
- *    - All found CD-ROM paths/appName (optionally, and if they exist)
- *
- * These directories are then searched for files ending with the extension
- *  (archiveExt), which, if they are valid and supported archives, will also
- *  be added to the search path. If you specified "PKG" for (archiveExt), and
- *  there's a file named data.PKG in the base dir, it'll be checked. Archives
- *  can either be appended or prepended to the search path in alphabetical
- *  order, regardless of which directories they were found in.
- *
- * All of this can be accomplished from the application, but this just does it
- *  all for you. Feel free to add more to the search path manually, too.
- *
- *    @param appName Program-specific name of your program, to separate it
- *                   from other programs using PhysicsFS.
- *
- *    @param archiveExt File extention used by your program to specify an
- *                      archive. For example, Quake 3 uses "pk3", even though
- *                      they are just zipfiles. Specify NULL to not dig out
- *                      archives automatically.
- *
- *    @param includeCdRoms Non-zero to include CD-ROMs in the search path, and
- *                         (if (archiveExt) != NULL) search them for archives.
- *                         This may cause a significant amount of blocking
- *                         while discs are accessed, and if there are no discs
- *                         in the drive (or even not mounted on Unix systems),
- *                         then they may not be made available anyhow. You may
- *                         want to specify zero and handle the disc setup
- *                         yourself.
- *
- *    @param archivesFirst Non-zero to prepend the archives to the search path.
- *                          Zero to append them. Ignored if !(archiveExt).
- */
 int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
                          int includeCdRoms, int archivesFirst)
 {
@@ -644,7 +672,6 @@ int PHYSFS_delete(const char *filename)
     free(str);
 
     rc = (rc == 0);
-
     if (!rc)
         __PHYSFS_setError(strerror(errno));
 
@@ -780,12 +807,37 @@ PHYSFS_file *PHYSFS_openRead(const char *filename)
 int PHYSFS_close(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
+    FileHandleList *i;
+    FileHandleList **lists[] = { &openWriteList, &openReadList, NULL };
+    int rc;
+
     assert(h != NULL);
-    BAIL_IF_MACRO(h->close == NULL, ERR_NOT_SUPPORTED, -1);
-    rc = h->close(h);
-    if (rc)
-        free(handle);
-    return(rc);
+    assert(h->funcs != NULL);
+    assert(h->funcs->close != NULL);
+
+    while (lists != NULL)
+    {
+        for (i = *(*lists); i != NULL; i = i->next)
+        {
+            if (i->handle == h)
+            {
+                rc = h->close(h);
+                if (!rc)
+                    return(0);
+
+                if (prev == NULL)
+                    *lists = i->next;
+                else
+                    prev->next = i->next;
+                free(i);
+                free(handle);
+                return(1);
+            } /* if */
+        } /* for */
+        lists++;
+    } /* while */
+
+    assert(0);  /* shouldn't EVER hit this. */
 } /* PHYSFS_close */
 
 
@@ -794,8 +846,9 @@ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
-    BAIL_IF_MACRO(h->read == NULL, ERR_NOT_SUPPORTED, -1);
-    return(h->read(h, buffer, objSize, objCount));
+    assert(h->funcs != NULL);
+    BAIL_IF_MACRO(h->funcs->read == NULL, ERR_NOT_SUPPORTED, -1);
+    return(h->funcs->read(h, buffer, objSize, objCount));
 } /* PHYSFS_read */
 
 
@@ -804,8 +857,9 @@ int PHYSFS_write(PHYSFS_file *handle, void *buffer,
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
-    BAIL_IF_MACRO(h->write == NULL, ERR_NOT_SUPPORTED, -1);
-    return(h->write(h, buffer, objSize, objCount));
+    assert(h->funcs != NULL);
+    BAIL_IF_MACRO(h->funcs->write == NULL, ERR_NOT_SUPPORTED, -1);
+    return(h->funcs->write(h, buffer, objSize, objCount));
 } /* PHYSFS_write */
 
 
@@ -813,8 +867,9 @@ int PHYSFS_eof(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
-    BAIL_IF_MACRO(h->eof == NULL, ERR_NOT_SUPPORTED, -1);
-    return(h->eof(h));
+    assert(h->funcs != NULL);
+    BAIL_IF_MACRO(h->funcs->eof == NULL, ERR_NOT_SUPPORTED, -1);
+    return(h->funcs->eof(h));
 } /* PHYSFS_eof */
 
 
@@ -822,8 +877,9 @@ int PHYSFS_tell(PHYSFS_file *handle)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
-    BAIL_IF_MACRO(h->tell == NULL, ERR_NOT_SUPPORTED, -1);
-    return(h->tell(h));
+    assert(h->funcs != NULL);
+    BAIL_IF_MACRO(h->funcs->tell == NULL, ERR_NOT_SUPPORTED, -1);
+    return(h->funcs->tell(h));
 } /* PHYSFS_tell */
 
 
@@ -831,8 +887,9 @@ int PHYSFS_seek(PHYSFS_file *handle, int pos)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
-    BAIL_IF_MACRO(h->seek == NULL, ERR_NOT_SUPPORTED, 0);
-    return(h->seek(h, pos));
+    assert(h->funcs != NULL);
+    BAIL_IF_MACRO(h->funcs->seek == NULL, ERR_NOT_SUPPORTED, 0);
+    return(h->funcs->seek(h, pos));
 } /* PHYSFS_seek */
 
 /* end of physfs.c ... */

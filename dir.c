@@ -12,11 +12,8 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-/* template for filehandles. */
-const FileHandle __PHYSFS_FileHandle_DIR =
+static const FileFunctions __PHYSFS_FileHandle_DIR =
 {
-    NULL,       /* opaque         */
-    NULL,       /* dirReader      */
     DIR_read,   /* read() method  */
     NULL,       /* write() method */
     DIR_eof,    /* eof() method   */
@@ -25,15 +22,28 @@ const FileHandle __PHYSFS_FileHandle_DIR =
     DIR_close,  /* close() method */
 };
 
-/* template for directories. */
-const DirReader __PHYSFS_DirReader_DIR =
+
+static const FileFunctions __PHYSFS_FileHandle_DIRW =
 {
-    NULL,              /* opaque                  */
+    NULL,       /* read() method  */
+    DIR_write,  /* write() method */
+    DIR_eof,    /* eof() method   */
+    DIR_tell,   /* tell() method  */
+    DIR_seek,   /* seek() method  */
+    DIR_close,  /* close() method */
+};
+
+
+const DirFunctions __PHYSFS_DirFunctions_DIR =
+{
+    DIR_isArchive,     /* isArchive() method      */
+    DIR_openArchive,   /* openArchive() method    */
     DIR_enumerate,     /* enumerateFiles() method */
     DIR_isDirectory,   /* isDirectory() method    */
     DIR_isSymLink,     /* isSymLink() method      */
     DIR_isOpenable,    /* isOpenable() method     */
     DIR_openRead,      /* openRead() method       */
+    DIR_openWrite,     /* openWrite() method      */
     DIR_dirClose,      /* close() method          */
 };
 

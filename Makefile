@@ -173,7 +173,7 @@ $(BINDIR)/%.o: $(SRCDIR)/%.c
 $(BINDIR)/%.o: $(SRCDIR)/%.asm
 	$(ASM) $(ASMFLAGS) -o $@ $<
 
-.PHONY: all clean listobjs
+.PHONY: all clean distclean listobjs
 
 all: $(BINDIR) $(MAINLIB)
 
@@ -182,6 +182,8 @@ $(MAINLIB) : $(BINDIR) $(MAINOBJS)
 
 $(BINDIR):
 	mkdir -p $(BINDIR)
+
+distclean: clean
 
 clean:
 	rm -f $(CLEANUP)

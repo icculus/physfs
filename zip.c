@@ -12,11 +12,13 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-/* template for filehandles. */
-const FileHandle __PHYSFS_FileHandle_ZIP =
+#if (!defined PHYSFS_SUPPORTS_ZIP)
+#error PHYSFS_SUPPORTS_ZIP must be defined.
+#endif
+
+
+static const FileFunctions __PHYSFS_FileHandle_ZIP =
 {
-    NULL,       /* opaque         */
-    NULL,       /* dirReader      */
     ZIP_read,   /* read() method  */
     NULL,       /* write() method */
     ZIP_eof,    /* eof() method   */
@@ -25,15 +27,17 @@ const FileHandle __PHYSFS_FileHandle_ZIP =
     ZIP_close,  /* close() method */
 };
 
-/* template for directories. */
-const DirReader __PHYSFS_DirReader_ZIP =
+
+const DirFunctions __PHYSFS_DirFunctions_ZIP =
 {
-    NULL,              /* opaque                  */
+    ZIP_isArchive,     /* isArchive() method      */
+    ZIP_openArchive,   /* openArchive() method    */
     ZIP_enumerate,     /* enumerateFiles() method */
     ZIP_isDirectory,   /* isDirectory() method    */
     ZIP_isSymLink,     /* isSymLink() method      */
     ZIP_isOpenable,    /* isOpenable() method     */
     ZIP_openRead,      /* openRead() method       */
+    NULL,              /* openWrite() method      */
     ZIP_dirClose,      /* close() method          */
 };
 

@@ -15,6 +15,7 @@
 #endif
 
 struct __PHYSFS_DIRREADER__;
+struct __PHYSFS_FILEFUNCTIONS__;
 
 typedef struct __PHYSFS_FILEHANDLE__
 {
@@ -24,44 +25,53 @@ typedef struct __PHYSFS_FILEHANDLE__
     void *opaque;
 
         /*
-         * This should be the DirReader that created this FileHandle.
+         * This should be the DirHandle that created this FileHandle.
          */
-    struct __PHYSFS_DIRREADER__ *dirReader;
+    const struct __PHYSFS_DIRREADER__ *dirReader;
 
+        /*
+         * Pointer to the file i/o functions for this filehandle.
+         */
+    const struct __PHYSFS_FILEFUNCTIONS__ *funcs;
+} FileHandle;
+
+
+typedef struct __PHYSFS_FILEFUNCTIONS__
+{
         /*
          * Read more from the file.
          */
-    int (*read)(struct __PHYSFS_FILEHANDLE__ *handle, void *buffer,
+    int (*read)(FileHandle *handle, void *buffer,
                 unsigned int objSize, unsigned int objCount);
 
         /*
          * Write more to the file. Archives don't have to implement this.
          *  (Set it to NULL if not implemented).
          */
-    int (*write)(struct __PHYSFS_FILEHANDLE__ *handle, void *buffer,
+    int (*write)(FileHandle *handle, void *buffer,
                  unsigned int objSize, unsigned int objCount);
 
         /*
          * Returns non-zero if at end of file.
          */
-    int (*eof)(struct __PHYSFS_FILEHANDLE__ *handle);
+    int (*eof)(FileHandle *handle);
 
         /*
          * Returns byte offset from start of file.
          */
-    int (*tell)(struct __PHYSFS_FILEHANDLE__ *handle);
+    int (*tell)(FileHandle *handle);
 
         /*
          * Move read/write pointer to byte offset from start of file.
          *  Returns non-zero on success, zero on error.
          */
-    int (*seek)(struct __PHYSFS_FILEHANDLE__ *handle, int offset);
+    int (*seek)(FileHandle *handle, int offset);
 
         /*
-         * Close the file, and free this structure (including "opaque").
+         * Close the file, and free the FileHandle structure (including "opaque").
          */
-    int (*close)(void);
-} FileHandle;
+    int (*close)(FileHandle *handle);
+} FileFunctions;
 
 
 typedef struct __PHYSFS_DIRREADER__
@@ -72,53 +82,98 @@ typedef struct __PHYSFS_DIRREADER__
     void *opaque;
 
         /*
+         * Pointer to the directory i/o functions for this reader.
+         */
+    const struct __PHYSFS_DIRFUNCTIONS__ *funcs;
+} DirHandle;
+
+
+/*
+ * Symlinks should always be followed; PhysicsFS will use
+ *  DirFunctions->isSymLink() and make a judgement on whether to
+ *  continue to call other methods based on that.
+ */
+typedef struct __PHYSFS_DIRFUNCTIONS__
+{
+        /*
+         * Returns non-zero if (filename) is a valid archive that this
+         *  driver can handle. This filename is in platform-dependent
+         *  notation.
+         */
+    int (*isArchive)(const char *filename);
+
+        /*
+         * Return a DirHandle for dir/archive (name).
+         *  This filename is in platform-dependent notation.
+         *  return (NULL) on error.
+         */
+    DirHandle *(*openArchive)(const char *name);
+
+        /*
          * Returns a list (freeable via PHYSFS_freeList()) of
          *  all files in dirname.
-         *  Symlinks should be followed.
+         *  This dirname is in platform-independent notation.
          */
-    char **(*enumerateFiles)(struct __PHYSFS_DIRREADER__ *r, const char *dirname);
+    char **(*enumerateFiles)(DirHandle *r, const char *dirname);
 
         /*
          * Returns non-zero if filename is really a directory.
-         *  Symlinks should be followed.
+         *  This filename is in platform-independent notation.
          */
-    int (*isDirectory)(struct __PHYSFS_DIRREADER__ *r, const char *name);
+    int (*isDirectory)(DirHandle *r, const char *name);
 
         /*
          * Returns non-zero if filename is really a symlink.
+         *  This filename is in platform-independent notation.
          */
-    int (*isSymLink)(struct __PHYSFS_DIRREADER__ *r, const char *name);
+    int (*isSymLink)(DirHandle *r, const char *name);
 
         /*
          * Returns non-zero if filename can be opened for reading.
-         *  Symlinks should be followed.
+         *  This filename is in platform-independent notation.
          */
-    int (*isOpenable)(struct __PHYSFS_DIRREADER__ *r, const char *name);
+    int (*isOpenable)(DirHandle *r, const char *name);
 
         /*
          * Open file for reading, and return a FileHandle.
-         *  Symlinks should be followed.
+         *  This filename is in platform-independent notation.
          */
-    FileHandle *(*openRead)(struct __PHYSFS_DIRREADER__ *r, const char *filename);
+    FileHandle *(*openRead)(DirHandle *r, const char *filename);
 
         /*
-         * Close directories/archives, and free this structure, including
-         *  the "opaque" entry. This should assume that it won't be called if
-         *  there are still files open from this DirReader.
+         * Open file for writing, and return a FileHandle.
+         *  This filename is in platform-independent notation.
+         *  This method may be NULL.
          */
-    void (*close)(struct __PHYSFS_DIRREADER__ *r);
-} DirReader;
+    FileHandle *(*openWrite)(DirHandle *r, const char *filename);
+
+        /*
+         * Open file for appending, and return a FileHandle.
+         *  This filename is in platform-independent notation.
+         *  This method may be NULL.
+         */
+    FileHandle *(*openAppend)(DirHandle *r, const char *filename);
+
+        /*
+         * Close directories/archives, and free the handle, including
+         *  the "opaque" entry. This should assume that it won't be called if
+         *  there are still files open from this DirHandle.
+         */
+    void (*close)(DirHandle *r);
+} DirFunctions;
 
 
 /* error messages... */
 #define ERR_IS_INITIALIZED       "Already initialized"
 #define ERR_NOT_INITIALIZED      "Not initialized"
 #define ERR_INVALID_ARGUMENT     "Invalid argument"
+#define ERR_FILES_OPEN_READ      "Files still open for reading"
 #define ERR_FILES_OPEN_WRITE     "Files still open for writing"
 #define ERR_NO_DIR_CREATE        "Failed to create directories"
 #define ERR_OUT_OF_MEMORY        "Out of memory"
 #define ERR_NOT_IN_SEARCH_PATH   "No such entry in search path"
 #define ERR_NOT_SUPPORTED        "Operation not supported"
+#define ERR_UNSUPPORTED_ARCHIVE  "Archive type unsupported"
 
 
 /*
@@ -192,6 +247,11 @@ int __PHYSFS_platformGetThreadID(void);
  * This is a pass-through to whatever stricmp() is called on your platform.
  */
 int __PHYSFS_platformStricmp(const char *str1, const char *str2);
+
+/*
+ * Return non-zero if filename (in platform-dependent notation) is a symlink.
+ */
+int __PHYSFS_platformIsSymlink(const char *fname);
 
 
 #ifdef __cplusplus

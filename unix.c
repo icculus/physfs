@@ -38,5 +38,21 @@ int __PHYSFS_platformStricmp(const char *str1, const char *str2)
     return(strcasecmp(str1, str2));
 } /* __PHYSFS_platformStricmp */
 
+
+int __PHYSFS_platformIsSymlink(const char *fname)
+{
+} /* __PHYSFS_platformIsSymlink */
+
+
+char *__PHYSFS_platformGetUserName(void)
+{
+} /* __PHYSFS_platformGetUserName */
+
+
+char *__PHYSFS_platformGetUserDir(void);
+{
+} /* __PHYSFS_platformGetUserDir */
+
+
 /* end of unix.c ... */
 
