@@ -13,18 +13,6 @@
 /* BeOS uses beos.cpp and posix.c ... Cygwin and such use win32.c ... */
 #if ((!defined __BEOS__) && (!defined WIN32))
 
-#ifdef __FreeBSD__
-#  if (!defined __BSD__)
-#    define __BSD__
-#  endif
-#endif
-
-#if ((defined __APPLE__) && (defined __MACH__))
-#  if (!defined __BSD__)
-#    define __BSD__
-#  endif
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,15 +26,18 @@
 #include <dirent.h>
 #include <time.h>
 #include <errno.h>
-
-#if (defined __BSD__)
-#include <sys/ucred.h>
-#else
-#include <mntent.h>
-#endif
-
 #include <sys/mount.h>
 
+#ifdef PHYSFS_HAVE_SYS_UCRED_H
+#  ifdef PHYSFS_HAVE_MNTENT_H
+#    undef PHYSFS_HAVE_MNTENT_H /* don't do both... */
+#  endif
+#  include <sys/ucred.h>
+#endif
+
+#ifdef PHYSFS_HAVE_MNTENT_H
+#include <mntent.h>
+#endif
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -68,7 +59,7 @@ int __PHYSFS_platformDeinit(void)
 
 
 
-#if (defined __BSD__)
+#ifdef PHYSFS_HAVE_SYS_UCRED_H
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
 {
@@ -113,9 +104,10 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
+#endif
 
-#else  /* non-Darwin implementation... */
 
+#ifdef PHYSFS_HAVE_MNTENT_H
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
 {
