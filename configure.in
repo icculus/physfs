@@ -253,6 +253,11 @@ if test x$physfslang = xspanish; then
   AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_SPANISH, [define desired natural language])
 fi
 
+if test x$physfslang = xfrench; then
+  physfs_valid_lang=yes
+  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_FRENCH, [define desired natural language])
+fi
+
 
 dnl Add other language checks here...
 
@@ -271,6 +276,7 @@ if test x$physfs_valid_lang = xno; then
   AC_MSG_WARN([***   --enable-language=english])
   AC_MSG_WARN([***   --enable-language=spanish])
   AC_MSG_WARN([***   --enable-language=russian-koi8-r])
+  AC_MSG_WARN([***   --enable-language=french])
   AC_MSG_WARN([***])
   AC_MSG_ERROR([*** unsupported language. stop.])
 fi
