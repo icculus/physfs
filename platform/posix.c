@@ -10,6 +10,8 @@
 #  include <config.h>
 #endif
 
+#if (!defined WIN32)
+
 #if (defined __STRICT_ANSI__)
 #define __PHYSFS_DOING_STRICT_ANSI__
 #endif
@@ -511,6 +513,8 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
     BAIL_IF_MACRO(stat(fname, &statbuf) < 0, strerror(errno), -1);
     return statbuf.st_mtime;
 } /* __PHYSFS_platformGetLastModTime */
+
+#endif /* !defined WIN32 */
 
 /* end of posix.c ... */
 
