@@ -15,10 +15,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <time.h>
-
-#ifndef DISABLE_NT_SUPPORT
-#include <userenv.h>
-#endif
+#include <assert.h>
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -28,10 +25,7 @@
 
 const char *__PHYSFS_platformDirSeparator = "\\";
 
-static HANDLE ProcessHandle = NULL;     /* Current process handle */
-static HANDLE AccessTokenHandle = NULL; /* Security handle to process */
-static DWORD ProcessID;                 /* ID assigned to current process */
-static int runningNT;                   /* TRUE if NT derived OS */
+static int runningNT = 0;               /* TRUE if NT derived OS */
 static OSVERSIONINFO OSVersionInfo;     /* Information about the OS */
 static char *ProfileDirectory = NULL;   /* User profile folder */
 
@@ -42,104 +36,13 @@ static char *ProfileDirectory = NULL;   /* User profile folder */
 #define INVALID_SET_FILE_POINTER 0xFFFFFFFF
 #endif
 
-/* NT specific functions go in here so they don't get compiled when not NT */
-#ifndef DISABLE_NT_SUPPORT
 /*
- * Uninitialize any NT specific stuff done in doNTInit().
+ * Figure out what the last failing Win32 API call was, and
+ *  generate a human-readable string for the error message.
  *
- * Return zero if there was a catastrophic failure and non-zero otherwise.
+ * The return value is a static buffer that is overwritten with
+ *  each call to this function.
  */
-static int doNTDeinit(void)
-{
-    if(CloseHandle(AccessTokenHandle) != S_OK)
-    {
-        return 0;
-    }
-
-    free(ProfileDirectory);
-
-    /* It's all good */
-    return 1;
-}
-
-/*
- * Initialize any NT specific stuff.  This includes any OS based on NT.
- *
- * Return zero if there was a catastrophic failure and non-zero otherwise.
- */
-static int doNTInit(void)
-{
-    DWORD pathsize = 0;
-    char TempProfileDirectory[1];
-
-    /* Create a process access token handle */
-    if(!OpenProcessToken(ProcessHandle, TOKEN_QUERY, &AccessTokenHandle))
-    {
-        /* Access token is required by other win32 functions */
-        return 0;
-    }
-
-    /* Should fail.  Will write the size of the profile path in pathsize*/
-    /*!!! Second parameter can't be NULL or the function fails??? */
-    if(!GetUserProfileDirectory(AccessTokenHandle, TempProfileDirectory, &pathsize))
-    {
-        /* Allocate memory for the profile directory */
-        ProfileDirectory = (char *)malloc(pathsize);
-        BAIL_IF_MACRO(ProfileDirectory == NULL, ERR_OUT_OF_MEMORY, 0);
-        /* Try to get the profile directory */
-        if(!GetUserProfileDirectory(AccessTokenHandle, ProfileDirectory, &pathsize))
-        {
-            free(ProfileDirectory);
-            return 0;
-        }
-    }
-
-    /* Everything initialized okay */
-    return 1;
-}
-#endif
-
-static BOOL MediaInDrive(const char *DriveLetter)
-{
-    UINT OldErrorMode;
-    DWORD DummyValue;
-    BOOL ReturnValue;
-
-    /* Prevent windows warning message to appear when checking media size */
-    OldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-    
-    /* If this function succeeds, there's media in the drive */
-    ReturnValue = GetDiskFreeSpace(DriveLetter, &DummyValue, &DummyValue, &DummyValue, &DummyValue);
-
-    /* Revert back to old windows error handler */
-    SetErrorMode(OldErrorMode);
-
-    return ReturnValue;
-}
-
-static time_t FileTimeToTimeT(FILETIME *ft)
-{
-    SYSTEMTIME st_utc;
-    SYSTEMTIME st_localtz;
-    TIME_ZONE_INFORMATION TimeZoneInfo;
-    struct tm tm;
-
-    FileTimeToSystemTime(ft, &st_utc);
-    GetTimeZoneInformation(&TimeZoneInfo);
-    SystemTimeToTzSpecificLocalTime(&TimeZoneInfo, &st_utc, &st_localtz);
-
-    tm.tm_sec = st_localtz.wSecond;
-    tm.tm_min = st_localtz.wMinute;
-    tm.tm_hour = st_localtz.wHour;
-    tm.tm_mday = st_localtz.wDay;
-    tm.tm_mon = st_localtz.wMonth - 1;
-    tm.tm_year = st_localtz.wYear - 1900;
-    tm.tm_wday = st_localtz.wDayOfWeek;
-    tm.tm_yday = -1;
-    tm.tm_isdst = -1;
-    return mktime(&tm);
-}
-
 static const char *win32strerror(void)
 {
     static TCHAR msgbuf[255];
@@ -158,6 +61,117 @@ static const char *win32strerror(void)
     return((const char *) msgbuf);
 } /* win32strerror */
 
+
+/*
+ * Uninitialize any NT specific stuff done in doNTInit().
+ *
+ * Return zero if there was a catastrophic failure and non-zero otherwise.
+ */
+static int doNTDeinit(void)
+{
+    /* nothing NT-specific to deinit at this point. */
+    return 1;  /* It's all good */
+} /* doNTDeinit */
+
+
+typedef BOOL (STDMETHODCALLTYPE FAR * LPFNGETUSERPROFILEDIR) (
+      HANDLE hToken,
+      LPTSTR lpProfileDir,
+      LPDWORD lpcchSize);
+   
+/*
+ * Initialize any NT specific stuff.  This includes any OS based on NT.
+ *
+ * Return zero if there was a catastrophic failure and non-zero otherwise.
+ */
+static int doNTInit(void)
+{
+    DWORD pathsize = 0;
+    char dummy[1];
+    BOOL rc = 0;
+    HANDLE ProcessHandle = NULL;     /* Current process handle */
+    HANDLE AccessTokenHandle = NULL; /* Security handle to process */
+    LPFNGETUSERPROFILEDIR GetUserProfileDirectory = NULL;
+    HMODULE lib = NULL;
+    const char *err = NULL;
+
+    /* Hooray for spaghetti code! */
+
+    lib = LoadLibrary("userenv.dll");
+    if (!lib)
+        goto ntinit_failed;
+
+    /* !!! FIXME: Handle Unicode? */
+    GetUserProfileDirectory = (LPFNGETUSERPROFILEDIR)
+                              GetProcAddress(lib, "GetUserProfileDirectoryA");
+    if (!GetUserProfileDirectory)
+        goto ntinit_failed;
+
+    /* Create a process handle associated with the current process ID */
+    ProcessHandle = GetCurrentProcess();
+
+    /* Create a process access token handle */
+    if(!OpenProcessToken(ProcessHandle, TOKEN_QUERY, &AccessTokenHandle))
+        goto ntinit_failed; /* we need that token to get the profile dir. */
+
+    /* Should fail.  Will write the size of the profile path in pathsize */
+    /* Second parameter can't be NULL or the function fails. */
+    rc = GetUserProfileDirectory(AccessTokenHandle, dummy, &pathsize);
+    assert(!rc);  /* success?! */
+
+    /* Allocate memory for the profile directory */
+    ProfileDirectory = (char *) malloc(pathsize);
+    if (ProfileDirectory == NULL)
+    {
+        err = ERR_OUT_OF_MEMORY;
+        goto ntinit_failed;
+    } /* if */
+
+    /* Try to get the profile directory */
+    if(!GetUserProfileDirectory(AccessTokenHandle, ProfileDirectory, &pathsize))
+        goto ntinit_failed;
+
+    goto ntinit_succeeded;  /* We made it: hit the showers. */
+
+ntinit_failed:
+    if (err == NULL) /* set an error string if we haven't yet. */
+        __PHYSFS_setError(win32strerror());
+
+    if (ProfileDirectory != NULL)
+    {
+        free(ProfileDirectory);
+        ProfileDirectory = NULL;
+    } /* if */
+
+    /* drop through and clean up the rest of the stuff... */
+
+ntinit_succeeded:
+    if (lib != NULL)
+        FreeLibrary(lib);
+
+    if (AccessTokenHandle != NULL)
+        CloseHandle(AccessTokenHandle);
+
+    return ((err == NULL) ? 1 : 0);
+} /* doNTInit */
+
+static BOOL MediaInDrive(const char *DriveLetter)
+{
+    UINT OldErrorMode;
+    DWORD DummyValue;
+    BOOL ReturnValue;
+
+    /* Prevent windows warning message to appear when checking media size */
+    OldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    
+    /* If this function succeeds, there's media in the drive */
+    ReturnValue = GetDiskFreeSpace(DriveLetter, &DummyValue, &DummyValue, &DummyValue, &DummyValue);
+
+    /* Revert back to old windows error handler */
+    SetErrorMode(OldErrorMode);
+
+    return ReturnValue;
+} /* MediaInDrive */
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
 {
@@ -191,8 +205,19 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 static char *getExePath(const char *argv0)
 {
     char *filepart = NULL;
-    char *retval = (char *) malloc(sizeof (TCHAR) * (MAX_PATH + 1));
-    DWORD buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
+    char *retval;
+	DWORD buflen;
+		
+	retval = (char *) malloc(sizeof (TCHAR) * (MAX_PATH + 1));
+	BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
+	if (buflen == 0)
+    {
+        const char *err = win32strerror();
+        free(retval);
+        BAIL_MACRO(err, NULL);
+    } /* if */
+
     retval[buflen] = '\0';  /* does API always null-terminate the string? */
 
         /* make sure the string was not truncated. */
@@ -204,9 +229,11 @@ static char *getExePath(const char *argv0)
             *(ptr + 1) = '\0';  /* chop off filename. */
 
             /* free up the bytes we didn't actually use. */            
-            retval = (char *) realloc(retval, strlen(retval) + 1);
-            if (retval != NULL)
-                return(retval);
+            ptr = (char *) realloc(retval, strlen(retval) + 1);
+            if (ptr != NULL)
+			    retval = ptr;
+
+            return(retval);
         } /* if */
     } /* if */
 
@@ -240,6 +267,7 @@ char *__PHYSFS_platformGetUserName(void)
         BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
         if (GetUserName(retval, &bufsize) == 0)  /* ?! */
         {
+            __PHYSFS_setError(win32strerror());
             free(retval);
             retval = NULL;
         } /* if */
@@ -251,7 +279,10 @@ char *__PHYSFS_platformGetUserName(void)
 
 char *__PHYSFS_platformGetUserDir(void)
 {
-	return ProfileDirectory;
+    char *retval = (char *) malloc(strlen(ProfileDirectory) + 1);
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    strcpy(retval, ProfileDirectory); /* calculated at init time. */
+	return retval;
 } /* __PHYSFS_platformGetUserDir */
 
 
@@ -352,15 +383,17 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     size_t len = strlen(dirname);
 
     /* Allocate a new string for path, maybe '\\', "*", and NULL terminator */
-    SearchPath = alloca(len + 3);
+    SearchPath = (char *) _alloca(len + 3);
+    BAIL_IF_MACRO(SearchPath == NULL, ERR_OUT_OF_MEMORY, NULL);
+
     /* Copy current dirname */
     strcpy(SearchPath, dirname);
 
     /* if there's no '\\' at the end of the path, stick one in there. */
-    if (dirname[len - 1] != '\\')
+    if (SearchPath[len - 1] != '\\')
     {
-        dirname[len++] = '\\';
-        dirname[len] = '\0';
+        SearchPath[len++] = '\\';
+        SearchPath[len] = '\0';
     } /* if */
 
     /* Append the "*" to the end of the string */
@@ -549,6 +582,7 @@ int __PHYSFS_platformMkDir(const char *path)
     return(1);
 } /* __PHYSFS_platformMkDir */
 
+
 /* 
  * Get OS info and save it.
  *
@@ -558,10 +592,7 @@ int getOSInfo(void)
 {
     /* Get OS info */
     OSVersionInfo.dwOSVersionInfoSize = sizeof(OSVersionInfo);
-    if(!GetVersionEx(&OSVersionInfo))
-    {
-        return 0;
-    }
+    BAIL_IF_MACRO(!GetVersionEx(&OSVersionInfo), win32strerror(), 0);
 
     /* Set to TRUE if we are runnign a WinNT based OS 4.0 or greater */
     runningNT = (OSVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
@@ -572,53 +603,37 @@ int getOSInfo(void)
 
 int __PHYSFS_platformInit(void)
 {
-    if(!getOSInfo())
-    {
-        return 0;
-    }
+    BAIL_IF_MACRO(!getOSInfo(), NULL, 0);
 
-    /* Get Windows ProcessID associated with the current process */
-    ProcessID = GetCurrentProcessId();
-    /* Create a process handle associated with the current process ID */
-    ProcessHandle = GetCurrentProcess();
-
-    if(ProcessHandle == NULL)
-    {
-        /* Process handle is required by other win32 functions */
-        return 0;
-    }
-
-    /* Default profile directory is the exe path */
-	ProfileDirectory = getExePath(NULL);
-
-#ifndef DISABLE_NT_SUPPORT
     /* If running an NT system (NT/Win2k/XP, etc...) */
     if(runningNT)
     {
-        if(!doNTInit())
-        {
-            /* Error initializing NT stuff */
-            return 0;
-        }
-    }
-#endif
+        BAIL_IF_MACRO(!doNTInit(), NULL, 0);
+    } /* if */
+    else
+    {
+        /* Profile directory is the exe path on 95/98/ME systems. */
+    	ProfileDirectory = getExePath(NULL);
+        BAIL_IF_MACRO(ProfileDirectory == NULL, win32strerror(), 0);
+    } /* else */
 
-    /* It's all good */
-    return 1;
+    return 1;  /* It's all good */
 }
 
 int __PHYSFS_platformDeinit(void)
 {
-#ifndef DISABLE_NT_SUPPORT
-    if(!doNTDeinit())
-        return 0;
-#endif
+    if (runningNT)
+    {
+        BAIL_IF_MACRO(!doNTDeinit(), NULL, 0);
+    } /* if */
 
-    if(CloseHandle(ProcessHandle) != S_OK)
-        return 0;
+    if (ProfileDirectory != NULL)
+    {
+        free(ProfileDirectory);
+        ProfileDirectory = NULL;
+    } /* if */
 
-    /* It's all good */
-    return 1;
+    return 1; /* It's all good */
 }
 
 void *__PHYSFS_platformOpenRead(const char *filename)
@@ -630,10 +645,7 @@ void *__PHYSFS_platformOpenRead(const char *filename)
     FileHandle = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, NULL, 
         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    /* If CreateFile() failed */
-    if(FileHandle == INVALID_HANDLE_VALUE)
-        return NULL;
-
+    BAIL_IF_MACRO(FileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
     return (void *)FileHandle;
 }
 
@@ -646,10 +658,7 @@ void *__PHYSFS_platformOpenWrite(const char *filename)
     FileHandle = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_READ, NULL, 
         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    /* If CreateFile() failed */
-    if(FileHandle == INVALID_HANDLE_VALUE)
-        return NULL;
-
+    BAIL_IF_MACRO(FileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
     return (void *)FileHandle;
 }
 
@@ -660,14 +669,9 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
     /* Open an existing file for appending only.  File can be opened by others
        who request read access to the file only. */
     FileHandle = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_READ, NULL, 
-        TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    /* If CreateFile() failed */
-    if(FileHandle == INVALID_HANDLE_VALUE)
-        /* CreateFile might have failed because the file doesn't exist, so
-           we'll just create a new file for writing then */
-        return __PHYSFS_platformOpenWrite(filename);
-
+    BAIL_IF_MACRO(FileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
     return (void *)FileHandle;
 }
 
@@ -685,17 +689,14 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     /*!!! - uint32 might be a greater # than DWORD */
     if(!ReadFile(FileHandle, buffer, count * size, &CountOfBytesRead, NULL))
     {
-        /* Set the error to GetLastError */
-        __PHYSFS_setError(win32strerror());
-        /* We errored out */
-        retval = -1;
-    }
+        BAIL_MACRO(win32strerror(), -1);
+    } /* if */
     else
     {
         /* Return the number of "objects" read. */
         /* !!! - What if not the right amount of bytes was read to make an object? */
         retval = CountOfBytesRead / size;
-    }
+    } /* else */
 
     return retval;
 }
@@ -714,17 +715,14 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, void *buffer,
     /*!!! - uint32 might be a greater # than DWORD */
     if(!WriteFile(FileHandle, buffer, count * size, &CountOfBytesWritten, NULL))
     {
-        /* Set the error to GetLastError */
-        __PHYSFS_setError(win32strerror());
-        /* We errored out */
-        retval = -1;
-    }
+        BAIL_MACRO(win32strerror(), -1);
+    } /* if */
     else
     {
         /* Return the number of "objects" read. */
         /*!!! - What if not the right number of bytes was written? */
         retval = CountOfBytesWritten / size;
-    }
+    } /* else */
 
     return retval;
 }
@@ -805,18 +803,15 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle)
     if(((FileSizeLow = GetFileSize(FileHandle, &FileSizeHigh))
         == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
     {
-        /* Set the error to GetLastError */
-        __PHYSFS_setError(win32strerror());
-
-        retval = -1;
-    }
+        BAIL_MACRO(win32strerror(), -1);
+    } /* if */
     else
     {
         /* Combine the high/low order to create the 64-bit position value */
         retval = FileSizeHigh;
         retval = retval << 32;
         retval |= FileSizeLow;
-    }
+    } /* else */
 
     return retval;
 }
@@ -876,17 +871,6 @@ int __PHYSFS_platformClose(void *opaque)
     return retval;
 }
 
-/*
- * Remove a file or directory entry in the actual filesystem. (path) is
- *  specified in platform-dependent notation. Note that this deletes files
- *  _and_ directories, so you might need to do some determination.
- *  Non-empty directories should report an error and not delete themselves
- *  or their contents.
- *
- * Deleting a symlink should remove the link, not what it points to.
- *
- * On error, return zero and set the error message. Return non-zero on success.
- */
 int __PHYSFS_platformDelete(const char *path)
 {
     int retval;
@@ -927,12 +911,12 @@ int __PHYSFS_platformGrabMutex(void *mutex)
     if(WaitForSingleObject((HANDLE)mutex, INFINITE) == WAIT_FAILED)
     {
         /* Our wait failed for some unknown reason */
-        retval = 1;
+        retval = 0;
     }
     else
     {
         /* Good to go */
-        retval = 0;
+        retval = 1;
     }
 
     return retval;
@@ -942,6 +926,29 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 {
     ReleaseMutex((HANDLE)mutex);
 }
+
+static time_t FileTimeToTimeT(FILETIME *ft)
+{
+    SYSTEMTIME st_utc;
+    SYSTEMTIME st_localtz;
+    TIME_ZONE_INFORMATION TimeZoneInfo;
+    struct tm tm;
+
+    FileTimeToSystemTime(ft, &st_utc);
+    GetTimeZoneInformation(&TimeZoneInfo);
+    SystemTimeToTzSpecificLocalTime(&TimeZoneInfo, &st_utc, &st_localtz);
+
+    tm.tm_sec = st_localtz.wSecond;
+    tm.tm_min = st_localtz.wMinute;
+    tm.tm_hour = st_localtz.wHour;
+    tm.tm_mday = st_localtz.wDay;
+    tm.tm_mon = st_localtz.wMonth - 1;
+    tm.tm_year = st_localtz.wYear - 1900;
+    tm.tm_wday = st_localtz.wDayOfWeek;
+    tm.tm_yday = -1;
+    tm.tm_isdst = -1;
+    return mktime(&tm);
+} /* FileTimeToTimeT */
 
 PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 {
@@ -953,14 +960,12 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
         AttributeData.ftLastWriteTime.dwLowDateTime == 0)
     {
         /* Return error */
-        return -1;
+        BAIL_MACRO(win32strerror(), -1);
     }
-    else
-    {
-        /* Return UNIX time_t version of last write time */
-        /*return (PHYSFS_sint64)FileTimeToTimeT(&AttributeData.ftLastWriteTime);*/
-        return (PHYSFS_sint64)FileTimeToTimeT(&AttributeData.ftCreationTime);
-    }
+
+    /* Return UNIX time_t version of last write time */
+    return (PHYSFS_sint64)FileTimeToTimeT(&AttributeData.ftLastWriteTime);
+    /*return (PHYSFS_sint64)FileTimeToTimeT(&AttributeData.ftCreationTime);*/
 } /* __PHYSFS_platformGetLastModTime */
 
 /* end of win32.c ... */
