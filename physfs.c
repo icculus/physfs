@@ -1196,7 +1196,6 @@ char * __PHYSFS_convertToDependent(const char *prepend,
 int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
 {
     int retval = 1;
-    int fileExists;
     char *start;
     char *end;
     char *str;
@@ -1224,14 +1223,16 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
 
         if (!allowSymLinks)
         {
-            if (h->funcs->isSymLink(h, str, &fileExists))
+            if (h->funcs->isSymLink(h, str, &retval))
             {
                 __PHYSFS_setError(ERR_SYMLINK_DISALLOWED);
                 retval = 0;
                 break;
             } /* if */
 
-            /* !!! FIXME: Abort early here if !fileExists? */
+            /* break out early if path element is missing. */
+            if (!retval)
+                break;
         } /* if */
 
         if (end == NULL)
