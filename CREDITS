@@ -3,7 +3,8 @@ GRP driver,
 DIR driver,
 Unix support,
 Initial Win32 support,
-ZIP driver:
+ZIP driver,
+MacOS Classic support:
     Ryan C. Gordon
 
 Tons of win32 help:
