@@ -2,6 +2,11 @@
  * CHANGELOG.
  */
 
+08192002 - Generalized sorting routines, moved them into physfs.c and removed
+           the multiple copies from the various archivers. Adding profiling
+           code (currently only for sort routines)...enable it with
+           --enable-profiling in the configure script. Fixed incorrect
+           behaviours in configure.in.
 08172002 - Patched configure.in to work around buggy autoconfs.
 08162002 - Fixed QPAK archiver, since I broke it (sorry!). Also fixed a
            qpak memory leak.
