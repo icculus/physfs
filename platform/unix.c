@@ -309,10 +309,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 /* Much like my college days, try to sleep for 10 milliseconds at a time... */
 void __PHYSFS_platformTimeslice(void)
 {
-    struct timespec napTime;
-    napTime.tv_sec = 0;
-    napTime.tv_nsec = 10 * 1000 * 1000;  /* specified in nanoseconds. */
-    nanosleep(&napTime, NULL);           /* don't care if it fails. */
+    usleep( 10 * 1000 );           /* don't care if it fails. */
 } /* __PHYSFS_platformTimeslice */
 
 
