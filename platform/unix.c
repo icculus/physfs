@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <pthread.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -27,6 +26,10 @@
 #include <time.h>
 #include <errno.h>
 #include <sys/mount.h>
+
+#if (!defined PHYSFS_NO_PTHREADS_SUPPORT)
+#include <pthread.h>
+#endif
 
 #ifdef PHYSFS_HAVE_SYS_UCRED_H
 #  ifdef PHYSFS_HAVE_MNTENT_H
@@ -256,12 +259,6 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 } /* __PHYSFS_platformCalcBaseDir */
 
 
-PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
-{
-    return((PHYSFS_uint64) pthread_self());
-} /* __PHYSFS_platformGetThreadID */
-
-
 /* Much like my college days, try to sleep for 10 milliseconds at a time... */
 void __PHYSFS_platformTimeslice(void)
 {
@@ -281,6 +278,22 @@ char *__PHYSFS_platformRealPath(const char *path)
     strcpy(retval, resolved_path);
     return(retval);
 } /* __PHYSFS_platformRealPath */
+
+
+#if (!defined PHYSFS_NO_PTHREADS_SUPPORT)
+
+PHYSFS_uint64 __PHYSFS_platformGetThreadID(void) { return(0x0001); }
+void *__PHYSFS_platformCreateMutex(void) { return((void *) 0x0001); }
+void __PHYSFS_platformDestroyMutex(void *mutex) {}
+int __PHYSFS_platformGrabMutex(void *mutex) { return(1); }
+void __PHYSFS_platformReleaseMutex(void *mutex) {}
+
+#else
+
+PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
+{
+    return((PHYSFS_uint64) pthread_self());
+} /* __PHYSFS_platformGetThreadID */
 
 
 void *__PHYSFS_platformCreateMutex(void)
@@ -316,6 +329,9 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 {
     pthread_mutex_unlock((pthread_mutex_t *) mutex);
 } /* __PHYSFS_platformReleaseMutex */
+
+#endif /* !PHYSFS_NO_PTHREADS_SUPPORT */
+
 
 #endif /* !defined __BEOS__ && !defined WIN32 */
 
