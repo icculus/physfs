@@ -290,9 +290,11 @@ void __PHYSFS_platformReleaseMutex(void *mutex) {}
 
 #else
 
+#define PHTREAD_TO_UI64(thr) ((PHYSFS_uint64) (thr))
+
 PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 {
-    return((PHYSFS_uint64) pthread_self());
+    return(PHTREAD_TO_UI64(pthread_self()));
 } /* __PHYSFS_platformGetThreadID */
 
 
