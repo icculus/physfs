@@ -63,6 +63,8 @@
 11142001 - Removed a redundant error check in platform/win32.c
 03052002 - Made unix.c's timeslice implementation more portable, and added a
             Darwin-specific means to detect CDs (thanks to Patrick Stein).
+            Minor cleanup in win32.c (changed "for (; condition ;)" into
+            "while (condition)" ...)
 
 --ryan. (icculus@clutteredmind.org)
 
