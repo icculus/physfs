@@ -172,15 +172,11 @@ MAINSRCS := physfs.c archivers/dir.c
 ifeq ($(strip $(use_archive_zip)),true)
   MAINSRCS += archivers/zip.c archivers/unzip.c
   CFLAGS += -DPHYSFS_SUPPORTS_ZIP
+  LDFLAGS += -lz
   ifeq ($(strip $(cygwin)),true)
+    EXTRABUILD += zlibwin32/zlib.a
     CFLAGS += -Izlibwin32
-    ifeq ($(strip $(debugging)),true)
-      LDFLAGS += zlibwin32/zlibstat_multid.lib  
-    else
-      LDFLAGS += zlibwin32/zlibstat_multir.lib  
-    endif
-  else
-    LDFLAGS += -lz
+    LDFLAGS += -Lzlibwin32
   endif
 endif
 
@@ -233,13 +229,13 @@ $(BINDIR)/%.o: $(SRCDIR)/%.asm
 
 .PHONY: all clean distclean listobjs install
 
-all: $(BINDIR) $(MAINLIB) $(TESTEXE)
+all: $(BINDIR) $(EXTRABUILD) $(MAINLIB) $(TESTEXE)
 
 $(MAINLIB) : $(BINDIR) $(MAINOBJS)
-	$(LINKER) -o $(MAINLIB) $(LDFLAGS) $(SHAREDFLAGS) $(MAINOBJS)
+	$(LINKER) -o $(MAINLIB) $(SHAREDFLAGS) $(MAINOBJS) $(LDFLAGS)
 
 $(TESTEXE) : $(MAINLIB) $(TESTOBJS)
-	$(LINKER) -o $(TESTEXE) $(LDFLAGS) $(TESTLDFLAGS) $(TESTOBJS) -L$(BINDIR) -l$(strip $(PUREBASELIBNAME))
+	$(LINKER) -o $(TESTEXE) $(TESTLDFLAGS) $(TESTOBJS) -L$(BINDIR) -l$(strip $(PUREBASELIBNAME)) $(LDFLAGS)
 
 
 install: all
@@ -264,11 +260,21 @@ $(BINDIR):
 	mkdir -p $(BINDIR)/platform
 	mkdir -p $(BINDIR)/test
 
+
+ifeq ($(strip $(cygwin)),true)
+zlibwin32/zlib.a:
+	cd zlibwin32 ; $(MAKE) CC=$(CC)
+endif
+
+
 distclean: clean
 
 clean:
 	rm -f $(CLEANUP)
 	rm -rf $(BINDIR)
+ifeq ($(strip $(cygwin)),true)
+	cd zlibwin32 ; $(MAKE) clean
+endif
 
 listobjs:
 	@echo SOURCES:
