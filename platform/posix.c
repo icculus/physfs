@@ -141,6 +141,28 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
 } /* __PHYSFS_platformStricmp */
 
 
+int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 len)
+{
+    int ux, uy;
+
+    if (!len)
+        return(0);
+
+    do
+    {
+        ux = toupper((int) *x);
+        uy = toupper((int) *y);
+        if (ux != uy)
+            return((ux > uy) ? 1 : -1);
+        x++;
+        y++;
+        len--;
+    } while ((ux) && (uy) && (len));
+
+    return(0);
+} /* __PHYSFS_platformStrnicmp */
+
+
 #if (defined __PHYSFS_NO_SYMLINKS__)
 #define doStat stat
 #else

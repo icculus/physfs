@@ -350,6 +350,13 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
 } /* __PHYSFS_platformStricmp */
 
 
+int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 l)
+{
+    extern int _strnicmp(const char *, const char *, int);
+    return(_strnicmp(x, y, (int) l));  /* (*shrug*) */
+} /* __PHYSFS_platformStricmp */
+
+
 static OSErr fnameToFSSpecNoAlias(const char *fname, FSSpec *spec)
 {
     OSErr err;

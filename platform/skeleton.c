@@ -68,6 +68,12 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
 } /* __PHYSFS_platformStricmp */
 
 
+int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 l)
+{
+    BAIL_MACRO(ERR_NOT_IMPLEMENTED, 0);
+} /* __PHYSFS_platformStrnicmp */
+
+
 int __PHYSFS_platformExists(const char *fname)
 {
     BAIL_MACRO(ERR_NOT_IMPLEMENTED, 0);

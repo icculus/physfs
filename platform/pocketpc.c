@@ -211,8 +211,13 @@ PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 int __PHYSFS_platformStricmp(const char *x, const char *y)
 {    
     return(_stricmp(x, y));
-
 } /* __PHYSFS_platformStricmp */
+
+
+int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 len)
+{    
+    return(_strnicmp(x, y, (int) len));
+} /* __PHYSFS_platformStrnicmp */
 
 
 int __PHYSFS_platformExists(const char *fname)
