@@ -26,7 +26,7 @@
  *  writing directory to "C:\MyGame\MyWritingDirectory", then no PHYSFS calls
  *  could touch anything above this directory, including the "C:\MyGame" and
  *  "C:\" directories. This prevents an application's internal scripting
- *  language from piddling over c:\config.sys, for example. If you'd rather
+ *  language from piddling over c:\\config.sys, for example. If you'd rather
  *  give PHYSFS full access to the system's REAL file system, set the writing
  *  dir to "C:\", but that's generally A Bad Thing for several reasons.
  *
@@ -61,20 +61,21 @@
  * Once the search path is defined, you may open files for reading. If you've
  *  got the following search path defined (to use a win32 example again):
  *
- *    C:\mygame
- *    C:\mygame\myuserfiles
- *    D:\mygamescdromdatafiles
- *    C:\mygame\installeddatafiles.zip
+ *  - C:\\mygame
+ *  - C:\\mygame\\myuserfiles
+ *  - D:\\mygamescdromdatafiles
+ *  - C:\\mygame\\installeddatafiles.zip
  *
  * Then a call to PHYSFS_openRead("textfiles/myfile.txt") (note the directory
  *  separator, lack of drive letter, and lack of dir separator at the start of
  *  the string; this is platform-independent notation) will check for
- *  C:\mygame\textfiles\myfile.txt, then
- *  C:\mygame\myuserfiles\textfiles\myfile.txt, then
- *  D:\mygamescdromdatafiles\textfiles\myfile.txt, then, finally, for
- *  textfiles\myfile.txt inside of C:\mygame\installeddatafiles.zip. Remember
- *  that most archive types and platform filesystems store their filenames in
- *  a case-sensitive manner, so you should be careful to specify it correctly.
+ *  C:\\mygame\\textfiles\\myfile.txt, then
+ *  C:\\mygame\\myuserfiles\\textfiles\\myfile.txt, then
+ *  D:\\mygamescdromdatafiles\\textfiles\\myfile.txt, then, finally, for
+ *  textfiles\\myfile.txt inside of C:\\mygame\\installeddatafiles.zip.
+ *  Remember that most archive types and platform filesystems store their
+ *  filenames in a case-sensitive manner, so you should be careful to specify
+ *  it correctly.
  *
  * Files opened through PhysicsFS may NOT contain "." or ".." or ":" as dir
  *  elements. Not only are these meaningless on MacOS and/or Unix, they are a
@@ -317,9 +318,9 @@ typedef struct
 } PHYSFS_Version;
 
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
-#define PHYSFS_VER_MAJOR 0
-#define PHYSFS_VER_MINOR 1
-#define PHYSFS_VER_PATCH 9
+#define PHYSFS_VER_MAJOR 1
+#define PHYSFS_VER_MINOR 0
+#define PHYSFS_VER_PATCH 0
 #endif  /* DOXYGEN_SHOULD_IGNORE_THIS */
 
 
@@ -854,8 +855,8 @@ __EXPORT__ int PHYSFS_delete(const char *filename);
  *  matches in different parts of the search path, only the first one found
  *  is used, just like when opening a file.
  *
- * So, if you look for "maps/level1.map", and C:\mygame is in your search
- *  path and C:\mygame\maps\level1.map exists, then "C:\mygame" is returned.
+ * So, if you look for "maps/level1.map", and C:\\mygame is in your search
+ *  path and C:\\mygame\\maps\\level1.map exists, then "C:\mygame" is returned.
  *
  * If a any part of a match is a symbolic link, and you've not explicitly
  *  permitted symlinks, then it will be ignored, and the search for a match

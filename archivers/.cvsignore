@@ -10,3 +10,4 @@ mvl.lo
 zip.lo
 libarchivers.la
 qpak.lo
+wad.lo

@@ -22,8 +22,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".,zlib114"
-				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_USRDLL;PHYSFS_EXPORTS;PHYSFS_SUPPORTS_GRP;PHYSFS_SUPPORTS_WAD;PHYSFS_SUPPORTS_ZIP;PHYSFS_SUPPORTS_QPAK"
+				AdditionalIncludeDirectories=".,zlib121"
+				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_USRDLL;Z_PREFIX;PHYSFS_EXPORTS;PHYSFS_SUPPORTS_GRP;PHYSFS_SUPPORTS_WAD;PHYSFS_SUPPORTS_ZIP;PHYSFS_SUPPORTS_QPAK;PHYSFS_SUPPORTS_HOG;PHYSFS_SUPPORTS_MVL"
 				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -93,8 +93,8 @@
 				EnableIntrinsicFunctions="TRUE"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="FALSE"
-				AdditionalIncludeDirectories=".,zlib114"
-				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_USRDLL;PHYSFS_EXPORTS;PHYSFS_SUPPORTS_GRP;PHYSFS_SUPPORTS_WAD;PHYSFS_SUPPORTS_ZIP;PHYSFS_SUPPORTS_QPAK"
+				AdditionalIncludeDirectories=".,zlib121"
+				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_USRDLL;Z_PREFIX;PHYSFS_EXPORTS;PHYSFS_SUPPORTS_GRP;PHYSFS_SUPPORTS_WAD;PHYSFS_SUPPORTS_ZIP;PHYSFS_SUPPORTS_QPAK;PHYSFS_SUPPORTS_HOG;PHYSFS_SUPPORTS_MVL"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
 				RuntimeLibrary="2"
@@ -155,16 +155,16 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
 			<File
-				RelativePath=".\zlib114\adler32.c">
+				RelativePath=".\zlib121\adler32.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\compress.c">
+				RelativePath=".\zlib121\compress.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\crc32.c">
+				RelativePath=".\zlib121\crc32.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\deflate.c">
+				RelativePath=".\zlib121\deflate.c">
 			</File>
 			<File
 				RelativePath=".\archivers\dir.c">
@@ -173,25 +173,19 @@
 				RelativePath=".\archivers\grp.c">
 			</File>
 			<File
-				RelativePath=".\archivers\wad.c">
+				RelativePath="archivers\hog.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\infblock.c">
+				RelativePath=".\zlib121\inffast.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\infcodes.c">
+				RelativePath=".\zlib121\inflate.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\inffast.c">
+				RelativePath=".\zlib121\inftrees.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\inflate.c">
-			</File>
-			<File
-				RelativePath=".\zlib114\inftrees.c">
-			</File>
-			<File
-				RelativePath=".\zlib114\infutil.c">
+				RelativePath="archivers\mvl.c">
 			</File>
 			<File
 				RelativePath=".\physfs.c">
@@ -203,10 +197,13 @@
 				RelativePath="archivers\qpak.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\trees.c">
+				RelativePath=".\zlib121\trees.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\uncompr.c">
+				RelativePath=".\zlib121\uncompr.c">
+			</File>
+			<File
+				RelativePath=".\archivers\wad.c">
 			</File>
 			<File
 				RelativePath=".\platform\win32.c">
@@ -215,32 +212,32 @@
 				RelativePath=".\archivers\zip.c">
 			</File>
 			<File
-				RelativePath=".\zlib114\zutil.c">
+				RelativePath=".\zlib121\zutil.c">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath=".\zlib114\deflate.h">
+				RelativePath=".\zlib121\deflate.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\infblock.h">
+				RelativePath=".\zlib121\infblock.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\infcodes.h">
+				RelativePath=".\zlib121\infcodes.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\inffast.h">
+				RelativePath=".\zlib121\inffast.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\inffixed.h">
+				RelativePath=".\zlib121\inffixed.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\inftrees.h">
+				RelativePath=".\zlib121\inftrees.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\infutil.h">
+				RelativePath=".\zlib121\infutil.h">
 			</File>
 			<File
 				RelativePath=".\physfs.h">
@@ -249,16 +246,16 @@
 				RelativePath=".\physfs_internal.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\trees.h">
+				RelativePath=".\zlib121\trees.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\zconf.h">
+				RelativePath=".\zlib121\zconf.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\zlib.h">
+				RelativePath=".\zlib121\zlib.h">
 			</File>
 			<File
-				RelativePath=".\zlib114\zutil.h">
+				RelativePath=".\zlib121\zutil.h">
 			</File>
 		</Filter>
 		<Filter

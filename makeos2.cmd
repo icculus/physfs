@@ -7,13 +7,16 @@ rem  Patches go to icculus@clutteredmind.org ...
 
 set PHYSFSLANG=PHYSFS_LANG_ENGLISH
 set DEBUGFLAGS=-D_NDEBUG -O2 -s
-rem set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib121 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DPHYSFS_LANG=%PHYSFSLANG% -DHAVE_ASSERT_H
-set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib121 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DHAVE_ASSERT_H
+rem set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib121 -c -D__ST_MT_ERRNO__ -DOS2 -DZ_PREFIX -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DPHYSFS_LANG=%PHYSFSLANG% -DHAVE_ASSERT_H
+set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib121 -c -D__ST_MT_ERRNO__ -DOS2 -DZ_PREFIX -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DHAVE_ASSERT_H
 
-@echo on
-mkdir bin
-erase /N bin\*.*
+rem goto :dolinking
 
+@echo cleaning up any previous build...
+@mkdir bin 2>NUL
+@erase /N bin\*.* 2>NUL
+
+@echo Building export definitions...
 @echo ;don't edit this directly! It is rewritten by makeos2.cmd! > bin\test_physfs.def
 @echo NAME TESTPHYSFS WINDOWCOMPAT >> bin\test_physfs.def
 @echo DESCRIPTION 'PhysicsFS: http://icculus.org/physfs/' >> bin\test_physfs.def
@@ -102,8 +105,11 @@ erase /N bin\*.*
 @echo  "PHYSFS_setBuffer" >> bin\physfs.def
 @echo  "PHYSFS_flush" >> bin\physfs.def
 
+@echo Building export library...
 emximp -o bin/physfs.lib bin/physfs.def
 
+@echo Compiling PhysicsFS library...
+@echo on
 gcc %CFLAGS% -o bin/physfs.obj physfs.c
 gcc %CFLAGS% -o bin/physfs_byteorder.obj physfs_byteorder.c
 gcc %CFLAGS% -o bin/os2.obj platform/os2.c
@@ -114,7 +120,6 @@ gcc %CFLAGS% -o bin/zip.obj archivers/zip.c
 gcc %CFLAGS% -o bin/qpak.obj archivers/qpak.c
 gcc %CFLAGS% -o bin/hog.obj archivers/hog.c
 gcc %CFLAGS% -o bin/mvl.obj archivers/mvl.c
-
 gcc %CFLAGS% -o bin/adler32.obj zlib121/adler32.c
 gcc %CFLAGS% -o bin/compress.obj zlib121/compress.c
 gcc %CFLAGS% -o bin/crc32.obj zlib121/crc32.c
@@ -127,9 +132,22 @@ gcc %CFLAGS% -o bin/inftrees.obj zlib121/inftrees.c
 gcc %CFLAGS% -o bin/trees.obj zlib121/trees.c
 gcc %CFLAGS% -o bin/uncompr.obj zlib121/uncompr.c
 gcc %CFLAGS% -o bin/zutil.obj zlib121/zutil.c
+@echo off
 
+:dolinking
+@echo Linking PhysicsFS library...
 gcc %DEBUGFLAGS% -Zdll -Zcrtdll -Zomf -Zmt -Zmtd -o bin/physfs.dll bin/*.obj bin/physfs.def
 
+rem goto :builddone
+
+@echo Compiling test program...
 gcc %CFLAGS% -o bin/test_physfs.obj test/test_physfs.c
+@echo Linking test program...
 gcc %DEBUGFLAGS% -Zomf -Zcrtdll -Zmt -Zmtd -o bin/test_physfs.exe bin/test_physfs.obj bin/physfs.lib bin/test_physfs.def
+
+:builddone
+
+@echo "All done!"
+
+rem end of makeos2.cmd ...
 
