@@ -49,6 +49,7 @@ libphysfs_la_SOURCES =	\
 	archivers/dir.c		\
 	archivers/grp.c		\
 	archivers/zip.c		\
+	archivers/qpak.c   	\
 	platform/unix.c     \
 	platform/posix.c    \
     $(ZLIB_SRC)

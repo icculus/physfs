@@ -57,8 +57,15 @@ extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_GRP;
 extern const DirFunctions         __PHYSFS_DirFunctions_GRP;
 #endif
 
+#if (defined PHYSFS_SUPPORTS_QPAK)
+extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_QPAK;
+extern const DirFunctions         __PHYSFS_DirFunctions_QPAK;
+#endif
+
 extern const DirFunctions  __PHYSFS_DirFunctions_DIR;
 
+
+// !!! FIXME: This is stored with dirFunctions now, too.
 static const PHYSFS_ArchiveInfo *supported_types[] =
 {
 #if (defined PHYSFS_SUPPORTS_ZIP)
@@ -67,6 +74,10 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
 
 #if (defined PHYSFS_SUPPORTS_GRP)
     &__PHYSFS_ArchiveInfo_GRP,
+#endif
+
+#if (defined PHYSFS_SUPPORTS_QPAK)
+    &__PHYSFS_ArchiveInfo_QPAK,
 #endif
 
     NULL
@@ -80,6 +91,10 @@ static const DirFunctions *dirFunctions[] =
 
 #if (defined PHYSFS_SUPPORTS_GRP)
     &__PHYSFS_DirFunctions_GRP,
+#endif
+
+#if (defined PHYSFS_SUPPORTS_QPAK)
+    &__PHYSFS_DirFunctions_QPAK,
 #endif
 
     &__PHYSFS_DirFunctions_DIR,

@@ -9,5 +9,6 @@ endif
 libarchivers_la_SOURCES =	\
 	dir.c		\
 	grp.c		\
-	zip.c
+	zip.c		\
+	qpak.c
 
