@@ -31,7 +31,7 @@
 
 #define TEST_VERSION_MAJOR  0
 #define TEST_VERSION_MINOR  1
-#define TEST_VERSION_PATCH  6
+#define TEST_VERSION_PATCH  7
 
 static FILE *history_file = NULL;
 
