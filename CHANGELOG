@@ -2,10 +2,9 @@
  * CHANGELOG.
  */
 
-05222002 - The internal zlib is now always built (but only linked in if
-           needed). This is so "make dist" includes the sources in the
-           tarball. I wonder if there's way to get them included without
-           compiling them when they aren't needed.
+05222002 - Fixed the build system to always package the complete source, not
+           just what we built for a given system, when doing a "make dist".
+           Updated INSTALL. Started writing BeOS platform code.
 05212002 - Cleaned up some FIXMEs.
 05202002 - Added .cvsignore files.
 05162002 - Edward Rudd also caught an embarrassing screwup by me in
