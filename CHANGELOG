@@ -5,6 +5,14 @@
 12292003 - Updated CodeWarrior projects from CW6 to CW7, and made a bunch of
            patches to get the Mac Classic target building again. Removed
            zlib114 from CVS repository. Updated OS/2 build batch file.
+           Added Z_PREFIX define to Unix builds that use internal zlib.
+           Patched up some (outdated?) Visual C project files for zlib121.
+           Patched Doxyfile and physfs.h for newer Doxygen. Fixed OS/2
+           build script. Tweaked Project Builder files to at least compile.
+           Added some last minute BeOS and Cygwin build fixes. Updated
+           Visual Studio projects and tweaked some Makefile.am crap. Made
+           changes so Visual Studio files would pack with DOS endlines and...
+           Upped version to 1.0.0 (woohoo!).
 12222003 - Fixed a search-and-replace mistake in win32.c that preventing
            compiling on Windows. (thanks, Brian!) Converted VC6 .dsp to use
            zlib121; made Z_PREFIX=1 enabled by default to avoid link clashes;
