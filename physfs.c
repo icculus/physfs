@@ -1200,6 +1200,9 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
     char *end;
     char *str;
 
+    if (*fname == '\0')  /* quick rejection. */
+        return(1);
+
     /* !!! FIXME: Can we ditch this malloc()? */
     start = str = malloc(strlen(fname) + 1);
     BAIL_IF_MACRO(str == NULL, ERR_OUT_OF_MEMORY, 0);
