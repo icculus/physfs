@@ -30,4 +30,10 @@ EXTRA_DIST =	\
 	LICENSE \
 	CHANGELOG \
 	INSTALL \
-	TODO
+	TODO \
+	Doxyfile \
+    docs
+
+dist-hook:
+	rm -rf `find $(distdir)/docs -name CVS`
+
