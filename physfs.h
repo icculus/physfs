@@ -698,6 +698,7 @@ __EXPORT__ int PHYSFS_setWriteDir(const char *newDir);
  *                   platform-dependent notation.
  *   \param mountPoint Location in the interpolated tree that this archive
  *                     will be "mounted", in platform-independent notation.
+ *                     NULL or "" is equivalent to "/".
  *   \param appendToPath nonzero to append to search path, zero to prepend.
  *  \return nonzero if added to path, zero on failure (bogus archive, dir
  *                   missing, etc). Specifics of the error can be
@@ -711,7 +712,7 @@ __EXPORT__ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appe
  * \brief Add an archive or directory to the search path.
  *
  * This is a legacy call, equivalent to:
- *     PHYSFS_mount(newDir, "/", appendToPath);
+ *     PHYSFS_mount(newDir, NULL, appendToPath);
  *
  * \sa PHYSFS_mount
  * \sa PHYSFS_unmount
