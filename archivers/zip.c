@@ -58,12 +58,12 @@ typedef struct
 #define SYMLINK_RECURSE_COUNT 20
 
 
-static int ZIP_read(FileHandle *handle, void *buffer,
-                    unsigned int objSize, unsigned int objCount);
+static PHYSFS_sint64 ZIP_read(FileHandle *handle, void *buffer,
+                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static int ZIP_eof(FileHandle *handle);
-static int ZIP_tell(FileHandle *handle);
-static int ZIP_seek(FileHandle *handle, int offset);
-static int ZIP_fileLength(FileHandle *handle);
+static PHYSFS_sint64 ZIP_tell(FileHandle *handle);
+static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset);
+static PHYSFS_sint64 ZIP_fileLength(FileHandle *handle);
 static int ZIP_fileClose(FileHandle *handle);
 static int ZIP_isArchive(const char *filename, int forWriting);
 static char *ZIP_realpath(unzFile fh, unz_file_info *info);
@@ -116,12 +116,12 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 
 
 
-static int ZIP_read(FileHandle *handle, void *buffer,
-                    unsigned int objSize, unsigned int objCount)
+static PHYSFS_sint64 ZIP_read(FileHandle *handle, void *buffer,
+                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     unzFile fh = ((ZIPfileinfo *) (handle->opaque))->handle;
-    int bytes = objSize * objCount;
-    int rc = unzReadCurrentFile(fh, buffer, bytes);
+    int bytes = (int) (objSize * objCount); /* !!! FIXME: overflow? */
+    PHYSFS_sint32 rc = unzReadCurrentFile(fh, buffer, bytes);
 
     if (rc < bytes)
         __PHYSFS_setError(ERR_PAST_EOF);
@@ -140,18 +140,18 @@ static int ZIP_eof(FileHandle *handle)
 } /* ZIP_eof */
 
 
-static int ZIP_tell(FileHandle *handle)
+static PHYSFS_sint64 ZIP_tell(FileHandle *handle)
 {
     return(unztell(((ZIPfileinfo *) (handle->opaque))->handle));
 } /* ZIP_tell */
 
 
-static int ZIP_seek(FileHandle *handle, int offset)
+static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset)
 {
-    /* this blows. */
+    /* !!! FIXME : this blows. */
     unzFile fh = ((ZIPfileinfo *) (handle->opaque))->handle;
     char *buf = NULL;
-    int bufsize = 4096 * 2;
+    PHYSFS_uint32 bufsize = 4096 * 2;
 
     BAIL_IF_MACRO(unztell(fh) == offset, NULL, 1);
     BAIL_IF_MACRO(ZIP_fileLength(handle) <= offset, ERR_PAST_EOF, 0);
@@ -169,8 +169,8 @@ static int ZIP_seek(FileHandle *handle, int offset)
 
     while (offset > 0)
     {
-        int chunk = (offset > bufsize) ? bufsize : offset;
-        int rc = unzReadCurrentFile(fh, buf, chunk);
+        PHYSFS_uint32 chunk = (offset > bufsize) ? bufsize : offset;
+        PHYSFS_sint32 rc = unzReadCurrentFile(fh, buf, chunk);
         BAIL_IF_MACRO(rc == 0, ERR_IO_ERROR, 0);  /* shouldn't happen. */
         BAIL_IF_MACRO(rc == UNZ_ERRNO, ERR_IO_ERROR, 0);
         BAIL_IF_MACRO(rc < 0, ERR_COMPRESSION, 0);
@@ -182,7 +182,7 @@ static int ZIP_seek(FileHandle *handle, int offset)
 } /* ZIP_seek */
 
 
-static int ZIP_fileLength(FileHandle *handle)
+static PHYSFS_sint64 ZIP_fileLength(FileHandle *handle)
 {
     ZIPfileinfo *finfo = (ZIPfileinfo *) (handle->opaque);
     unz_file_info info;

@@ -14,6 +14,12 @@
 #error Do not include this header from your applications.
 #endif
 
+#include "physfs.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct __PHYSFS_DIRHANDLE__;
 struct __PHYSFS_FILEFUNCTIONS__;
 
@@ -52,8 +58,8 @@ typedef struct __PHYSFS_FILEFUNCTIONS__
          *  if complete failure.
          * On failure, call __PHYSFS_setError().
          */
-    int (*read)(FileHandle *handle, void *buffer,
-                unsigned int objSize, unsigned int objCount);
+    PHYSFS_sint64 (*read)(FileHandle *handle, void *buffer,
+                          PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 
         /*
          * Write more to the file. Archives don't have to implement this.
@@ -62,8 +68,8 @@ typedef struct __PHYSFS_FILEFUNCTIONS__
          *  if complete failure.
          * On failure, call __PHYSFS_setError().
          */
-    int (*write)(FileHandle *handle, const void *buffer,
-                 unsigned int objSize, unsigned int objCount);
+    PHYSFS_sint64 (*write)(FileHandle *handle, const void *buffer,
+                 PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 
         /*
          * Returns non-zero if at end of file.
@@ -73,21 +79,21 @@ typedef struct __PHYSFS_FILEFUNCTIONS__
         /*
          * Returns byte offset from start of file.
          */
-    int (*tell)(FileHandle *handle);
+    PHYSFS_sint64 (*tell)(FileHandle *handle);
 
         /*
          * Move read/write pointer to byte offset from start of file.
          *  Returns non-zero on success, zero on error.
          * On failure, call __PHYSFS_setError().
          */
-    int (*seek)(FileHandle *handle, int offset);
+    int (*seek)(FileHandle *handle, PHYSFS_uint64 offset);
 
         /*
          * Return number of bytes available in the file, or -1 if you
          *  aren't able to determine.
          * On failure, call __PHYSFS_setError().
          */
-    int (*fileLength)(FileHandle *handle);
+    PHYSFS_sint64 (*fileLength)(FileHandle *handle);
 
         /*
          * Close the file, and free the FileHandle structure (including "opaque").
@@ -341,6 +347,148 @@ int __PHYSFS_platformInit(void);
 int __PHYSFS_platformDeinit(void);
 
 /*
+ * Open a file for reading. (filename) is in platform-dependent notation. The
+ *  file pointer should be positioned on the first byte of the file.
+ *
+ * The return value will be some platform-specific datatype that is opaque to
+ *  the caller; it could be a (FILE *) under Unix, or a (HANDLE *) under win32.
+ *
+ * The same file can be opened for read multiple times, and each should have
+ *  a unique file handle; this is frequently employed to prevent race
+ *  conditions in the archivers.
+ *
+ * Call __PHYSFS_setError() and return (NULL) if the file can't be opened.
+ */
+void *__PHYSFS_platformOpenRead(const char *filename);
+
+/*
+ * Open a file for writing. (filename) is in platform-dependent notation. If
+ *  the file exists, it should be truncated to zero bytes, and if it doesn't
+ *  exist, it should be created as a zero-byte file. The file pointer should
+ *  be positioned on the first byte of the file.
+ *
+ * The return value will be some platform-specific datatype that is opaque to
+ *  the caller; it could be a (FILE *) under Unix, or a (HANDLE *) under win32,
+ *  etc.
+ *
+ * Opening a file for write multiple times has undefined results.
+ *
+ * Call __PHYSFS_setError() and return (NULL) if the file can't be opened.
+ */
+void *__PHYSFS_platformOpenWrite(const char *filename);
+
+/*
+ * Open a file for appending. (filename) is in platform-dependent notation. If
+ *  the file exists, the file pointer should be place just past the end of the
+ *  file, so that the first write will be one byte after the current end of
+ *  the file. If the file doesn't exist, it should be created as a zero-byte
+ *  file. The file pointer should be positioned on the first byte of the file.
+ *
+ * The return value will be some platform-specific datatype that is opaque to
+ *  the caller; it could be a (FILE *) under Unix, or a (HANDLE *) under win32,
+ *  etc.
+ *
+ * Opening a file for append multiple times has undefined results.
+ *
+ * Call __PHYSFS_setError() and return (NULL) if the file can't be opened.
+ */
+void *__PHYSFS_platformOpenAppend(const char *filename);
+
+/*
+ * Read more data from a platform-specific file handle. (opaque) should be
+ *  cast to whatever data type your platform uses. Read a maximum of (count)
+ *  objects of (size) 8-bit bytes to the area pointed to by (buffer). If there
+ *  isn't enough data available, return the number of full objects read, and
+ *  position the file pointer at the start of the first incomplete object.
+ *  On success, return (count) and position the file pointer one byte past
+ *  the end of the last read object. Return (-1) if there is a catastrophic
+ *  error, and call __PHYSFS_setError() to describe the problem; the file
+ *  pointer should not move in such a case.
+ */
+PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
+                                    PHYSFS_uint32 size, PHYSFS_uint32 count);
+
+/*
+ * Write more data to a platform-specific file handle. (opaque) should be
+ *  cast to whatever data type your platform uses. Write a maximum of (count)
+ *  objects of (size) 8-bit bytes from the area pointed to by (buffer). If
+ *  there isn't enough data available, return the number of full objects
+ *  written, and position the file pointer at the start of the first
+ *  incomplete object. Return (-1) if there is a catastrophic error, and call
+ *  __PHYSFS_setError() to describe the problem; the file pointer should not
+ *  move in such a case.
+ */
+PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, void *buffer,
+                                     PHYSFS_uint32 size, PHYSFS_uint32 count);
+
+/*
+ * Set the file pointer to a new position. (opaque) should be cast to
+ *  whatever data type your platform uses. (pos) specifies the number
+ *  of 8-bit bytes to seek to from the start of the file. Seeking past the
+ *  end of the file is an error condition, and you should check for it.
+ *
+ * Not all file types can seek; this is to be expected by the caller.
+ *
+ * On error, call __PHYSFS_setError() and return zero. On success, return
+ *  a non-zero value.
+ */
+int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos);
+
+/*
+ * Get the file pointer's position, in an 8-bit byte offset from the start of
+ *  the file. (opaque) should be cast to whatever data type your platform
+ *  uses.
+ *
+ * Not all file types can "tell"; this is to be expected by the caller.
+ *
+ * On error, call __PHYSFS_setError() and return zero. On success, return
+ *  a non-zero value.
+ */
+PHYSFS_sint64 __PHYSFS_platformTell(void *opaque);
+
+/*
+ * Determine the current size of a file, in 8-bit bytes, from an open file.
+ *
+ * The caller expects that this information may not be available for all
+ *  file types on all platforms.
+ *
+ * Return -1 if you can't do it, and call __PHYSFS_setError(). Otherwise,
+ *  return the file length in 8-bit bytes.
+ */
+PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle);
+
+/*
+ * Determine if a file is at EOF. (opaque) should be cast to whatever data
+ *  type your platform uses.
+ *
+ * The caller expects that there was a short read before calling this.
+ *
+ * Return non-zero if EOF, zero if it is _not_ EOF.
+ */
+int __PHYSFS_platformEOF(void *opaque);
+
+/*
+ * Flush any pending writes to disk. (opaque) should be cast to whatever data
+ *  type your platform uses. Be sure to check for errors; the caller expects
+ *  that this function can fail if there was a flushing error, etc.
+ *
+ *  Return zero on failure, non-zero on success.
+ */
+int __PHYSFS_platformFlush(void *opaque);
+
+/*
+ * Flush and close a file. (opaque) should be cast to whatever data type
+ *  your platform uses. Be sure to check for errors when closing; the
+ *  caller expects that this function can fail if there was a flushing
+ *  error, etc.
+ *
+ * You should clean up all resources associated with (opaque).
+ *
+ *  Return zero on failure, non-zero on success.
+ */
+int __PHYSFS_platformClose(void *opaque);
+
+/*
  * Platform implementation of PHYSFS_getCdRomDirs()...
  *  See physfs.h. The retval should be freeable via PHYSFS_freeList().
  */
@@ -374,7 +522,7 @@ char *__PHYSFS_platformGetUserDir(void);
  *  arbitrary; the only requirement is that no two threads have the same
  *  number.
  */
-int __PHYSFS_platformGetThreadID(void);
+PHYSFS_uint64 __PHYSFS_platformGetThreadID(void);
 
 /*
  * This is a pass-through to whatever stricmp() is called on your platform.
@@ -413,7 +561,8 @@ int __PHYSFS_platformIsDirectory(const char *fname);
  *  you can make assumptions about the size of strings, etc..
  *
  * Platforms that choose not to implement this may just call
- *  __PHYSFS_convertToDependent() as a passthrough.
+ *  __PHYSFS_convertToDependent() as a passthrough, which may fit the bill
+ *  already.
  *
  * Be sure to free() the return value when done with it.
  */
@@ -438,13 +587,6 @@ void __PHYSFS_platformTimeslice(void);
  */
 LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
                                                   int omitSymLinks);
-
-
-/*
- * Determine the current size of a file, in bytes, from a stdio FILE *.
- *  Return -1 if you can't do it, and call __PHYSFS_setError().
- */
-int __PHYSFS_platformFileLength(FILE *handle);
 
 
 /*
@@ -479,7 +621,7 @@ int __PHYSFS_platformMkDir(const char *path);
 
 
 #ifdef __cplusplus
-extern "C" {
+}
 #endif
 
 #endif

@@ -148,6 +148,42 @@ extern "C" {
 #endif
 
 
+/* !!! FIXME: This is not universal. */
+typedef unsigned char         PHYSFS_uint8;
+typedef signed char           PHYSFS_sint8;
+typedef unsigned short        PHYSFS_uint16;
+typedef signed short          PHYSFS_sint16;
+typedef unsigned int          PHYSFS_uint32;
+typedef signed int            PHYSFS_sint32;
+
+#ifdef PHYSFS_NO_64BIT_SUPPORT  /* oh well. */
+typedef PHYSFS_uint32         PHYSFS_uint64;
+typedef PHYSFS_sint32         PHYSFS_sint64;
+#else
+typedef unsigned long long    PHYSFS_uint64;
+typedef signed long long      PHYSFS_sint64;
+#endif
+
+/* Make sure the types really have the right sizes */
+#define PHYSFS_COMPILE_TIME_ASSERT(name, x)               \
+       typedef int PHYSFS_dummy_ ## name[(x) * 2 - 1]
+
+PHYSFS_COMPILE_TIME_ASSERT(uint8, sizeof(PHYSFS_uint8) == 1);
+PHYSFS_COMPILE_TIME_ASSERT(sint8, sizeof(PHYSFS_sint8) == 1);
+PHYSFS_COMPILE_TIME_ASSERT(uint16, sizeof(PHYSFS_uint16) == 2);
+PHYSFS_COMPILE_TIME_ASSERT(sint16, sizeof(PHYSFS_sint16) == 2);
+PHYSFS_COMPILE_TIME_ASSERT(uint32, sizeof(PHYSFS_uint32) == 4);
+PHYSFS_COMPILE_TIME_ASSERT(sint32, sizeof(PHYSFS_sint32) == 4);
+
+#ifndef PHYSFS_NO_64BIT_SUPPORT
+PHYSFS_COMPILE_TIME_ASSERT(uint64, sizeof(PHYSFS_uint64) == 8);
+PHYSFS_COMPILE_TIME_ASSERT(sint64, sizeof(PHYSFS_sint64) == 8);
+#endif
+
+#undef PHYSFS_COMPILE_TIME_ASSERT
+
+
+
 typedef struct __PHYSFS_FILE__
 {
     void *opaque;
@@ -166,9 +202,9 @@ typedef struct __PHYSFS_ARCHIVEINFO__
 
 typedef struct __PHYSFS_VERSION__
 {
-    int major;
-    int minor;
-    int patch;
+    PHYSFS_uint8 major;
+    PHYSFS_uint8 minor;
+    PHYSFS_uint8 patch;
 } PHYSFS_Version;
 
 #define PHYSFS_VER_MAJOR 0
@@ -758,9 +794,10 @@ __EXPORT__ int PHYSFS_close(PHYSFS_file *handle);
  *           the reason this might be < (objCount), as can PHYSFS_eof().
  *            -1 if complete failure.
  */
-__EXPORT__ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
-                           unsigned int objSize, unsigned int objCount);
-
+__EXPORT__ PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle,
+                                     void *buffer,
+                                     PHYSFS_uint32 objSize,
+                                     PHYSFS_uint32 objCount);
 
 /**
  * Write data to a PhysicsFS filehandle. The file must be opened for writing.
@@ -772,9 +809,10 @@ __EXPORT__ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
  *  @return number of objects written. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount). -1 if complete failure.
  */
-__EXPORT__ int PHYSFS_write(PHYSFS_file *handle, const void *buffer,
-                            unsigned int objSize, unsigned int objCount);
-
+__EXPORT__ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle,
+                                      const void *buffer,
+                                      PHYSFS_uint32 objSize,
+                                      PHYSFS_uint32 objCount);
 
 /**
  * Determine if the end of file has been reached in a PhysicsFS filehandle.
@@ -792,7 +830,7 @@ __EXPORT__ int PHYSFS_eof(PHYSFS_file *handle);
  *  @return offset in bytes from start of file. -1 if error occurred.
  *           Specifics of the error can be gleaned from PHYSFS_getLastError().
  */
-__EXPORT__ int PHYSFS_tell(PHYSFS_file *handle);
+__EXPORT__ PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle);
 
 
 /**
@@ -805,7 +843,7 @@ __EXPORT__ int PHYSFS_tell(PHYSFS_file *handle);
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-__EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, int pos);
+__EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos);
 
 
 /**
@@ -819,7 +857,7 @@ __EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, int pos);
  *   @param handle handle returned from PHYSFS_open*().
  *  @return size in bytes of the file. -1 if can't be determined.
  */
-__EXPORT__ int PHYSFS_fileLength(PHYSFS_file *handle);
+__EXPORT__ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle);
 
 #ifdef __cplusplus
 }

@@ -39,10 +39,8 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-#if 0
 #if (!defined PHYSFS_SUPPORTS_GRP)
 #error PHYSFS_SUPPORTS_GRP must be defined.
-#endif
 #endif
 
 /* !!! FIXME: Using the same file handle for all reads is a RACE CONDITION! */
@@ -50,24 +48,24 @@
 typedef struct
 {
     FILE *handle;
-    int totalEntries;
+    PHYSFS_uint32 totalEntries;
 } GRPinfo;
 
 typedef struct
 {
-    int startPos;
-    int curPos;
-    int size;
+    PHYSFS_uint32 startPos;
+    PHYSFS_uint32 curPos;
+    PHYSFS_uint32 size;
 } GRPfileinfo;
 
 
 static void GRP_dirClose(DirHandle *h);
-static int GRP_read(FileHandle *handle, void *buffer,
-                    unsigned int objSize, unsigned int objCount);
+static PHYSFS_sint64 GRP_read(FileHandle *handle, void *buffer,
+                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static int GRP_eof(FileHandle *handle);
-static int GRP_tell(FileHandle *handle);
-static int GRP_seek(FileHandle *handle, int offset);
-static int GRP_fileLength(FileHandle *handle);
+static PHYSFS_sint64 GRP_tell(FileHandle *handle);
+static int GRP_seek(FileHandle *handle, PHYSFS_uint64 offset);
+static PHYSFS_sint64 GRP_fileLength(FileHandle *handle);
 static int GRP_fileClose(FileHandle *handle);
 static int GRP_isArchive(const char *filename, int forWriting);
 static DirHandle *GRP_openArchive(const char *name, int forWriting);
@@ -125,13 +123,13 @@ static void GRP_dirClose(DirHandle *h)
 } /* GRP_dirClose */
 
 
-static int GRP_read(FileHandle *handle, void *buffer,
-                    unsigned int objSize, unsigned int objCount)
+static PHYSFS_sint64 GRP_read(FileHandle *handle, void *buffer,
+                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
     FILE *fh = (FILE *) (((GRPinfo *) (handle->dirHandle->opaque))->handle);
-    int bytesLeft = (finfo->startPos + finfo->size) - finfo->curPos;
-    unsigned int objsLeft = bytesLeft / objSize;
+    PHYSFS_uint32 bytesLeft = (finfo->startPos + finfo->size) - finfo->curPos;
+    PHYSFS_uint32 objsLeft = bytesLeft / objSize;
     size_t retval = 0;
 
     if (objsLeft < objCount)
@@ -144,9 +142,9 @@ static int GRP_read(FileHandle *handle, void *buffer,
     retval = fread(buffer, objSize, objCount, fh);
     finfo->curPos += (retval * objSize);
     BAIL_IF_MACRO((retval < (size_t) objCount) && (ferror(fh)),
-                   strerror(errno), (int) retval);
+                   strerror(errno), (PHYSFS_sint64) retval);
 
-    return((int) retval);
+    return((PHYSFS_sint64) retval);
 } /* GRP_read */
 
 
@@ -157,14 +155,14 @@ static int GRP_eof(FileHandle *handle)
 } /* GRP_eof */
 
 
-static int GRP_tell(FileHandle *handle)
+static PHYSFS_sint64 GRP_tell(FileHandle *handle)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
     return(finfo->curPos - finfo->startPos);
 } /* GRP_tell */
 
 
-static int GRP_seek(FileHandle *handle, int offset)
+static int GRP_seek(FileHandle *handle, PHYSFS_uint64 offset)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
     int newPos = finfo->startPos + offset;
@@ -176,7 +174,7 @@ static int GRP_seek(FileHandle *handle, int offset)
 } /* GRP_seek */
 
 
-static int GRP_fileLength(FileHandle *handle)
+static PHYSFS_sint64 GRP_fileLength(FileHandle *handle)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
     return(finfo->size);
@@ -191,13 +189,9 @@ static int GRP_fileClose(FileHandle *handle)
 } /* GRP_fileClose */
 
 
-static int openGrp(const char *filename, int forWriting, FILE **fh, int *count)
+static int openGrp(const char *filename, int forWriting, FILE **fh, PHYSFS_sint32 *count)
 {
     char buf[12];
-
-     /* !!! FIXME: Get me platform-independent typedefs! */
-    if (sizeof (int) != 4)
-        assert(0);
 
     *fh = NULL;
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
@@ -208,10 +202,10 @@ static int openGrp(const char *filename, int forWriting, FILE **fh, int *count)
     
     errno = 0;
     BAIL_IF_MACRO(fread(buf, 12, 1, *fh) != 1, strerror(errno), 0);
-    BAIL_IF_MACRO(strncmp(buf, "KenSilverman", 12) != 0,
+    BAIL_IF_MACRO(memcmp(buf, "KenSilverman", 12) != 0,
                     ERR_UNSUPPORTED_ARCHIVE, 0);
 
-    if (fread(count, 4, 1, *fh) != 1)
+    if (fread(count, sizeof (PHYSFS_sint32), 1, *fh) != 1)
         *count = 0;
 
     return(1);
@@ -312,7 +306,8 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h,
 } /* GRP_enumerateFiles */
 
 
-static int getFileEntry(DirHandle *h, const char *name, int *size)
+static PHYSFS_sint32 getFileEntry(DirHandle *h, const char *name,
+                                  PHYSFS_sint32 *size)
 {
     char buf[16];
     GRPinfo *g = (GRPinfo *) (h->opaque);
@@ -338,23 +333,24 @@ static int getFileEntry(DirHandle *h, const char *name, int *size)
 
     for (i = 0; i < g->totalEntries; i++)
     {
-        int fsize;
+        PHYSFS_sint32 l = 0;
 
         errno = 0;
-        BAIL_IF_MACRO(fread(buf, 16, 1, fh) != 1, strerror(errno), -1);
+        BAIL_IF_MACRO(fread(buf, 12, 1, fh) != 1, strerror(errno), -1);
 
-        fsize = *((int *) (buf + 12));
+        errno = 0;
+        BAIL_IF_MACRO(fread(&l, sizeof (l), 1, fh) != 1, strerror(errno), -1);
 
         buf[12] = '\0';  /* FILENAME.EXT is all you get. */
 
         if (__PHYSFS_platformStricmp(buf, name) == 0)
         {
             if (size != NULL)
-                *size = fsize;
+                *size = l;
             return(retval);
         } /* if */
 
-        retval += fsize;
+        retval += l;
     } /* for */
 
     return(-1);  /* not found. */
@@ -383,7 +379,8 @@ static FileHandle *GRP_openRead(DirHandle *h, const char *name)
 {
     FileHandle *retval;
     GRPfileinfo *finfo;
-    int size, offset;
+    PHYSFS_sint32 size;
+    PHYSFS_sint32 offset;
 
     offset = getFileEntry(h, name, &size);
     BAIL_IF_MACRO(offset == -1, ERR_NO_SUCH_FILE, NULL);
