@@ -403,8 +403,10 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
         l->next = NULL;
     } /* while */
 
+    if (buf != NULL)
+        free(buf);
+
     closedir(dir);
-    free(buf);
     return(retval);
 } /* __PHYSFS_platformEnumerateFiles */
 
