@@ -1232,14 +1232,14 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname, int allowMissing)
             } /* if */
 
             /* break out early if path element is missing. */
-            if ((!retval) && (!allowMissing))
+            if (!retval)
             {
                 /*
                  * We need to clear it if it's the last element of the path,
                  *  since this might be a non-existant file we're opening
                  *  for writing...
                  */
-                if (end == NULL)
+                if ((end == NULL) || (allowMissing))
                     retval = 1;
                 break;
             } /* if */
@@ -1264,6 +1264,7 @@ int PHYSFS_mkdir(const char *dname)
     char *start;
     char *end;
     int retval = 0;
+    int exists = 1;  /* force existance check on first path element. */
 
     BAIL_IF_MACRO(dname == NULL, ERR_INVALID_ARGUMENT, 0);
     while (*dname == '/')
@@ -1279,14 +1280,15 @@ int PHYSFS_mkdir(const char *dname)
 
     while (1)
     {
-        int already_exists;
-
         end = strchr(start, '/');
         if (end != NULL)
             *end = '\0';
 
-        retval = h->funcs->isDirectory(h, str, &already_exists);
-        if ((!retval) && (!already_exists))
+        /* only check for existance if all parent dirs existed, too... */
+        if (exists)
+            retval = h->funcs->isDirectory(h, str, &exists);
+
+        if (!exists)
             retval = h->funcs->mkdir(h, str);
 
         if (!retval)
