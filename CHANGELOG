@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+08212002 - Did a couple tedious-for-small-rewards cleanups, optimizations,
+           corrections and streamlinings I've been meaning to do. Touched a
+           lot of code.
 08192002 - Generalized sorting routines, moved them into physfs.c and removed
            the multiple copies from the various archivers. Adding profiling
            code (currently only for sort routines)...enable it with
