@@ -55,8 +55,20 @@ After building the lib, you can make sure it works by building the
 "Debug" or "Release". This EXE is linked against the DLL you built
 previously.
 
+If you're using Visual C++ 6 and want to generate a static LIB file, point
+it at "physfs_static.dsp" in the root of the source tree and build.  This
+will produce a "physfs_static.lib" in either a "physfs_static_debug"
+or a "physfs_static_release" directory, depending on what configuration
+you chose to build.  NOPE: "test_physfs.dsp" does not work with the
+statically linked build.
+
 Visual Studio.NET users should do the same thing, but use the "physfs.vcproj"
 and "test_physfs.vcproj" project files instead.
+
+NOTE: to change build options such as which drivers are loaded (ZIP, QPAK,
+etc.) modify the appropriate manifest constants under the Project Settings.
+By default the LIB version supports all drivers, but the DLL build does
+not support MVL or HOG file formats.
 
 If you're using another compiler, send me a patch when you get it working.  :)
 
@@ -65,8 +77,6 @@ may not work. Patches are welcome.
 
 If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
 from you; send an email to icculus@clutteredmind.org.
-
-
 
 MACOS 8/9:
 Double-click on "CWProjects.sit" in the root of the source tree. This will
