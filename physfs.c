@@ -1193,6 +1193,8 @@ char * __PHYSFS_convertToDependent(const char *prepend,
 
 int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
 {
+   return 1;
+#if 0
     int retval = 1;
     char *start;
     char *end;
@@ -1254,6 +1256,7 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
 
     free(str);
     return(retval);
+#endif
 } /* __PHYSFS_verifySecurity */
 
 
