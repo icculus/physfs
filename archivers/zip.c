@@ -66,7 +66,7 @@ static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset);
 static PHYSFS_sint64 ZIP_fileLength(FileHandle *handle);
 static int ZIP_fileClose(FileHandle *handle);
 static int ZIP_isArchive(const char *filename, int forWriting);
-static char *ZIP_realpath(unzFile fh, unz_file_info *info);
+static char *ZIP_realpath(unzFile fh, unz_file_info *info, ZIPentry *entry);
 static DirHandle *ZIP_openArchive(const char *name, int forWriting);
 static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
                                             const char *dirname,
