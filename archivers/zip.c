@@ -1258,6 +1258,9 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
     LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_uint32 dlen = strlen(dirname);
 
+    if (dirname[dlen - 1] == '/')
+        dlen--;
+
     i = zip_find_start_of_dir(info, dirname, 0);
     BAIL_IF_MACRO(i == -1, ERR_NO_SUCH_FILE, NULL);
 
