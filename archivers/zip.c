@@ -9,13 +9,6 @@
 /*
  * !!! FIXME: overall design bugs.
  *
- *  It'd be nice if we could remove the thread issues: I/O to individual
- *   files inside an archive are safe, but the searches over the central
- *   directory and the ZIP_openRead() call are race conditions. Basically,
- *   we need to hack something like openDir() into unzip.c, so that directory
- *   reads are separated by handles, and maybe add a openFileByName() call,
- *   or make unzOpenCurrentFile() take a handle, too.
- *
  *  Make unz_file_info.version into two fields of unsigned char. That's what
  *   they are in the zipfile; heavens knows why unzip.c casts it...this causes
  *   a byte ordering headache for me in entry_is_symlink().
@@ -44,9 +37,16 @@
 
 typedef struct
 {
-    unzFile handle;
-    uLong totalEntries;
+    char *name;
+    unz_file_info info;
+    char *symlink;
+} ZIPentry;
+
+typedef struct
+{
     char *archiveName;
+    unz_global_info global;
+    ZIPentry *entries;
 } ZIPinfo;
 
 typedef struct
@@ -57,6 +57,10 @@ typedef struct
 
 extern const DirFunctions __PHYSFS_DirFunctions_ZIP;
 static const FileFunctions __PHYSFS_FileFunctions_ZIP;
+
+
+/* Number of symlinks to follow before we assume it's a recursive link... */
+#define SYMLINK_RECURSE_COUNT 20
 
 
 static int ZIP_read(FileHandle *handle, void *buffer,
@@ -165,53 +169,44 @@ static int ZIP_isArchive(const char *filename, int forWriting)
 } /* ZIP_isArchive */
 
 
-static DirHandle *ZIP_openArchive(const char *name, int forWriting)
+static void freeEntries(ZIPinfo *info, int count, const char *errmsg)
 {
-    unzFile unz = NULL;
-    DirHandle *retval = NULL;
-    unz_global_info global;
+    int i;
 
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, NULL);
+    for (i = 0; i < count; i++)
+    {
+        free(info->entries[i].name);
+        if (info->entries[i].symlink != NULL)
+            free(info->entries[i].symlink);
+    } /* for */
 
-    errno = 0;
-    BAIL_IF_MACRO(access(name, R_OK) != 0, strerror(errno), NULL);
+    free(info->entries);
 
-    retval = malloc(sizeof (DirHandle));
+    if (errmsg != NULL)
+        __PHYSFS_setError(errmsg);
+} /* freeEntries */
+
+
+static char *ZIP_realpath(unzFile fh, unz_file_info *info)
+{
+    char *retval = NULL;
+    int size;
+
+    BAIL_IF_MACRO(unzOpenCurrentFile(fh) != UNZ_OK, ERR_IO_ERROR, NULL);
+    size = info->uncompressed_size;
+    retval = (char *) malloc(size + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-
-    unz = unzOpen(name);
-    if ((unz == NULL) || (unzGetGlobalInfo(unz, &global) != UNZ_OK))
-    {
-        if (unz)
-            unzClose(unz);
-        free(retval);
-        BAIL_IF_MACRO(1, ERR_UNSUPPORTED_ARCHIVE, NULL);
-    } /* if */
-
-    retval->opaque = malloc(sizeof (ZIPinfo));
-    if (retval->opaque == NULL)
+    if (unzReadCurrentFile(fh, retval, size) != size)
     {
         free(retval);
-        unzClose(unz);
-        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+        __PHYSFS_setError(ERR_IO_ERROR);
+        retval = NULL;
     } /* if */
-
-    ((ZIPinfo *) (retval->opaque))->archiveName = malloc(strlen(name) + 1);
-    if (((ZIPinfo *) (retval->opaque))->archiveName == NULL)
-    {
-        free(retval->opaque);
-        free(retval);
-        unzClose(unz);
-        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
-    } /* if */
-
-    ((ZIPinfo *) (retval->opaque))->handle = unz;
-    ((ZIPinfo *) (retval->opaque))->totalEntries = global.number_entry;
-    strcpy(((ZIPinfo *) (retval->opaque))->archiveName, name);
-    retval->funcs = &__PHYSFS_DirFunctions_ZIP;
+    retval[size] = '\0';
+    unzCloseCurrentFile(fh);
 
     return(retval);
-} /* ZIP_openArchive */
+} /* ZIP_realpath */
 
 
 /* "uLong" is defined by zlib and/or unzip.h ... */
@@ -259,29 +254,108 @@ static int entry_is_symlink(unz_file_info *info)
 } /* entry_is_symlink */
 
 
-static char *ZIP_realpath(unzFile fh, unz_file_info *info)
+static int loadZipEntries(ZIPinfo *info, unzFile unz)
 {
-    char *retval = NULL;
-    int size;
+    int i, max;
 
-    if (entry_is_symlink(info))
+    BAIL_IF_MACRO(unzGetGlobalInfo(unz, &(info->global)) != UNZ_OK,
+                    ERR_IO_ERROR, 0);
+    BAIL_IF_MACRO(unzGoToFirstFile(unz) != UNZ_OK, ERR_IO_ERROR, 0);
+
+    max = info->global.number_entry;
+    info->entries = (ZIPentry *) malloc(sizeof (ZIPentry) * max);
+    BAIL_IF_MACRO(info->entries == NULL, ERR_OUT_OF_MEMORY, 0);
+
+    for (i = 0; i < max; i++)
     {
-        BAIL_IF_MACRO(unzOpenCurrentFile(fh) != UNZ_OK, ERR_IO_ERROR, NULL);
-        size = info->uncompressed_size;
-        retval = (char *) malloc(size + 1);
-        BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-        if (unzReadCurrentFile(fh, retval, size) != size)
+        unz_file_info *d = &((info->entries[i]).info);
+        if (unzGetCurrentFileInfo(unz, d, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK)
         {
-            free(retval);
-            __PHYSFS_setError(ERR_IO_ERROR);
-            retval = NULL;
+            freeEntries(info, i, ERR_IO_ERROR);
+            return(0);
         } /* if */
-        retval[size] = '\0';
-        unzCloseCurrentFile(fh);
+
+        (info->entries[i]).name = (char *) malloc(d->size_filename + 1);
+        if ((info->entries[i]).name == NULL)
+        {
+            freeEntries(info, i, ERR_OUT_OF_MEMORY);
+            return(0);
+        } /* if */
+
+        info->entries[i].symlink = NULL;
+
+        if (unzGetCurrentFileInfo(unz, NULL, (info->entries[i]).name,
+                                  d->size_filename + 1, NULL, 0,
+                                  NULL, 0) != UNZ_OK)
+        {
+            freeEntries(info, i + 1, ERR_IO_ERROR);
+            return(0);
+        } /* if */
+
+        if (entry_is_symlink(d))
+        {
+            info->entries[i].symlink = ZIP_realpath(unz, d);
+            if (info->entries[i].symlink == NULL)
+            {
+                freeEntries(info, i + 1, NULL);
+                return(0);
+            } /* if */
+        } /* if */
+
+        if ((unzGoToNextFile(unz) != UNZ_OK) && (i + 1 < max))
+        {
+            freeEntries(info, i + 1, ERR_IO_ERROR);
+            return(0);
+        } /* if */
+    } /* for */
+
+    return(1);
+} /* loadZipEntries */
+
+
+static DirHandle *ZIP_openArchive(const char *name, int forWriting)
+{
+    unzFile unz = NULL;
+    DirHandle *retval = NULL;
+
+    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, NULL);
+
+    retval = malloc(sizeof (DirHandle));
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+
+    unz = unzOpen(name);
+    if (unz == NULL)
+    {
+        free(retval);
+        BAIL_IF_MACRO(1, ERR_UNSUPPORTED_ARCHIVE, NULL);
     } /* if */
 
+    retval->opaque = malloc(sizeof (ZIPinfo));
+    if (retval->opaque == NULL)
+    {
+        free(retval);
+        unzClose(unz);
+        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+    } /* if */
+
+    ((ZIPinfo *) (retval->opaque))->archiveName = malloc(strlen(name) + 1);
+    if ( (((ZIPinfo *) (retval->opaque))->archiveName == NULL) ||
+         (!loadZipEntries( (ZIPinfo *) (retval->opaque), unz)) )
+    {
+        if (((ZIPinfo *) (retval->opaque))->archiveName != NULL)
+            free(((ZIPinfo *) (retval->opaque))->archiveName);
+        free(retval->opaque);
+        free(retval);
+        unzClose(unz);
+        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+    } /* if */
+
+    unzClose(unz);
+    strcpy(((ZIPinfo *) (retval->opaque))->archiveName, name);
+    retval->funcs = &__PHYSFS_DirFunctions_ZIP;
+
     return(retval);
-} /* ZIP_realpath */
+} /* ZIP_openArchive */
 
 
 /* !!! This is seriously ugly. */
@@ -290,18 +364,15 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
                                             int omitSymLinks)
 {
     ZIPinfo *zi = (ZIPinfo *) (h->opaque);
-    unzFile fh = zi->handle;
     int i;
     int dlen;
     LinkedStringList *retval = NULL;
     LinkedStringList *l = NULL;
     LinkedStringList *prev = NULL;
-    char buf[MAXZIPENTRYSIZE];
     char *d;
-    unz_file_info info;
+    ZIPentry *entry;
+    char buf[MAXZIPENTRYSIZE];
 
-        /* jump to first file entry... */
-    BAIL_IF_MACRO(unzGoToFirstFile(fh) != UNZ_OK, ERR_IO_ERROR, NULL);
     dlen = strlen(dirname);
     d = malloc(dlen + 1);
     BAIL_IF_MACRO(d == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -312,19 +383,21 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
         d[dlen] = '\0';
     } /* if */
 
-    for (i = 0; i < zi->totalEntries; i++, unzGoToNextFile(fh))
+    for (i = 0, entry = zi->entries; i < zi->global.number_entry; i++, entry++)
     {
         char *ptr;
         char *add_file;
         int this_dlen;
 
-        unzGetCurrentFileInfo(fh, &info, buf, sizeof (buf), NULL, 0, NULL, 0);
-
-        if ((omitSymLinks) && (entry_is_symlink(&info)))
+        if ((omitSymLinks) && (entry->symlink != NULL))
             continue;
 
-        buf[sizeof (buf) - 1] = '\0';  /* safety. */
-        this_dlen = strlen(buf);
+        this_dlen = strlen(entry->name);
+        if (this_dlen + 1 > MAXZIPENTRYSIZE)
+            continue;  /* ugh. */
+
+        strcpy(buf, entry->name);
+
         if ((this_dlen > 0) && (buf[this_dlen - 1] == '/'))   /* no trailing slash. */
         {
             this_dlen--;
@@ -396,16 +469,14 @@ static int ZIP_exists_symcheck(DirHandle *h, const char *name, int follow)
 {
     char buf[MAXZIPENTRYSIZE];
     ZIPinfo *zi = (ZIPinfo *) (h->opaque);
-    unzFile fh = zi->handle;
     int dlen;
     char *d;
     int i;
-    unz_file_info info;
+    ZIPentry *entry;
 
-    BAIL_IF_MACRO(unzGoToFirstFile(fh) != UNZ_OK, ERR_IO_ERROR, 0);
     dlen = strlen(name);
     d = malloc(dlen + 1);
-    BAIL_IF_MACRO(d == NULL, ERR_OUT_OF_MEMORY, 0);
+    BAIL_IF_MACRO(d == NULL, ERR_OUT_OF_MEMORY, -1);
     strcpy(d, name);
     if ((dlen > 0) && (d[dlen - 1] == '/'))   /* no trailing slash. */
     {
@@ -413,12 +484,13 @@ static int ZIP_exists_symcheck(DirHandle *h, const char *name, int follow)
         d[dlen] = '\0';
     } /* if */
 
-    for (i = 0; i < zi->totalEntries; i++, unzGoToNextFile(fh))
+    for (i = 0, entry = zi->entries; i < zi->global.number_entry; i++, entry++)
     {
-        int this_dlen;
-        unzGetCurrentFileInfo(fh, &info, buf, sizeof (buf), NULL, 0, NULL, 0);
-        buf[sizeof (buf) - 1] = '\0';  /* safety. */
-        this_dlen = strlen(buf);
+        int this_dlen = strlen(entry->name);
+        if (this_dlen + 1 > MAXZIPENTRYSIZE)
+            continue;  /* ugh. */
+
+        strcpy(buf, entry->name);
         if ((this_dlen > 0) && (buf[this_dlen - 1] == '/'))   /* no trailing slash. */
         {
             this_dlen--;
@@ -428,23 +500,19 @@ static int ZIP_exists_symcheck(DirHandle *h, const char *name, int follow)
         if ( ((buf[dlen] == '/') || (buf[dlen] == '\0')) &&
              (strncmp(d, buf, dlen) == 0) )
         {
-            int retval = 1;
+            int retval = i;
             free(d);
             if (follow)  /* follow symlinks? */
             {
-                char *real = ZIP_realpath(fh, &info);
-                if (real != NULL)
-                {
-                    retval = ZIP_exists_symcheck(h, real, follow - 1);
-                    free(real);
-                } /* if */
+                if (entry->symlink != NULL)
+                    retval = ZIP_exists_symcheck(h, entry->symlink, follow-1);
             } /* if */
             return(retval);
         } /* if */
     } /* for */
 
     free(d);
-    return(0);
+    return(-1);
 } /* ZIP_exists_symcheck */
 
 
@@ -456,55 +524,47 @@ static int ZIP_exists_nofollow(DirHandle *h, const char *name)
 
 static int ZIP_exists(DirHandle *h, const char *name)
 {
-    /* follow at most 20 links to prevent recursion... */
-    int retval = ZIP_exists_symcheck(h, name, 20);
-    unz_file_info info;
-    unzFile fh = ((ZIPinfo *) (h->opaque))->handle;
+    int retval = ZIP_exists_symcheck(h, name, SYMLINK_RECURSE_COUNT);
+    int is_sym;
 
-    if (retval)
-    {
-        /* current zip entry will be the file in question. */
-        unzGetCurrentFileInfo(fh, &info, NULL, 0, NULL, 0, NULL, 0);
+    if (retval == -1)
+        return(0);
 
-        /* if it's a symlink, then we ran into a possible symlink loop. */
-        BAIL_IF_MACRO(entry_is_symlink(&info), ERR_TOO_MANY_SYMLINKS, 0);
-    } /* if */
+    /* if it's a symlink, then we ran into a possible symlink loop. */
+    is_sym = ( ((ZIPinfo *)(h->opaque))->entries[retval].symlink != NULL );
+    BAIL_IF_MACRO(is_sym, ERR_TOO_MANY_SYMLINKS, 0);
 
-    return(retval);
+    return(1);
 } /* ZIP_exists */
 
 
 static int ZIP_isDirectory(DirHandle *h, const char *name)
 {
-    char buf[MAXZIPENTRYSIZE];
-    unzFile fh = ((ZIPinfo *) (h->opaque))->handle;
-    int retval = ZIP_exists(h, name);
-    int dlen = strlen(name);
+    int dlen;
+    int is_sym;
+    int retval = ZIP_exists_symcheck(h, name, SYMLINK_RECURSE_COUNT);
 
-    if (retval)
-    {
-        /* current zip entry will be the file in question. */
-        unzGetCurrentFileInfo(fh, NULL, buf, sizeof (buf), NULL, 0, NULL, 0);
-        retval = (buf[dlen] == '/');  /* !!! yikes. */
-    } /* if */
+    if (retval == -1)
+        return(0);
 
+    /* if it's a symlink, then we ran into a possible symlink loop. */
+    is_sym = ( ((ZIPinfo *)(h->opaque))->entries[retval].symlink != NULL );
+    BAIL_IF_MACRO(is_sym, ERR_TOO_MANY_SYMLINKS, 0);
+
+    dlen = strlen(name);
+    /* !!! yikes. Better way to check? */
+    retval = (((ZIPinfo *)(h->opaque))->entries[retval].name[dlen] == '/');
     return(retval);
 } /* ZIP_isDirectory */
 
 
 static int ZIP_isSymLink(DirHandle *h, const char *name)
 {
-    unzFile fh = ((ZIPinfo *) (h->opaque))->handle;
     int retval = ZIP_exists_nofollow(h, name);
-    unz_file_info info;
+    if (retval == -1)
+        return(0);
 
-    if (retval)
-    {
-        /* current zip entry will be the file in question. */
-        unzGetCurrentFileInfo(fh, &info, NULL, 0, NULL, 0, NULL, 0);
-        retval = entry_is_symlink(&info);
-    } /* if */
-
+    retval = ( ((ZIPinfo *)(h->opaque))->entries[retval].symlink != NULL );
     return(retval);
 } /* ZIP_isSymLink */
 
@@ -512,13 +572,13 @@ static int ZIP_isSymLink(DirHandle *h, const char *name)
 static FileHandle *ZIP_openRead(DirHandle *h, const char *filename)
 {
     FileHandle *retval = NULL;
+    ZIPinfo *zi = ((ZIPinfo *) (h->opaque));
     ZIPfileinfo *finfo = NULL;
-    char *name = ((ZIPinfo *) (h->opaque))->archiveName;
     unzFile f;
 
     BAIL_IF_MACRO(!ZIP_exists(h, filename), ERR_NO_SUCH_FILE, NULL);
 
-    f = unzOpen(name);
+    f = unzOpen(zi->archiveName);
     BAIL_IF_MACRO(f == NULL, ERR_IO_ERROR, NULL);
 
     if ( (unzLocateFile(f, filename, 2) != UNZ_OK) ||
@@ -548,8 +608,10 @@ static FileHandle *ZIP_openRead(DirHandle *h, const char *filename)
 
 static void ZIP_dirClose(DirHandle *h)
 {
-    unzClose(((ZIPinfo *) (h->opaque))->handle);
-    free(h->opaque);
+    ZIPinfo *zi = (ZIPinfo *) (h->opaque);
+    freeEntries(zi, zi->global.number_entry, NULL);
+    free(zi->archiveName);
+    free(zi);
     free(h);
 } /* ZIP_dirClose */
 
