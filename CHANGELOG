@@ -4,6 +4,7 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+02152005 - Minor comment fix in platform/pocketpc.c
 01052004 - Fixed HOG archiver sorting/file lookup (thanks, Chris!)
 12162004 - Fixed some documentation/header comment typos (thanks, Gaetan!)
 10302004 - Fixed a strcpy that should have been a strcat. (thanks, Tolga!)
