@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+09222004 - Happy September. Added Spanish translation back in.
 04092004 - Added MIX support for legacy Westwood titles (Thanks, Sebastian!).
            Made bootstrap script MacOSX-friendly. Moved byteorder defines into
            physfs_internal.h ...
