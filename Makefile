@@ -168,14 +168,18 @@ TESTSRCS := test/test_physfs.c
 MAINSRCS := physfs.c archivers/dir.c
 
 ifeq ($(strip $(use_archive_zip)),true)
-MAINSRCS += archivers/zip.c archivers/unzip.c
-CFLAGS += -DPHYSFS_SUPPORTS_ZIP
-ifeq ($(strip $(cygwin)),true)
-CFLAGS += -Izlibwin32
-LDFLAGS += zlibwin32/zlibstat.lib
-else
-LDFLAGS += -lz
-endif
+  MAINSRCS += archivers/zip.c archivers/unzip.c
+  CFLAGS += -DPHYSFS_SUPPORTS_ZIP
+  ifeq ($(strip $(cygwin)),true)
+    CFLAGS += -Izlibwin32
+    ifeq ($(strip $(debugging)),true)
+      LDFLAGS += zlibwin32/zlibstat_multid.lib  
+    else
+      LDFLAGS += zlibwin32/zlibstat_multir.lib  
+    endif
+  else
+    LDFLAGS += -lz
+  endif
 endif
 
 ifeq ($(strip $(use_archive_grp)),true)
@@ -185,6 +189,7 @@ endif
 
 ifeq ($(strip $(cygwin)),true)
 MAINSRCS += platform/win32.c
+CFLAGS += -DWIN32
 else
 MAINSRCS += platform/unix.c
 endif

@@ -626,7 +626,7 @@ char **PHYSFS_getSearchPath(void)
 
 
 int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
-                         int includeCdRoms, int archivesFirst)
+                                     int includeCdRoms, int archivesFirst)
 {
     const char *basedir = PHYSFS_getBaseDir();
     const char *userdir = PHYSFS_getUserDir();
@@ -737,9 +737,9 @@ void PHYSFS_permitSymbolicLinks(int allow)
 
 
 /* string manipulation in C makes my ass itch. */
-char *__PHYSFS_convertToDependent(const char *prepend,
-                                  const char *dirName,
-                                  const char *append)
+char * __PHYSFS_convertToDependent(const char *prepend,
+                                              const char *dirName,
+                                              const char *append)
 {
     const char *dirsep = PHYSFS_getDirSeparator();
     int sepsize = strlen(dirsep);
@@ -1233,7 +1233,7 @@ int PHYSFS_close(PHYSFS_file *handle)
 
 
 int PHYSFS_read(PHYSFS_file *handle, void *buffer,
-                unsigned int objSize, unsigned int objCount)
+                            unsigned int objSize, unsigned int objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
@@ -1244,7 +1244,7 @@ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
 
 
 int PHYSFS_write(PHYSFS_file *handle, void *buffer,
-                 unsigned int objSize, unsigned int objCount)
+                            unsigned int objSize, unsigned int objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
@@ -1293,7 +1293,6 @@ int PHYSFS_fileLength(PHYSFS_file *handle)
     BAIL_IF_MACRO(h->funcs->fileLength == NULL, ERR_NOT_SUPPORTED, 0);
     return(h->funcs->fileLength(h));
 } /* PHYSFS_filelength */
-
 
 /* end of physfs.c ... */
 

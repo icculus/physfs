@@ -572,10 +572,35 @@ int main(int argc, char **argv)
 #if (defined HAVE_READLINE)
         buf = readline("> ");
 #else
+        int i;
         buf = malloc(512);
         memset(buf, '\0', 512);
-        scanf("%s", buf);
+        printf("> ");
+        for (i = 0; i < 511; i++)
+        {
+            int ch = fgetc(stdin);
+            if (ch == EOF)
+            {
+                strcpy(buf, "quit");
+                break;
+            } /* if */
+            else if ((ch == '\n') || (ch == '\r'))
+            {
+                buf[i] = '\0';
+                break;
+            } /* else if */
+            else if (ch == '\b')
+            {
+                if (i > 0)
+                    i--;
+            } /* else if */
+            else
+            {
+                buf[i] = (char) ch;
+            } /* else */
+        } /* for */
 #endif
+
         rc = process_command(buf);
         free(buf);
     } while (rc);

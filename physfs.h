@@ -141,6 +141,12 @@
 extern "C" {
 #endif
 
+#if (defined _MSC_VER)
+#define __EXPORT__ __declspec(dllexport)
+#else
+#define __EXPORT__
+#endif
+
 
 typedef struct __PHYSFS_FILE__
 {
@@ -195,7 +201,7 @@ typedef struct __PHYSFS_VERSION__
  *
  * This function may be called safely at any time, even before PHYSFS_init().
  */
-void PHYSFS_getLinkedVersion(PHYSFS_Version *ver);
+__EXPORT__ void PHYSFS_getLinkedVersion(PHYSFS_Version *ver);
 
 
 /**
@@ -209,7 +215,7 @@ void PHYSFS_getLinkedVersion(PHYSFS_Version *ver);
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_init(const char *argv0);
+__EXPORT__ int PHYSFS_init(const char *argv0);
 
 
 /**
@@ -231,7 +237,7 @@ int PHYSFS_init(const char *argv0);
  *          gleaned from PHYSFS_getLastError(). If failure, state of PhysFS is
  *          undefined, and probably badly screwed up.
  */
-int PHYSFS_deinit(void);
+__EXPORT__ int PHYSFS_deinit(void);
 
 
 /**
@@ -257,7 +263,7 @@ int PHYSFS_deinit(void);
  *
  *   @return READ ONLY Null-terminated array of READ ONLY structures.
  */
-const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void);
+__EXPORT__ const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void);
 
 
 /**
@@ -266,7 +272,7 @@ const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void);
  *
  *   @param list List of information specified as freeable by this function.
  */
-void PHYSFS_freeList(void *list);
+__EXPORT__ void PHYSFS_freeList(void *list);
 
 
 /**
@@ -280,7 +286,7 @@ void PHYSFS_freeList(void *list);
  *
  *   @return READ ONLY string of last error message.
  */
-const char *PHYSFS_getLastError(void);
+__EXPORT__ const char *PHYSFS_getLastError(void);
 
 
 /**
@@ -294,7 +300,7 @@ const char *PHYSFS_getLastError(void);
  *
  *   @return READ ONLY null-terminated string of platform's dir separator.
  */
-const char *PHYSFS_getDirSeparator(void);
+__EXPORT__ const char *PHYSFS_getDirSeparator(void);
 
 
 /**
@@ -322,7 +328,7 @@ const char *PHYSFS_getDirSeparator(void);
  *
  *   @param allow nonzero to permit symlinks, zero to deny linking.
  */
-void PHYSFS_permitSymbolicLinks(int allow);
+__EXPORT__ void PHYSFS_permitSymbolicLinks(int allow);
 
 
 /**
@@ -354,7 +360,7 @@ void PHYSFS_permitSymbolicLinks(int allow);
  *
  *   @return Null-terminated array of null-terminated strings.
  */
-char **PHYSFS_getCdRomDirs(void);
+__EXPORT__ char **PHYSFS_getCdRomDirs(void);
 
 
 /**
@@ -368,7 +374,7 @@ char **PHYSFS_getCdRomDirs(void);
  *
  *  @return READ ONLY string of base dir in platform-dependent notation.
  */
-const char *PHYSFS_getBaseDir(void);
+__EXPORT__ const char *PHYSFS_getBaseDir(void);
 
 
 /**
@@ -386,7 +392,7 @@ const char *PHYSFS_getBaseDir(void);
  *
  *  @return READ ONLY string of user dir in platform-dependent notation.
  */
-const char *PHYSFS_getUserDir(void);
+__EXPORT__ const char *PHYSFS_getUserDir(void);
 
 
 /**
@@ -395,7 +401,7 @@ const char *PHYSFS_getUserDir(void);
  *  @return READ ONLY string of write dir in platform-dependent notation,
  *           OR NULL IF NO WRITE PATH IS CURRENTLY SET.
  */
-const char *PHYSFS_getWriteDir(void);
+__EXPORT__ const char *PHYSFS_getWriteDir(void);
 
 
 /**
@@ -415,7 +421,7 @@ const char *PHYSFS_getWriteDir(void);
  *           Specifics of the error can be gleaned from PHYSFS_getLastError().
  *
  */
-int PHYSFS_setWriteDir(const char *newDir);
+__EXPORT__ int PHYSFS_setWriteDir(const char *newDir);
 
 
 /**
@@ -429,7 +435,7 @@ int PHYSFS_setWriteDir(const char *newDir);
  *                   missing, etc). Specifics of the error can be
  *                   gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_addToSearchPath(const char *newDir, int appendToPath);
+__EXPORT__ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath);
 
 
 /**
@@ -445,7 +451,7 @@ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath);
  *   @return nonzero on success, zero on failure.
  *            Specifics of the error can be gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_removeFromSearchPath(const char *oldDir);
+__EXPORT__ int PHYSFS_removeFromSearchPath(const char *oldDir);
 
 
 /**
@@ -465,7 +471,7 @@ int PHYSFS_removeFromSearchPath(const char *oldDir);
  *   @return Null-terminated array of null-terminated strings. NULL if there
  *            was a problem (read: OUT OF MEMORY).
  */
-char **PHYSFS_getSearchPath(void);
+__EXPORT__ char **PHYSFS_getSearchPath(void);
 
 
 /**
@@ -521,8 +527,10 @@ char **PHYSFS_getSearchPath(void);
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
-                          int includeCdRoms, int archivesFirst);
+__EXPORT__ int PHYSFS_setSaneConfig(const char *appName,
+                                    const char *archiveExt,
+                                    int includeCdRoms,
+                                    int archivesFirst);
 
 
 /**
@@ -541,7 +549,7 @@ int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_mkdir(const char *dirName);
+__EXPORT__ int PHYSFS_mkdir(const char *dirName);
 
 
 /**
@@ -564,7 +572,7 @@ int PHYSFS_mkdir(const char *dirName);
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_delete(const char *filename);
+__EXPORT__ int PHYSFS_delete(const char *filename);
 
 
 /**
@@ -586,7 +594,7 @@ int PHYSFS_delete(const char *filename);
  *    @return READ ONLY string of element of search path containing the
  *             the file in question. NULL if not found.
  */
-const char *PHYSFS_getRealDir(const char *filename);
+__EXPORT__ const char *PHYSFS_getRealDir(const char *filename);
 
 
 
@@ -625,7 +633,7 @@ const char *PHYSFS_getRealDir(const char *filename);
  *    @param dir directory in platform-independent notation to enumerate.
  *   @return Null-terminated array of null-terminated strings.
  */
-char **PHYSFS_enumerateFiles(const char *dir);
+__EXPORT__ char **PHYSFS_enumerateFiles(const char *dir);
 
 
 /**
@@ -639,7 +647,7 @@ char **PHYSFS_enumerateFiles(const char *dir);
  *    @param fname filename in platform-independent notation.
  *   @return non-zero if filename exists. zero otherwise.
  */
-int PHYSFS_exists(const char *fname);
+__EXPORT__ int PHYSFS_exists(const char *fname);
 
 
 /**
@@ -653,7 +661,7 @@ int PHYSFS_exists(const char *fname);
  *    @param fname filename in platform-independent notation.
  *   @return non-zero if filename exists and is a directory.  zero otherwise.
  */
-int PHYSFS_isDirectory(const char *fname);
+__EXPORT__ int PHYSFS_isDirectory(const char *fname);
 
 
 /**
@@ -667,7 +675,7 @@ int PHYSFS_isDirectory(const char *fname);
  *    @param fname filename in platform-independent notation.
  *   @return non-zero if filename exists and is a symlink.  zero otherwise.
  */
-int PHYSFS_isSymbolicLink(const char *fname);
+__EXPORT__ int PHYSFS_isSymbolicLink(const char *fname);
 
 
 /**
@@ -684,7 +692,7 @@ int PHYSFS_isSymbolicLink(const char *fname);
  *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-PHYSFS_file *PHYSFS_openWrite(const char *filename);
+__EXPORT__ PHYSFS_file *PHYSFS_openWrite(const char *filename);
 
 
 /**
@@ -702,7 +710,7 @@ PHYSFS_file *PHYSFS_openWrite(const char *filename);
  *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-PHYSFS_file *PHYSFS_openAppend(const char *filename);
+__EXPORT__ PHYSFS_file *PHYSFS_openAppend(const char *filename);
 
 
 /**
@@ -719,7 +727,7 @@ PHYSFS_file *PHYSFS_openAppend(const char *filename);
  *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-PHYSFS_file *PHYSFS_openRead(const char *filename);
+__EXPORT__ PHYSFS_file *PHYSFS_openRead(const char *filename);
 
 
 /**
@@ -734,7 +742,7 @@ PHYSFS_file *PHYSFS_openRead(const char *filename);
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_close(PHYSFS_file *handle);
+__EXPORT__ int PHYSFS_close(PHYSFS_file *handle);
 
 
 /**
@@ -748,8 +756,8 @@ int PHYSFS_close(PHYSFS_file *handle);
  *           the reason this might be < (objCount), as can PHYSFS_eof().
  *            -1 if complete failure.
  */
-int PHYSFS_read(PHYSFS_file *handle, void *buffer,
-                unsigned int objSize, unsigned int objCount);
+__EXPORT__ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
+                           unsigned int objSize, unsigned int objCount);
 
 
 /**
@@ -762,8 +770,8 @@ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
  *  @return number of objects written. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount). -1 if complete failure.
  */
-int PHYSFS_write(PHYSFS_file *handle, void *buffer,
-                 unsigned int objSize, unsigned int objCount);
+__EXPORT__ int PHYSFS_write(PHYSFS_file *handle, void *buffer,
+                            unsigned int objSize, unsigned int objCount);
 
 
 /**
@@ -772,7 +780,7 @@ int PHYSFS_write(PHYSFS_file *handle, void *buffer,
  *   @param handle handle returned from PHYSFS_openRead().
  *  @return nonzero if EOF, zero if not.
  */
-int PHYSFS_eof(PHYSFS_file *handle);
+__EXPORT__ int PHYSFS_eof(PHYSFS_file *handle);
 
 
 /**
@@ -782,7 +790,7 @@ int PHYSFS_eof(PHYSFS_file *handle);
  *  @return offset in bytes from start of file. -1 if error occurred.
  *           Specifics of the error can be gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_tell(PHYSFS_file *handle);
+__EXPORT__ int PHYSFS_tell(PHYSFS_file *handle);
 
 
 /**
@@ -795,7 +803,7 @@ int PHYSFS_tell(PHYSFS_file *handle);
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_seek(PHYSFS_file *handle, int pos);
+__EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, int pos);
 
 
 /**
@@ -809,7 +817,7 @@ int PHYSFS_seek(PHYSFS_file *handle, int pos);
  *   @param handle handle returned from PHYSFS_open*().
  *  @return size in bytes of the file. -1 if can't be determined.
  */
-int PHYSFS_fileLength(PHYSFS_file *handle);
+__EXPORT__ int PHYSFS_fileLength(PHYSFS_file *handle);
 
 #ifdef __cplusplus
 }
