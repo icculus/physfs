@@ -1210,7 +1210,7 @@ int PHYSFS_isDirectory(const char *fname)
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, fname))
         {
-            if (!h->funcs->exists(h, fname))
+            if (!h->funcs->exists(h, fname))  /* !!! FIXME: Let archivers figure this out. */
                 __PHYSFS_setError(ERR_NO_SUCH_FILE);
             else
             {
@@ -1460,6 +1460,42 @@ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
 
     return(h->funcs->fileLength(h));
 } /* PHYSFS_filelength */
+
+
+LinkedStringList *__PHYSFS_addToLinkedStringList(LinkedStringList *retval,
+                                                 LinkedStringList **prev,
+                                                 const char *str,
+                                                 PHYSFS_sint32 len)
+{
+    LinkedStringList *l;
+
+    l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
+    BAIL_IF_MACRO(l == NULL, ERR_OUT_OF_MEMORY, retval);
+
+    if (len < 0)
+        len = strlen(str);
+
+    l->str = (char *) malloc(len + 1);
+    if (l->str == NULL)
+    {
+        free(l);
+        BAIL_MACRO(ERR_OUT_OF_MEMORY, retval);
+    } /* if */
+
+    strncpy(l->str, str, len);
+    l->str[len] = '\0';
+
+    if (retval == NULL)
+        retval = l;
+    else
+        (*prev)->next = l;
+
+    *prev = l;
+    l->next = NULL;
+    return(retval);
+} /* __PHYSFS_addToLinkedStringList */
+
+
 
 /* end of physfs.c ... */
 
