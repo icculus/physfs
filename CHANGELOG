@@ -57,7 +57,9 @@
            get used in dir.c when a file is opened for writing/appending.
            Updated CREDITS.
 10092001 - Syntax fixes in dir.c, a FIXME in grp.c, and a "cat" command in
-           the test program.
+           the test program. Apparently I had accidentally removed a rather
+           crucial line from dir.c a few revisions ago, and no one noticed. :(
+           Fixed. The win32 userdir will default to the base dir, now.
 
 --ryan. (icculus@clutteredmind.org)
 
