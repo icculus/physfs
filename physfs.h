@@ -1834,7 +1834,9 @@ __EXPORT__ int PHYSFS_writeUBE64(PHYSFS_file *file, PHYSFS_uint64 val);
  *  because it's convenient for systems to have handles be the same size
  *  as a pointer, but they shouldn't be assumed to point to valid memory
  *  (or to memory at all). The allocator in use will convert from memhandles
- *  to valid pointers to allocated memory.
+ *  to valid pointers to allocated memory. A memhandle of NULL is considered
+ *  to be bogus (so malloc can return a NULL handle), even though it's not
+ *  technically a NULL pointer in itself.
  *
  * \sa PHYSFS_allocator
  * \sa PHYSFS_setAllocator

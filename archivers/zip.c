@@ -192,8 +192,13 @@ static voidpf zlibPhysfsAlloc(voidpf opaque, uInt items, uInt size)
     PHYSFS_allocator *allocator = __PHYSFS_getAllocator();
     size_t total = (items * size) + sizeof (PHYSFS_memhandle);
     PHYSFS_memhandle h = allocator->malloc(total);
-    char *ptr = (char *) allocator->lock(h);
-    PHYSFS_memhandle *ph = (PHYSFS_memhandle *) ptr;
+    char *ptr;
+    PHYSFS_memhandle *ph;
+    if (h == NULL)
+        return(NULL);
+
+    ptr = (char *) allocator->lock(h);
+    ph = (PHYSFS_memhandle *) ptr;
     *ph = h; /* tuck the memhandle in front of the memory block... */
     return(ptr + sizeof (PHYSFS_memhandle));
 } /* zlibPhysfsAlloc */
