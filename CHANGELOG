@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+07262002 - Fixed a typo in documentation. Archivers with matching file
+           extensions are now given first shot at opening an archive, but if
+           they fail, the other archivers are tried.
 07252002 - configure.in and unix.c now deal with platforms that lack a
            functional pthread library. Edward Rudd sent in a patch to the RPM
            specfile to have the build system set the correct version.
