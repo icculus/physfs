@@ -54,7 +54,7 @@ char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
 
     if (envr != NULL)
     {
-        retval = malloc(strlen(envr) + 1);
+        retval = (char *) malloc(strlen(envr) + 1);
         if (retval != NULL)
             strcpy(retval, envr);
     } /* if */
@@ -72,7 +72,7 @@ static char *getUserNameByUID(void)
     pw = getpwuid(uid);
     if ((pw != NULL) && (pw->pw_name != NULL))
     {
-        retval = malloc(strlen(pw->pw_name) + 1);
+        retval = (char *) malloc(strlen(pw->pw_name) + 1);
         if (retval != NULL)
             strcpy(retval, pw->pw_name);
     } /* if */
@@ -90,7 +90,7 @@ static char *getUserDirByUID(void)
     pw = getpwuid(uid);
     if ((pw != NULL) && (pw->pw_dir != NULL))
     {
-        retval = malloc(strlen(pw->pw_dir) + 1);
+        retval = (char *) malloc(strlen(pw->pw_dir) + 1);
         if (retval != NULL)
             strcpy(retval, pw->pw_dir);
     } /* if */
@@ -188,7 +188,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     int len = ((prepend) ? strlen(prepend) : 0) +
               ((append) ? strlen(append) : 0) +
               strlen(dirName) + 1;
-    char *retval = malloc(len);
+    char *retval = (char *) malloc(len);
 
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
@@ -225,7 +225,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     {
         dlen = strlen(dirname);
         bufsize = dlen + 256;
-        buf = malloc(bufsize);
+        buf = (char *) malloc(bufsize);
         BAIL_IF_MACRO(buf == NULL, ERR_OUT_OF_MEMORY, NULL);
         strcpy(buf, dirname);
         if (buf[dlen - 1] != '/')
