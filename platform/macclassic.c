@@ -15,10 +15,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifdef __MWERKS__
-#include <alloca.h>
-#endif
- 
 /*
  * Most of the API calls in here are, according to ADC, available since
  *  MacOS 8.1. I don't think I used any MacOS 9 or CarbonLib-specific
