@@ -96,7 +96,7 @@ static int ZIP_seek(FileHandle *handle, int offset)
 {
     /* this blows. */
     unzFile fh = ((ZIPfileinfo *) (handle->opaque))->handle;
-    char *buf;
+    char *buf = NULL;
     int bufsize = 4096 * 2;
 
     BAIL_IF_MACRO(unztell(fh) == offset, NULL, 1);
@@ -342,7 +342,7 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
                 continue;
 
             buf[dlen] = '\0';
-            if (strcmp(d, buf) != 0)   /* not same directory? */
+            if (__PHYSFS_platformStricmp(d, buf) != 0)   /* not same directory? */
                 continue;
 
             add_file = buf + dlen + 1;
@@ -356,7 +356,7 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
             *ptr = '\0';
             for (j = retval; j != NULL; j = j->next)
             {
-                if (strcmp(j->str, ptr) == 0)
+                if (__PHYSFS_platformStricmp(j->str, ptr) == 0)
                     break;
             } /* for */
 
@@ -521,12 +521,21 @@ static FileHandle *ZIP_openRead(DirHandle *h, const char *filename)
     f = unzOpen(name);
     BAIL_IF_MACRO(f == NULL, ERR_IO_ERROR, NULL);
 
-    if ( (unzLocateFile(f, filename, 1) != UNZ_OK) ||
-         ( (finfo = (ZIPfileinfo *) malloc(sizeof (ZIPfileinfo))) == NULL ) ||
-         (unzOpenCurrentFile(f) != UNZ_OK) )
+    if ( (unzLocateFile(f, filename, 2) != UNZ_OK) ||
+         (unzOpenCurrentFile(f) != UNZ_OK) ||
+         ( (finfo = (ZIPfileinfo *) malloc(sizeof (ZIPfileinfo))) == NULL ) )
     {
         unzClose(f);
         BAIL_IF_MACRO(1, ERR_IO_ERROR, NULL);
+    } /* if */
+
+    if ( (!(retval = (FileHandle *) malloc(sizeof (FileHandle)))) ||
+         (!(retval->opaque = (ZIPfileinfo *) malloc(sizeof (ZIPfileinfo)))) )
+    {
+        if (retval)
+            free(retval);
+        unzClose(f);
+        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
     finfo->handle = f;
