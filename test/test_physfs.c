@@ -260,6 +260,64 @@ static int cmd_setsaneconfig(char *args)
 } /* cmd_setsaneconfig */
 
 
+static int cmd_mkdir(char *args)
+{
+    if (PHYSFS_mkdir(args))
+        printf("Successful.\n");
+    else
+        printf("Failure. reason: %s.\n", PHYSFS_getLastError());
+
+    return(1);
+} /* cmd_mkdir */
+
+
+static int cmd_delete(char *args)
+{
+    if (PHYSFS_delete(args))
+        printf("Successful.\n");
+    else
+        printf("Failure. reason: %s.\n", PHYSFS_getLastError());
+
+    return(1);
+} /* cmd_delete */
+
+
+static int cmd_getrealdir(char *args)
+{
+    const char *rc = PHYSFS_getRealDir(args);
+    if (rc)
+        printf("Found at [%s].\n", rc);
+    else
+        printf("Not found.\n");
+
+    return(1);
+} /* cmd_getrealdir */
+
+
+static int cmd_exists(char *args)
+{
+    int rc = PHYSFS_exists(args);
+    printf("File %sexists.\n", rc ? "" : "does not ");
+    return(1);
+} /* cmd_exists */
+
+
+static int cmd_isdir(char *args)
+{
+    int rc = PHYSFS_isDirectory(args);
+    printf("File %s a directory.\n", rc ? "is" : "is NOT");
+    return(1);
+} /* cmd_isdir */
+
+
+static int cmd_issymlink(char *args)
+{
+    int rc = PHYSFS_isSymbolicLink(args);
+    printf("File %s a symlink.\n", rc ? "is" : "is NOT");
+    return(1);
+} /* cmd_issymlink */
+
+
 /* must have spaces trimmed prior to this call. */
 static int count_args(const char *str)
 {
@@ -309,6 +367,12 @@ static const command_info commands[] =
     { "setwritedir",    cmd_setwritedir,    1, "<newWriteDir>"              },
     { "permitsymlinks", cmd_permitsyms,     1, "<1or0>"                     },
     { "setsaneconfig",  cmd_setsaneconfig,  4, "<appName> <arcExt> <includeCdRoms> <archivesFirst>" },
+    { "mkdir",          cmd_mkdir,          1, "<dirToMk>"                  },
+    { "delete",         cmd_delete,         1, "<dirToDelete>"              },
+    { "getrealdir",     cmd_getrealdir,     1, "<fileToFind>"               },
+    { "exists",         cmd_exists,         1, "<fileToCheck>"              },
+    { "isdir",          cmd_isdir,          1, "<fileToCheck>"              },
+    { "issymlink",      cmd_issymlink,      1, "<fileToCheck>"              },
     { NULL,             NULL,              -1, NULL                         }
 };
 
@@ -424,9 +488,15 @@ static int process_command(char *complete_cmd)
 
 static void open_history_file(void)
 {
+#if 0
     const char *envr = getenv("TESTPHYSFS_HISTORY");
     if (!envr)
         return;
+#else
+    char envr[256];
+    strcpy(envr, PHYSFS_getUserDir());
+    strcat(envr, ".testphys_history");
+#endif
 
     if (access(envr, F_OK) == 0)
     {
