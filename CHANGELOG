@@ -74,7 +74,9 @@
            improvements by Gregory S. Read. Added PHYSFS_[us]int(8|16|32)
            types...this breaks binary compatibility with previous PhysicsFS
            releases! Added platform specific i/o functions, so we don't have
-           to rely on stdio anymore.
+           to rely on stdio anymore. Updated TODO with my comments on the
+           physfs mailing list. 1.0, here we come!  Tons of other fixes and
+           enhancements.
 
 --ryan. (icculus@clutteredmind.org)
 
