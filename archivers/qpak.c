@@ -308,7 +308,6 @@ static int qpak_load_entries(const char *name, int forWriting, QPAKinfo *info)
     void *fh = NULL;
     PHYSFS_uint32 fileCount;
     QPAKentry *entry;
-    char *ptr;
 
     BAIL_IF_MACRO(!qpak_open(name, forWriting, &fh, &fileCount), NULL, 0);
     info->entryCount = fileCount;
