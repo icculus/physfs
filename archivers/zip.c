@@ -94,6 +94,10 @@ typedef struct
 /* ...and others... */
 
 
+#define UNIX_FILETYPE_MASK    0170000
+#define UNIX_FILETYPE_SYMLINK 0120000
+
+
 #define MAXZIPENTRYSIZE 256  /* !!! FIXME: get rid of this. */
 
 
@@ -617,15 +621,25 @@ static int version_does_symlinks(PHYSFS_uint32 version)
     int retval = 0;
     PHYSFS_uint8 hosttype = (PHYSFS_uint8) ((version >> 8) & 0xFF);
 
-    /*
-     * These are the platforms that can build an archive with symlinks,
-     *  according to the Info-ZIP project.
-     */
     switch (hosttype)
     {
-        case 3:   /* Unix  */
-        case 16:  /* BeOS  */
-        case 5:   /* Atari */
+            /*
+             * These are the platforms that can NOT build an archive with
+             *  symlinks, according to the Info-ZIP project.
+             */
+        case 0:  /* FS_FAT_  */
+        case 1:  /* AMIGA_   */
+        case 2:  /* VMS_     */
+        case 4:  /* VM_CSM_  */
+        case 6:  /* FS_HPFS_ */
+        case 11: /* FS_NTFS_ */
+        case 14: /* FS_VFAT_ */
+        case 13: /* ACORN_   */
+        case 15: /* MVS_     */
+        case 18: /* THEOS_   */
+            break;  /* do nothing. */
+
+        default:  /* assume the rest to be unix-like. */
             retval = 1;
             break;
     } /* switch */
@@ -636,15 +650,12 @@ static int version_does_symlinks(PHYSFS_uint32 version)
 
 static int entry_is_symlink(ZIPentry *entry, PHYSFS_uint32 extern_attr)
 {
+    PHYSFS_uint16 xattr = ((extern_attr >> 16) & 0xFFFF);
+
     return (
               (version_does_symlinks(entry->version)) &&
               (entry->uncompressed_size > 0) &&
-
-            #if 0 /* !!! FIXME ... this check is incorrect for some files! */
-              (extern_attr & 0x0120000)  /* symlink flag. */
-            #else
-              0  /* always fail for now. Symlinks will just be small files. */
-            #endif
+              ((xattr & UNIX_FILETYPE_MASK) == UNIX_FILETYPE_SYMLINK)
            );
 } /* entry_is_symlink */
 
