@@ -103,7 +103,7 @@ endif
 
 ifeq ($(strip $(build_dll)),true)
 LIB_EXT := $(DLL_EXT)
-LDFLAGS += -shared
+SHAREDFLAGS += -shared
 else
 LIB_EXT := $(STATICLIB_EXT)
 endif
@@ -138,6 +138,8 @@ ASMFLAGS := -f $(ASMOBJFMT) $(ASMDEFS)
 BASELIBNAME := physfs
 MAINLIB := $(BINDIR)/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
 
+TESTSRCS := test/test_physfs.c
+
 MAINSRCS := physfs.c platform/unix.c archivers/dir.c
 
 ifeq ($(strip $(use_archive_zip)),true)
@@ -150,13 +152,20 @@ MAINSRCS += archivers/grp.c
 CFLAGS += -DPHYSFS_SUPPORTS_GRP
 endif
 
+TESTEXE := $(BINDIR)/test_physfs$(EXE_EXT)
+
 # Rule for getting list of objects from source
 MAINOBJS1 := $(MAINSRCS:.c=.o)
 MAINOBJS2 := $(MAINOBJS1:.cpp=.o)
 MAINOBJS3 := $(MAINOBJS2:.asm=.o)
-
 MAINOBJS := $(foreach f,$(MAINOBJS3),$(BINDIR)/$(f))
 MAINSRCS := $(foreach f,$(MAINSRCS),$(SRCDIR)/$(f))
+
+TESTOBJS1 := $(TESTSRCS:.c=.o)
+TESTOBJS2 := $(TESTOBJS1:.cpp=.o)
+TESTOBJS3 := $(TESTOBJS2:.asm=.o)
+TESTOBJS := $(foreach f,$(TESTOBJS3),$(BINDIR)/$(f))
+TESTSRCS := $(foreach f,$(TESTSRCS),$(SRCDIR)/$(f))
 
 CLEANUP = $(wildcard *.exe) $(wildcard *.obj) \
           $(wildcard $(BINDIR)/*.exe) $(wildcard $(BINDIR)/*.obj) \
@@ -180,15 +189,20 @@ $(BINDIR)/%.o: $(SRCDIR)/%.asm
 
 .PHONY: all clean distclean listobjs
 
-all: $(BINDIR) $(MAINLIB)
+all: $(BINDIR) $(MAINLIB) $(TESTEXE)
 
 $(MAINLIB) : $(BINDIR) $(MAINOBJS)
-	$(LINKER) -o $(MAINLIB) $(LDFLAGS) $(MAINOBJS)
+	$(LINKER) -o $(MAINLIB) $(LDFLAGS) $(SHAREDFLAGS) $(MAINOBJS)
+
+$(TESTEXE) : $(MAINLIB) $(TESTOBJS)
+	$(LINKER) -o $(TESTEXE) $(LDFLAGS) $(TESTOBJS) $(MAINLIB)
+
 
 $(BINDIR):
 	mkdir -p $(BINDIR)
 	mkdir -p $(BINDIR)/archivers
 	mkdir -p $(BINDIR)/platform
+	mkdir -p $(BINDIR)/test
 
 distclean: clean
 
