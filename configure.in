@@ -226,6 +226,17 @@ if test x$we_have_sed = xyes; then
   AC_MSG_RESULT([$this_is_macosx])
 fi
 
+this_is_freebsd=no
+if test x$we_have_sed = xyes; then
+  AC_MSG_CHECKING([if this is FreeBSD])
+  x=`echo $build_os |tr A-Z a-z |sed "s/.*freebsd.*/freebsd/"`
+  if test x$x = xfreebsd; then
+    this_is_freebsd=yes
+  fi
+
+  AC_MSG_RESULT([$this_is_freebsd])
+fi
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h])
@@ -242,14 +253,19 @@ dnl AC_TYPE_SIZE_T
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS([memset strrchr])
 
+CFLAGS="$CFLAGS -D_REENTRANT -D_THREAD_SAFE"
+LDFLAGS="$LDFLAGS -no-undefined"
+
+if test x$this_is_freebsd = x$yes; then
+  LDFLAGS="$LDFLAGS -pthread"
+fi
+
 dnl Add Makefile conditionals
 AM_CONDITIONAL(BUILD_ZLIB, test x$enable_internal_zlib = xyes)
 AM_CONDITIONAL(BUILD_TEST_PHYSFS, test x$enable_testprog = xyes)
 AM_CONDITIONAL(BUILD_MACOSX, test x$this_is_macosx = xyes)
 AM_CONDITIONAL(BUILD_BEOS, test x$this_is_beos = xyes)
 AM_CONDITIONAL(BUILD_CYGWIN, test x$this_is_cygwin = xyes)
-
-LDFLAGS="$LDFLAGS -no-undefined"
 
 AC_OUTPUT([
 Makefile

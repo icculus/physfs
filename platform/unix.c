@@ -13,9 +13,15 @@
 /* BeOS uses beos.cpp and posix.c ... Cygwin and such use win32.c ... */
 #if ((!defined __BEOS__) && (!defined WIN32))
 
+#ifdef __FreeBSD__
+#  if (!defined __BSD__)
+#    define __BSD__
+#  endif
+#endif
+
 #if ((defined __APPLE__) && (defined __MACH__))
-#  if (!defined __DARWIN__)
-#    define __DARWIN__
+#  if (!defined __BSD__)
+#    define __BSD__
 #  endif
 #endif
 
@@ -33,10 +39,10 @@
 #include <time.h>
 #include <errno.h>
 
-#if (!defined __DARWIN__)
-#include <mntent.h>
-#else
+#if (defined __BSD__)
 #include <sys/ucred.h>
+#else
+#include <mntent.h>
 #endif
 
 #include <sys/mount.h>
@@ -62,7 +68,7 @@ int __PHYSFS_platformDeinit(void)
 
 
 
-#if (defined __DARWIN__)
+#if (defined __BSD__)
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
 {
