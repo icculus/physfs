@@ -249,7 +249,7 @@ static PHYSFS_sint64 DIR_getLastModTime(DirHandle *h, const char *name)
     PHYSFS_sint64 retval;
 
     BAIL_IF_MACRO(d == NULL, NULL, 0);
-    retval = __PHYSFS_platformGetMtime(d);
+    retval = __PHYSFS_platformGetLastModTime(d);
     free(d);
     return(retval);
 } /* DIR_getLastModTime */
