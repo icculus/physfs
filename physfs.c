@@ -25,6 +25,7 @@ typedef struct __PHYSFS_DIRHANDLE__
 {
     void *opaque;  /* Instance data unique to the archiver. */
     char *dirName;  /* Path to archive in platform-dependent notation. */
+    char *mountPoint; /* Mountpoint in virtual file tree. */
     const PHYSFS_Archiver *funcs;  /* Ptr to archiver info for this handle. */
     struct __PHYSFS_DIRHANDLE__ *next;  /* linked list stuff. */
 } DirHandle;
@@ -440,6 +441,7 @@ static DirHandle *tryOpenDir(const PHYSFS_Archiver *funcs,
             else
             {
                 memset(retval, '\0', sizeof (DirHandle));
+                retval->mountPoint = NULL;
                 retval->funcs = funcs;
                 retval->opaque = opaque;
             } /* else */
@@ -487,25 +489,41 @@ static DirHandle *openDirectory(const char *d, int forWriting)
 } /* openDirectory */
 
 
-static DirHandle *createDirHandle(const char *newDir, int forWriting)
+static DirHandle *createDirHandle(const char *newDir,
+                                  const char *mountPoint,
+                                  int forWriting)
 {
     DirHandle *dirHandle = NULL;
-
-    BAIL_IF_MACRO(newDir == NULL, ERR_INVALID_ARGUMENT, NULL);
+    GOTO_IF_MACRO(!newDir, ERR_INVALID_ARGUMENT, badDirHandle);
 
     dirHandle = openDirectory(newDir, forWriting);
-    BAIL_IF_MACRO(dirHandle == NULL, NULL, NULL);
+    GOTO_IF_MACRO(!dirHandle, NULL, badDirHandle);
 
     dirHandle->dirName = (char *) malloc(strlen(newDir) + 1);
-    if (dirHandle->dirName == NULL)
+    GOTO_IF_MACRO(!dirHandle->dirName, ERR_OUT_OF_MEMORY, badDirHandle);
+    strcpy(dirHandle->dirName, newDir);
+
+    if ((mountPoint != NULL) && (*mountPoint != '\0'))
     {
-        dirHandle->funcs->dirClose(dirHandle->opaque);
-        free(dirHandle);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+        /* !!! FIXME: Sanitize the string here. */
+        dirHandle->mountPoint = (char *) malloc(strlen(mountPoint) + 2);
+        GOTO_IF_MACRO(!dirHandle->mountPoint, ERR_OUT_OF_MEMORY, badDirHandle);
+        strcpy(dirHandle->mountPoint, mountPoint);
+        strcat(dirHandle->mountPoint, "/");
     } /* if */
 
-    strcpy(dirHandle->dirName, newDir);
     return(dirHandle);
+
+badDirHandle:
+    if (dirHandle != NULL)
+    {
+        dirHandle->funcs->dirClose(dirHandle->opaque);
+        free(dirHandle->dirName);
+        free(dirHandle->mountPoint);
+        free(dirHandle);
+    } /* if */
+
+    return(NULL);
 } /* createDirHandle */
 
 
@@ -859,7 +877,7 @@ int PHYSFS_setWriteDir(const char *newDir)
 
     if (newDir != NULL)
     {
-        writeDir = createDirHandle(newDir, 1);
+        writeDir = createDirHandle(newDir, NULL, 1);
         retval = (writeDir != NULL);
     } /* if */
 
@@ -869,11 +887,14 @@ int PHYSFS_setWriteDir(const char *newDir)
 } /* PHYSFS_setWriteDir */
 
 
-int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
+int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
 {
     DirHandle *dh;
     DirHandle *prev = NULL;
     DirHandle *i;
+
+    BAIL_IF_MACRO(newDir == NULL, ERR_INVALID_ARGUMENT, 0);
+    BAIL_IF_MACRO(mountPoint == NULL, ERR_INVALID_ARGUMENT, 0);
 
     __PHYSFS_platformGrabMutex(stateLock);
 
@@ -884,7 +905,7 @@ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
         prev = i;
     } /* for */
 
-    dh = createDirHandle(newDir, 0);
+    dh = createDirHandle(newDir, mountPoint, 0);
     BAIL_IF_MACRO_MUTEX(dh == NULL, NULL, stateLock, 0);
 
     if (appendToPath)
@@ -902,6 +923,12 @@ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
 
     __PHYSFS_platformReleaseMutex(stateLock);
     return(1);
+} /* PHYSFS_mount */
+
+
+int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
+{
+    return(PHYSFS_mount(newDir, "/", appendToPath));
 } /* PHYSFS_addToSearchPath */
 
 
@@ -1130,7 +1157,8 @@ char * __PHYSFS_convertToDependent(const char *prepend,
  * Verify that (fname) (in platform-independent notation), in relation
  *  to (h) is secure. That means that each element of fname is checked
  *  for symlinks (if they aren't permitted). Also, elements such as
- *  ".", "..", or ":" are flagged.
+ *  ".", "..", or ":" are flagged. This also allows for quick rejection of
+ *  files that exist outside an archive's mountpoint.
  *
  * With some exceptions (like PHYSFS_mkdir(), which builds multiple subdirs
  *  at a time), you should always pass zero for "allowMissing" for efficiency.
@@ -1147,6 +1175,17 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname, int allowMissing)
 
     if (*fname == '\0')  /* quick rejection. */
         return(1);
+
+    if (h->mountPoint != NULL)  /* NULL mountpoint means "/". */
+    {
+        /* !!! FIXME: Case insensitive? */
+        size_t mntpntlen = strlen(h->mountPoint);
+        assert(mntpntlen > 1); /* root mount points should be NULL. */
+        if (strncmp(h->mountPoint, fname, mntpntlen) != 0)
+            return(0);  /* not under the mountpoint, so skip this archive. */
+
+        fname += mntpntlen;  /* move to start of actual archive path. */
+    } /* if */
 
     /* !!! FIXME: Can we ditch this malloc()? */
     start = str = malloc(strlen(fname) + 1);

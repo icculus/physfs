@@ -78,13 +78,13 @@
  *  it correctly.
  *
  * Files opened through PhysicsFS may NOT contain "." or ".." or ":" as dir
- *  elements. Not only are these meaningless on MacOS and/or Unix, they are a
- *  security hole. Also, symbolic links (which can be found in some archive
- *  types and directly in the filesystem on Unix platforms) are NOT followed
- *  until you call PHYSFS_permitSymbolicLinks(). That's left to your own
- *  discretion, as following a symlink can allow for access outside the write
- *  dir and search paths. There is no mechanism for creating new symlinks in
- *  PhysicsFS.
+ *  elements. Not only are these meaningless on MacOS Classic and/or Unix,
+ *  they are a security hole. Also, symbolic links (which can be found in
+ *  some archive types and directly in the filesystem on Unix platforms) are
+ *  NOT followed until you call PHYSFS_permitSymbolicLinks(). That's left to
+ *  your own discretion, as following a symlink can allow for access outside
+ *  the write dir and search paths. For portability, there is no mechanism for
+ *  creating new symlinks in PhysicsFS.
  *
  * The write dir is not included in the search path unless you specifically
  *  add it. While you CAN change the write dir as many times as you like,
@@ -110,6 +110,18 @@
  *  PHYSFS_getBaseDir(), and PHYSFS_getUserDir() for info on what those
  *  are and how they can help you determine an optimal search path.
  *
+ * PhysicsFS 2.0 adds the concept of "mounting" archives to arbitrary points
+ *  in the search path. If a zipfile contains "maps/level.map" and you mount
+ *  that archive at "mods/mymod", then you would have to open
+ *  "mods/mymod/maps/level.map" to access the file, even though "mods/mymod"
+ *  isn't actually specified in the .zip file. Unlike the Unix mentality of
+ *  mounting a filesystem, "mods/mymod" doesn't actually have to exist when
+ *  mounting the zipfile. It's a "virtual" directory. The mounting mechanism
+ *  allows the developer to seperate archives in the tree and avoid trampling
+ *  over files when added new archives, such as including mod support in a
+ *  game...keeping external content on a tight leash in this manner can be of
+ *  utmost importance to some applications.
+ *
  * PhysicsFS is mostly thread safe. The error messages returned by
  *  PHYSFS_getLastError are unique by thread, and library-state-setting
  *  functions are mutex'd. For efficiency, individual file accesses are 
@@ -124,7 +136,7 @@
  * Note that archives need not be named as such: if you have a ZIP file and
  *  rename it with a .PKG extension, the file will still be recognized as a
  *  ZIP archive by PhysicsFS; the file's contents are used to determine its
- *  type.
+ *  type where possible.
  *
  * Currently supported archive types:
  *   - .ZIP (pkZip/WinZip/Info-ZIP compatible)
@@ -133,12 +145,13 @@
  *   - .HOG (Descent I/II HOG file archives)
  *   - .MVL (Descent II movielib archives)
  *   - .WAD (DOOM engine archives)
+ *   - .MIX (Older Westwood games archives)
  *
  * Please see the file LICENSE in the source's root directory for licensing
  *  and redistribution rights.
  *
- * Please see the file CREDITS in the source's root directory for a complete
- *  list of who's responsible for this.
+ * Please see the file CREDITS in the source's root directory for a more or
+ *  less complete list of who's responsible for this.
  *
  *  \author Ryan C. Gordon.
  */
@@ -656,19 +669,52 @@ __EXPORT__ int PHYSFS_setWriteDir(const char *newDir);
 
 
 /**
- * \fn int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
+ * \fn int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath);
  * \brief Add an archive or directory to the search path.
  *
  * If this is a duplicate, the entry is not added again, even though the
- *  function succeeds.
+ *  function succeeds. You may not add the same archive to two different
+ *  mountpoints: duplicate checking is done against the archive and not the
+ *  mountpoint.
+ *
+ * When you mount an archive, it is added to a virtual file system...all files
+ *  in all of the archives are interpolated into a single hierachical file
+ *  tree. Two archives mounted at the same place (or an archive with files
+ *  overlapping another mountpoint) may have overlapping files: in such a case,
+ *  the file earliest in the search path is selected, and the other files are
+ *  inaccessible to the application. This allows archives to be used to
+ *  override previous revisions; you can use the mounting mechanism to place
+ *  archives at a specific point in the file tree and prevent overlap; this
+ *  is useful for downloadable mods that might trample over application data
+ *  or each other, for example.
+ *
+ * The mountpoint does not need to exist prior to mounting, which is different
+ *  than those familiar with the Unix concept of "mounting" may not expect.
+ *  As well, more than one archive can be mounted to the same mountpoint, or
+ *  mountpoints and archive contents can overlap...the interpolation mechanism
+ *  still functions as usual.
  *
  *   \param newDir directory or archive to add to the path, in
  *                   platform-dependent notation.
+ *   \param mountPoint Location in the interpolated tree that this archive
+ *                     will be "mounted", in platform-independent notation.
  *   \param appendToPath nonzero to append to search path, zero to prepend.
  *  \return nonzero if added to path, zero on failure (bogus archive, dir
  *                   missing, etc). Specifics of the error can be
  *                   gleaned from PHYSFS_getLastError().
+ */
+__EXPORT__ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath);
+
+
+/**
+ * \fn int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
+ * \brief Add an archive or directory to the search path.
  *
+ * This is a legacy call, equivalent to:
+ *     PHYSFS_mount(newDir, "/", appendToPath);
+ *
+ * \sa PHYSFS_mount
+ * \sa PHYSFS_unmount
  * \sa PHYSFS_removeFromSearchPath
  * \sa PHYSFS_getSearchPath
  */
