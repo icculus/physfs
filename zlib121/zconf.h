@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zconf.h,v 1.2 2003/12/22 18:19:09 bhook Exp $ */
+/* @(#) $Id$ */
 
 #ifndef ZCONF_H
 #define ZCONF_H
@@ -127,6 +127,9 @@
 #if !defined(STDC) && (defined(OS2) || defined(__HOS_AIX__))
 #  define STDC
 #endif
+#if !defined(STDC) && defined(macintosh)
+#  define STDC
+#endif
 
 #if defined(__OS400__) && !defined(STDC)    /* iSeries (formerly AS/400). */
 #  define STDC
@@ -139,7 +142,7 @@
 #endif
 
 /* Some Mac compilers merge all .h files incorrectly: */
-#if defined(__MWERKS__)||defined(applec)||defined(THINK_C)||defined(__SC__)
+#if defined(__MWERKS__)||defined(applec)||defined(THINK_C)||defined(__SC__)||defined(__MRC__)
 #  define NO_DUMMY_DECL
 #endif
 

@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <alloca.h>
 
 /*
  * Most of the API calls in here are, according to ADC, available since
@@ -138,7 +137,7 @@ static OSErr oserr(OSErr retval)
     const char *errstr = get_macos_error_string(retval);
     if (strcmp(errstr, ERR_MACOS_GENERIC) == 0)
     {
-        snprintf(buf, sizeof (buf), ERR_MACOS_GENERIC, (int) retval);
+        sprintf(buf, ERR_MACOS_GENERIC, (int) retval);
         errstr = buf;
     } /* if */
 
@@ -768,16 +767,10 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
                                     PHYSFS_uint32 size, PHYSFS_uint32 count)
 {
     SInt16 ref = *((SInt16 *) opaque);
-    SInt32 br;
-    PHYSFS_uint32 i;
+    SInt32 br = size*count;
 
-    for (i = 0; i < count; i++)
-    {
-        br = size;
-        BAIL_IF_MACRO(oserr(FSRead(ref, &br, buffer)) != noErr, NULL, i);
-        BAIL_IF_MACRO(br != size, NULL, i);  /* !!! FIXME: seek back if only read part of an object! */
-        buffer = ((PHYSFS_uint8 *) buffer) + size;
-    } /* for */
+	BAIL_IF_MACRO(oserr(FSRead(ref, &br, buffer)) != noErr, NULL, br/size);
+	BAIL_IF_MACRO(br != size*count, NULL, br/size);  /* !!! FIXME: seek back if only read part of an object! */
 
     return(count);
 } /* __PHYSFS_platformRead */
@@ -787,16 +780,10 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint32 size, PHYSFS_uint32 count)
 {
     SInt16 ref = *((SInt16 *) opaque);
-    SInt32 bw;
-    PHYSFS_uint32 i;
+    SInt32 bw = size*count;
 
-    for (i = 0; i < count; i++)
-    {
-        bw = size;
-        BAIL_IF_MACRO(oserr(FSWrite(ref, &bw, buffer)) != noErr, NULL, i);
-        BAIL_IF_MACRO(bw != size, NULL, i); /* !!! FIXME: seek back if only wrote part of an object! */
-        buffer = ((PHYSFS_uint8 *) buffer) + size;
-    } /* for */
+	BAIL_IF_MACRO(oserr(FSWrite(ref, &bw, buffer)) != noErr, NULL, bw/size);
+	BAIL_IF_MACRO(bw != size*count, NULL, bw/size); /* !!! FIXME: seek back if only wrote part of an object! */
 
     return(count);
 } /* __PHYSFS_platformWrite */
