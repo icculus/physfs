@@ -1187,7 +1187,7 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
                                             int stop_on_first_find)
 {
     PHYSFS_sint32 lo = 0;
-    PHYSFS_sint32 hi = (PHYSFS_sint32) info->entryCount;
+    PHYSFS_sint32 hi = (PHYSFS_sint32) (info->entryCount - 1);
     PHYSFS_sint32 middle;
     PHYSFS_uint32 dlen = strlen(path);
     PHYSFS_sint32 retval = -1;
