@@ -1230,7 +1230,6 @@ int __PHYSFS_verifySecurity(DirHandle *h, char *fname, int allowMissing)
     int retval = 1;
     char *start;
     char *end;
-    char *str;
 
     if (*fname == '\0')  /* quick rejection. */
         return(1);
@@ -1249,11 +1248,7 @@ int __PHYSFS_verifySecurity(DirHandle *h, char *fname, int allowMissing)
         retval = 1;
     } /* if */
 
-    /* !!! FIXME: Can we ditch this malloc()? */
-    start = str = malloc(strlen(fname) + 1);
-    BAIL_IF_MACRO(str == NULL, ERR_OUT_OF_MEMORY, 0);
-    strcpy(str, fname);
-
+    start = fname;
     if (!allowSymLinks)
     {
         while (1)
@@ -1262,12 +1257,8 @@ int __PHYSFS_verifySecurity(DirHandle *h, char *fname, int allowMissing)
             if (end != NULL)
                 *end = '\0';
 
-            if (h->funcs->isSymLink(h->opaque, str, &retval))
-            {
-                __PHYSFS_setError(ERR_SYMLINK_DISALLOWED);
-                free(str);
-                return(0); /* insecure. */
-            } /* if */
+            if (h->funcs->isSymLink(h->opaque, fname, &retval))
+                BAIL_MACRO(ERR_SYMLINK_DISALLOWED, 0);   /* insecure. */
 
             /* break out early if path element is missing. */
             if (!retval)
@@ -1297,7 +1288,6 @@ int __PHYSFS_verifySecurity(DirHandle *h, char *fname, int allowMissing)
 int PHYSFS_mkdir(const char *_dname)
 {
     DirHandle *h;
-    char *str;
     char *start;
     char *end;
     int retval = 0;
@@ -1312,9 +1302,7 @@ int PHYSFS_mkdir(const char *_dname)
     BAIL_IF_MACRO_MUTEX(writeDir == NULL, ERR_NO_WRITE_DIR, stateLock, 0);
     h = writeDir;
     BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h,dname,1),NULL,stateLock,0);
-    start = str = dname;
-    BAIL_IF_MACRO_MUTEX(str == NULL, ERR_OUT_OF_MEMORY, stateLock, 0);
-    strcpy(str, dname);
+    start = dname;
 
     while (1)
     {
@@ -1324,10 +1312,10 @@ int PHYSFS_mkdir(const char *_dname)
 
         /* only check for existance if all parent dirs existed, too... */
         if (exists)
-            retval = h->funcs->isDirectory(h->opaque, str, &exists);
+            retval = h->funcs->isDirectory(h->opaque, dname, &exists);
 
         if (!exists)
-            retval = h->funcs->mkdir(h->opaque, str);
+            retval = h->funcs->mkdir(h->opaque, dname);
 
         if (!retval)
             break;
