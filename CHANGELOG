@@ -3,6 +3,9 @@
  */
 
 08282002 - Cleanups in grp.c so that Visual C++ doesn't complain anymore.
+           zip.c now works correctly when PhysicsFS is disallowing symlinks.
+           A few minor optimizations in zip.c, with a few more to come later.
+           Added VS.NET project files to CVS.
 08222002 - Fixed ZIP_exists() to work with directories. Now breaks out of
            __PHYSFS_verifySecurity() early if a path element is missing
            (since all the others will be, too)...this check is only done
