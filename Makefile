@@ -168,7 +168,7 @@ MAINLIB := $(BINDIR)/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
 
 TESTSRCS := test/test_physfs.c
 
-MAINSRCS := physfs.c archivers/dir.c
+MAINSRCS := physfs.c physfs_byteorder.c archivers/dir.c
 
 ifeq ($(strip $(use_archive_zip)),true)
   MAINSRCS += archivers/zip.c archivers/unzip.c
