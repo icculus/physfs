@@ -154,7 +154,7 @@ static int openQPak(const char *filename, int forWriting, void **fileHandle)
     if (!readui32(*fileHandle, &sig))
         goto openPak_failed;
     
-    if (sig == QPAK_MAGIC)
+    if (sig != QPAK_MAGIC)
     {
         __PHYSFS_setError(ERR_UNSUPPORTED_ARCHIVE);
         goto openPak_failed;
