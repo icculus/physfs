@@ -166,6 +166,8 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
         /*
          * Returns non-zero if filename is really a directory.
          *  This filename is in platform-independent notation.
+         *  Symlinks should be followed; if what the symlink points
+         *  to is missing, or isn't a directory, then the retval is zero.
          */
     int (*isDirectory)(DirHandle *r, const char *name);
 
@@ -315,6 +317,17 @@ char *__PHYSFS_convertToDependent(const char *prepend,
  *  PHYSFS_getLastError() will specify what was wrong.
  */
 int __PHYSFS_verifySecurity(DirHandle *h, const char *fname);
+
+
+/*
+ * Use this to build the list that your enumerate function should return.
+ *  See zip.c for an example of proper use.
+ */
+LinkedStringList *__PHYSFS_addToLinkedStringList(LinkedStringList *retval,
+                                                 LinkedStringList **prev,
+                                                 const char *str,
+                                                 PHYSFS_sint32 len);
+
 
 
 /* These get used all over for lessening code clutter. */
