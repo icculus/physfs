@@ -6,6 +6,9 @@ libphysfsinclude_HEADERS =	\
 
 if BUILD_MACOSX
 
+BEOS_SRC = @BUILD_BEOS_CPP@
+BEOS_EXTRADIST = @BUILD_BEOS_EXTRA@
+
 ZLIB_FILES = zlib114/adler32.c		\
              zlib114/compress.c		\
              zlib114/crc32.c		\
@@ -53,7 +56,7 @@ libphysfs_la_SOURCES =	\
 	archivers/unzip.h   \
 	platform/unix.c     \
 	platform/posix.c    \
-    $(ZLIB_SRC) @BUILD_BEOS_CPP@
+    $(ZLIB_SRC) $(BEOS_SRC)
 
 libphysfs_la_INCLUDES = $(ZLIB_INC)
 
@@ -91,7 +94,7 @@ EXTRA_DIST =	\
     extras/physfshttpd.c   \
 	Makefile.am.oldautomake \
 	Makefile.am.newautomake \
-    $(ZLIB_EXTRADIST) @BUILD_BEOS_EXTRA@ $(TEST_EXTRADIST)
+    $(ZLIB_EXTRADIST) $(BEOS_EXTRADIST) $(TEST_EXTRADIST)
 
 else
 
