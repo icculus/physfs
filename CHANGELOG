@@ -4,7 +4,10 @@
 
 05222002 - Fixed the build system to always package the complete source, not
            just what we built for a given system, when doing a "make dist".
-           Updated INSTALL. Started writing BeOS platform code.
+           Updated INSTALL. Wrote BeOS platform code (platform/beos.cpp).
+           Split unix.c into unix.c and posix.c. Linux and BeOS both share
+           posix.c, although I don't think it's completely POSIX compliant at
+           this point (not that it matters much).
 05212002 - Cleaned up some FIXMEs.
 05202002 - Added .cvsignore files.
 05162002 - Edward Rudd also caught an embarrassing screwup by me in
