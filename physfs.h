@@ -128,6 +128,7 @@
  * Currently supported archive types:
  *   - .ZIP (pkZip/WinZip/Info-ZIP compatible)
  *   - .GRP (Build Engine groupfile archives)
+ *   - .PAK (Quake I/II archive format)
  *   - .HOG (Descent I/II HOG file archives)
  *   - .MVL (Descent II movielib archives)
  *
