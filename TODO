@@ -45,8 +45,6 @@ Some might be dupes, some might be done already.
 - Should file enumeration return an error or set error state?
 - Ryanify pocketpc.c ...
 - Update internal zlib?
-- Split verifySecurity() off into sanitizePath() and hook it into mount point
-  initialization.
 - Get svn hooks working.
 - maybe other stuff.
 
