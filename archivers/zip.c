@@ -6,13 +6,28 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#undef __STRICT_ANSI__
+/*
+ * !!! FIXME: overall design bugs.
+ *
+ *  It'd be nice if we could remove the thread issues: I/O to individual
+ *   files inside an archive are safe, but the searches over the central
+ *   directory and the ZIP_openRead() call are race conditions. Basically,
+ *   we need to hack something like openDir() into unzip.c, so that directory
+ *   reads are separated by handles, and maybe add a openFileByName() call,
+ *   or make unzOpenCurrentFile() take a handle, too.
+ *
+ *  Make unz_file_info.version into two fields of unsigned char. That's what
+ *   they are in the zipfile; heavens knows why unzip.c casts it...this causes
+ *   a byte ordering headache for me in entry_is_symlink().
+ *
+ *  Maybe add a seekToStartOfCurrentFile() in unzip.c if complete seek
+ *   semantics are impossible.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/stat.h>
 #include <errno.h>
 #include "physfs.h"
 #include "unzip.h"
@@ -31,11 +46,12 @@ typedef struct
 {
     unzFile handle;
     uLong totalEntries;
+    char *archiveName;
 } ZIPinfo;
 
 typedef struct
 {
-int i;
+    unzFile handle;
 } ZIPfileinfo;
 
 
@@ -46,37 +62,89 @@ static const FileFunctions __PHYSFS_FileFunctions_ZIP;
 static int ZIP_read(FileHandle *handle, void *buffer,
                     unsigned int objSize, unsigned int objCount)
 {
-    BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, 0);  /* !!! write me! */
+    unzFile fh = ((ZIPfileinfo *) (handle->opaque))->handle;
+    int bytes = objSize * objCount;
+    int rc = unzReadCurrentFile(fh, buffer, bytes);
+
+    if (rc < bytes)
+        __PHYSFS_setError(ERR_PAST_EOF);
+    else if (rc == UNZ_ERRNO)
+        __PHYSFS_setError(ERR_IO_ERROR);
+    else if (rc < 0)
+        __PHYSFS_setError(ERR_COMPRESSION);
+
+    return(rc / objSize);
 } /* ZIP_read */
 
 
 static int ZIP_eof(FileHandle *handle)
 {
-    BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, 1);  /* !!! write me! */
+    return(unzeof(((ZIPfileinfo *) (handle->opaque))->handle));
 } /* ZIP_eof */
 
 
 static int ZIP_tell(FileHandle *handle)
 {
-    BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, -1);  /* !!! write me! */
+    return(unztell(((ZIPfileinfo *) (handle->opaque))->handle));
 } /* ZIP_tell */
+
+
+static int ZIP_fileLength(FileHandle *handle);
 
 
 static int ZIP_seek(FileHandle *handle, int offset)
 {
-    BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, 0);  /* !!! write me! */
+    /* this blows. */
+    unzFile fh = ((ZIPfileinfo *) (handle->opaque))->handle;
+    char *buf;
+    int bufsize = 4096 * 2;
+
+    BAIL_IF_MACRO(unztell(fh) == offset, NULL, 1);
+    BAIL_IF_MACRO(ZIP_fileLength(handle) <= offset, ERR_PAST_EOF, 0);
+
+        /* reset to the start of the zipfile. */
+    unzCloseCurrentFile(fh);
+    BAIL_IF_MACRO(unzOpenCurrentFile(fh) != UNZ_OK, ERR_IO_ERROR, 0);
+
+    while ((buf == NULL) && (bufsize >= 512))
+    {
+        bufsize >>= 1;  /* divides by two. */
+        buf = (char *) malloc(bufsize);
+    } /* while */
+    BAIL_IF_MACRO(buf == NULL, ERR_OUT_OF_MEMORY, 0);
+
+    while (offset > 0)
+    {
+        int chunk = (offset > bufsize) ? bufsize : offset;
+        int rc = unzReadCurrentFile(fh, buf, chunk);
+        BAIL_IF_MACRO(rc == 0, ERR_IO_ERROR, 0);  /* shouldn't happen. */
+        BAIL_IF_MACRO(rc == UNZ_ERRNO, ERR_IO_ERROR, 0);
+        BAIL_IF_MACRO(rc < 0, ERR_COMPRESSION, 0);
+        offset -= rc;
+    } /* while */
+
+    free(buf);
+    return(offset == 0);
 } /* ZIP_seek */
 
 
 static int ZIP_fileLength(FileHandle *handle)
 {
-    BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, -1);  /* !!! write me! */
+    ZIPfileinfo *finfo = (ZIPfileinfo *) (handle->opaque);
+    unz_file_info info;
+
+    unzGetCurrentFileInfo(finfo->handle, &info, NULL, 0, NULL, 0, NULL, 0);
+    return(info.uncompressed_size);
 } /* ZIP_fileLength */
 
 
 static int ZIP_fileClose(FileHandle *handle)
 {
-    BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, 0);  /* !!! write me! */
+    ZIPfileinfo *finfo = (ZIPfileinfo *) (handle->opaque);
+    unzClose(finfo->handle);
+    free(finfo);
+    free(handle);
+    return(1);
 } /* ZIP_fileClose */
 
 
@@ -128,8 +196,18 @@ static DirHandle *ZIP_openArchive(const char *name, int forWriting)
         BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
+    ((ZIPinfo *) (retval->opaque))->archiveName = malloc(strlen(name) + 1);
+    if (((ZIPinfo *) (retval->opaque))->archiveName == NULL)
+    {
+        free(retval->opaque);
+        free(retval);
+        unzClose(unz);
+        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+    } /* if */
+
     ((ZIPinfo *) (retval->opaque))->handle = unz;
     ((ZIPinfo *) (retval->opaque))->totalEntries = global.number_entry;
+    strcpy(((ZIPinfo *) (retval->opaque))->archiveName, name);
     retval->funcs = &__PHYSFS_DirFunctions_ZIP;
 
     return(retval);
@@ -433,23 +511,28 @@ static int ZIP_isSymLink(DirHandle *h, const char *name)
 
 static FileHandle *ZIP_openRead(DirHandle *h, const char *filename)
 {
-/*
-    unzFile fh = ((ZIPinfo *) (h->opaque))->handle;
-    unz_file_info info;
-*/
     FileHandle *retval = NULL;
+    ZIPfileinfo *finfo = NULL;
+    char *name = ((ZIPinfo *) (h->opaque))->archiveName;
+    unzFile f;
 
     BAIL_IF_MACRO(!ZIP_exists(h, filename), ERR_NO_SUCH_FILE, NULL);
 
-/*
-    finfo->startPos = ;
-    finfo->curPos = offset;
-    finfo->size = size;
-    retval->opaque = (void *) finfo;
-    retval->funcs = &__PHYSFS_FileFunctions_GRP;
-    retval->dirHandle = h;
-*/
+    f = unzOpen(name);
+    BAIL_IF_MACRO(f == NULL, ERR_IO_ERROR, NULL);
 
+    if ( (unzLocateFile(f, filename, 1) != UNZ_OK) ||
+         ( (finfo = (ZIPfileinfo *) malloc(sizeof (ZIPfileinfo))) == NULL ) ||
+         (unzOpenCurrentFile(f) != UNZ_OK) )
+    {
+        unzClose(f);
+        BAIL_IF_MACRO(1, ERR_IO_ERROR, NULL);
+    } /* if */
+
+    finfo->handle = f;
+    retval->opaque = (void *) finfo;
+    retval->funcs = &__PHYSFS_FileFunctions_ZIP;
+    retval->dirHandle = h;
     return(retval);
 } /* ZIP_openRead */
 
