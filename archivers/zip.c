@@ -104,7 +104,7 @@ static DirHandle *ZIP_openArchive(const char *name, int forWriting)
     {
         if (unz)
             unzClose(unz);
-        free(retval); 
+        free(retval);
         BAIL_IF_MACRO(1, ERR_UNSUPPORTED_ARCHIVE, NULL);
     } /* if */
 
@@ -117,7 +117,7 @@ static DirHandle *ZIP_openArchive(const char *name, int forWriting)
     } /* if */
 
     ((ZIPinfo *) (retval->opaque))->handle = unz;
-    ((ZIPinfo *) (retval->opaque))->totalEntries = global.number_entry;        
+    ((ZIPinfo *) (retval->opaque))->totalEntries = global.number_entry;
 
     return(retval);
 } /* ZIP_openArchive */
@@ -243,8 +243,8 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 {
     "ZIP",
     "PkZip/WinZip/Info-Zip compatible",
-    "Ryan C. Gordon",
-    "http://www.icculus.org/",
+    "Ryan C. Gordon (icculus@linuxgames.com)",
+    "http://www.icculus.org/~icculus/",
 };
 
 /* end of zip.c ... */
