@@ -13,9 +13,9 @@ dnl ---------------------------------------------------------------------
 # if backwards compatibility has been broken,
 # set BINARY_AGE and INTERFACE_AGE to 0.
 
-MAJOR_VERSION=0
-MINOR_VERSION=1
-MICRO_VERSION=9
+MAJOR_VERSION=1
+MINOR_VERSION=0
+MICRO_VERSION=0
 INTERFACE_AGE=0
 BINARY_AGE=0
 VERSION=$MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION
@@ -202,6 +202,7 @@ else
 
   if test x$enable_internal_zlib = xyes; then
     AC_MSG_RESULT([internal zlib])
+    PHYSFSCFLAGS="$PHYSFSCFLAGS -DZ_PREFIX"
   else
     if test x$enable_external_zlib = xyes; then
       AC_MSG_RESULT([external zlib])
@@ -347,8 +348,9 @@ have_non_posix_threads=no
 AC_MSG_CHECKING([if this is BeOS])
 if test x$target_os = xbeos; then
   this_is_beos=yes
-  enable_pthreads=no
   have_non_posix_threads=yes
+  enable_cdrom=yes
+  enable_pthreads=no
   LIBS="$LIBS -lroot -lbe"
 else
   this_is_beos=no
@@ -360,6 +362,7 @@ AC_MSG_CHECKING([if this is Cygwin])
 if test x$target_os = xcygwin; then
   this_is_cygwin=yes
   PHYSFSCFLAGS="$PHYSFSCFLAGS -DWIN32"
+  enable_cdrom=yes
   enable_pthreads=no
   have_non_posix_threads=yes
 else
@@ -423,6 +426,9 @@ if test x$we_have_sed = xyes; then
   x=`echo $target_os |tr A-Z a-z |sed "s/.*os2.*/os2/"`
   if test x$x = xos2; then
     this_is_os2=yes
+    have_non_posix_threads=yes
+    enable_cdrom=yes
+    enable_pthreads=no
     PHYSFSCFLAGS="$PHYSFSCFLAGS -DOS2"
   fi
 

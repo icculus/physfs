@@ -66,6 +66,7 @@
 				014CEA440018CDF011CA2923,
 				014CEA450018CDF011CA2923,
 			);
+			hasScannedForEncodings = 1;
 			isa = PBXProject;
 			mainGroup = 0867D691FE84028FC02AAC07;
 			productRefGroup = 034768DFFF38A50411DB9C8B;
@@ -110,8 +111,8 @@
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
-				OTHER_CFLAGS = "-DPHYSFS_HAVE_SYS_UCRED_H -DNDEBUG -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_QPAK";
-				OTHER_LDFLAGS = "-seg1addr 0x30A00000";
+				OTHER_CFLAGS = "-DPHYSFS_HAVE_SYS_UCRED_H -DZ_PREFIX -DNDEBUG -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DPHYSFS_SUPPORTS_WAD";
+				OTHER_LDFLAGS = "-seg1addr 0x30A00000 -framework IOKit -framework Carbon";
 				PRODUCT_NAME = physfs;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -145,17 +146,16 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.7</string>
+	<string>1.0.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>0.0.1d1</string>
+	<string>1.0.0</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
 </dict>
 </plist>
 ";
-			shouldUseHeadermap = 1;
 		};
 		0867D69DFE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -163,12 +163,9 @@
 				F8FDCE0A03AEDD6801A8000A,
 				F8FDCE6B03AEDE1F01A8000A,
 				F8FDCE8A03AEDE1F01A8000A,
-				F8FDCE8C03AEDE1F01A8000A,
-				F8FDCE8E03AEDE1F01A8000A,
 				F8FDCE9003AEDE1F01A8000A,
 				F8FDCE9103AEDE1F01A8000A,
 				F8FDCE9403AEDE1F01A8000A,
-				F8FDCE9603AEDE1F01A8000A,
 				F8FDCE9B03AEDE1F01A8000A,
 				F8FDCE9D03AEDE1F01A8000A,
 				F8FDCE9E03AEDE1F01A8000A,
@@ -197,17 +194,17 @@
 				F8FDCE8703AEDE1F01A8000A,
 				F8FDCE8803AEDE1F01A8000A,
 				F8FDCE8903AEDE1F01A8000A,
-				F8FDCE8B03AEDE1F01A8000A,
-				F8FDCE8D03AEDE1F01A8000A,
 				F8FDCE8F03AEDE1F01A8000A,
 				F8FDCE9203AEDE1F01A8000A,
 				F8FDCE9303AEDE1F01A8000A,
-				F8FDCE9503AEDE1F01A8000A,
 				F8FDCE9A03AEDE1F01A8000A,
 				F8FDCE9C03AEDE1F01A8000A,
 				F8FDCE9F03AEDE1F01A8000A,
 				F8FDCEC703AEDE3A01A8000A,
 				F886735503B8AF5501A8000A,
+				56E7B5B005A6A75B00A801AA,
+				56E7B5B105A6A75B00A801AA,
+				56E7B5B205A6A75B00A801AA,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -267,12 +264,77 @@
 //082
 //083
 //084
+//560
+//561
+//562
+//563
+//564
+		56E7B5AD05A6A75B00A801AA = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = hog.c;
+			refType = 4;
+		};
+		56E7B5AE05A6A75B00A801AA = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = mvl.c;
+			refType = 4;
+		};
+		56E7B5AF05A6A75B00A801AA = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = wad.c;
+			refType = 4;
+		};
+		56E7B5B005A6A75B00A801AA = {
+			fileRef = 56E7B5AD05A6A75B00A801AA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		56E7B5B105A6A75B00A801AA = {
+			fileRef = 56E7B5AE05A6A75B00A801AA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		56E7B5B205A6A75B00A801AA = {
+			fileRef = 56E7B5AF05A6A75B00A801AA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		56E7B5B305A6A75B00A801AA = {
+			fileRef = 56E7B5AD05A6A75B00A801AA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		56E7B5B405A6A75B00A801AA = {
+			fileRef = 56E7B5AE05A6A75B00A801AA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		56E7B5B505A6A75B00A801AA = {
+			fileRef = 56E7B5AF05A6A75B00A801AA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//560
+//561
+//562
+//563
+//564
 //F80
 //F81
 //F82
 //F83
 //F84
 		F886735403B8AF5501A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = qpak.c;
 			path = ../archivers/qpak.c;
@@ -380,7 +442,6 @@
 </dict>
 </plist>
 ";
-			shouldUseHeadermap = 0;
 		};
 		F886735D03B8B31801A8000A = {
 			isa = PBXApplicationReference;
@@ -400,6 +461,7 @@
 			refType = 4;
 		};
 		F886736303B8B37C01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = test_physfs.c;
 			path = ../test/test_physfs.c;
@@ -423,12 +485,9 @@
 				F8FDCE0903AEDD6801A8000A,
 				F8FDCEA703AEDE1F01A8000A,
 				F8FDCEB303AEDE1F01A8000A,
-				F8FDCEB503AEDE1F01A8000A,
-				F8FDCEB703AEDE1F01A8000A,
 				F8FDCEB903AEDE1F01A8000A,
 				F8FDCEBA03AEDE1F01A8000A,
 				F8FDCEBD03AEDE1F01A8000A,
-				F8FDCEBF03AEDE1F01A8000A,
 				F8FDCEC103AEDE1F01A8000A,
 				F8FDCEC303AEDE1F01A8000A,
 				F8FDCEC403AEDE1F01A8000A,
@@ -450,17 +509,17 @@
 				F8FDCEB003AEDE1F01A8000A,
 				F8FDCEB103AEDE1F01A8000A,
 				F8FDCEB203AEDE1F01A8000A,
-				F8FDCEB403AEDE1F01A8000A,
-				F8FDCEB603AEDE1F01A8000A,
 				F8FDCEB803AEDE1F01A8000A,
 				F8FDCEBB03AEDE1F01A8000A,
 				F8FDCEBC03AEDE1F01A8000A,
-				F8FDCEBE03AEDE1F01A8000A,
 				F8FDCEC003AEDE1F01A8000A,
 				F8FDCEC203AEDE1F01A8000A,
 				F8FDCEC503AEDE1F01A8000A,
 				F8FDCECA03AF0B0001A8000A,
 				F886735603B8AF5501A8000A,
+				56E7B5B305A6A75B00A801AA,
+				56E7B5B405A6A75B00A801AA,
+				56E7B5B505A6A75B00A801AA,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -506,7 +565,6 @@
 			productInstallPath = /usr/local/lib;
 			productName = libphysfs.a;
 			productReference = F8FDCD0303AEBD5D01A8000A;
-			shouldUseHeadermap = 0;
 		};
 		F8FDCD0303AEBD5D01A8000A = {
 			isa = PBXLibraryReference;
@@ -534,7 +592,6 @@
 			productInstallPath = /usr/local/bin;
 			productName = "Standard Package";
 			productReference = F8FDCD0903AEBD7901A8000A;
-			shouldUseHeadermap = 0;
 		};
 		F8FDCD0903AEBD7901A8000A = {
 			isa = PBXExecutableFileReference;
@@ -562,7 +619,6 @@
 			productInstallPath = /usr/local/bin;
 			productName = "Devel Package";
 			productReference = F8FDCD1003AEBD8901A8000A;
-			shouldUseHeadermap = 0;
 		};
 		F8FDCD1003AEBD8901A8000A = {
 			isa = PBXExecutableFileReference;
@@ -623,6 +679,7 @@
 			shellScript = "exec ./pkg-support/mkpackage.sh \"physfs\" \"devel\"";
 		};
 		F8FDCE0803AEDD6801A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = physfs.h;
 			path = ../physfs.h;
@@ -655,33 +712,39 @@
 			refType = 2;
 		};
 		F8FDCE0C03AEDDC901A8000A = {
+			fileEncoding = 30;
 			isa = PBXExecutableFileReference;
 			path = install.sh;
 			refType = 4;
 		};
 		F8FDCE0D03AEDDC901A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = ReadMe.txt;
 			refType = 4;
 		};
 		F8FDCE0E03AEDDC901A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = Welcome.txt;
 			refType = 4;
 		};
 		F8FDCE0F03AEDDC901A8000A = {
+			fileEncoding = 30;
 			isa = PBXExecutableFileReference;
 			name = mkpackage.sh;
 			path = "pkg-support/mkpackage.sh";
 			refType = 2;
 		};
 		F8FDCE1003AEDDC901A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = "physfs-devel.info";
 			path = "pkg-support/physfs-devel.info";
 			refType = 2;
 		};
 		F8FDCE1103AEDDC901A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = physfs.info;
 			path = "pkg-support/physfs.info";
@@ -698,11 +761,13 @@
 			refType = 2;
 		};
 		F8FDCE1303AEDDC901A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = ReadMe.txt;
 			refType = 4;
 		};
 		F8FDCE1403AEDDC901A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = Welcome.txt;
 			refType = 4;
@@ -713,6 +778,9 @@
 				F8FDCE1C03AEDE1F01A8000A,
 				F8FDCE2203AEDE1F01A8000A,
 				F886735403B8AF5501A8000A,
+				56E7B5AD05A6A75B00A801AA,
+				56E7B5AE05A6A75B00A801AA,
+				56E7B5AF05A6A75B00A801AA,
 			);
 			isa = PBXGroup;
 			name = archivers;
@@ -720,33 +788,39 @@
 			refType = 2;
 		};
 		F8FDCE1B03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = dir.c;
 			refType = 4;
 		};
 		F8FDCE1C03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = grp.c;
 			refType = 4;
 		};
 		F8FDCE2203AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = zip.c;
 			refType = 4;
 		};
 		F8FDCE2303AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = physfs_byteorder.c;
 			path = ../physfs_byteorder.c;
 			refType = 2;
 		};
 		F8FDCE2403AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = physfs_internal.h;
 			path = ../physfs_internal.h;
 			refType = 2;
 		};
 		F8FDCE2503AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = physfs.c;
 			path = ../physfs.c;
@@ -767,31 +841,37 @@
 			refType = 2;
 		};
 		F8FDCE2B03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = beos.cpp;
 			refType = 4;
 		};
 		F8FDCE2C03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = macclassic.c;
 			refType = 4;
 		};
 		F8FDCE3003AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = posix.c;
 			refType = 4;
 		};
 		F8FDCE3103AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = skeleton.c;
 			refType = 4;
 		};
 		F8FDCE3203AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = unix.c;
 			refType = 4;
 		};
 		F8FDCE3303AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = win32.c;
 			refType = 4;
@@ -803,18 +883,12 @@
 				F8FDCE4503AEDE1F01A8000A,
 				F8FDCE4603AEDE1F01A8000A,
 				F8FDCE4703AEDE1F01A8000A,
-				F8FDCE4803AEDE1F01A8000A,
-				F8FDCE4903AEDE1F01A8000A,
-				F8FDCE4A03AEDE1F01A8000A,
-				F8FDCE4B03AEDE1F01A8000A,
 				F8FDCE4C03AEDE1F01A8000A,
 				F8FDCE4D03AEDE1F01A8000A,
 				F8FDCE4E03AEDE1F01A8000A,
 				F8FDCE4F03AEDE1F01A8000A,
 				F8FDCE5003AEDE1F01A8000A,
 				F8FDCE5103AEDE1F01A8000A,
-				F8FDCE5203AEDE1F01A8000A,
-				F8FDCE5303AEDE1F01A8000A,
 				F8FDCE5703AEDE1F01A8000A,
 				F8FDCE5803AEDE1F01A8000A,
 				F8FDCE5903AEDE1F01A8000A,
@@ -824,126 +898,114 @@
 				F8FDCE5D03AEDE1F01A8000A,
 			);
 			isa = PBXGroup;
-			name = zlib114;
-			path = ../zlib114;
+			name = zlib121;
+			path = ../zlib121;
 			refType = 2;
 		};
 		F8FDCE4303AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = adler32.c;
 			refType = 4;
 		};
 		F8FDCE4403AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = compress.c;
 			refType = 4;
 		};
 		F8FDCE4503AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = crc32.c;
 			refType = 4;
 		};
 		F8FDCE4603AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = deflate.c;
 			refType = 4;
 		};
 		F8FDCE4703AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = deflate.h;
 			refType = 4;
 		};
-		F8FDCE4803AEDE1F01A8000A = {
-			isa = PBXFileReference;
-			path = infblock.c;
-			refType = 4;
-		};
-		F8FDCE4903AEDE1F01A8000A = {
-			isa = PBXFileReference;
-			path = infblock.h;
-			refType = 4;
-		};
-		F8FDCE4A03AEDE1F01A8000A = {
-			isa = PBXFileReference;
-			path = infcodes.c;
-			refType = 4;
-		};
-		F8FDCE4B03AEDE1F01A8000A = {
-			isa = PBXFileReference;
-			path = infcodes.h;
-			refType = 4;
-		};
 		F8FDCE4C03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = inffast.c;
 			refType = 4;
 		};
 		F8FDCE4D03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = inffast.h;
 			refType = 4;
 		};
 		F8FDCE4E03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = inffixed.h;
 			refType = 4;
 		};
 		F8FDCE4F03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = inflate.c;
 			refType = 4;
 		};
 		F8FDCE5003AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = inftrees.c;
 			refType = 4;
 		};
 		F8FDCE5103AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = inftrees.h;
 			refType = 4;
 		};
-		F8FDCE5203AEDE1F01A8000A = {
-			isa = PBXFileReference;
-			path = infutil.c;
-			refType = 4;
-		};
-		F8FDCE5303AEDE1F01A8000A = {
-			isa = PBXFileReference;
-			path = infutil.h;
-			refType = 4;
-		};
 		F8FDCE5703AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = trees.c;
 			refType = 4;
 		};
 		F8FDCE5803AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = trees.h;
 			refType = 4;
 		};
 		F8FDCE5903AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = uncompr.c;
 			refType = 4;
 		};
 		F8FDCE5A03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = zconf.h;
 			refType = 4;
 		};
 		F8FDCE5B03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = zlib.h;
 			refType = 4;
 		};
 		F8FDCE5C03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = zutil.c;
 			refType = 4;
 		};
 		F8FDCE5D03AEDE1F01A8000A = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = zutil.h;
 			refType = 4;
@@ -1020,30 +1082,6 @@
 			settings = {
 			};
 		};
-		F8FDCE8B03AEDE1F01A8000A = {
-			fileRef = F8FDCE4803AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCE8C03AEDE1F01A8000A = {
-			fileRef = F8FDCE4903AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCE8D03AEDE1F01A8000A = {
-			fileRef = F8FDCE4A03AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCE8E03AEDE1F01A8000A = {
-			fileRef = F8FDCE4B03AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F8FDCE8F03AEDE1F01A8000A = {
 			fileRef = F8FDCE4C03AEDE1F01A8000A;
 			isa = PBXBuildFile;
@@ -1076,18 +1114,6 @@
 		};
 		F8FDCE9403AEDE1F01A8000A = {
 			fileRef = F8FDCE5103AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCE9503AEDE1F01A8000A = {
-			fileRef = F8FDCE5203AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCE9603AEDE1F01A8000A = {
-			fileRef = F8FDCE5303AEDE1F01A8000A;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1206,30 +1232,6 @@
 			settings = {
 			};
 		};
-		F8FDCEB403AEDE1F01A8000A = {
-			fileRef = F8FDCE4803AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCEB503AEDE1F01A8000A = {
-			fileRef = F8FDCE4903AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCEB603AEDE1F01A8000A = {
-			fileRef = F8FDCE4A03AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCEB703AEDE1F01A8000A = {
-			fileRef = F8FDCE4B03AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F8FDCEB803AEDE1F01A8000A = {
 			fileRef = F8FDCE4C03AEDE1F01A8000A;
 			isa = PBXBuildFile;
@@ -1262,18 +1264,6 @@
 		};
 		F8FDCEBD03AEDE1F01A8000A = {
 			fileRef = F8FDCE5103AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCEBE03AEDE1F01A8000A = {
-			fileRef = F8FDCE5203AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCEBF03AEDE1F01A8000A = {
-			fileRef = F8FDCE5303AEDE1F01A8000A;
 			isa = PBXBuildFile;
 			settings = {
 			};

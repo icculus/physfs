@@ -32,17 +32,22 @@ EXTRA_DIST =	\
 	INSTALL \
 	TODO \
 	Doxyfile \
-	CWProjects.sit \
+	PBProjects \
+	CWProjects.sitx \
 	physfs.spec.in \
 	physfs.spec \
 	physfs.dsp \
+	physfs_static.dsp \
 	test_physfs.dsp \
+	physfs.vcproj \
+	test_physfs.vcproj \
 	zlib_license_change.txt \
 	makeos2.cmd
 
 dist-hook:
+	perl -w -pi -e 'chomp; $$_ .= "\r\n";' $(distdir)/*.dsp $(distdir)/*.vcproj
 	mkdir $(distdir)/docs
 	echo "Docs are generated with the program "Doxygen" (http://www.doxygen.org/)," >> $(distdir)/docs/README
 	echo " or can be read online at http://icculus.org/physfs/docs/" >> $(distdir)/docs/README
 	echo >> $(distdir)/docs/README
-
+	rm -rf `find $(distdir) -name "CVS" -type d`

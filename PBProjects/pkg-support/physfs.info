@@ -1,6 +1,6 @@
-Title PhysFS 0.1.9
+Title PhysFS 1.0.0
 Version 1
-Description PhysFS Library for Mac OS X (http://www.icculus.org/physfs/)
+Description PhysicsFS Library for Mac OS X (http://www.icculus.org/physfs/)
 DefaultLocation /Library/Frameworks
 Diskname (null)
 DeleteWarning 
