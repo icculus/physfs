@@ -40,6 +40,7 @@
 				F8FDCD0303AEBD5D01A8000A,
 				F8FDCD0903AEBD7901A8000A,
 				F8FDCD1003AEBD8901A8000A,
+				F886735D03B8B31801A8000A,
 			);
 			isa = PBXGroup;
 			name = Products;
@@ -74,6 +75,7 @@
 				F8FDCD0203AEBD5D01A8000A,
 				F8FDCD0803AEBD7901A8000A,
 				F8FDCD0F03AEBD8901A8000A,
+				F886735C03B8B31801A8000A,
 			);
 		};
 		0867D691FE84028FC02AAC07 = {
@@ -82,6 +84,7 @@
 				08FB77AEFE84172EC02AAC07,
 				089C1665FE841158C02AAC07,
 				F8FDCD2103AEBE7B01A8000A,
+				F886736003B8B34001A8000A,
 				034768DFFF38A50411DB9C8B,
 			);
 			isa = PBXGroup;
@@ -107,6 +110,7 @@
 				HEADER_SEARCH_PATHS = "";
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
 				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = "-DPHYSFS_HAVE_SYS_UCRED_H -DNDEBUG -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_QPAK";
 				OTHER_LDFLAGS = "-seg1addr 0x30A00000";
 				PRODUCT_NAME = physfs;
 				SECTORDER_FLAGS = "";
@@ -157,7 +161,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F8FDCE0A03AEDD6801A8000A,
-				F8FDCE6803AEDE1F01A8000A,
 				F8FDCE6B03AEDE1F01A8000A,
 				F8FDCE8A03AEDE1F01A8000A,
 				F8FDCE8C03AEDE1F01A8000A,
@@ -186,7 +189,6 @@
 			files = (
 				F8FDCE6203AEDE1F01A8000A,
 				F8FDCE6303AEDE1F01A8000A,
-				F8FDCE6703AEDE1F01A8000A,
 				F8FDCE6903AEDE1F01A8000A,
 				F8FDCE6A03AEDE1F01A8000A,
 				F8FDCE6C03AEDE1F01A8000A,
@@ -205,6 +207,7 @@
 				F8FDCE9C03AEDE1F01A8000A,
 				F8FDCE9F03AEDE1F01A8000A,
 				F8FDCEC703AEDE3A01A8000A,
+				F886735503B8AF5501A8000A,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -269,11 +272,155 @@
 //F82
 //F83
 //F84
+		F886735403B8AF5501A8000A = {
+			isa = PBXFileReference;
+			name = qpak.c;
+			path = ../archivers/qpak.c;
+			refType = 2;
+		};
+		F886735503B8AF5501A8000A = {
+			fileRef = F886735403B8AF5501A8000A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F886735603B8AF5501A8000A = {
+			fileRef = F886735403B8AF5501A8000A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F886735703B8B31801A8000A = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F886735803B8B31801A8000A = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F886735903B8B31801A8000A = {
+			buildActionMask = 2147483647;
+			files = (
+				F886736403B8B37C01A8000A,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F886735A03B8B31801A8000A = {
+			buildActionMask = 2147483647;
+			files = (
+				F886736603B8B43A01A8000A,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F886735B03B8B31801A8000A = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F886735C03B8B31801A8000A = {
+			buildPhases = (
+				F886735703B8B31801A8000A,
+				F886735803B8B31801A8000A,
+				F886735903B8B31801A8000A,
+				F886735A03B8B31801A8000A,
+				F886735B03B8B31801A8000A,
+			);
+			buildSettings = {
+				OTHER_CFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = test_physfs_static;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WRAPPER_EXTENSION = app;
+			};
+			dependencies = (
+				F886735F03B8B32101A8000A,
+			);
+			isa = PBXApplicationTarget;
+			name = test_physfs_static;
+			productInstallPath = "$(USER_APPS_DIR)";
+			productName = test_physfs_static;
+			productReference = F886735D03B8B31801A8000A;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string></string>
+	<key>CFBundleGetInfoString</key>
+	<string></string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string></string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string></string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string></string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>0.0.1d1</string>
+</dict>
+</plist>
+";
+			shouldUseHeadermap = 0;
+		};
+		F886735D03B8B31801A8000A = {
+			isa = PBXApplicationReference;
+			path = test_physfs_static.app;
+			refType = 3;
+		};
+		F886735F03B8B32101A8000A = {
+			isa = PBXTargetDependency;
+			target = F8FDCD0203AEBD5D01A8000A;
+		};
+		F886736003B8B34001A8000A = {
+			children = (
+				F886736303B8B37C01A8000A,
+			);
+			isa = PBXGroup;
+			name = "Test Program";
+			refType = 4;
+		};
+		F886736303B8B37C01A8000A = {
+			isa = PBXFileReference;
+			name = test_physfs.c;
+			path = ../test/test_physfs.c;
+			refType = 2;
+		};
+		F886736403B8B37C01A8000A = {
+			fileRef = F886736303B8B37C01A8000A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F886736603B8B43A01A8000A = {
+			fileRef = F8FDCD0303AEBD5D01A8000A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F8FDCCFE03AEBD5D01A8000A = {
 			buildActionMask = 2147483647;
 			files = (
 				F8FDCE0903AEDD6801A8000A,
-				F8FDCEA403AEDE1F01A8000A,
 				F8FDCEA703AEDE1F01A8000A,
 				F8FDCEB303AEDE1F01A8000A,
 				F8FDCEB503AEDE1F01A8000A,
@@ -295,7 +442,6 @@
 			files = (
 				F8FDCEA103AEDE1F01A8000A,
 				F8FDCEA203AEDE1F01A8000A,
-				F8FDCEA303AEDE1F01A8000A,
 				F8FDCEA503AEDE1F01A8000A,
 				F8FDCEA603AEDE1F01A8000A,
 				F8FDCEA803AEDE1F01A8000A,
@@ -314,6 +460,7 @@
 				F8FDCEC203AEDE1F01A8000A,
 				F8FDCEC503AEDE1F01A8000A,
 				F8FDCECA03AF0B0001A8000A,
+				F886735603B8AF5501A8000A,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -343,7 +490,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
+				OTHER_CFLAGS = "-DPHYSFS_HAVE_SYS_UCRED_H -DNDEBUG -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_QPAK";
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -564,9 +711,8 @@
 			children = (
 				F8FDCE1B03AEDE1F01A8000A,
 				F8FDCE1C03AEDE1F01A8000A,
-				F8FDCE2003AEDE1F01A8000A,
-				F8FDCE2103AEDE1F01A8000A,
 				F8FDCE2203AEDE1F01A8000A,
+				F886735403B8AF5501A8000A,
 			);
 			isa = PBXGroup;
 			name = archivers;
@@ -581,16 +727,6 @@
 		F8FDCE1C03AEDE1F01A8000A = {
 			isa = PBXFileReference;
 			path = grp.c;
-			refType = 4;
-		};
-		F8FDCE2003AEDE1F01A8000A = {
-			isa = PBXFileReference;
-			path = unzip.c;
-			refType = 4;
-		};
-		F8FDCE2103AEDE1F01A8000A = {
-			isa = PBXFileReference;
-			path = unzip.h;
 			refType = 4;
 		};
 		F8FDCE2203AEDE1F01A8000A = {
@@ -824,18 +960,6 @@
 			settings = {
 			};
 		};
-		F8FDCE6703AEDE1F01A8000A = {
-			fileRef = F8FDCE2003AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCE6803AEDE1F01A8000A = {
-			fileRef = F8FDCE2103AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F8FDCE6903AEDE1F01A8000A = {
 			fileRef = F8FDCE2203AEDE1F01A8000A;
 			isa = PBXBuildFile;
@@ -1018,18 +1142,6 @@
 		};
 		F8FDCEA203AEDE1F01A8000A = {
 			fileRef = F8FDCE1C03AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCEA303AEDE1F01A8000A = {
-			fileRef = F8FDCE2003AEDE1F01A8000A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F8FDCEA403AEDE1F01A8000A = {
-			fileRef = F8FDCE2103AEDE1F01A8000A;
 			isa = PBXBuildFile;
 			settings = {
 			};

@@ -1,4 +1,4 @@
-This is an example portable sound library for use with SDL.
+This is an example portable filesystem.
 The API can be found in the file ~/Library/Frameworks/physfs.framework/Headers/physfs.h
 
 The source code is available from:

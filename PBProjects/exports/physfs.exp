@@ -22,17 +22,19 @@
 	_PHYSFS_exists
 	_PHYSFS_isDirectory
 	_PHYSFS_isSymbolicLink
+	_PHYSFS_getLastModTime
 	_PHYSFS_openWrite
 	_PHYSFS_openAppend
 	_PHYSFS_openRead
 	_PHYSFS_close
-	_PHYSFS_getLastModTime
 	_PHYSFS_read
 	_PHYSFS_write
 	_PHYSFS_eof
 	_PHYSFS_tell
 	_PHYSFS_seek
 	_PHYSFS_fileLength
+	_PHYSFS_setBuffer
+	_PHYSFS_flush
 	_PHYSFS_swapSLE16
 	_PHYSFS_swapULE16
 	_PHYSFS_swapSLE32
