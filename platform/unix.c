@@ -280,7 +280,7 @@ char *__PHYSFS_platformRealPath(const char *path)
 } /* __PHYSFS_platformRealPath */
 
 
-#if (!defined PHYSFS_NO_PTHREADS_SUPPORT)
+#if (defined PHYSFS_NO_PTHREADS_SUPPORT)
 
 PHYSFS_uint64 __PHYSFS_platformGetThreadID(void) { return(0x0001); }
 void *__PHYSFS_platformCreateMutex(void) { return((void *) 0x0001); }
