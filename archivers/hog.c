@@ -321,7 +321,6 @@ static int hog_load_entries(const char *name, int forWriting, HOGinfo *info)
     void *fh = NULL;
     PHYSFS_uint32 fileCount;
     HOGentry *entry;
-    char *ptr;
 
     BAIL_IF_MACRO(!hog_open(name, forWriting, &fh, &fileCount), NULL, 0);
     info->entryCount = fileCount;
