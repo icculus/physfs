@@ -4,7 +4,8 @@
 
 07172002 - Fixed seeking backwards in ZIP_seek(). Changed the error message
            ERR_TOO_MANY_SYMLINKS to ERR_SYMLINK_LOOP. Patches to build system
-           and unix.c for FreeBSD compatibility.
+           and unix.c for FreeBSD compatibility. Added physfs.spec to
+           "make dist" archives (thanks, Edward Rudd!).
 07152002 - Symlinks in ZIP archives are detected correctly now, I think.
 07142002 - Use GetVolumeInformation() instead of GetDiskFreeSpace() in
            win32.c's mediaInDrive() function. This allows Windows NT 3.x to
