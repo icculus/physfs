@@ -249,22 +249,22 @@ static int determineUserDir(void)
 } /* determineUserDir */
 
 
-static BOOL mediaInDrive(const char *driveLetter)
+static BOOL mediaInDrive(const char *drive)
 {
     UINT oldErrorMode;
-    DWORD dummyValue;
-    BOOL returnValue;
+    DWORD tmp;
+    BOOL retval;
 
     /* Prevent windows warning message to appear when checking media size */
     oldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     
     /* If this function succeeds, there's media in the drive */
-    returnValue = GetDiskFreeSpace(driveLetter, &dummyValue, &dummyValue, &dummyValue, &dummyValue);
+    retval = GetVolumeInformation(drive, NULL, 0, NULL, NULL, &tmp, NULL, 0);
 
     /* Revert back to old windows error handler */
     SetErrorMode(oldErrorMode);
 
-    return(returnValue);
+    return(retval);
 } /* mediaInDrive */
 
 
