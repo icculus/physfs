@@ -1,5 +1,7 @@
 - Make win32.c compile under Cygwin. It's just one function (fullpath()) that
   needs to be replaced.
+- Hmm...we can determine the actual CD-ROM drives under Win32, but how do you
+  decide that there's no disc in the drive?
 
 // end of TODO ...
 
