@@ -1,0 +1,15 @@
+Title PhysFS-Devel 0.1.7
+Version 1
+Description PhysFS Library for Mac OS X (http://www.icculus.org/physfs/)
+DefaultLocation /Developer/Documentation/physfs
+Diskname (null)
+DeleteWarning 
+NeedsAuthorization YES
+DisableStop NO
+UseUserMask YES
+Application NO
+Relocatable NO
+Required NO
+InstallOnly NO
+RequiresReboot NO
+InstallFat NO
