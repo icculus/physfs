@@ -1,7 +1,10 @@
 /*
  * CHANGELOG.
  */
-
+12222003 - Converted VC6 .dsp to use zlib121; made Z_PREFIX=1 enabled by
+	   default to avoid link clashes; put zlib files in separate
+	   logical folder in .dsp project; updated zlib121/zconf.h to
+	   address remaining symbols that were still causing link warnings
 12222003 - Fixed a search-and-replace mistake in win32.c that preventing
            compiling on Windows. (thanks, Brian!)
 12182003 - WAD archiver now puts maps into subdirectories, making them

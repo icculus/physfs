@@ -40,8 +40,9 @@ RSC=rc.exe
 # PROP Output_Dir "physfs_static_release"
 # PROP Intermediate_Dir "physfs_static_release"
 # PROP Target_Dir ""
+MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /G6 /MT /W3 /GX /O2 /I "zlib114" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_WAD=1 /D PHYSFS_SUPPORTS_MVL=1 /YX /FD /c
+# ADD CPP /nologo /G6 /MT /W3 /GX /O2 /I "zlib121" /I "../physfs" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_WAD=1 /D PHYSFS_SUPPORTS_MVL=1 /D Z_PREFIX=1 /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -63,8 +64,9 @@ LIB32=link.exe -lib
 # PROP Output_Dir "physfs_static_debug"
 # PROP Intermediate_Dir "physfs_static_debug"
 # PROP Target_Dir ""
+MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /G6 /MTd /W3 /Gm /GX /ZI /Od /I "zlib114" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_WAD=1 /D PHYSFS_SUPPORTS_MVL=1 /FR /YX /FD /GZ /c
+# ADD CPP /nologo /G6 /MTd /W3 /Gm /GX /ZI /Od /I "zlib121" /I "../physfs" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_WAD=1 /D PHYSFS_SUPPORTS_MVL=1 /D Z_PREFIX=1 /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -83,22 +85,54 @@ LIB32=link.exe -lib
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Group "zlib"
+
+# PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\zlib114\adler32.c
+SOURCE=.\zlib121\adler32.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib114\compress.c
+SOURCE=.\zlib121\compress.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib114\crc32.c
+SOURCE=.\zlib121\crc32.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib114\deflate.c
+SOURCE=.\zlib121\deflate.c
 # End Source File
+# Begin Source File
+
+SOURCE=.\zlib121\infback.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\zlib121\inffast.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\zlib121\inflate.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\zlib121\inftrees.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\zlib121\trees.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\zlib121\uncompr.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\zlib121\zutil.c
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\archivers\dir.c
@@ -109,35 +143,7 @@ SOURCE=.\archivers\grp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\archivers\wad.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\archivers\hog.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\infblock.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\infcodes.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\inffast.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\inflate.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\inftrees.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\infutil.c
 # End Source File
 # Begin Source File
 
@@ -157,11 +163,7 @@ SOURCE=.\archivers\qpak.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib114\trees.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\uncompr.c
+SOURCE=.\archivers\wad.c
 # End Source File
 # Begin Source File
 
@@ -171,42 +173,10 @@ SOURCE=.\platform\win32.c
 
 SOURCE=.\archivers\zip.c
 # End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\zutil.c
-# End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
-# Begin Source File
-
-SOURCE=.\zlib114\deflate.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\infblock.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\infcodes.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\inffast.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\inffixed.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\inftrees.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\infutil.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\physfs.h
@@ -214,22 +184,6 @@ SOURCE=.\physfs.h
 # Begin Source File
 
 SOURCE=.\physfs_internal.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\trees.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\zconf.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\zlib.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\zlib114\zutil.h
 # End Source File
 # End Group
 # End Target

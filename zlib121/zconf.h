@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zconf.h,v 1.1 2003/12/07 05:29:20 icculus Exp $ */
+/* @(#) $Id: zconf.h,v 1.2 2003/12/22 18:19:09 bhook Exp $ */
 
 #ifndef ZCONF_H
 #define ZCONF_H
@@ -50,6 +50,28 @@
 #  define uLongf        z_uLongf
 #  define voidpf        z_voidpf
 #  define voidp         z_voidp
+
+#  define inflate_table       z_inflate_table
+#  define inflate_copyright   z_inflate_copyright
+#  define inflate_fast        z_inflate_fast
+#  define inflateBackInit_     z_inflateBackInit_
+#  define inflateBack         z_inflateBack
+#  define inflateBackEnd      z_inflateBackEnd
+#  define deflate_copyright   z_deflate_copyright
+#  define zlibVersion         z_zlibVersion
+#  define zlibCompileFlags    z_zlibCompileFlags
+#  define zError              z_zError
+#  define zcalloc             z_zcalloc
+#  define zcfree              z_zcfree
+#  define z_errmsg            z_z_errmsg
+#  define _tr_init            z_tr_init
+#  define _tr_stored_block    z_tr_stored_block
+#  define _tr_flush_block     z_tr_flush_block
+#  define _tr_tally           z_tr_tally
+#  define _length_code        z_length_code
+#  define _dist_code          z_dist_code
+#  define _tr_align           z_tr_align
+
 #endif
 
 #if defined(__MSDOS__) && !defined(MSDOS)
