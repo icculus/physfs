@@ -522,22 +522,26 @@ int PHYSFS_setWriteDir(const char *newDir)
 
 int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
 {
-    DirInfo *di = buildDirInfo(newDir, 0);
+    DirInfo *di;
+    DirInfo *i = searchPath;
+    DirInfo *prev = NULL;
+
+    while (i != NULL)
+    {
+        if (strcmp(newDir, i->dirName) == 0)  /* already in search path. */
+            return(1);
+
+        prev = i;
+        i = i->next;
+    } /* while */
+
+    di = buildDirInfo(newDir, 0);
 
     BAIL_IF_MACRO(di == NULL, NULL, 0);
 
     if (appendToPath)
     {
-        DirInfo *i = searchPath;
-        DirInfo *prev = NULL;
-
         di->next = NULL;
-        while (i != NULL)
-        {
-            prev = i;
-            i = i->next;
-        } /* while */
-
         if (prev == NULL)
             searchPath = di;
         else
@@ -1147,16 +1151,12 @@ PHYSFS_file *PHYSFS_openAppend(const char *filename)
 
 PHYSFS_file *PHYSFS_openRead(const char *fname)
 {
-    PHYSFS_file *retval = NULL;
     FileHandle *rc = NULL;
     FileHandleList *list;
     DirInfo *i;
 
     while (*fname == '/')
         fname++;
-
-    list = (FileHandleList *) malloc(sizeof (FileHandleList));
-    BAIL_IF_MACRO(!list, ERR_OUT_OF_MEMORY, NULL);
 
     for (i = searchPath; i != NULL; i = i->next)
     {
@@ -1170,16 +1170,15 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
     } /* for */
 
     if (rc == NULL)
-        free(list);
-    else
-    {
-        list->handle.opaque = (void *) rc;
-        list->next = openReadList;
-        openReadList = list;
-        retval = &(list->handle);
-    } /* else */
+        return(NULL);
 
-    return(retval);
+    list = (FileHandleList *) malloc(sizeof (FileHandleList));
+    BAIL_IF_MACRO(!list, ERR_OUT_OF_MEMORY, NULL);
+    list->handle.opaque = (void *) rc;
+    list->next = openReadList;
+    openReadList = list;
+
+    return(&(list->handle));
 } /* PHYSFS_openRead */
 
 
