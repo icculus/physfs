@@ -2,7 +2,8 @@
  * CHANGELOG.
  */
 
-07212002 - More FreeBSD build system patches.
+07212002 - More FreeBSD build system patches. Added some new autoconf spew to
+           .cvsignore.
 07192002 - Cleaned up configure.in and unix.c so that we check by available
            header to determine the appropriate CD-ROM detection code...this
            should make this more future-proof (and probably get it building
