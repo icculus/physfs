@@ -1227,10 +1227,9 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
             {
                 __PHYSFS_setError(ERR_SYMLINK_DISALLOWED);
                 retval = 0;
-                break;
             } /* if */
 
-            /* break out early if path element is missing. */
+            /* break out early if path element is missing or it's a symlink. */
             if (!retval)
                 break;
         } /* if */
