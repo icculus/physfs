@@ -45,6 +45,8 @@
 #endif
 #endif
 
+/* !!! FIXME: Using the same file handle for all reads is a RACE CONDITION! */
+
 typedef struct
 {
     FILE *handle;
