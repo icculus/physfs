@@ -47,6 +47,7 @@ Some might be dupes, some might be done already.
 - Ryanify pocketpc.c ...
 - CFLAGS fix.
 - Update internal zlib?
+- Get svn hooks working.
 - maybe other stuff.
 
 // end of TODO ...
