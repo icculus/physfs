@@ -170,9 +170,9 @@ typedef struct __PHYSFS_VERSION__
 #define PHYSFS_VER_PATCH 0
 
 #define PHYSFS_VERSION(x) { \
-                            x->major = PHYSFS_VER_MAJOR; \
-                            x->minor = PHYSFS_VER_MINOR; \
-                            x->patch = PHYSFS_VER_PATCH; \
+                            (x)->major = PHYSFS_VER_MAJOR; \
+                            (x)->minor = PHYSFS_VER_MINOR; \
+                            (x)->patch = PHYSFS_VER_PATCH; \
                           }
 
 /**
