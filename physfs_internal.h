@@ -56,6 +56,7 @@ extern "C" {
  #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define QPAK_ARCHIVE_DESCRIPTION "Quake I/II format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip compatible"
+ #define WAD_ARCHIVE_DESCRIPTION  "DOOM engine format"
 
  #define ERR_IS_INITIALIZED       "Already initialized"
  #define ERR_NOT_INITIALIZED      "Not initialized"
@@ -153,6 +154,7 @@ extern "C" {
  #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define QPAK_ARCHIVE_DESCRIPTION "Quake I/II format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip kompatibel"
+ #define WAD_ARCHIVE_DESCRIPTION  "DOOM engine format"
 
  #define ERR_IS_INITIALIZED       "Bereits initialisiert"
  #define ERR_NOT_INITIALIZED      "Nicht initialisiert"
@@ -249,6 +251,7 @@ extern "C" {
  #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
  #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip ”œ◊Õ≈”‘…ÕŸ "
+ #define WAD_ARCHIVE_DESCRIPTION  "DOOM engine format" // !!! FIXME: translate this line if needed
 
  #define ERR_IS_INITIALIZED       "ı÷≈ …Œ…√…¡Ã…⁄…“œ◊¡Œ"
  #define ERR_NOT_INITIALIZED      "Ó≈ …Œ…√…¡Ã…⁄…“œ◊¡Œ"
@@ -345,6 +348,7 @@ extern "C" {
  #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
  #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip ÒÓ‚ÏÂÒÚËÏ˚È"
+ #define WAD_ARCHIVE_DESCRIPTION  "DOOM engine format" // FIXME: translate this line if needed
 
  #define ERR_IS_INITIALIZED       "”ÊÂ ËÌËˆË‡ÎËÁËÓ‚‡Ì"
  #define ERR_NOT_INITIALIZED      "ÕÂ ËÌËˆË‡ÎËÁËÓ‚‡Ì"
@@ -441,6 +445,7 @@ extern "C" {
  #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
  #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip ·Æ¢¨•·‚®¨Î©"
+ #define WAD_ARCHIVE_DESCRIPTION  "DOOM engine format" // FIXME: Translate this line if needed
 
  #define ERR_IS_INITIALIZED       "ì¶• ®≠®Ê®†´®ß®‡Æ¢†≠"
  #define ERR_NOT_INITIALIZED      "ç• ®≠®Ê®†´®ß®‡Æ¢†≠"
@@ -537,6 +542,7 @@ extern "C" {
  #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
  #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip ·ﬁ“‹’·‚ÿ‹ÎŸ"
+ #define WAD_ARCHIVE_DESCRIPTION  "DOOM engine format"  // FIXME: translate this line if needed
 
  #define ERR_IS_INITIALIZED       "√÷’ ÿ›ÿÊÿ–€ÿ◊ÿ‡ﬁ“–›"
  #define ERR_NOT_INITIALIZED      "Ω’ ÿ›ÿÊÿ–€ÿ◊ÿ‡ﬁ“–›"
@@ -635,6 +641,7 @@ extern "C" {
  #define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
  #define QPAK_ARCHIVE_DESCRIPTION "Quake I/II format"
  #define ZIP_ARCHIVE_DESCRIPTION  "Compatible PkZip/WinZip/Info-Zip"
+ #define WAD_ARCHIVE_DESCRIPTION  "Format WAD du moteur DOOM"
 
  #define ERR_IS_INITIALIZED       "DÈj‡ initialisÈ"
  #define ERR_NOT_INITIALIZED      "Non initialisÈ"
@@ -727,11 +734,12 @@ extern "C" {
 
 #elif (PHYSFS_LANG == PHYSFS_LANG_PORTUGUESE_BR)
  #define DIR_ARCHIVE_DESCRIPTION  "N„o arquivo, E/S sistema de arquivos direto"
- #define GRP_ARCHIVE_DESCRIPTION  "Formato Build engine Groupfile"
+ #define GRP_ARCHIVE_DESCRIPTION  "Formato Groupfile do engine Build"
  #define HOG_ARCHIVE_DESCRIPTION  "Formato Descent I/II HOG file"
  #define MVL_ARCHIVE_DESCRIPTION  "Formato Descent II Movielib"
  #define QPAK_ARCHIVE_DESCRIPTION "Formato Quake I/II"
  #define ZIP_ARCHIVE_DESCRIPTION  "Formato compatÌvel PkZip/WinZip/Info-Zip"
+ #define WAD_ARCHIVE_DESCRIPTION  "Formato WAD do engine DOOM"
 
  #define ERR_IS_INITIALIZED       "J· inicializado"
  #define ERR_NOT_INITIALIZED      "N„o inicializado"
