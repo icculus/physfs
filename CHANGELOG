@@ -3,7 +3,7 @@
  */
 
 07112002 - configure.in updated to make it happier on newer autoconfs
-           (thanks again, Alexander!).
+           (thanks again, Alexander!). FIXME cleanups.
 07102002 - Added a byteorder-friendly convenience API, so you can read/write
            data and convert to the native byteorder without too much effort.
            Upped version to 0.1.7.
