@@ -2,12 +2,15 @@ Initial API interface and implementation,
 GRP driver,
 DIR driver,
 Unix support,
-Win32 support,
+Initial Win32 support,
 ZIP driver:
     Ryan C. Gordon
 
 Tons of win32 help:
     Adam Gates
+
+More win32 hacking:
+    Gregory S. Read
 
 Fixes for missing current working directories,
 PHYSFS_setSaneConfig() improvements,
