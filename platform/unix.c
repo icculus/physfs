@@ -436,11 +436,18 @@ char *__PHYSFS_platformCurrentDir(void)
                 free(retval);
             BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
         } /* if */
-
+	
         retval = ptr;
         ptr = getcwd(retval, allocSize);
-    } while (ptr == NULL);
-
+    } while (ptr == NULL && errno == ERANGE);
+    if(ptr == NULL && errno) {
+	/* getcwd() failed for some reason, for example current
+	 * directory not existing.
+	 */
+	if (retval != NULL)
+	    free(retval);
+	BAIL_IF_MACRO(1, ERR_NO_SUCH_FILE, NULL);
+    }
     return(retval);
 } /* __PHYSFS_platformCurrentDir */
 

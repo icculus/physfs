@@ -340,7 +340,19 @@ static char *calculateBaseDir(const char *argv0)
     /*
      * Last ditch effort: it's the current working directory. (*shrug*)
      */
-    return(__PHYSFS_platformCurrentDir());
+    retval = __PHYSFS_platformCurrentDir();
+    if(retval != NULL) {
+	return(retval);
+    }
+
+    /*
+     * Ok, current directory doesn't exist, use the root directory.
+     * Not a good alternative, but it only happens if the current
+     * directory was deleted from under the program.
+     */
+    retval = (char *) malloc(strlen(dirsep) + 1);
+    strcpy(retval, dirsep);
+    return(retval);
 } /* calculateBaseDir */
 
 
