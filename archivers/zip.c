@@ -27,13 +27,6 @@
 #include "physfs_internal.h"
 
 /*
- * When sorting the zip entries in an archive, we use a modified QuickSort.
- *  When there are less then ZIP_QUICKSORT_THRESHOLD entries left to sort,
- *  we switch over to an InsertionSort for the remainder. Tweak to taste.
- */
-#define ZIP_QUICKSORT_THRESHOLD 4
-
-/*
  * A buffer of ZIP_READBUFSIZE is malloc() for each compressed file opened,
  *  and is free()'d when you close the file; compressed data is read into
  *  this buffer, and then is decompressed into the buffer passed to
@@ -937,78 +930,22 @@ zip_load_entry_puked:
 } /* zip_load_entry */
 
 
-static void zip_entry_swap(ZIPentry *a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static int zip_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+{
+    ZIPentry *a = (ZIPentry *) _a;
+    return(strcmp(a[one].name, a[two].name));
+} /* zip_entry_cmp */
+
+
+static void zip_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     ZIPentry tmp;
-    memcpy(&tmp, &a[one], sizeof (ZIPentry));
-    memcpy(&a[one], &a[two], sizeof (ZIPentry));
-    memcpy(&a[two], &tmp, sizeof (ZIPentry));
+    ZIPentry *first = &(((ZIPentry *) _a)[one]);
+    ZIPentry *second = &(((ZIPentry *) _a)[two]);
+    memcpy(&tmp, first, sizeof (ZIPentry));
+    memcpy(first, second, sizeof (ZIPentry));
+    memcpy(second, &tmp, sizeof (ZIPentry));
 } /* zip_entry_swap */
-
-
-static void zip_quick_sort(ZIPentry *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi)
-{
-    PHYSFS_uint32 i;
-    PHYSFS_uint32 j;
-    ZIPentry *v;
-
-	if ((hi - lo) > ZIP_QUICKSORT_THRESHOLD)
-	{
-		i = (hi + lo) / 2;
-
-		if (strcmp(a[lo].name, a[i].name) > 0) zip_entry_swap(a, lo, i);
-		if (strcmp(a[lo].name, a[hi].name) > 0) zip_entry_swap(a, lo, hi);
-		if (strcmp(a[i].name, a[hi].name) > 0) zip_entry_swap(a, i, hi);
-
-		j = hi - 1;
-		zip_entry_swap(a, i, j);
-		i = lo;
-		v = &a[j];
-		while (1)
-		{
-			while(strcmp(a[++i].name, v->name) < 0) {}
-			while(strcmp(a[--j].name, v->name) > 0) {}
-			if (j < i)
-                break;
-			zip_entry_swap(a, i, j);
-		} /* while */
-		zip_entry_swap(a, i, hi-1);
-		zip_quick_sort(a, lo, j);
-		zip_quick_sort(a, i+1, hi);
-	} /* if */
-} /* zip_quick_sort */
-
-
-static void zip_insertion_sort(ZIPentry *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi)
-{
-    PHYSFS_uint32 i;
-    PHYSFS_uint32 j;
-    ZIPentry tmp;
-
-    for (i = lo + 1; i <= hi; i++)
-    {
-        memcpy(&tmp, &a[i], sizeof (ZIPentry));
-        j = i;
-        while ((j > lo) && (strcmp(a[j - 1].name, tmp.name) > 0))
-        {
-            memcpy(&a[j], &a[j - 1], sizeof (ZIPentry));
-            j--;
-        } /* while */
-        memcpy(&a[j], &tmp, sizeof (ZIPentry));
-    } /* for */
-} /* zip_insertion_sort */
-
-
-static void zip_sort_entries(ZIPentry *entries, PHYSFS_uint32 max)
-{
-    /*
-     * Fast Quicksort algorithm inspired by code from here:
-     *   http://www.cs.ubc.ca/spider/harrison/Java/sorting-demo.html
-     */
-    if (max <= ZIP_QUICKSORT_THRESHOLD)
-        zip_quick_sort(entries, 0, max - 1);
-	zip_insertion_sort(entries, 0, max - 1);
-} /* zip_sort_entries */
 
 
 static int zip_load_entries(void *in, DirHandle *dirh,
@@ -1032,7 +969,7 @@ static int zip_load_entries(void *in, DirHandle *dirh,
         } /* if */
     } /* for */
 
-    zip_sort_entries(info->entries, max);
+    __PHYSFS_sort(info->entries, max, zip_entry_cmp, zip_entry_swap);
     return(1);
 } /* zip_load_entries */
 

@@ -183,32 +183,6 @@ static int QPAK_isArchive(const char *filename, int forWriting)
 } /* QPAK_isArchive */
 
 
-static void qpak_insertion_sort(QPAKentry *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi)
-{
-    PHYSFS_uint32 i;
-    PHYSFS_uint32 j;
-    QPAKentry tmp;
-
-    for (i = lo + 1; i <= hi; i++)
-    {
-        memcpy(&tmp, &a[i], sizeof (QPAKentry));
-        j = i;
-        while ((j > lo) && (strcmp(a[j - 1].name, tmp.name) > 0))
-        {
-            memcpy(&a[j], &a[j - 1], sizeof (QPAKentry));
-            j--;
-        } /* while */
-        memcpy(&a[j], &tmp, sizeof (QPAKentry));
-    } /* for */
-} /* qpak_insertion_sort */
-
-
-static void qpak_sort_entries(QPAKentry *entries, PHYSFS_uint32 max)
-{
-    qpak_insertion_sort(entries, 0, max - 1);
-} /* qpak_sort_entries */
-
-
 static int qpak_loadEntries(void *fh, int dirOffset, int numEntries,
                             QPAKentry *entries)
 {
@@ -436,7 +410,7 @@ static int qpak_populateDirectories(QPAKentry *entries, int numEntries,
 } /* qpak_populateDirectories */
 
 
-static void qpak_deletePakInfo (QPAKinfo *pakInfo)
+static void qpak_deletePakInfo(QPAKinfo *pakInfo)
 {
     if (pakInfo->handle != NULL)
         __PHYSFS_platformClose(pakInfo->handle);
@@ -451,6 +425,24 @@ static void qpak_deletePakInfo (QPAKinfo *pakInfo)
 
     free(pakInfo);
 } /* qpak_deletePakInfo */
+
+
+static int qpak_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+{
+    QPAKentry *a = (QPAKentry *) _a;
+    return(strcmp(a[one].name, a[two].name));
+} /* qpak_entry_cmp */
+
+
+static void qpak_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+{
+    QPAKentry tmp;
+    QPAKentry *first = &(((QPAKentry *) _a)[one]);
+    QPAKentry *second = &(((QPAKentry *) _a)[two]);
+    memcpy(&tmp, first, sizeof (QPAKentry));
+    memcpy(first, second, sizeof (QPAKentry));
+    memcpy(second, &tmp, sizeof (QPAKentry));
+} /* qpak_entry_swap */
 
 
 static DirHandle *QPAK_openArchive(const char *name, int forWriting)
@@ -506,7 +498,8 @@ static DirHandle *QPAK_openArchive(const char *name, int forWriting)
     if (qpak_loadEntries(fh, dirOffset, pi->totalEntries, pi->entries) == 0)
         goto QPAK_openArchive_failed;
 
-    qpak_sort_entries(pi->entries, pi->totalEntries);
+    __PHYSFS_sort(pi->entries, pi->totalEntries,
+                  qpak_entry_cmp, qpak_entry_swap);
 
     pi->root = qpak_newDirectory("");
     if (pi->root == NULL)
