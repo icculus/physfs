@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+06222002 - Alexander Pipelka spotted a bug in the file open routines in
+           posix.c; patched.
 06152002 - Autoconf build system will now generate shared libraries on BeOS,
            and (supposedly) Cygwin.
 06142002 - Rewrote autoconf build system. It now works around the MacOS X bug
