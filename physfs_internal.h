@@ -252,8 +252,8 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_PAST_EOF             "Past end of file"
 #define ERR_ARC_IS_READ_ONLY     "Archive is read-only"
 #define ERR_IO_ERROR             "I/O error"
-#define ERR_CANT_SET_WRITE_DIR   "Can't set write directory."
-
+#define ERR_CANT_SET_WRITE_DIR   "Can't set write directory"
+#define ERR_TOO_MANY_SYMLINKS    "Too many symbolic links"
 
 /*
  * Call this to set the message returned by PHYSFS_getLastError().
