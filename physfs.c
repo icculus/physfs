@@ -1191,7 +1191,7 @@ char * __PHYSFS_convertToDependent(const char *prepend,
 } /* __PHYSFS_convertToDependent */
 
 
-int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
+int __PHYSFS_verifySecurity(DirHandle *h, const char *fname, int allowMissing)
 {
     int retval = 1;
     char *start;
@@ -1232,7 +1232,7 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
             } /* if */
 
             /* break out early if path element is missing. */
-            if (!retval)
+            if ((!retval) && (!allowMissing))
             {
                 /*
                  * We need to clear it if it's the last element of the path,
@@ -1272,18 +1272,23 @@ int PHYSFS_mkdir(const char *dname)
     __PHYSFS_platformGrabMutex(stateLock);
     BAIL_IF_MACRO_MUTEX(writeDir == NULL, ERR_NO_WRITE_DIR, stateLock, 0);
     h = writeDir->dirHandle;
-    BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h, dname), NULL, stateLock, 0);
+    BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h,dname,1),NULL,stateLock,0);
     start = str = malloc(strlen(dname) + 1);
     BAIL_IF_MACRO_MUTEX(str == NULL, ERR_OUT_OF_MEMORY, stateLock, 0);
     strcpy(str, dname);
 
     while (1)
     {
+        int already_exists;
+
         end = strchr(start, '/');
         if (end != NULL)
             *end = '\0';
 
-        retval = h->funcs->mkdir(h, str);
+        retval = h->funcs->isDirectory(h, str, &already_exists);
+        if ((!retval) && (!already_exists))
+            retval = h->funcs->mkdir(h, str);
+
         if (!retval)
             break;
 
@@ -1314,7 +1319,7 @@ int PHYSFS_delete(const char *fname)
 
     BAIL_IF_MACRO_MUTEX(writeDir == NULL, ERR_NO_WRITE_DIR, stateLock, 0);
     h = writeDir->dirHandle;
-    BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h, fname), NULL, stateLock, 0);
+    BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h,fname,0),NULL,stateLock,0);
     retval = h->funcs->remove(h, fname);
 
     __PHYSFS_platformReleaseMutex(stateLock);
@@ -1334,7 +1339,7 @@ const char *PHYSFS_getRealDir(const char *filename)
     for (i = searchPath; ((i != NULL) && (retval == NULL)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
-        if (__PHYSFS_verifySecurity(h, filename))
+        if (__PHYSFS_verifySecurity(h, filename, 0))
         {
             if (h->funcs->exists(h, filename))
                 retval = i->dirName;
@@ -1451,7 +1456,7 @@ char **PHYSFS_enumerateFiles(const char *path)
     for (i = searchPath; i != NULL; i = i->next)
     {
         DirHandle *h = i->dirHandle;
-        if (__PHYSFS_verifySecurity(h, path))
+        if (__PHYSFS_verifySecurity(h, path, 0))
         {
             rc = h->funcs->enumerateFiles(h, path, omitSymLinks);
             interpolateStringLists(&finalList, rc);
@@ -1491,7 +1496,7 @@ PHYSFS_sint64 PHYSFS_getLastModTime(const char *fname)
     for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
-        if (__PHYSFS_verifySecurity(h, fname))
+        if (__PHYSFS_verifySecurity(h, fname, 0))
             retval = h->funcs->getLastModTime(h, fname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
@@ -1516,7 +1521,7 @@ int PHYSFS_isDirectory(const char *fname)
     for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
-        if (__PHYSFS_verifySecurity(h, fname))
+        if (__PHYSFS_verifySecurity(h, fname, 0))
             retval = h->funcs->isDirectory(h, fname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
@@ -1543,7 +1548,7 @@ int PHYSFS_isSymbolicLink(const char *fname)
     for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
-        if (__PHYSFS_verifySecurity(h, fname))
+        if (__PHYSFS_verifySecurity(h, fname, 0))
             retval = h->funcs->isSymLink(h, fname, &fileExists);
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
@@ -1567,7 +1572,7 @@ static PHYSFS_file *doOpenWrite(const char *fname, int appending)
     __PHYSFS_platformGrabMutex(stateLock);
     h = (writeDir == NULL) ? NULL : writeDir->dirHandle;
     BAIL_IF_MACRO_MUTEX(!h, ERR_NO_WRITE_DIR, stateLock, NULL);
-    BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h, fname), NULL,
+    BAIL_IF_MACRO_MUTEX(!__PHYSFS_verifySecurity(h, fname, 0), NULL,
                         stateLock, NULL);
 
     list = (FileHandleList *) malloc(sizeof (FileHandleList));
@@ -1622,7 +1627,7 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
     for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
     {
         DirHandle *h = i->dirHandle;
-        if (__PHYSFS_verifySecurity(h, fname))
+        if (__PHYSFS_verifySecurity(h, fname, 0))
             rc = h->funcs->openRead(h, fname, &fileExists);
     } /* for */
     BAIL_IF_MACRO_MUTEX(rc == NULL, NULL, stateLock, NULL);
