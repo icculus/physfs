@@ -39,9 +39,7 @@ AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
 dnl Detect the canonical host and target build environment
-AC_CANONICAL_BUILD
-AC_CANONICAL_HOST
-AC_CANONICAL_TARGET
+AC_CANONICAL_SYSTEM
 
 dnl Setup for automake
 AM_CONFIG_HEADER(config.h)
@@ -340,7 +338,7 @@ fi
 have_non_posix_threads=no
 
 AC_MSG_CHECKING([if this is BeOS])
-if test x$build_os = xbeos; then
+if test x$target_os = xbeos; then
   this_is_beos=yes
   enable_pthreads=no
   have_non_posix_threads=yes
@@ -352,7 +350,7 @@ fi
 AC_MSG_RESULT([$this_is_beos])
 
 AC_MSG_CHECKING([if this is Cygwin])
-if test x$build_os = xcygwin; then
+if test x$target_os = xcygwin; then
   this_is_cygwin=yes
   PHYSFSCFLAGS="$PHYSFSCFLAGS -DWIN32"
   enable_pthreads=no
@@ -366,8 +364,8 @@ AC_MSG_RESULT([$this_is_cygwin])
 this_is_macosx=no
 if test x$we_have_sed = xyes; then
   AC_MSG_CHECKING([if this is MacOS X])
-  x=`echo $build_os |sed "s/darwin.*/darwin/"`
-  if test x$x = xdarwin -a x$build_vendor = xapple; then
+  x=`echo $target_os |sed "s/darwin.*/darwin/"`
+  if test x$x = xdarwin -a x$target_vendor = xapple; then
     this_is_macosx=yes
     PHYSFSLDFLAGS="$PHYSFSLDFLAGS -Wl,-framework -Wl,Carbon -Wl,-framework -Wl,IOKit"
   fi
@@ -378,7 +376,7 @@ fi
 this_is_freebsd=no
 if test x$we_have_sed = xyes; then
   AC_MSG_CHECKING([if this is FreeBSD])
-  x=`echo $build_os |tr A-Z a-z |sed "s/.*freebsd.*/freebsd/"`
+  x=`echo $target_os |tr A-Z a-z |sed "s/.*freebsd.*/freebsd/"`
   if test x$x = xfreebsd; then
     this_is_freebsd=yes
     PHYSFSLDFLAGS="$PHYSFSLDFLAGS -pthread"
@@ -390,7 +388,7 @@ fi
 this_is_openbsd=no
 if test x$we_have_sed = xyes; then
   AC_MSG_CHECKING([if this is OpenBSD])
-  x=`echo $build_os |tr A-Z a-z |sed "s/.*openbsd.*/openbsd/"`
+  x=`echo $target_os |tr A-Z a-z |sed "s/.*openbsd.*/openbsd/"`
   if test x$x = xopenbsd; then
     this_is_openbsd=yes
     PHYSFSLDFLAGS="$PHYSFSLDFLAGS -pthread"
@@ -402,7 +400,7 @@ fi
 this_is_atheos=no
 if test x$we_have_sed = xyes; then
   AC_MSG_CHECKING([if this is AtheOS])
-  x=`echo $build_os |tr A-Z a-z |sed "s/.*atheos.*/atheos/"`
+  x=`echo $target_os |tr A-Z a-z |sed "s/.*atheos.*/atheos/"`
   if test x$x = xatheos; then
     this_is_atheos=yes
     enable_cdrom=no
@@ -415,7 +413,7 @@ fi
 this_is_os2=no
 if test x$we_have_sed = xyes; then
   AC_MSG_CHECKING([if this is OS/2])
-  x=`echo $build_os |tr A-Z a-z |sed "s/.*os2.*/os2/"`
+  x=`echo $target_os |tr A-Z a-z |sed "s/.*os2.*/os2/"`
   if test x$x = xos2; then
     this_is_os2=yes
     PHYSFSCFLAGS="$PHYSFSCFLAGS -DOS2"
@@ -424,6 +422,18 @@ if test x$we_have_sed = xyes; then
   AC_MSG_RESULT([$this_is_os2])
 fi
 
+this_is_mint=no
+if test x$we_have_sed = xyes; then
+  AC_MSG_CHECKING([if this is MiNT])
+  x=`echo $target_os |tr A-Z a-z |sed "s/.*mint.*/mint/"`
+  if test x$x = xmint; then
+    this_is_mint=yes
+    enable_cdrom=no
+    enable_pthreads=no
+  fi
+
+  AC_MSG_RESULT([$this_is_mint])
+fi
 
 
 dnl Some platform might disable this, so check this down here...
