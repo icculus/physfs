@@ -1842,11 +1842,11 @@ typedef struct
     void *(*malloc)(size_t);
     void *(*realloc)(void *, size_t);
     void (*free)(void *);
-} PHYSFS_allocator;
+} PHYSFS_Allocator;
 
 
 /**
- * \fn int PHYSFS_setAllocator(PHYSFS_allocator *allocator)
+ * \fn int PHYSFS_setAllocator(PHYSFS_Allocator *allocator)
  * \brief Hook your own allocation routines into PhysicsFS.
  *
  * (This is for limited, hardcore use. If you don't immediately see a need
@@ -1870,7 +1870,7 @@ typedef struct
  *   \return zero on failure, non-zero on success. This call only fails
  *           when used between PHYSFS_init() and PHYSFS_deinit() calls.
  */
-__EXPORT__ int PHYSFS_setAllocator(PHYSFS_allocator *allocator);
+__EXPORT__ int PHYSFS_setAllocator(PHYSFS_Allocator *allocator);
 
 
 /* Everything above this line is part of the PhysicsFS 2.0 API. */

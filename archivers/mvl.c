@@ -64,30 +64,30 @@ typedef struct
 } MVLfileinfo;
 
 
-static void MVL_dirClose(void *opaque);
-static PHYSFS_sint64 MVL_read(FileHandle *handle, void *buffer,
+static PHYSFS_sint64 MVL_read(fvoid *opaque, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 MVL_write(FileHandle *handle, const void *buffer,
+static PHYSFS_sint64 MVL_write(fvoid *opaque, const void *buffer,
                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int MVL_eof(FileHandle *handle);
-static PHYSFS_sint64 MVL_tell(FileHandle *handle);
-static int MVL_seek(FileHandle *handle, PHYSFS_uint64 offset);
-static PHYSFS_sint64 MVL_fileLength(FileHandle *handle);
-static int MVL_fileClose(FileHandle *handle);
+static int MVL_eof(fvoid *opaque);
+static PHYSFS_sint64 MVL_tell(fvoid *opaque);
+static int MVL_seek(fvoid *opaque, PHYSFS_uint64 offset);
+static PHYSFS_sint64 MVL_fileLength(fvoid *opaque);
+static int MVL_fileClose(fvoid *opaque);
 static int MVL_isArchive(const char *filename, int forWriting);
 static void *MVL_openArchive(const char *name, int forWriting);
-static LinkedStringList *MVL_enumerateFiles(void *opaque,
+static LinkedStringList *MVL_enumerateFiles(dvoid *opaque,
                                             const char *dirname,
                                             int omitSymLinks);
-static int MVL_exists(void *opaque, const char *name);
-static int MVL_isDirectory(void *opaque, const char *name, int *fileExists);
-static int MVL_isSymLink(void *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 MVL_getLastModTime(void *opaque, const char *n, int *e);
-static FileHandle *MVL_openRead(void *opaque, const char *name, int *exist);
-static FileHandle *MVL_openWrite(void *opaque, const char *name);
-static FileHandle *MVL_openAppend(void *opaque, const char *name);
-static int MVL_remove(void *opaque, const char *name);
-static int MVL_mkdir(void *opaque, const char *name);
+static int MVL_exists(dvoid *opaque, const char *name);
+static int MVL_isDirectory(dvoid *opaque, const char *name, int *fileExists);
+static int MVL_isSymLink(dvoid *opaque, const char *name, int *fileExists);
+static PHYSFS_sint64 MVL_getLastModTime(dvoid *opaque, const char *n, int *e);
+static fvoid *MVL_openRead(dvoid *opaque, const char *name, int *exist);
+static fvoid *MVL_openWrite(dvoid *opaque, const char *name);
+static fvoid *MVL_openAppend(dvoid *opaque, const char *name);
+static int MVL_remove(dvoid *opaque, const char *name);
+static int MVL_mkdir(dvoid *opaque, const char *name);
+static void MVL_dirClose(dvoid *opaque);
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MVL =
 {
@@ -98,19 +98,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MVL =
 };
 
 
-static const FileFunctions __PHYSFS_FileFunctions_MVL =
-{
-    MVL_read,       /* read() method       */
-    MVL_write,      /* write() method      */
-    MVL_eof,        /* eof() method        */
-    MVL_tell,       /* tell() method       */
-    MVL_seek,       /* seek() method       */
-    MVL_fileLength, /* fileLength() method */
-    MVL_fileClose   /* fileClose() method  */
-};
-
-
-const DirFunctions __PHYSFS_DirFunctions_MVL =
+const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
 {
     &__PHYSFS_ArchiveInfo_MVL,
     MVL_isArchive,          /* isArchive() method      */
@@ -125,12 +113,19 @@ const DirFunctions __PHYSFS_DirFunctions_MVL =
     MVL_openAppend,         /* openAppend() method     */
     MVL_remove,             /* remove() method         */
     MVL_mkdir,              /* mkdir() method          */
-    MVL_dirClose            /* dirClose() method       */
+    MVL_dirClose,           /* dirClose() method       */
+    MVL_read,               /* read() method           */
+    MVL_write,              /* write() method          */
+    MVL_eof,                /* eof() method            */
+    MVL_tell,               /* tell() method           */
+    MVL_seek,               /* seek() method           */
+    MVL_fileLength,         /* fileLength() method     */
+    MVL_fileClose           /* fileClose() method      */
 };
 
 
 
-static void MVL_dirClose(void *opaque)
+static void MVL_dirClose(dvoid *opaque)
 {
     MVLinfo *info = ((MVLinfo *) opaque);
     free(info->filename);
@@ -139,10 +134,10 @@ static void MVL_dirClose(void *opaque)
 } /* MVL_dirClose */
 
 
-static PHYSFS_sint64 MVL_read(FileHandle *handle, void *buffer,
+static PHYSFS_sint64 MVL_read(fvoid *opaque, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
-    MVLfileinfo *finfo = (MVLfileinfo *) (handle->opaque);
+    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
     MVLentry *entry = finfo->entry;
     PHYSFS_uint32 bytesLeft = entry->size - finfo->curPos;
     PHYSFS_uint32 objsLeft = (bytesLeft / objSize);
@@ -159,30 +154,30 @@ static PHYSFS_sint64 MVL_read(FileHandle *handle, void *buffer,
 } /* MVL_read */
 
 
-static PHYSFS_sint64 MVL_write(FileHandle *handle, const void *buffer,
+static PHYSFS_sint64 MVL_write(fvoid *opaque, const void *buffer,
                                PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* MVL_write */
 
 
-static int MVL_eof(FileHandle *handle)
+static int MVL_eof(fvoid *opaque)
 {
-    MVLfileinfo *finfo = (MVLfileinfo *) (handle->opaque);
+    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
     MVLentry *entry = finfo->entry;
     return(finfo->curPos >= entry->size);
 } /* MVL_eof */
 
 
-static PHYSFS_sint64 MVL_tell(FileHandle *handle)
+static PHYSFS_sint64 MVL_tell(fvoid *opaque)
 {
-    return(((MVLfileinfo *) (handle->opaque))->curPos);
+    return(((MVLfileinfo *) opaque)->curPos);
 } /* MVL_tell */
 
 
-static int MVL_seek(FileHandle *handle, PHYSFS_uint64 offset)
+static int MVL_seek(fvoid *opaque, PHYSFS_uint64 offset)
 {
-    MVLfileinfo *finfo = (MVLfileinfo *) (handle->opaque);
+    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
     MVLentry *entry = finfo->entry;
     int rc;
 
@@ -196,19 +191,18 @@ static int MVL_seek(FileHandle *handle, PHYSFS_uint64 offset)
 } /* MVL_seek */
 
 
-static PHYSFS_sint64 MVL_fileLength(FileHandle *handle)
+static PHYSFS_sint64 MVL_fileLength(fvoid *opaque)
 {
-    MVLfileinfo *finfo = ((MVLfileinfo *) handle->opaque);
+    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
     return((PHYSFS_sint64) finfo->entry->size);
 } /* MVL_fileLength */
 
 
-static int MVL_fileClose(FileHandle *handle)
+static int MVL_fileClose(fvoid *opaque)
 {
-    MVLfileinfo *finfo = ((MVLfileinfo *) handle->opaque);
+    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
     BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
     free(finfo);
-    free(handle);
     return(1);
 } /* MVL_fileClose */
 
@@ -362,7 +356,7 @@ MVL_openArchive_failed:
 } /* MVL_openArchive */
 
 
-static LinkedStringList *MVL_enumerateFiles(void *opaque,
+static LinkedStringList *MVL_enumerateFiles(dvoid *opaque,
                                             const char *dirname,
                                             int omitSymLinks)
 {
@@ -415,27 +409,27 @@ static MVLentry *mvl_find_entry(MVLinfo *info, const char *name)
 } /* mvl_find_entry */
 
 
-static int MVL_exists(void *opaque, const char *name)
+static int MVL_exists(dvoid *opaque, const char *name)
 {
     return(mvl_find_entry(((MVLinfo *) opaque), name) != NULL);
 } /* MVL_exists */
 
 
-static int MVL_isDirectory(void *opaque, const char *name, int *fileExists)
+static int MVL_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 {
     *fileExists = MVL_exists(opaque, name);
     return(0);  /* never directories in a groupfile. */
 } /* MVL_isDirectory */
 
 
-static int MVL_isSymLink(void *opaque, const char *name, int *fileExists)
+static int MVL_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 {
     *fileExists = MVL_exists(opaque, name);
     return(0);  /* never symlinks in a groupfile. */
 } /* MVL_isSymLink */
 
 
-static PHYSFS_sint64 MVL_getLastModTime(void *opaque,
+static PHYSFS_sint64 MVL_getLastModTime(dvoid *opaque,
                                         const char *name,
                                         int *fileExists)
 {
@@ -450,10 +444,9 @@ static PHYSFS_sint64 MVL_getLastModTime(void *opaque,
 } /* MVL_getLastModTime */
 
 
-static FileHandle *MVL_openRead(void *opaque, const char *fnm, int *fileExists)
+static fvoid *MVL_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     MVLinfo *info = ((MVLinfo *) opaque);
-    FileHandle *retval;
     MVLfileinfo *finfo;
     MVLentry *entry;
 
@@ -461,51 +454,42 @@ static FileHandle *MVL_openRead(void *opaque, const char *fnm, int *fileExists)
     *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, NULL);
 
-    retval = (FileHandle *) malloc(sizeof (FileHandle));
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     finfo = (MVLfileinfo *) malloc(sizeof (MVLfileinfo));
-    if (finfo == NULL)
-    {
-        free(retval);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
-    } /* if */
+    BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     finfo->handle = __PHYSFS_platformOpenRead(info->filename);
     if ( (finfo->handle == NULL) ||
          (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
     {
         free(finfo);
-        free(retval);
         return(NULL);
     } /* if */
 
     finfo->curPos = 0;
     finfo->entry = entry;
-    retval->opaque = (void *) finfo;
-    retval->funcs = &__PHYSFS_FileFunctions_MVL;
-    return(retval);
+    return(finfo);
 } /* MVL_openRead */
 
 
-static FileHandle *MVL_openWrite(void *opaque, const char *name)
+static fvoid *MVL_openWrite(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* MVL_openWrite */
 
 
-static FileHandle *MVL_openAppend(void *opaque, const char *name)
+static fvoid *MVL_openAppend(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* MVL_openAppend */
 
 
-static int MVL_remove(void *opaque, const char *name)
+static int MVL_remove(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* MVL_remove */
 
 
-static int MVL_mkdir(void *opaque, const char *name)
+static int MVL_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* MVL_mkdir */
