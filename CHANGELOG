@@ -3,6 +3,7 @@
  */
 
 08292002 - Fixed a mistake in makeos2.cmd, and updated the INSTALL docs.
+           Added physfs.spec.in to EXTRA_DIST in Makefile.am*
 08292002 - Added a physfs/stdio wrapper header to the "extras" dir,
            compliments of Adam D. Moss (file is "abs-file.h").
 08282002 - Cleanups in grp.c so that Visual C++ doesn't complain anymore.
