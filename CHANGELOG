@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+07302002 - Minor error handling fix (thanks, Alexander!)
 07292002 - Found some memory leaks, thanks to Valgrind (which rules, btw).
            Added Russian translations (koi8-r, cp1251, cp866, and iso-8859-5)
            by Ed Sinjiashvili. Added Spanish translation by Pedro J. Pérez.
