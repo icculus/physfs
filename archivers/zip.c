@@ -153,7 +153,7 @@ static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset)
     PHYSFS_uint32 bufsize = 4096 * 2;
 
     BAIL_IF_MACRO(unztell(fh) == offset, NULL, 1);
-    BAIL_IF_MACRO(ZIP_fileLength(handle) <= offset, ERR_PAST_EOF, 0);
+    BAIL_IF_MACRO(ZIP_fileLength(handle) <= (PHYSFS_sint64) offset, ERR_PAST_EOF, 0);
 
         /* reset to the start of the zipfile. */
     unzCloseCurrentFile(fh);

@@ -175,9 +175,9 @@ ifeq ($(strip $(use_archive_zip)),true)
   CFLAGS += -DPHYSFS_SUPPORTS_ZIP
   LDFLAGS += -lz
   ifeq ($(strip $(cygwin)),true)
-    EXTRABUILD += zlibwin32/zlib.a
-    CFLAGS += -Izlibwin32
-    LDFLAGS += -Lzlibwin32
+    EXTRABUILD += zlib114/zlib114.a
+    CFLAGS += -Izlib114
+    LDFLAGS += -Lzlib114
   endif
 endif
 
@@ -264,8 +264,8 @@ $(BINDIR):
 
 
 ifeq ($(strip $(cygwin)),true)
-zlibwin32/zlib.a:
-	cd zlibwin32 ; $(MAKE) CC=$(CC)
+zlib114/zlib114.a:
+	cd zlib114 ; $(MAKE) CC=$(CC)
 endif
 
 
@@ -275,7 +275,7 @@ clean:
 	rm -f $(CLEANUP)
 	rm -rf $(BINDIR)
 ifeq ($(strip $(cygwin)),true)
-	cd zlibwin32 ; $(MAKE) clean
+	cd zlib114 ; $(MAKE) clean
 endif
 
 listobjs:
