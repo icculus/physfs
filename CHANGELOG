@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+07242002 - Rewrote ZIP_enumerate(). Hopefully it sucks less this time.
 07232002 - Cleaned up the cut-and-pastes in the various file enumeration
            routines and moved it into __PHYSFS_addToLinkedStringList().
            Tons more ZIP file enhancing. I'm fairly certain it's robust and
