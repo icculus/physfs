@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libphysfs.la
 
-SUBDIRS = platform archivers zlib114 . test extras
+SUBDIRS = platform archivers zlib121 . test extras
 
 libphysfsincludedir = $(includedir)
 libphysfsinclude_HEADERS =	\
@@ -12,7 +12,7 @@ libphysfs_la_SOURCES =	\
 	physfs_byteorder.c
 
 if BUILD_ZLIB
-ZLIB_LIB = zlib114/libz.la
+ZLIB_LIB = zlib121/libz.la
 else
 ZLIB_LIB =
 endif
