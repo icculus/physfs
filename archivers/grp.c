@@ -206,6 +206,8 @@ static int openGrp(const char *filename, int forWriting,
     if (__PHYSFS_platformRead(*fh, count, sizeof (PHYSFS_sint32), 1) != 1)
         goto openGrp_failed;
 
+    *count = PHYSFS_swapSLE32(*count);
+
     return(1);
 
 openGrp_failed:
@@ -361,6 +363,7 @@ static PHYSFS_sint32 getFileEntry(DirHandle *h, const char *name,
 
         BAIL_IF_MACRO(__PHYSFS_platformRead(fh, buf, 12, 1) != 1, NULL, -1);
         BAIL_IF_MACRO(__PHYSFS_platformRead(fh, &l, sizeof (l), 1) != 1, NULL, -1);
+        l = PHYSFS_swapSLE32(l);
 
         buf[12] = '\0';  /* FILENAME.EXT is all you get. */
 
