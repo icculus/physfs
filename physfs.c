@@ -1473,96 +1473,6 @@ const char *PHYSFS_getRealDir(const char *filename)
     return(retval);
 } /* PHYSFS_getRealDir */
 
-#if 0
-static int countList(LinkedStringList *list)
-{
-    int retval = 0;
-    LinkedStringList *i;
-
-    for (i = list; i != NULL; i = i->next)
-        retval++;
-
-    return(retval);
-} /* countList */
-
-
-static char **convertStringListToPhysFSList(LinkedStringList *finalList)
-{
-    int i;
-    LinkedStringList *next = NULL;
-    int len = countList(finalList);
-    char **retval = (char **) malloc((len + 1) * sizeof (char *));
-
-    if (retval == NULL)
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-
-    for (i = 0; i < len; i++)
-    {
-        next = finalList->next;
-        if (retval == NULL)
-            free(finalList->str);
-        else
-            retval[i] = finalList->str;
-        free(finalList);
-        finalList = next;
-    } /* for */
-
-    if (retval != NULL)
-        retval[i] = NULL;
-
-    return(retval);
-} /* convertStringListToPhysFSList */
-
-
-static void insertStringListItem(LinkedStringList **final,
-                                 LinkedStringList *item)
-{
-    LinkedStringList *i;
-    LinkedStringList *prev = NULL;
-    int rc;
-
-    for (i = *final; i != NULL; i = i->next)
-    {
-        rc = strcmp(i->str, item->str);
-        if (rc > 0)  /* insertion point. */
-            break;
-        else if (rc == 0)      /* already in list. */
-        {
-            free(item->str);
-            free(item);
-            return;
-        } /* else if */
-        prev = i;
-    } /* for */
-
-        /*
-         * If we are here, we are either at the insertion point.
-         *  This may be the end of the list, or the list may be empty, too.
-         */
-    if (prev == NULL)
-        *final = item;
-    else
-        prev->next = item;
-
-    item->next = i;
-} /* insertStringListItem */
-
-
-/* if we run out of memory anywhere in here, we give back what we can. */
-static void interpolateStringLists(LinkedStringList **final,
-                                    LinkedStringList *newList)
-{
-    LinkedStringList *next = NULL;
-
-    while (newList != NULL)
-    {
-        next = newList->next;
-        insertStringListItem(final, newList);
-        newList = next;
-    } /* while */
-} /* interpolateStringLists */
-#endif
-
 
 static int locateInStringList(const char *str,
                               char **list,
@@ -2126,40 +2036,6 @@ int PHYSFS_flush(PHYSFS_File *handle)
     fh->bufpos = fh->buffill = 0;
     return(1);
 } /* PHYSFS_flush */
-
-
-LinkedStringList *__PHYSFS_addToLinkedStringList(LinkedStringList *retval,
-                                                 LinkedStringList **prev,
-                                                 const char *str,
-                                                 PHYSFS_sint32 len)
-{
-    LinkedStringList *l;
-
-    l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
-    BAIL_IF_MACRO(l == NULL, ERR_OUT_OF_MEMORY, retval);
-
-    if (len < 0)
-        len = strlen(str);
-
-    l->str = (char *) malloc(len + 1);
-    if (l->str == NULL)
-    {
-        free(l);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, retval);
-    } /* if */
-
-    strncpy(l->str, str, len);
-    l->str[len] = '\0';
-
-    if (retval == NULL)
-        retval = l;
-    else
-        (*prev)->next = l;
-
-    *prev = l;
-    l->next = NULL;
-    return(retval);
-} /* __PHYSFS_addToLinkedStringList */
 
 
 int PHYSFS_setAllocator(PHYSFS_Allocator *a)

@@ -13,6 +13,8 @@
            archivers and moved their PHYSFS_Archiver data to the end of the
            file, since this was annoying me and I was getting sick of updating
            function signatures in two places when the internal API changed.
+           Removed the code/data for LinkedStringLists...it isn't used anymore
+           now that the callback code is in place.
 09262004 - Did the same thing to FileHandles than I did to DirHandles, but
            this triggered massive tweaking in physfs.c. A lot of code got
            little cleanups, which was nice. Less malloc pressure, too, since

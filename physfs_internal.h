@@ -924,13 +924,6 @@ struct __PHYSFS_DIRHANDLE__;
 struct __PHYSFS_FILEFUNCTIONS__;
 
 
-typedef struct __PHYSFS_LINKEDSTRINGLIST__
-{
-    char *str;
-    struct __PHYSFS_LINKEDSTRINGLIST__ *next;
-} LinkedStringList;
-
-
 /* !!! FIXME: find something better than "dvoid" and "fvoid" ... */
 /* Opaque data for file and dir handlers... */
 typedef void dvoid;
@@ -1192,15 +1185,6 @@ void __PHYSFS_setError(const char *err);
 char *__PHYSFS_convertToDependent(const char *prepend,
                                   const char *dirName,
                                   const char *append);
-
-/*
- * Use this to build the list that your enumerate function should return.
- *  See zip.c for an example of proper use.
- */
-LinkedStringList *__PHYSFS_addToLinkedStringList(LinkedStringList *retval,
-                                                 LinkedStringList **prev,
-                                                 const char *str,
-                                                 PHYSFS_sint32 len);
 
 
 /* This byteorder stuff was lifted from SDL. http://www.libsdl.org/ */
