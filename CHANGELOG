@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+11222002 - Initial PocketPC port by Corona688.
 10222002 - Fixed segfault in test_physfs.c when user hits CTRL-D (and
            readline() thus returns NULL)...now gracefully exits, as it should.
 10142002 - Added check for AMD's x86-64 ("Hammer") architecture when
