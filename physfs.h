@@ -129,10 +129,6 @@
 #ifndef _INCLUDE_PHYSFS_H_
 #define _INCLUDE_PHYSFS_H_
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -143,8 +139,6 @@ extern "C" {
 #define __EXPORT__
 #endif
 
-
-/* !!! FIXME: This is not universal. */
 typedef unsigned char         PHYSFS_uint8;
 typedef signed char           PHYSFS_sint8;
 typedef unsigned short        PHYSFS_uint16;
@@ -152,13 +146,12 @@ typedef signed short          PHYSFS_sint16;
 typedef unsigned int          PHYSFS_uint32;
 typedef signed int            PHYSFS_sint32;
 
-#ifdef PHYSFS_NO_64BIT_SUPPORT  /* oh well. */
+#if (defined PHYSFS_NO_64BIT_SUPPORT)  /* oh well. */
 typedef PHYSFS_uint32         PHYSFS_uint64;
 typedef PHYSFS_sint32         PHYSFS_sint64;
-#elif _WIN32
-/*!!! No 64-bit unsigned in Win32???? */
-typedef LONGLONG              PHYSFS_sint64;
-typedef LONGLONG              PHYSFS_uint64;
+#elif (defined _MSC_VER)
+typedef signed __int64        PHYSFS_sint64;
+typedef unsigned __int64      PHYSFS_uint64;
 #else
 typedef unsigned long long    PHYSFS_uint64;
 typedef signed long long      PHYSFS_sint64;

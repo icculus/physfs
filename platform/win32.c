@@ -184,6 +184,9 @@ PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 /* ...make this Cygwin AND Visual C friendly... */
 int __PHYSFS_platformStricmp(const char *x, const char *y)
 {
+#if (defined _MSC_VER)
+    return(stricmp(x, y));
+#else
     int ux, uy;
 
     do
@@ -199,6 +202,7 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
     } while ((ux) && (uy));
 
     return(0);
+#endif
 } /* __PHYSFS_platformStricmp */
 
 
@@ -469,9 +473,6 @@ static int doNTInit()
     /*!!! Second parameter can't be NULL or the function fails??? */
     if(!GetUserProfileDirectory(AccessTokenHandle, TempProfileDirectory, &pathsize))
     {
-        const char *temp;
-        temp = win32strerror();
-
         /* Allocate memory for the profile directory */
         ProfileDirectory = (char *)malloc(pathsize);
         BAIL_IF_MACRO(ProfileDirectory == NULL, ERR_OUT_OF_MEMORY, 0);

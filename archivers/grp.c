@@ -133,7 +133,7 @@ static PHYSFS_sint64 GRP_read(FileHandle *handle, void *buffer,
     PHYSFS_uint64 objsLeft = (bytesLeft / objSize);
 
     if (objsLeft < objCount)
-        objCount = objsLeft;
+        objCount = (PHYSFS_uint32) objsLeft;
 
     return(__PHYSFS_platformRead(fh, buffer, objSize, objCount));
 } /* GRP_read */
@@ -143,7 +143,9 @@ static int GRP_eof(FileHandle *handle)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
     void *fh = finfo->handle;
-    return(__PHYSFS_platformTell(fh) >= finfo->startPos + finfo->size);
+    PHYSFS_sint64 pos = __PHYSFS_platformTell(fh);
+    BAIL_IF_MACRO(pos < 0, NULL, 1);  /* (*shrug*) */
+    return(pos >= (PHYSFS_sint64) (finfo->startPos + finfo->size));
 } /* GRP_eof */
 
 
