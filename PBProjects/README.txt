@@ -2,7 +2,7 @@ This is an unofficial OS X Project Builder environment to build a physfs Framewo
 
 
 Built with:
-physfs 0.1.8
+physfs 0.1.9
 Project Builder 2.0.1
 OS X (10.2 Jaguar)
 
