@@ -1,6 +1,10 @@
 lib_LTLIBRARIES = libphysfs.la
 
-#SUBDIRS = platform archivers zlib114 . test extras
+libphysfsincludedir = $(includedir)
+libphysfsinclude_HEADERS =	\
+	physfs.h
+
+if BUILD_MACOSX
 
 ZLIB_FILES = zlib114/adler32.c		\
              zlib114/compress.c		\
@@ -45,11 +49,6 @@ else
   BEOS_SRC =
   BEOS_EXTRADIST = platform/beos.cpp
 endif
-
-
-libphysfsincludedir = $(includedir)
-libphysfsinclude_HEADERS =	\
-	physfs.h
 
 libphysfs_la_SOURCES =	\
 	physfs.c	        \
@@ -100,6 +99,44 @@ EXTRA_DIST =	\
     extras/physfsrwops.c   \
     extras/physfshttpd.c   \
     $(ZLIB_EXTRADIST) $(BEOS_EXTRADIST) $(TEST_EXTRADIST)
+
+else
+
+SUBDIRS = platform archivers zlib114 . test extras
+
+libphysfs_la_SOURCES =	\
+	physfs.c	\
+	physfs_internal.h	\
+	physfs_byteorder.c
+
+if BUILD_ZLIB
+ZLIB_LIB = zlib114/libz.la
+else
+ZLIB_LIB =
+endif
+
+libphysfs_la_LDFLAGS = 		\
+	-release $(LT_RELEASE)	\
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+libphysfs_la_LIBADD =	\
+	archivers/libarchivers.la	\
+	platform/libplatform.la	\
+	$(ZLIB_LIB)
+
+EXTRA_DIST =	\
+	CREDITS \
+	LICENSE \
+	CHANGELOG \
+	INSTALL \
+	TODO \
+	Doxyfile \
+	CWProjects.sit \
+	physfs.dsp \
+	test_physfs.dsp \
+    docs
+
+
+endif
 
 dist-hook:
 	rm -rf $(distdir)/docs/*

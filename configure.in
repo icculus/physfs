@@ -39,6 +39,7 @@ AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
 dnl Detect the canonical host and target build environment
+AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
@@ -57,7 +58,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_LIBTOOL_WIN32_DLL 
 AC_PROG_LIBTOOL
-
+AC_CHECK_PROG(we_have_sed, sed, yes, no)
 
 dnl ---------------------------------------------------------------------
 dnl Debug mode?
@@ -192,9 +193,26 @@ if test x$enable_readline = xyes; then
   fi
 fi
 
-AC_CHECK_HEADER(be/kernel/OS.h, this_is_beos=yes)
-if test x$this_is_beos = xyes; then
+dnl AC_CHECK_HEADER(be/kernel/OS.h, this_is_beos=yes)
+AC_MSG_CHECKING([if this is BeOS])
+if test x$build_os = xbeos; then
+  this_is_beos=yes
   LIBS="$LIBS -lroot -lbe"
+else
+  this_is_beos=no
+fi
+
+AC_MSG_RESULT([$this_is_beos])
+
+this_is_macosx=no
+if test x$we_have_sed = xyes; then
+  AC_MSG_CHECKING([if this is MacOS X])
+  x=`echo $build_os |sed "s/darwin.*/darwin/"`
+  if test x$x = xdarwin -a x$build_vendor = xapple; then
+    this_is_macosx=yes
+  fi
+
+  AC_MSG_RESULT([$this_is_macosx])
 fi
 
 # Checks for header files.
@@ -217,10 +235,18 @@ dnl Add Makefile conditionals
 AM_CONDITIONAL(BUILD_ZLIB, test x$enable_internal_zlib = xyes)
 AM_CONDITIONAL(BUILD_TEST_PHYSFS, test x$enable_testprog = xyes)
 AM_CONDITIONAL(BUILD_BEOS_CPP, test x$this_is_beos = xyes)
+AM_CONDITIONAL(BUILD_MACOSX, test x$this_is_macosx = xyes)
 
 LDFLAGS="$LDFLAGS -no-undefined"
 
 AC_OUTPUT([
 Makefile
+archivers/Makefile
+platform/Makefile
+zlib114/Makefile
+test/Makefile
+extras/Makefile
 ])
+
+dnl end of configure.in ...
 
