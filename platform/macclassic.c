@@ -165,6 +165,7 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
 
 static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
 {
+    OSErr err;
     Str255 str255;
     int len = strlen(fname);
     if (len > 255)
@@ -174,7 +175,8 @@ static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
 
     str255[0] = strlen(fname);
     memcpy(&str255[1], fname, str255[0]);
-    return(FSMakeFSSpec(0, 0, str255, spec));
+    err = FSMakeFSSpec(0, 0, str255, spec);
+    return(err);
 } /* fnameToFSSpec */
 
 
@@ -195,14 +197,16 @@ int __PHYSFS_platformIsDirectory(const char *fname)
 {
     FSSpec spec;
     CInfoPBRec infoPB;
+    OSErr err;
 
     BAIL_IF_MACRO(fnameToFSSpec(fname, &spec) != noErr, ERR_OS_ERROR, 0);
     memset(&infoPB, '\0', sizeof (CInfoPBRec));
     infoPB.dirInfo.ioNamePtr = spec.name;     /* put name in here.       */
     infoPB.dirInfo.ioVRefNum = spec.vRefNum;  /* ID of file's volume.    */ 
-    infoPB.dirInfo.ioDrParID = spec.parID;    /* ID of bin's dir.        */
+    infoPB.dirInfo.ioDrDirID = spec.parID;    /* ID of bin's dir.        */
     infoPB.dirInfo.ioFDirIndex = 0;           /* file (not parent) info. */
-    BAIL_IF_MACRO(PBGetCatInfoSync(&infoPB) != noErr, ERR_OS_ERROR, 0);
+    err = PBGetCatInfoSync(&infoPB);
+    BAIL_IF_MACRO((err != noErr) && (err != fnfErr), ERR_OS_ERROR, 0);
     return((infoPB.dirInfo.ioFlAttrib & kioFlAttribDirMask) != 0);
 } /* __PHYSFS_platformIsDirectory */
 
@@ -263,7 +267,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
         str255[0] = 0;
         infoPB.dirInfo.ioNamePtr = str255;        /* store name in here.     */
         infoPB.dirInfo.ioVRefNum = spec.vRefNum;  /* ID of file's volume.    */ 
-        infoPB.dirInfo.ioDrParID = spec.parID;    /* ID of bin's dir.        */
+        infoPB.dirInfo.ioDrDirID = spec.parID;    /* ID of bin's dir.        */
         infoPB.dirInfo.ioFDirIndex = ++i;         /* file (not parent) info. */
         if (PBGetCatInfoSync(&infoPB) != noErr)
             break;
