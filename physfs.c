@@ -152,7 +152,7 @@ static void freeErrorMessages(void)
 
     for (i = errorMessages; i != NULL; i = next)
     {
-        next = i;
+        next = i->next;
         free(i);
     } /* for */
 } /* freeErrorMessages */
@@ -414,7 +414,7 @@ static void freeSearchPath(void)
     {
         for (i = searchPath; i != NULL; i = next)
         {
-            next = i;
+            next = i->next;
             freeDirInfo(i, openReadList);
         } /* for */
         searchPath = NULL;
