@@ -802,13 +802,13 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
                                     PHYSFS_uint32 size, PHYSFS_uint32 count)
 {
-    HANDLE FileHandle = ((win32file *) opaque)->handle;
+    HANDLE Handle = ((win32file *) opaque)->handle;
     DWORD CountOfBytesRead;
     PHYSFS_sint64 retval;
 
     /* Read data from the file */
     /* !!! FIXME: uint32 might be a greater # than DWORD */
-    if(!ReadFile(FileHandle, buffer, count * size, &CountOfBytesRead, NULL))
+    if(!ReadFile(Handle, buffer, count * size, &CountOfBytesRead, NULL))
     {
         BAIL_MACRO(win32strerror(), -1);
     } /* if */
@@ -826,13 +826,13 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint32 size, PHYSFS_uint32 count)
 {
-    HANDLE FileHandle = ((win32file *) opaque)->handle;
+    HANDLE Handle = ((win32file *) opaque)->handle;
     DWORD CountOfBytesWritten;
     PHYSFS_sint64 retval;
 
     /* Read data from the file */
     /* !!! FIXME: uint32 might be a greater # than DWORD */
-    if(!WriteFile(FileHandle, buffer, count * size, &CountOfBytesWritten, NULL))
+    if(!WriteFile(Handle, buffer, count * size, &CountOfBytesWritten, NULL))
     {
         BAIL_MACRO(win32strerror(), -1);
     } /* if */
@@ -849,7 +849,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
-    HANDLE FileHandle = ((win32file *) opaque)->handle;
+    HANDLE Handle = ((win32file *) opaque)->handle;
     DWORD HighOrderPos;
     DWORD *pHighOrderPos;
     DWORD rc;
@@ -872,7 +872,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
      */
 
     /* Move pointer "pos" count from start of file */
-    rc = SetFilePointer(FileHandle, LOWORDER_UINT64(pos),
+    rc = SetFilePointer(Handle, LOWORDER_UINT64(pos),
                         pHighOrderPos, FILE_BEGIN);
 
     if ( (rc == PHYSFS_INVALID_SET_FILE_POINTER) &&
@@ -887,13 +887,13 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
-    HANDLE FileHandle = ((win32file *) opaque)->handle;
+    HANDLE Handle = ((win32file *) opaque)->handle;
     DWORD HighPos = 0;
     DWORD LowPos;
     PHYSFS_sint64 retval;
 
     /* Get current position */
-    LowPos = SetFilePointer(FileHandle, 0, &HighPos, FILE_CURRENT);
+    LowPos = SetFilePointer(Handle, 0, &HighPos, FILE_CURRENT);
     if ( (LowPos == PHYSFS_INVALID_SET_FILE_POINTER) &&
          (GetLastError() != NO_ERROR) )
     {
@@ -912,12 +912,12 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
-    HANDLE FileHandle = ((win32file *) opaque)->handle;
+    HANDLE Handle = ((win32file *) opaque)->handle;
     DWORD SizeHigh;
     DWORD SizeLow;
     PHYSFS_sint64 retval;
 
-    SizeLow = GetFileSize(FileHandle, &SizeHigh);
+    SizeLow = GetFileSize(Handle, &SizeHigh);
     if ( (SizeLow == PHYSFS_INVALID_SET_FILE_POINTER) &&
          (GetLastError() != NO_ERROR) )
     {
@@ -962,8 +962,8 @@ int __PHYSFS_platformFlush(void *opaque)
 
 int __PHYSFS_platformClose(void *opaque)
 {
-    HANDLE FileHandle = ((win32file *) opaque)->handle;
-    BAIL_IF_MACRO(!CloseHandle(FileHandle), win32strerror(), 0);
+    HANDLE Handle = ((win32file *) opaque)->handle;
+    BAIL_IF_MACRO(!CloseHandle(Handle), win32strerror(), 0);
     free(opaque);
     return(1);
 } /* __PHYSFS_platformClose */
