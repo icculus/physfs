@@ -34,7 +34,7 @@ EXTRA_DIST =	\
 	Doxyfile \
 	CWProjects.sit \
 	physfs.dsp \
-	test_physfs.dsp \
+	test_physfs.dsp
 
 dist-hook:
 	mkdir $(distdir)/docs
