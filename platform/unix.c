@@ -58,6 +58,19 @@ int __PHYSFS_platformDeinit(void)
 } /* __PHYSFS_platformDeinit */
 
 
+#ifdef PHYSFS_NO_CDROM_SUPPORT
+
+/* Stub version for platforms without CD-ROM support. */
+char **__PHYSFS_platformDetectAvailableCDs(void)
+{
+    char **retval = (char **) malloc(sizeof (char *));
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    *retval = NULL;
+    return(retval);
+} /* __PHYSFS_platformDetectAvailableCDs */
+
+#else
+
 
 #ifdef PHYSFS_HAVE_SYS_UCRED_H
 
@@ -65,20 +78,21 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 {
     char **retval = (char **) malloc(sizeof (char *));
     int cd_count = 1;  /* We count the NULL entry. */
-    struct statfs* mntbufp = NULL;
+    struct statfs *mntbufp = NULL;
     int mounts;
-    int ii;
+    int i;
 
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
-    mounts = getmntinfo( &mntbufp, MNT_WAIT );
+    mounts = getmntinfo(&mntbufp, MNT_WAIT);
 
-    for ( ii=0; ii < mounts; ++ii ) {
+    for (i = 0; i < mounts; i++)
+    {
         int add_it = 0;
 
-        if ( strcmp( mntbufp[ii].f_fstypename, "iso9660") == 0 )
+        if (strcmp(mntbufp[i].f_fstypename, "iso9660") == 0)
             add_it = 1;
-        else if ( strcmp( mntbufp[ii].f_fstypename, "cd9660") == 0 )
+        else if (strcmp( mntbufp[i].f_fstypename, "cd9660") == 0)
             add_it = 1;
 
         /* add other mount types here */
@@ -90,15 +104,15 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
             {
                 retval = tmp;
                 retval[cd_count - 1] = (char *)
-                                malloc(strlen(mntbufp[ii].f_mntonname) + 1);
+                                malloc(strlen(mntbufp[i].f_mntonname) + 1);
                 if (retval[cd_count - 1])
                 {
-                    strcpy(retval[cd_count - 1], mntbufp[ii].f_mntonname);
+                    strcpy(retval[cd_count - 1], mntbufp[i].f_mntonname);
                     cd_count++;
                 } /* if */
             } /* if */
         } /* if */
-    }
+    } /* for */
 
     retval[cd_count - 1] = NULL;
     return(retval);
@@ -153,6 +167,8 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 #endif
+
+#endif  /* !PHYSFS_NO_CDROM_SUPPORT */
 
 
 /* this is in posix.c ... */
@@ -242,7 +258,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 
 PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 {
-    return((PHYSFS_uint64) ((PHYSFS_uint32) pthread_self()));
+    return((PHYSFS_uint64) pthread_self());
 } /* __PHYSFS_platformGetThreadID */
 
 
