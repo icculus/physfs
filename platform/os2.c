@@ -233,7 +233,6 @@ int __PHYSFS_platformInit(void)
     PHYSFS_sint32 len;
 
     assert(baseDir == NULL);
-
     BAIL_IF_MACRO(os2err(DosGetInfoBlocks(&ptib, &ppib)) != NO_ERROR, NULL, 0);
     rc = DosQueryModuleName(ppib->pib_hmte, sizeof (buf), (PCHAR) buf);
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, 0);
@@ -248,7 +247,7 @@ int __PHYSFS_platformInit(void)
         } /* if */
     } /* for */
 
-    assert(len > 0);  /* should have been an "x:\\" on the front on string. */
+    assert(len > 0);  /* should have been a "x:\\" on the front on string. */
 
     baseDir = (char *) malloc(len + 1);
     BAIL_IF_MACRO(baseDir == NULL, ERR_OUT_OF_MEMORY, 0);
@@ -278,23 +277,31 @@ static int disc_is_inserted(ULONG drive)
 } /* is_cdrom_inserted */
 
 
+/* looks like "CD01" in ASCII (littleendian)...used for an ioctl. */
+#define CD01 0x31304443
+
 static int is_cdrom_drive(ULONG drive)
 {
-    PHYSFS_uint16 cmd = (((drive & 0xFF) << 8) | 0);
-    BIOSPARAMETERBLOCK bpb;
+    PHYSFS_uint32 param, data;
     ULONG ul1, ul2;
     APIRET rc;
+    HFILE hfile = NULLHANDLE;
+    char drivename[3] = { 'A' + drive, ':', '\0' };
 
-    rc = DosDevIOCtl((HFILE) -1, IOCTL_DISK,
-                     DSK_GETDEVICEPARAMS,
-                     &cmd, sizeof (cmd), &ul1,
-                     &bpb, sizeof (bpb), &ul2);
+    rc = DosOpen(drivename, &hfile, &ul1, 0, 0,
+                 OPEN_ACTION_OPEN_IF_EXISTS | OPEN_ACTION_FAIL_IF_NEW,
+                 OPEN_FLAGS_DASD | OPEN_FLAGS_FAIL_ON_ERROR |
+                 OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYNONE, NULL);
+    BAIL_IF_MACRO(rc != NO_ERROR, NULL, 0);
 
-    /*
-     * !!! FIXME: Note that this tells us that the media is REMOVABLE...
-     * !!! FIXME:  but it might not be a CD-ROM...check driver name?
-     */
-    return((rc == NO_ERROR) && ((bpb.fsDeviceAttr & 0x0001) == 0));
+    data = 0;
+    param = PHYSFS_swapULE32(CD01);
+    ul1 = ul2 = sizeof (PHYSFS_uint32);
+    rc = DosDevIOCtl(hfile, IOCTL_CDROMDISK, CDROMDISK_GETDRIVER,
+                     &param, sizeof (param), &ul1, &data, sizeof (data), &ul2);
+
+    DosClose(hfile);
+    return((rc == NO_ERROR) && (PHYSFS_swapULE32(data) == CD01));
 } /* is_cdrom_drive */
 
 
@@ -305,7 +312,7 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     ULONG i, bit;
     APIRET rc;
     char **retval;
-    PHYSFS_uint32 cd_count = 0;
+    PHYSFS_uint32 cd_count = 1;   /* we count the NULL entry. */
 
     retval = (char **) malloc(sizeof (char *));
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -340,6 +347,7 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
         } /* if */
     } /* for */
 
+    retval[cd_count - 1] = NULL;
     return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
@@ -441,15 +449,15 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
                                                   int omitSymLinks)
 {
     char spec[CCHMAXPATH];
-    LinkedStringList *retval = NULL, *p = NULL;
+    LinkedStringList *ret = NULL, *p = NULL;
     FILEFINDBUF3 fb;
     HDIR hdir = HDIR_CREATE;
     ULONG count = 1;
     APIRET rc;
 
-    BAIL_IF_MACRO(strlen(dirname) > sizeof (spec) - 4, ERR_OS_ERROR, NULL);
+    BAIL_IF_MACRO(strlen(dirname) > sizeof (spec) - 5, ERR_OS_ERROR, NULL);
     strcpy(spec, dirname);
-    strcat(spec, "*.*");
+    strcat(spec, (spec[strlen(spec) - 1] != '\\') ? "\\*.*" : "*.*");
 
     rc = DosFindFirst(spec, &hdir,
                       FILE_DIRECTORY | FILE_ARCHIVED |
@@ -458,19 +466,14 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, 0);
     while (count == 1)
     {
-        if (strcmp(fb.achName, ".") == 0)
-            continue;
-
-        if (strcmp(fb.achName, "..") == 0)
-            continue;
-
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, fb.achName, -1);
+        if ((strcmp(fb.achName, ".") != 0) && (strcmp(fb.achName, "..") != 0))
+            ret = __PHYSFS_addToLinkedStringList(ret, &p, fb.achName, -1);
 
         DosFindNext(hdir, &fb, sizeof (fb), &count);
     } /* while */
 
     DosFindClose(hdir);
-    return(retval);
+    return(ret);
 } /* __PHYSFS_platformEnumerateFiles */
 
 
