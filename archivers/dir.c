@@ -48,13 +48,13 @@ static void DIR_dirClose(DirHandle *h);
 
 static const FileFunctions __PHYSFS_FileFunctions_DIR =
 {
-    DIR_read,       /* read() method      */
-    NULL,           /* write() method     */
-    DIR_eof,        /* eof() method       */
-    DIR_tell,       /* tell() method      */
-    DIR_seek,       /* seek() method      */
+    DIR_read,       /* read() method       */
+    NULL,           /* write() method      */
+    DIR_eof,        /* eof() method        */
+    DIR_tell,       /* tell() method       */
+    DIR_seek,       /* seek() method       */
     DIR_fileLength, /* fileLength() method */
-    DIR_fileClose   /* fileClose() method */
+    DIR_fileClose   /* fileClose() method  */
 };
 
 
