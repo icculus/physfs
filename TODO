@@ -11,7 +11,7 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   support so that both "archives" look identical to an application; might be
   nice for an email program. That's blue sky, unless someone wants to tackle
   it.
-- Need PHYSFS_LANG_FRENCH, PHYSFS_LANG_SPANISH, and PHYSFS_LANG_GERMAN.
+- Need PHYSFS_LANG_GERMAN.
 - Figure out that pesky pthread casting problem.
 - macclassic.c :
   "/* (Hmm. Default behaviour is broken in the base library.  :)  )  */"
