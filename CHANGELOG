@@ -2,6 +2,12 @@
  * CHANGELOG.
  */
 
+04012002 - (_NOT_ an April Fool's Joke:) Started working on MacOS Classic
+           port. Added skeleton.c to platform directory. Minor patches to
+           get things compiling on Mac (notably, DirInfo conflicts with
+           a type exposed by MacOS's namespace-polluting API, and some
+           typecasting issues). Found a call to ferror() I had missed in
+           unzip.c.
 03302002 - Mutexes! PhysicsFS should be thread safe now, so long as you
            don't try to do something like close a file at the same time as
            you are reading from it in another thread. All reasonable race
