@@ -1,2 +1,6 @@
 usr/lib
 usr/include
+usr/share/man/man3
+usr/share/doc/libphysfs0-dev
+usr/share/doc/libphysfs0-dev/latex
+usr/share/doc/libphysfs0-dev/html
