@@ -156,9 +156,11 @@ TESTLDFLAGS := -lreadline
 # Source and target names.
 #-----------------------------------------------------------------------------#
 
-BASELIBNAME := physfs
-ifneq ($(strip $(cygwin)),true)
-BASELIBNAME := lib$(strip $(BASELIBNAME))
+PUREBASELIBNAME := physfs
+ifeq ($(strip $(cygwin)),true)
+BASELIBNAME := $(strip $(PUREBASELIBNAME))
+else
+BASELIBNAME := lib$(strip $(PUREBASELIBNAME))
 endif
 
 MAINLIB := $(BINDIR)/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
@@ -237,7 +239,7 @@ $(MAINLIB) : $(BINDIR) $(MAINOBJS)
 	$(LINKER) -o $(MAINLIB) $(LDFLAGS) $(SHAREDFLAGS) $(MAINOBJS)
 
 $(TESTEXE) : $(MAINLIB) $(TESTOBJS)
-	$(LINKER) -o $(TESTEXE) $(LDFLAGS) $(TESTLDFLAGS) $(TESTOBJS) $(MAINLIB)
+	$(LINKER) -o $(TESTEXE) $(LDFLAGS) $(TESTLDFLAGS) $(TESTOBJS) -L$(BINDIR) -l$(strip $(PUREBASELIBNAME))
 
 
 install: all
