@@ -471,6 +471,7 @@ int __PHYSFS_platformClose(void *opaque)
 {
     int fd = *((int *) opaque);
     BAIL_IF_MACRO(close(fd) == -1, strerror(errno), 0);
+    free(opaque);
     return(1);
 } /* __PHYSFS_platformClose */
 
