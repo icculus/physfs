@@ -14,6 +14,9 @@ PHYSFS_setSaneConfig() improvements,
 other bugfixes,
     David Hedbor
 
+Darwin support,
+    Patrick Stein
+
 Other stuff:
     Your name here! Patches go to icculus@clutteredmind.org ...
 
