@@ -79,6 +79,7 @@ EXTRA_DIST =	\
 	TODO \
 	Doxyfile \
 	CWProjects.sit \
+	physfs.spec \
 	physfs.dsp \
 	test_physfs.dsp \
 	platform/skeleton.c    \
@@ -123,6 +124,7 @@ EXTRA_DIST =	\
 	TODO \
 	Doxyfile \
 	CWProjects.sit \
+	physfs.spec \
 	physfs.dsp \
 	test_physfs.dsp
 
