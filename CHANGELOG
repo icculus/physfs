@@ -7,7 +7,10 @@
            little cleanups, which was nice. Less malloc pressure, too, since
            opening a file used to allocate a ton of crap and mush it
            together...now it's basically down to one structure and the
-           instance data in whatever archiver.
+           instance data in whatever archiver. Minor varname tweak in win32.c
+           and pocketpc.c. Changed PHYSFS_file to PHYSFS_File to match the
+           rest of the API's naming scheme (but put a typedef for source
+           compatibility).
 09252004 - Cleaned up archiver interface to not deal with DirHandles anymore,
            which simplifies things, removes some responsibility and code
            duplication from the archivers, and trims some malloc pressure.
