@@ -1314,6 +1314,11 @@ PHYSFS_uint64 __PHYSFS_platformGetThreadID(void);
 int __PHYSFS_platformStricmp(const char *str1, const char *str2);
 
 /*
+ * This is a pass-through to whatever strnicmp() is called on your platform.
+ */
+int __PHYSFS_platformStrnicmp(const char *s1, const char *s2, PHYSFS_uint32 l);
+
+/*
  * Return non-zero if filename (in platform-dependent notation) exists.
  *  Symlinks should NOT be followed; at this stage, we do not care what the
  *  symlink points to. Please call __PHYSFS_SetError() with the details of

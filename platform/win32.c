@@ -368,6 +368,34 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
 } /* __PHYSFS_platformStricmp */
 
 
+int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 len)
+{
+#if (defined _MSC_VER)
+    return(strnicmp(x, y, (int) len));
+#else
+    int ux, uy;
+
+    if (!len)
+        return(0);
+
+    do
+    {
+        ux = toupper((int) *x);
+        uy = toupper((int) *y);
+        if (ux > uy)
+            return(1);
+        else if (ux < uy)
+            return(-1);
+        x++;
+        y++;
+        len--;
+    } while ((ux) && (uy) && (len));
+
+    return(0);
+#endif
+} /* __PHYSFS_platformStricmp */
+
+
 int __PHYSFS_platformExists(const char *fname)
 {
     BAIL_IF_MACRO(GetFileAttributes(fname) == INVALID_FILE_ATTRIBUTES,
