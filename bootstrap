@@ -5,7 +5,15 @@ echo "Initial preparation...this can take awhile, so sit tight..."
 rm -f Makefile.am
 perl -w -e 'use File::Copy; exit 0 if (-f "Makefile.am"); my $x = `automake --version |head -n 1`; chomp($x); $x = 0.0 if ($x !~ s/\A.*?(\d+\.\d+).*\Z/$1/); if ($x < 1.5) { copy("./Makefile.am.oldautomake", "./Makefile.am"); } else { copy("./Makefile.am.newautomake", "./Makefile.am"); }'
 aclocal
-libtoolize --automake --copy --force
+
+# MacOS X renames GNU libtool to "glibtool", since they have something
+#  else called "libtool" already...
+if [ -x /usr/bin/glibtoolize ]; then
+  glibtoolize --automake --copy --force
+else
+  libtoolize --automake --copy --force
+fi
+
 autoheader
 automake --foreign --add-missing --copy
 autoconf
