@@ -1241,12 +1241,12 @@ int __PHYSFS_verifySecurity(DirHandle *h, char *fname, int allowMissing)
         size_t mntpntlen = strlen(h->mountPoint);
         assert(mntpntlen > 1); /* root mount points should be NULL. */
         size_t len = strlen(fname);
-        if (len < mntpntlen)
-            return(0); /* not under the mountpoint, so skip this archive. */
-        if (strncmp(h->mountPoint, fname, mntpntlen) != 0)
-            return(0);  /* not under the mountpoint, so skip this archive. */
-
+        /* not under the mountpoint, so skip this archive. */
+        BAIL_IF_MACRO(len < mntpntlen, ERR_NO_SUCH_PATH, 0);
+        retval = strncmp(h->mountPoint, fname, mntpntlen);
+        BAIL_IF_MACRO(retval != 0, ERR_NO_SUCH_PATH, 0);
         fname += mntpntlen;  /* move to start of actual archive path. */
+        retval = 1;
     } /* if */
 
     /* !!! FIXME: Can we ditch this malloc()? */
