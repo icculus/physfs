@@ -1230,8 +1230,12 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
                 rc = 1;
             else 
             {
-                if ((name[dlen + 1] == '\0') || (stop_on_first_find))
+                
+                if (stop_on_first_find) /* Just checking dir's existance? */
                     return(middle);
+
+                if (name[dlen + 1] == '\0') /* Skip initial dir entry. */
+                    return(middle + 1);
 
                 /* there might be more entries earlier in the list. */
                 retval = middle;
@@ -1253,60 +1257,47 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
                                             const char *dirname,
                                             int omitSymLinks)
 {
-#if 1
-    return(NULL);  /* !!! FIXME */
-#else
     ZIPinfo *info = ((ZIPinfo *) h->opaque);
-    PHYSFS_sint32 i, tmp, max;
     LinkedStringList *retval = NULL, *p = NULL;
-    PHYSFS_uint32 dlen = strlen(dirname);
-
-    if ((dlen > 0) && (dirname[dlen - 1] == '/'))
-        dlen--;
+    PHYSFS_sint32 dlen, dlen_inc, max, i;
 
     i = zip_find_start_of_dir(info, dirname, 0);
     BAIL_IF_MACRO(i == -1, ERR_NO_SUCH_FILE, NULL);
 
-    for (max = (PHYSFS_sint32) info->entryCount; i < max; i++)
+    dlen = strlen(dirname);
+    if ((dlen > 0) && (dirname[dlen - 1] == '/')) /* ignore trailing slash. */
+        dlen--;
+
+    dlen_inc = ((dlen > 0) ? 1 : 0) + dlen;
+    max = (PHYSFS_sint32) info->entryCount;
+    while (i < max)
     {
-        ZIPentry *entry = &info->entries[i];
-        const char *add_file;
-        size_t strsize;
-        char *slash;
+        char *e = info->entries[i].name;
+        if ((dlen) && ((strncmp(e, dirname, dlen) != 0) || (e[dlen] != '/')))
+            break;  /* past end of this dir; we're done. */
 
-        if ((dlen > 0) && (strncmp(entry->name, dirname, dlen) != 0))
-            break; /* we're past this dir's entries. */
-
-        add_file = entry->name + dlen + ((dlen > 0) ? 1 : 0);
-        if ( ((omitSymLinks) && (zip_entry_is_symlink(entry))) ||
-             (*add_file == '\0') ) /* skip links and the dir entry itself. */
+        if ((omitSymLinks) && (zip_entry_is_symlink(&info->entries[i])))
+            i++;
+        else
         {
-            continue;
-        } /* if */
+            char *add = e + dlen_inc;
+            char *ptr = strchr(add, '/');
+            PHYSFS_sint32 ln = (PHYSFS_sint32) ((ptr) ? ptr-add : strlen(add));
+            retval = __PHYSFS_addToLinkedStringList(retval, &p, add, ln);
+            ln += dlen_inc;  /* point past entry to children... */
 
-        slash = strchr(add_file, '/'); /* handle subdirs under dirname... */
-        strsize = (size_t) ((slash) ? (slash - add_file) : strlen(add_file));
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, add_file, strsize);
-
-        tmp = i;
-        /* We added a subdir? Skip its children. */
-        while ((slash != NULL) && (i < max))
-        {
-            if (strncmp(info->entries[i].name, info->entries[tmp].name, dlen + strsize + 1) == 0)
+            /* increment counter and skip children of subdirs... */
+            while ((++i < max) && (ptr != NULL))
             {
-                if (info->entries[i].name[dlen + strsize + 1] == '/')
-                {
-                    i++;
+                char *e_new = info->entries[i].name;
+                if ((strncmp(e, e_new, ln) == 0) && (e_new[ln] == '/'))
                     continue;
-                } /* if */
-            } /* if */
-            i--;  /* for loop will increment. */
-            slash = NULL;
-        } /* while */
+                ptr = NULL;
+            } /* while */
+        } /* else */
     } /* while */
 
     return(retval);
-#endif
 } /* ZIP_enumerateFiles */
 
 
