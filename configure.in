@@ -251,6 +251,18 @@ if test x$we_have_sed = xyes; then
   AC_MSG_RESULT([$this_is_freebsd])
 fi
 
+this_is_openbsd=no
+if test x$we_have_sed = xyes; then
+  AC_MSG_CHECKING([if this is OpenBSD])
+  x=`echo $build_os |tr A-Z a-z |sed "s/.*openbsd.*/openbsd/"`
+  if test x$x = xopenbsd; then
+    this_is_openbsd=yes
+    LDFLAGS="$LDFLAGS -pthread"
+  fi
+
+  AC_MSG_RESULT([$this_is_openbsd])
+fi
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h])
