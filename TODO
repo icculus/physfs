@@ -22,6 +22,9 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - Platforms to port to: PocketPC (Maybe can just use win32.c?),
   Amiga (needs platform driver), DOS4GW (platform driver).
 - profile string list interpolation.
+- zip_get_entry() is broken for directories, which means ZIP_exists() is
+  broken for dirs.
+- Enable more warnings?
 - Use __cdecl in physfs.h?
 - Look for FIXMEs (many marked with "!!!" in comments).
 - Probably other stuff. Requests and recommendations are welcome.
