@@ -16,8 +16,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef _WIN32_WCE
 #include <errno.h>
 #include <time.h>
+#endif
 #include "physfs.h"
 #include "zlib.h"
 
@@ -186,7 +188,9 @@ static const char *zlib_error_string(int rc)
     {
         case Z_OK: return(NULL);  /* not an error. */
         case Z_STREAM_END: return(NULL); /* not an error. */
+#ifndef _WIN32_WCE
         case Z_ERRNO: return(strerror(errno));
+#endif
         case Z_NEED_DICT: return(ERR_ZLIB_NEED_DICT);
         case Z_DATA_ERROR: return(ERR_ZLIB_DATA_ERROR);
         case Z_MEM_ERROR: return(ERR_ZLIB_MEMORY_ERROR);
@@ -894,6 +898,12 @@ static int zip_has_symlink_attr(ZIPentry *entry, PHYSFS_uint32 extern_attr)
 
 static PHYSFS_sint64 zip_dos_time_to_physfs_time(PHYSFS_uint32 dostime)
 {
+#ifdef _WIN32_WCE
+	/* We have no struct tm and no mktime right now.
+	   FIXME: This should probably be fixed at some point.
+	*/
+    return -1;
+#else
     PHYSFS_uint32 dosdate;
     struct tm unixtime;
     memset(&unixtime, '\0', sizeof (unixtime));
@@ -915,6 +925,7 @@ static PHYSFS_sint64 zip_dos_time_to_physfs_time(PHYSFS_uint32 dostime)
     unixtime.tm_isdst = -1;
 
     return((PHYSFS_sint64) mktime(&unixtime));
+#endif
 } /* zip_dos_time_to_physfs_time */
 
 
