@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+08292002 - Added a physfs/stdio wrapper header to the "extras" dir,
+           compliments of Adam D. Moss (file is "abs-file.h").
 08282002 - Cleanups in grp.c so that Visual C++ doesn't complain anymore.
            zip.c now works correctly when PhysicsFS is disallowing symlinks.
            A few minor optimizations in zip.c, with a few more to come later.
