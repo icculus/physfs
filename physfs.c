@@ -427,6 +427,9 @@ int PHYSFS_init(const char *argv0)
     } /* if */
 
     initialized = 1;
+
+    /* This makes sure that the error subsystem is initialized. */
+    __PHYSFS_setError(PHYSFS_getLastError());
     return(1);
 } /* PHYSFS_init */
 
