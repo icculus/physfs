@@ -11,7 +11,6 @@ These are in no particular order. A 1.0 release is reliant on doing some of
   nice for an email program. That's blue sky, unless someone wants to tackle
   it.
 - I'm a little nervous about the use of linked lists in qpak.c.
-- Add qpak.c and PHYSFS_SUPPORTS_QPAK to mac classic projects.
 - macclassic.c :
   "/* (Hmm. Default behaviour is broken in the base library.  :)  )  */"
 - Platforms to be verified as working: Solaris, WinNT 3.1, WinME, WinXP,
