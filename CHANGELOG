@@ -3,7 +3,7 @@
  */
 
 04052002 - Added byte ordering API. Byte ordering fixes in grp.c, and some
-           cleanups in unzip.c.
+           cleanups in unzip.c. Mac work is more or less complete.
 04042002 - Mac work continues. Almost complete, now. test_physfs now has
            tests for write, append, and filelength, and most of the
            commands can tolerate a quoted argument (although this is
