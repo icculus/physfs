@@ -355,10 +355,7 @@ char *__PHYSFS_platformRealPath(const char *path)
          *  We'll need to check for "." and ".." dirs, though, just in case.
          */
     if ((path[0] == '\\') && (path[1] == '\\'))
-    {
-        BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
         strcpy(retval, path);
-    } /* if */
 
     else
     {
