@@ -10,7 +10,6 @@ These are in no particular order. A 1.0 release is reliant on doing some of
   support so that both "archives" look identical to an application; might be
   nice for an email program. That's blue sky, unless someone wants to tackle
   it.
-- I'm a little nervous about the use of linked lists in qpak.c.
 - Stack allocate in stripAppleBundle() (platform/unix.c) instead of calloc().
 - macclassic.c :
   "/* (Hmm. Default behaviour is broken in the base library.  :)  )  */"
@@ -21,7 +20,6 @@ These are in no particular order. A 1.0 release is reliant on doing some of
 - Enable more warnings?
 - Use __cdecl in physfs.h?
 - Look for FIXMEs (many marked with "!!!" in comments).
-- Check for tab chars in the source.
 - Probably other stuff. Requests and recommendations are welcome.
 
 // end of TODO ...
