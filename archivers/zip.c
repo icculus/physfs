@@ -899,9 +899,9 @@ static int zip_has_symlink_attr(ZIPentry *entry, PHYSFS_uint32 extern_attr)
 static PHYSFS_sint64 zip_dos_time_to_physfs_time(PHYSFS_uint32 dostime)
 {
 #ifdef _WIN32_WCE
-	/* We have no struct tm and no mktime right now.
-	   FIXME: This should probably be fixed at some point.
-	*/
+    /* We have no struct tm and no mktime right now.
+       FIXME: This should probably be fixed at some point.
+    */
     return -1;
 #else
     PHYSFS_uint32 dosdate;

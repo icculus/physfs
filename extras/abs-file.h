@@ -118,8 +118,8 @@ static int MY_GETC(MY_FILETYPE *const fp) {
   }
   return c;
 }
-static char * MY_GETS(char * const str, const int size,
-		      MY_FILETYPE *const fp) {
+static char * MY_GETS(char * const str, const int size, 
+                      MY_FILETYPE *const fp) {
   int i = 0;
   int c;
   do {
@@ -131,9 +131,9 @@ static char * MY_GETS(char * const str, const int size,
       break;
     }
     str[i++] = c;
-  } while (c != '\0' &&
-	   c != -1 &&
-	   c != '\n');
+  } while (c != '\0' && 
+      c != -1 && 
+      c != '\n');
   str[i] = '\0';
   if (i == 0) {
     return NULL;

@@ -16,8 +16,8 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-#define INVALID_FILE_ATTRIBUTES		0xFFFFFFFF
-#define INVALID_SET_FILE_POINTER	0xFFFFFFFF
+#define INVALID_FILE_ATTRIBUTES  0xFFFFFFFF
+#define INVALID_SET_FILE_POINTER 0xFFFFFFFF
 typedef struct
 {
     HANDLE handle;
@@ -41,15 +41,15 @@ static const char *win32strerror(void)
     TCHAR *ptr = msgbuf;
 
     FormatMessage(
-		  FORMAT_MESSAGE_FROM_SYSTEM |
-		  FORMAT_MESSAGE_IGNORE_INSERTS,
-		  NULL,
-		  GetLastError(),
-		  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
-		  msgbuf,
-		  sizeof (msgbuf) / sizeof (TCHAR),
-		  NULL 
-		  );
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        GetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
+        msgbuf,
+        sizeof (msgbuf) / sizeof (TCHAR),
+        NULL 
+        );
 
     /* chop off newlines. */
     for (ptr = msgbuf; *ptr; ptr++)
@@ -71,23 +71,23 @@ static char *UnicodeToAsc(const wchar_t *w_str)
 
     if(w_str!=NULL)
     {
-	int len=wcslen(w_str)+1;
-	str=(char *)malloc(len);
+    int len=wcslen(w_str)+1;
+    str=(char *)malloc(len);
 
-	if(WideCharToMultiByte(CP_ACP,0,w_str,-1,str,len,NULL,NULL)==0)
-	{	//Conversion failed
-	    free(str);
-	    return NULL;
-	}
-	else
-	{	//Conversion successful
-	    return(str);
-	}
+    if(WideCharToMultiByte(CP_ACP,0,w_str,-1,str,len,NULL,NULL)==0)
+    {    //Conversion failed
+        free(str);
+        return NULL;
+    }
+    else
+    {    //Conversion successful
+        return(str);
+    }
 
     }
     else
-    {	//Given NULL string
-	return NULL;
+    {    //Given NULL string
+    return NULL;
     }
 }
 
@@ -96,21 +96,21 @@ static wchar_t *AscToUnicode(const char *str)
     wchar_t *w_str=NULL;
     if(str!=NULL)
     {
-	int len=strlen(str)+1;
-	w_str=(wchar_t *)malloc(sizeof(wchar_t)*len);
-	if(MultiByteToWideChar(CP_ACP,0,str,-1,w_str,len)==0)
-	{
-	    free(w_str);
-	    return NULL;
-	}
-	else
-	{
-	    return(w_str);
-	}
+    int len=strlen(str)+1;
+    w_str=(wchar_t *)malloc(sizeof(wchar_t)*len);
+    if(MultiByteToWideChar(CP_ACP,0,str,-1,w_str,len)==0)
+    {
+        free(w_str);
+        return NULL;
     }
     else
     {
-	return NULL;
+        return(w_str);
+    }
+    }
+    else
+    {
+    return NULL;
     }
 }
 
@@ -130,16 +130,16 @@ static char *getExePath()
         __PHYSFS_setError(win32strerror());
     } else {
         retval[buflen] = '\0';  /* does API always null-terminate this? */
-	ptr = retval+buflen;
-	while( ptr != retval )
-	{
-	    if( *ptr != _T('\\') ) {
-		*ptr-- = _T('\0');
-	    } else {
-		break;
-	    }
-	}
-	success = 1;
+    ptr = retval+buflen;
+    while( ptr != retval )
+    {
+        if( *ptr != _T('\\') ) {
+        *ptr-- = _T('\0');
+        } else {
+        break;
+        }
+    }
+    success = 1;
     } /* else */
 
     if (!success)
@@ -156,7 +156,7 @@ static char *getExePath()
     charretval = UnicodeToAsc(retval);
     free(retval);
     if(charretval == NULL) {
-	BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     }
     
     return(charretval);   /* w00t. */
@@ -220,11 +220,11 @@ int __PHYSFS_platformExists(const char *fname)
     int retval=0;
 
     wchar_t *w_fname=AscToUnicode(fname);
-	
+    
     if(w_fname!=NULL)
     {
-	retval=(GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
-	free(w_fname);
+    retval=(GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
+    free(w_fname);
     }
 
     return(retval);
@@ -245,8 +245,8 @@ int __PHYSFS_platformIsDirectory(const char *fname)
 
     if(w_fname!=NULL)
     {
-	retval=((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
-	free(w_fname);
+    retval=((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
+    free(w_fname);
     }
 
     return(retval);
@@ -258,8 +258,8 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *append)
 {
     int len = ((prepend) ? strlen(prepend) : 0) +
-	((append) ? strlen(append) : 0) +
-	strlen(dirName) + 1;
+    ((append) ? strlen(append) : 0) +
+    strlen(dirName) + 1;
     char *retval = malloc(len);
     char *p;
 
@@ -302,7 +302,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
 
     /* Allocate a new string for path, maybe '\\', "*", and NULL terminator */
     SearchPath = (char *) alloca(len + 3);
-    BAIL_IF_MACRO(SearchPath == NULL, ERR_OUT_OF_MEMORY, NULL);	
+    BAIL_IF_MACRO(SearchPath == NULL, ERR_OUT_OF_MEMORY, NULL);    
 
     /* Copy current dirname */
     strcpy(SearchPath, dirname);
@@ -325,7 +325,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
 
     if(dir == INVALID_HANDLE_VALUE)
     {
-	return NULL;
+    return NULL;
     }
 
     do
@@ -340,7 +340,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
         if (l == NULL)
             break;
 
-	l->str=UnicodeToAsc(ent.cFileName);
+    l->str=UnicodeToAsc(ent.cFileName);
 
         if (l->str == NULL)
         {
@@ -385,17 +385,17 @@ int __PHYSFS_platformMkDir(const char *path)
     wchar_t *w_path = AscToUnicode(path);
     if(w_path!=NULL)
     {
-	DWORD rc = CreateDirectory(w_path, NULL);
-	free(w_path);
-	if(rc==0)
-	{
-	    return(0);
-	}
-	return(1);
+    DWORD rc = CreateDirectory(w_path, NULL);
+    free(w_path);
+    if(rc==0)
+    {
+        return(0);
+    }
+    return(1);
     }
     else
     {
-	return(0);
+    return(0);
     }
 } /* __PHYSFS_platformMkDir */
 
@@ -413,7 +413,7 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 
     if(fileHandle==INVALID_HANDLE_VALUE)
     {
-	return NULL;
+    return NULL;
     }
 
     BAIL_IF_MACRO(fileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
@@ -421,8 +421,8 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
     retval = malloc(sizeof (winCEfile));
     if (retval == NULL)
     {
-	CloseHandle(fileHandle);
-	BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+    CloseHandle(fileHandle);
+    BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
     retval->readonly = rdonly;
@@ -474,7 +474,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     /*!!! - uint32 might be a greater # than DWORD */
     if(!ReadFile(FileHandle, buffer, count * size, &CountOfBytesRead, NULL))
     {
-	retval=-1;
+    retval=-1;
     } /* if */
     else
     {
@@ -499,7 +499,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
     /*!!! - uint32 might be a greater # than DWORD */
     if(!WriteFile(FileHandle, buffer, count * size, &CountOfBytesWritten, NULL))
     {
-	retval=-1;
+    retval=-1;
     } /* if */
     else
     {
@@ -626,14 +626,14 @@ int __PHYSFS_platformDelete(const char *path)
     /* If filename is a folder */
     if (GetFileAttributes(w_path) == FILE_ATTRIBUTE_DIRECTORY)
     {
-	int retval=!RemoveDirectory(w_path);
-	free(w_path);
+    int retval=!RemoveDirectory(w_path);
+    free(w_path);
         BAIL_IF_MACRO(retval, win32strerror(), 0);
     } /* if */
     else
     {
-	int retval=!DeleteFile(w_path);
-	free(w_path);
+    int retval=!DeleteFile(w_path);
+    free(w_path);
         BAIL_IF_MACRO(retval, win32strerror(), 0);
     } /* else */
 

@@ -54,28 +54,28 @@
 #ifndef PHYSFS_Swap16
 static __inline__ PHYSFS_uint16 PHYSFS_Swap16(PHYSFS_uint16 D)
 {
-	return((D<<8)|(D>>8));
+    return((D<<8)|(D>>8));
 }
 #endif
 #ifndef PHYSFS_Swap32
 static __inline__ PHYSFS_uint32 PHYSFS_Swap32(PHYSFS_uint32 D)
 {
-	return((D<<24)|((D<<8)&0x00FF0000)|((D>>8)&0x0000FF00)|(D>>24));
+    return((D<<24)|((D<<8)&0x00FF0000)|((D>>8)&0x0000FF00)|(D>>24));
 }
 #endif
 #ifndef PHYSFS_NO_64BIT_SUPPORT
 #ifndef PHYSFS_Swap64
 static __inline__ PHYSFS_uint64 PHYSFS_Swap64(PHYSFS_uint64 val) {
-	PHYSFS_uint32 hi, lo;
+    PHYSFS_uint32 hi, lo;
 
-	/* Separate into high and low 32-bit values and swap them */
-	lo = (PHYSFS_uint32)(val&0xFFFFFFFF);
-	val >>= 32;
-	hi = (PHYSFS_uint32)(val&0xFFFFFFFF);
-	val = PHYSFS_Swap32(lo);
-	val <<= 32;
-	val |= PHYSFS_Swap32(hi);
-	return(val);
+    /* Separate into high and low 32-bit values and swap them */
+    lo = (PHYSFS_uint32)(val&0xFFFFFFFF);
+    val >>= 32;
+    hi = (PHYSFS_uint32)(val&0xFFFFFFFF);
+    val = PHYSFS_Swap32(lo);
+    val <<= 32;
+    val |= PHYSFS_Swap32(hi);
+    return(val);
 }
 #endif
 #else
@@ -84,7 +84,7 @@ static __inline__ PHYSFS_uint64 PHYSFS_Swap64(PHYSFS_uint64 val) {
    If there is no real 64-bit datatype, then compilers will complain about
    the fake 64-bit datatype that PHYSFS provides when it compiles user code.
 */
-#define PHYSFS_Swap64(X)	(X)
+#define PHYSFS_Swap64(X)    (X)
 #endif
 #endif /* PHYSFS_NO_64BIT_SUPPORT */
 
