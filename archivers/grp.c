@@ -334,7 +334,7 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
 {
     void *fh = NULL;
     PHYSFS_uint32 fileCount;
-    PHYSFS_uint32 location = 32;  /* sizeof sig + sizeof 1st file header. */
+    PHYSFS_uint32 location = 16;  /* sizeof sig. */
     GRPentry *entry;
     char *ptr;
 
@@ -346,6 +346,8 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
         __PHYSFS_platformClose(fh);
         BAIL_MACRO(ERR_OUT_OF_MEMORY, 0);
     } /* if */
+
+    location += (16 * fileCount);
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
@@ -367,7 +369,7 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
 
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = location;
-        location += entry->size + 16;
+        location += entry->size;
     } /* for */
 
     __PHYSFS_platformClose(fh);
