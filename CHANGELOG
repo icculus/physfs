@@ -2,6 +2,11 @@
  * CHANGELOG.
  */
 
+05082002 - From Greg: More win32 work. Library is now 95% functional on win32.
+           Only known win32 problem is that the CD drives are reported whether
+           they contain a disc or not).
+05062002 - From Greg: Win32 boxes without the latest Platform SDK can now
+           #define DISABLE_NT_SUPPORT. Other fixes.
 04242002 - Updated win32 info in INSTALL to discuss Platform SDK issues.
 04202002 - Added a (very) quick and (very) dirty http server to the
            extras directory (public domain), as another example of using
