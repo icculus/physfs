@@ -8,13 +8,35 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <alloca.h>
+
+/*
+ * Most of the API calls in here are, according to ADC, available since
+ *  MacOS 8.1. I don't think I used any MacOS 9 or CarbonLib-specific
+ *  functions. There might be one or two 8.5 calls, and perhaps when the
+ *  ADC docs say "Available in MacOS 8.1" they really mean "this works
+ *  with System 6, but we don't want to hear about it at this point."
+ *
+ * IsAliasFile() showed up in MacOS 8.5. You can duplicate this code with
+ *  PBGetCatInfoSync(), which is an older API, if you hope the bits in the
+ *  catalog info never change (which they won't for, say, MacOS 8.1).
+ *  See Apple Technote FL-30:
+ *    http://developer.apple.com/technotes/fl/fl_30.html
+ *
+ * If you want to use weak pointers and Gestalt, and choose the correct
+ *  code to use during __PHYSFS_platformInit(), I'll accept a patch, but
+ *  chances are, it wasn't worth the time it took to write this, let alone
+ *  implement that.
+ */
+
 
 /*
  * Please note that I haven't tried this code with CarbonLib or under
  *  MacOS X at all. The code in unix.c is known to work with Darwin,
- *  and you may or may not be better off using that.
+ *  and you may or may not be better off using that, especially since
+ *  mutexes are no-ops in this file. Patches welcome.
  */
-#ifdef __PHYSFS_CARBONIZED__   
+#ifdef __PHYSFS_CARBONIZED__  /* this is currently not defined anywhere. */
 #include <Carbon.h>
 #else
 #include <OSUtils.h>
@@ -25,6 +47,7 @@
 #include <MacMemory.h>
 #include <Events.h>
 #include <DriverGestalt.h>
+#include <Aliases.h>
 #endif
 
 #define __PHYSICSFS_INTERNAL__
@@ -218,7 +241,7 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
 } /* __PHYSFS_platformStricmp */
 
 
-static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
+static OSErr fnameToFSSpecNoAlias(const char *fname, FSSpec *spec)
 {
     OSErr err;
     Str255 str255;
@@ -238,6 +261,77 @@ static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
 
     err = FSMakeFSSpec(0, 0, str255, spec);
     return(err);
+} /* fnameToFSSpecNoAlias */
+
+
+/* !!! FIXME: This code is pretty heinous. */
+static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
+{
+    Boolean alias = 0;
+    Boolean folder = 0;
+    OSErr err = fnameToFSSpecNoAlias(fname, spec);
+
+    if (err == dirNFErr)  /* might be an alias in the middle of the path. */
+    {
+        /* 
+         * Has to be at least two ':' chars, or we wouldn't get a
+         *  dir-not-found condition. (no ':' means it was just a volume,
+         *  just one ':' means we would have gotten a fnfErr, if anything.
+         */
+        char *ptr;
+        char *start;
+        char *path = alloca(strlen(fname) + 1);
+        strcpy(path, fname);
+        ptr = strchr(path, ':');
+        BAIL_IF_MACRO(!ptr, ERR_FILE_NOT_FOUND, err); /* just in case */
+        ptr = strchr(ptr + 1, ':');
+        BAIL_IF_MACRO(!ptr, ERR_FILE_NOT_FOUND, err); /* just in case */
+        *ptr = '\0';
+        err = fnameToFSSpecNoAlias(path, spec); /* get first dir. */
+        BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, err);
+        start = ptr;
+        ptr = strchr(start + 1, ':');
+
+        do
+        {
+            CInfoPBRec infoPB;
+            memset(&infoPB, '\0', sizeof (CInfoPBRec));
+            infoPB.dirInfo.ioNamePtr = spec->name;
+            infoPB.dirInfo.ioVRefNum = spec->vRefNum;
+            infoPB.dirInfo.ioDrDirID = spec->parID;
+            infoPB.dirInfo.ioFDirIndex = 0;
+            err = PBGetCatInfoSync(&infoPB);
+            if (err != noErr)  /* not an alias, really a bogus path. */
+                return(fnameToFSSpecNoAlias(fname, spec)); /* reset */
+
+            if ((infoPB.dirInfo.ioFlAttrib & kioFlAttribDirMask) != 0)
+                spec->parID = infoPB.dirInfo.ioDrDirID;
+
+            if (ptr != NULL)
+                *ptr = '\0';
+            *start = strlen(start + 1);  /* make it a pstring. */
+            err = FSMakeFSSpec(spec->vRefNum, spec->parID,
+                               (const unsigned char *) start, spec);
+            if (err != noErr)  /* not an alias, really a bogus path. */
+                return(fnameToFSSpecNoAlias(fname, spec)); /* reset */
+
+            err = ResolveAliasFileWithMountFlags(spec, 1, &folder, &alias, 0);
+            if (err != noErr)  /* not an alias, really a bogus path. */
+                return(fnameToFSSpecNoAlias(fname, spec)); /* reset */
+            start = ptr;
+            if (ptr != NULL)
+                ptr = strchr(start + 1, ':');                
+        } while (start != NULL);
+    } /* if */
+
+    else /* there's something there; make sure final file is not an alias. */
+    {
+        BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, err);
+        err = ResolveAliasFileWithMountFlags(spec, 1, &folder, &alias, 0);
+        BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, err);
+    } /* else */
+
+    return(noErr);  /* w00t. */
 } /* fnameToFSSpec */
 
 
@@ -250,7 +344,36 @@ int __PHYSFS_platformExists(const char *fname)
 
 int __PHYSFS_platformIsSymLink(const char *fname)
 {
-    return(0);  /* !!! FIXME: What happens if (fname) is an alias? */
+    OSErr err;
+    FSSpec spec;
+    Boolean a = 0;
+    Boolean f = 0;
+    CInfoPBRec infoPB;
+    char *ptr;
+    char *dir = alloca(strlen(fname) + 1);
+    BAIL_IF_MACRO(dir == NULL, ERR_OUT_OF_MEMORY, 0);
+    strcpy(dir, fname);
+    ptr = strrchr(dir, ':');
+    if (ptr == NULL)  /* just a volume name? Can't be a symlink. */
+        return(0);
+
+    /* resolve aliases up to the actual file... */
+    *ptr = '\0';
+    BAIL_IF_MACRO(fnameToFSSpec(dir, &spec) != noErr, ERR_OS_ERROR, 0);
+
+    *ptr = strlen(ptr + 1);  /* ptr is now a pascal string. Yikes! */
+    memset(&infoPB, '\0', sizeof (CInfoPBRec));
+    infoPB.dirInfo.ioNamePtr = spec.name;
+    infoPB.dirInfo.ioVRefNum = spec.vRefNum;
+    infoPB.dirInfo.ioDrDirID = spec.parID;
+    infoPB.dirInfo.ioFDirIndex = 0;
+    BAIL_IF_MACRO(PBGetCatInfoSync(&infoPB) != noErr, ERR_OS_ERROR, 0);
+
+    err = FSMakeFSSpec(spec.vRefNum, infoPB.dirInfo.ioDrDirID,
+                       (const unsigned char *) ptr, &spec);
+    BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, 0);
+    BAIL_IF_MACRO(IsAliasFile(&spec, &a, &f) != noErr, ERR_OS_ERROR, 0);
+    return(a);
 } /* __PHYSFS_platformIsSymlink */
 
 
@@ -340,6 +463,10 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
 
     for (i = 1; i <= max; i++)
     {
+        FSSpec aliasspec;
+        Boolean alias = 0;
+        Boolean folder = 0;
+
         memset(&infoPB, '\0', sizeof (CInfoPBRec));
         str255[0] = 0;
         infoPB.dirInfo.ioNamePtr = str255;        /* store name in here.  */
@@ -348,6 +475,17 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
         infoPB.dirInfo.ioFDirIndex = i;         /* next file's info.    */
         if (PBGetCatInfoSync(&infoPB) != noErr)
             continue;  /* skip this file. Oh well. */
+
+        if (FSMakeFSSpec(spec.vRefNum, dirID, str255, &aliasspec) != noErr)
+            continue;  /* skip it. */
+
+        if (IsAliasFile(&aliasspec, &alias, &folder) != noErr)
+            continue;  /* skip it. */
+
+        if ((alias) && (omitSymLinks))
+            continue;
+
+        /* still here? Add it to the list. */
 
         l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
         if (l == NULL)
