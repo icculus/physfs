@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+08162002 - Fixed QPAK archiver, since I broke it (sorry!). Also fixed a
+           qpak memory leak.
 08092002 - Added Quake PAK archiver (qpak.c) by Ed Sinjiashvili. Thanks!
            Made (successful?) attempt to fix pthread-to-ui64 cast problem.
            Check for OS/2 in configure.in, in case anyone gets autoconf and
