@@ -309,7 +309,7 @@ static int wad_load_entries(const char *name, int forWriting, WADinfo *info)
     PHYSFS_uint32 fileCount;
     PHYSFS_uint32 directoryOffset;
     WADentry *entry;
-    char lastDirectory[9],buffer[9];
+    char lastDirectory[9];
 
     lastDirectory[8] = 0; /* Make sure lastDirectory stays null-terminated. */
 

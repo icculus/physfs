@@ -249,10 +249,10 @@ static int hog_open(const char *filename, int forWriting,
         goto openHog_failed;
     } /* if */
 
-    while( 1 )
+    while (1)
     {
         if (__PHYSFS_platformRead(*fh, buf, 13, 1) != 1)
-            break;             //eof here is ok
+            break; /* eof here is ok */
 
         if (__PHYSFS_platformRead(*fh, &size, 4, 1) != 1)
             goto openHog_failed;
@@ -261,15 +261,15 @@ static int hog_open(const char *filename, int forWriting,
 
         (*count)++;
 
-        // Skip over entry
+        /* Skip over entry... */
         pos = __PHYSFS_platformTell(*fh);
         if (pos == -1)
             goto openHog_failed;
         if (!__PHYSFS_platformSeek(*fh, pos + size))
             goto openHog_failed;
-    }
+    } /* while */
 
-    // Rewind to start of entries
+    /* Rewind to start of entries... */
     if (!__PHYSFS_platformSeek(*fh, 3))
         goto openHog_failed;
 
@@ -353,7 +353,7 @@ static int hog_load_entries(const char *name, int forWriting, HOGinfo *info)
             return(0);
         }
 
-        // Skip over entry
+        /* Skip over entry */
         if (!__PHYSFS_platformSeek(fh, entry->startPos + entry->size))
         {
             __PHYSFS_platformClose(fh);

@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <alloca.h>
 
 /*
@@ -345,16 +346,42 @@ PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 
 int __PHYSFS_platformStricmp(const char *x, const char *y)
 {
-    extern int _stricmp(const char *, const char *);
-    return(_stricmp(x, y));  /* (*shrug*) */
+    int ux, uy;
+
+    do
+    {
+        ux = toupper((int) *x);
+        uy = toupper((int) *y);
+        if (ux != uy)
+            return((ux > uy) ? 1 : -1);
+        x++;
+        y++;
+    } while ((ux) && (uy));
+
+    return(0);
 } /* __PHYSFS_platformStricmp */
 
 
-int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 l)
+int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 len)
 {
-    extern int _strnicmp(const char *, const char *, int);
-    return(_strnicmp(x, y, (int) l));  /* (*shrug*) */
-} /* __PHYSFS_platformStricmp */
+    int ux, uy;
+
+    if (!len)
+        return(0);
+
+    do
+    {
+        ux = toupper((int) *x);
+        uy = toupper((int) *y);
+        if (ux != uy)
+            return((ux > uy) ? 1 : -1);
+        x++;
+        y++;
+        len--;
+    } while ((ux) && (uy) && (len));
+
+    return(0);
+} /* __PHYSFS_platformStrnicmp */
 
 
 static OSErr fnameToFSSpecNoAlias(const char *fname, FSSpec *spec)
