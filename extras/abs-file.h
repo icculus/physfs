@@ -92,7 +92,7 @@ from the Author.
 #ifdef USE_PHYSFS
 
 #include <physfs.h>
-#define MY_FILETYPE PHYSFS_file
+#define MY_FILETYPE PHYSFS_File
 #define MY_SETBUFFER(fp,size) PHYSFS_setBuffer(fp,size)
 #define MY_READ(p,s,n,fp) PHYSFS_read(fp,p,s,n)
 #if PHYSFS_DEFAULT_READ_BUFFER

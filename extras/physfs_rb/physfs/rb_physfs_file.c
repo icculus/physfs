@@ -17,7 +17,7 @@ VALUE classPhysfsFile;
 /*
  * construct new PhysicsFS::File object
  */
-VALUE physfs_file_new (PHYSFS_file *file)
+VALUE physfs_file_new (PHYSFS_File *file)
 {
     if (file == 0)
         return Qnil;
@@ -33,8 +33,8 @@ VALUE physfs_file_new (PHYSFS_file *file)
 VALUE physfs_file_close (VALUE self)
 {
     int result;
-    PHYSFS_file *file;
-    Data_Get_Struct (self, PHYSFS_file, file);
+    PHYSFS_File *file;
+    Data_Get_Struct (self, PHYSFS_File, file);
 
     if (file == 0)
 	return Qfalse;
@@ -59,9 +59,9 @@ VALUE physfs_file_read (VALUE self, VALUE objSize, VALUE objCount)
     int objRead;
     void *buffer;
     VALUE result;
-    PHYSFS_file *file;
+    PHYSFS_File *file;
 
-    Data_Get_Struct (self, PHYSFS_file, file);
+    Data_Get_Struct (self, PHYSFS_File, file);
     if (file == 0)
 	return Qnil; //wasted file - no read possible
 
@@ -89,9 +89,9 @@ VALUE physfs_file_read (VALUE self, VALUE objSize, VALUE objCount)
 VALUE physfs_file_write (VALUE self, VALUE buf, VALUE objSize, VALUE objCount)
 {
     int result;
-    PHYSFS_file *file;
+    PHYSFS_File *file;
 
-    Data_Get_Struct (self, PHYSFS_file, file);
+    Data_Get_Struct (self, PHYSFS_File, file);
     if (file == 0)
 	return Qnil;
 
@@ -109,9 +109,9 @@ VALUE physfs_file_write (VALUE self, VALUE buf, VALUE objSize, VALUE objCount)
 VALUE physfs_file_eof (VALUE self)
 {
     int result;
-    PHYSFS_file *file;
+    PHYSFS_File *file;
 
-    Data_Get_Struct (self, PHYSFS_file, file);
+    Data_Get_Struct (self, PHYSFS_File, file);
     if (file == 0)
 	return Qnil;
 
@@ -131,9 +131,9 @@ VALUE physfs_file_eof (VALUE self)
 VALUE physfs_file_tell (VALUE self)
 {
     int result;
-    PHYSFS_file *file;
+    PHYSFS_File *file;
 
-    Data_Get_Struct (self, PHYSFS_file, file);
+    Data_Get_Struct (self, PHYSFS_File, file);
     if (file == 0)
 	return Qnil;
 
@@ -153,9 +153,9 @@ VALUE physfs_file_tell (VALUE self)
 VALUE physfs_file_seek (VALUE self, VALUE pos)
 {
     int result;
-    PHYSFS_file *file;
+    PHYSFS_File *file;
 
-    Data_Get_Struct (self, PHYSFS_file, file);
+    Data_Get_Struct (self, PHYSFS_File, file);
     if (file == 0)
 	return Qnil;
 
@@ -173,9 +173,9 @@ VALUE physfs_file_seek (VALUE self, VALUE pos)
 VALUE physfs_file_length (VALUE self)
 {
     int result;
-    PHYSFS_file *file;
+    PHYSFS_File *file;
 
-    Data_Get_Struct (self, PHYSFS_file, file);
+    Data_Get_Struct (self, PHYSFS_File, file);
     if (file == 0)
 	return Qnil;
 
@@ -196,10 +196,10 @@ VALUE physfs_file_length (VALUE self)
  */
 VALUE physfs_file_to_rwops (VALUE self)
 {
-    PHYSFS_file *file;
+    PHYSFS_File *file;
     SDL_RWops   *rwops;
 
-    Data_Get_Struct (self, PHYSFS_file, file);
+    Data_Get_Struct (self, PHYSFS_File, file);
     if (file == 0)
 	return Qnil;
 

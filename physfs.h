@@ -244,7 +244,7 @@ PHYSFS_COMPILE_TIME_ASSERT(sint64, sizeof(PHYSFS_sint64) == 8);
 
 
 /**
- * \struct PHYSFS_file
+ * \struct PHYSFS_File
  * \brief A PhysicsFS file handle.
  *
  * You get a pointer to one of these when you open a file for reading,
@@ -269,8 +269,9 @@ PHYSFS_COMPILE_TIME_ASSERT(sint64, sizeof(PHYSFS_sint64) == 8);
 typedef struct
 {
     void *opaque;  /**< That's all you get. Don't touch. */
-} PHYSFS_file;
+} PHYSFS_File;
 
+typedef PHYSFS_File PHYSFS_file;  /* for backwards compatibility with 1.0 */
 
 
 /**
@@ -987,7 +988,7 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
 /* i/o stuff... */
 
 /**
- * \fn PHYSFS_file *PHYSFS_openWrite(const char *filename)
+ * \fn PHYSFS_File *PHYSFS_openWrite(const char *filename)
  * \brief Open a file for writing.
  *
  * Open a file for writing, in platform-independent notation and in relation
@@ -1008,11 +1009,11 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
  * \sa PHYSFS_write
  * \sa PHYSFS_close
  */
-__EXPORT__ PHYSFS_file *PHYSFS_openWrite(const char *filename);
+__EXPORT__ PHYSFS_File *PHYSFS_openWrite(const char *filename);
 
 
 /**
- * \fn PHYSFS_file *PHYSFS_openAppend(const char *filename)
+ * \fn PHYSFS_File *PHYSFS_openAppend(const char *filename)
  * \brief Open a file for appending.
  *
  * Open a file for writing, in platform-independent notation and in relation
@@ -1034,11 +1035,11 @@ __EXPORT__ PHYSFS_file *PHYSFS_openWrite(const char *filename);
  * \sa PHYSFS_write
  * \sa PHYSFS_close
  */
-__EXPORT__ PHYSFS_file *PHYSFS_openAppend(const char *filename);
+__EXPORT__ PHYSFS_File *PHYSFS_openAppend(const char *filename);
 
 
 /**
- * \fn PHYSFS_file *PHYSFS_openRead(const char *filename)
+ * \fn PHYSFS_File *PHYSFS_openRead(const char *filename)
  * \brief Open a file for reading.
  *
  * Open a file for reading, in platform-independent notation. The search path
@@ -1059,11 +1060,11 @@ __EXPORT__ PHYSFS_file *PHYSFS_openAppend(const char *filename);
  * \sa PHYSFS_read
  * \sa PHYSFS_close
  */
-__EXPORT__ PHYSFS_file *PHYSFS_openRead(const char *filename);
+__EXPORT__ PHYSFS_File *PHYSFS_openRead(const char *filename);
 
 
 /**
- * \fn int PHYSFS_close(PHYSFS_file *handle)
+ * \fn int PHYSFS_close(PHYSFS_File *handle)
  * \brief Close a PhysicsFS filehandle.
  *
  * This call is capable of failing if the operating system was buffering
@@ -1080,11 +1081,11 @@ __EXPORT__ PHYSFS_file *PHYSFS_openRead(const char *filename);
  * \sa PHYSFS_openWrite
  * \sa PHYSFS_openAppend
  */
-__EXPORT__ int PHYSFS_close(PHYSFS_file *handle);
+__EXPORT__ int PHYSFS_close(PHYSFS_File *handle);
 
 
 /**
- * \fn PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle, void *buffer, PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+ * \fn PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle, void *buffer, PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
  * \brief Read data from a PhysicsFS filehandle
  *
  * The file must be opened for reading.
@@ -1099,13 +1100,13 @@ __EXPORT__ int PHYSFS_close(PHYSFS_file *handle);
  *
  * \sa PHYSFS_eof
  */
-__EXPORT__ PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle,
+__EXPORT__ PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
                                      void *buffer,
                                      PHYSFS_uint32 objSize,
                                      PHYSFS_uint32 objCount);
 
 /**
- * \fn PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer, PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+ * \fn PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle, const void *buffer, PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
  * \brief Write data to a PhysicsFS filehandle
  *
  * The file must be opened for writing.
@@ -1117,7 +1118,7 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle,
  *  \return number of objects written. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount). -1 if complete failure.
  */
-__EXPORT__ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle,
+__EXPORT__ PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle,
                                       const void *buffer,
                                       PHYSFS_uint32 objSize,
                                       PHYSFS_uint32 objCount);
@@ -1126,7 +1127,7 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle,
 /* File position stuff... */
 
 /**
- * \fn int PHYSFS_eof(PHYSFS_file *handle)
+ * \fn int PHYSFS_eof(PHYSFS_File *handle)
  * \brief Check for end-of-file state on a PhysicsFS filehandle.
  *
  * Determine if the end of file has been reached in a PhysicsFS filehandle.
@@ -1137,11 +1138,11 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle,
  * \sa PHYSFS_read
  * \sa PHYSFS_tell
  */
-__EXPORT__ int PHYSFS_eof(PHYSFS_file *handle);
+__EXPORT__ int PHYSFS_eof(PHYSFS_File *handle);
 
 
 /**
- * \fn PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle)
+ * \fn PHYSFS_sint64 PHYSFS_tell(PHYSFS_File *handle)
  * \brief Determine current position within a PhysicsFS filehandle.
  *
  *   \param handle handle returned from PHYSFS_open*().
@@ -1150,11 +1151,11 @@ __EXPORT__ int PHYSFS_eof(PHYSFS_file *handle);
  *
  * \sa PHYSFS_seek
  */
-__EXPORT__ PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle);
+__EXPORT__ PHYSFS_sint64 PHYSFS_tell(PHYSFS_File *handle);
 
 
 /**
- * \fn int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
+ * \fn int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos)
  * \brief Seek to a new position within a PhysicsFS filehandle.
  *
  * The next read or write will occur at that place. Seeking past the
@@ -1167,11 +1168,11 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_tell(PHYSFS_file *handle);
  *
  * \sa PHYSFS_tell
  */
-__EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos);
+__EXPORT__ int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos);
 
 
 /**
- * \fn PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
+ * \fn PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_File *handle)
  * \brief Get total length of a file in bytes.
  *
  * Note that if the file size can't be determined (since the archive is
@@ -1186,13 +1187,13 @@ __EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos);
  * \sa PHYSFS_tell
  * \sa PHYSFS_seek
  */
-__EXPORT__ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle);
+__EXPORT__ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_File *handle);
 
 
 /* Buffering stuff... */
 
 /**
- * \fn int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 bufsize)
+ * \fn int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 bufsize)
  * \brief Set up buffering for a PhysicsFS file handle.
  *
  * Define an i/o buffer for a file handle. A memory block of (bufsize) bytes
@@ -1231,11 +1232,11 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle);
  * \sa PHYSFS_write
  * \sa PHYSFS_close
  */
-__EXPORT__ int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 bufsize);
+__EXPORT__ int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 bufsize);
 
 
 /**
- * \fn int PHYSFS_flush(PHYSFS_file *handle)
+ * \fn int PHYSFS_flush(PHYSFS_File *handle)
  * \brief Flush a buffered PhysicsFS file handle.
  *
  * For buffered files opened for writing, this will put the current contents
@@ -1250,7 +1251,7 @@ __EXPORT__ int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 bufsize);
  * \sa PHYSFS_setBuffer
  * \sa PHYSFS_close
  */
-__EXPORT__ int PHYSFS_flush(PHYSFS_file *handle);
+__EXPORT__ int PHYSFS_flush(PHYSFS_File *handle);
 
 
 /* Byteorder stuff... */
@@ -1421,7 +1422,7 @@ __EXPORT__ PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val);
 
 
 /**
- * \fn int PHYSFS_readSLE16(PHYSFS_file *file, PHYSFS_sint16 *val)
+ * \fn int PHYSFS_readSLE16(PHYSFS_File *file, PHYSFS_sint16 *val)
  * \brief Read and convert a signed 16-bit littleendian value.
  *
  * Convenience function. Read a signed 16-bit littleendian value from a
@@ -1433,11 +1434,11 @@ __EXPORT__ PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val);
  *           store the result. On failure, you can find out what went wrong
  *           from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_readSLE16(PHYSFS_file *file, PHYSFS_sint16 *val);
+__EXPORT__ int PHYSFS_readSLE16(PHYSFS_File *file, PHYSFS_sint16 *val);
 
 
 /**
- * \fn int PHYSFS_readULE16(PHYSFS_file *file, PHYSFS_uint16 *val)
+ * \fn int PHYSFS_readULE16(PHYSFS_File *file, PHYSFS_uint16 *val)
  * \brief Read and convert an unsigned 16-bit littleendian value.
  *
  * Convenience function. Read an unsigned 16-bit littleendian value from a
@@ -1450,11 +1451,11 @@ __EXPORT__ int PHYSFS_readSLE16(PHYSFS_file *file, PHYSFS_sint16 *val);
  *           from PHYSFS_GetLastError().
  *
  */
-__EXPORT__ int PHYSFS_readULE16(PHYSFS_file *file, PHYSFS_uint16 *val);
+__EXPORT__ int PHYSFS_readULE16(PHYSFS_File *file, PHYSFS_uint16 *val);
 
 
 /**
- * \fn int PHYSFS_readSBE16(PHYSFS_file *file, PHYSFS_sint16 *val)
+ * \fn int PHYSFS_readSBE16(PHYSFS_File *file, PHYSFS_sint16 *val)
  * \brief Read and convert a signed 16-bit bigendian value.
  *
  * Convenience function. Read a signed 16-bit bigendian value from a
@@ -1466,11 +1467,11 @@ __EXPORT__ int PHYSFS_readULE16(PHYSFS_file *file, PHYSFS_uint16 *val);
  *           store the result. On failure, you can find out what went wrong
  *           from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_readSBE16(PHYSFS_file *file, PHYSFS_sint16 *val);
+__EXPORT__ int PHYSFS_readSBE16(PHYSFS_File *file, PHYSFS_sint16 *val);
 
 
 /**
- * \fn int PHYSFS_readUBE16(PHYSFS_file *file, PHYSFS_uint16 *val)
+ * \fn int PHYSFS_readUBE16(PHYSFS_File *file, PHYSFS_uint16 *val)
  * \brief Read and convert an unsigned 16-bit bigendian value.
  *
  * Convenience function. Read an unsigned 16-bit bigendian value from a
@@ -1483,11 +1484,11 @@ __EXPORT__ int PHYSFS_readSBE16(PHYSFS_file *file, PHYSFS_sint16 *val);
  *           from PHYSFS_GetLastError().
  *
  */
-__EXPORT__ int PHYSFS_readUBE16(PHYSFS_file *file, PHYSFS_uint16 *val);
+__EXPORT__ int PHYSFS_readUBE16(PHYSFS_File *file, PHYSFS_uint16 *val);
 
 
 /**
- * \fn int PHYSFS_readSLE32(PHYSFS_file *file, PHYSFS_sint32 *val)
+ * \fn int PHYSFS_readSLE32(PHYSFS_File *file, PHYSFS_sint32 *val)
  * \brief Read and convert a signed 32-bit littleendian value.
  *
  * Convenience function. Read a signed 32-bit littleendian value from a
@@ -1499,11 +1500,11 @@ __EXPORT__ int PHYSFS_readUBE16(PHYSFS_file *file, PHYSFS_uint16 *val);
  *           store the result. On failure, you can find out what went wrong
  *           from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_readSLE32(PHYSFS_file *file, PHYSFS_sint32 *val);
+__EXPORT__ int PHYSFS_readSLE32(PHYSFS_File *file, PHYSFS_sint32 *val);
 
 
 /**
- * \fn int PHYSFS_readULE32(PHYSFS_file *file, PHYSFS_uint32 *val)
+ * \fn int PHYSFS_readULE32(PHYSFS_File *file, PHYSFS_uint32 *val)
  * \brief Read and convert an unsigned 32-bit littleendian value.
  *
  * Convenience function. Read an unsigned 32-bit littleendian value from a
@@ -1516,11 +1517,11 @@ __EXPORT__ int PHYSFS_readSLE32(PHYSFS_file *file, PHYSFS_sint32 *val);
  *           from PHYSFS_GetLastError().
  *
  */
-__EXPORT__ int PHYSFS_readULE32(PHYSFS_file *file, PHYSFS_uint32 *val);
+__EXPORT__ int PHYSFS_readULE32(PHYSFS_File *file, PHYSFS_uint32 *val);
 
 
 /**
- * \fn int PHYSFS_readSBE32(PHYSFS_file *file, PHYSFS_sint32 *val)
+ * \fn int PHYSFS_readSBE32(PHYSFS_File *file, PHYSFS_sint32 *val)
  * \brief Read and convert a signed 32-bit bigendian value.
  *
  * Convenience function. Read a signed 32-bit bigendian value from a
@@ -1532,11 +1533,11 @@ __EXPORT__ int PHYSFS_readULE32(PHYSFS_file *file, PHYSFS_uint32 *val);
  *           store the result. On failure, you can find out what went wrong
  *           from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_readSBE32(PHYSFS_file *file, PHYSFS_sint32 *val);
+__EXPORT__ int PHYSFS_readSBE32(PHYSFS_File *file, PHYSFS_sint32 *val);
 
 
 /**
- * \fn int PHYSFS_readUBE32(PHYSFS_file *file, PHYSFS_uint32 *val)
+ * \fn int PHYSFS_readUBE32(PHYSFS_File *file, PHYSFS_uint32 *val)
  * \brief Read and convert an unsigned 32-bit bigendian value.
  *
  * Convenience function. Read an unsigned 32-bit bigendian value from a
@@ -1549,11 +1550,11 @@ __EXPORT__ int PHYSFS_readSBE32(PHYSFS_file *file, PHYSFS_sint32 *val);
  *           from PHYSFS_GetLastError().
  *
  */
-__EXPORT__ int PHYSFS_readUBE32(PHYSFS_file *file, PHYSFS_uint32 *val);
+__EXPORT__ int PHYSFS_readUBE32(PHYSFS_File *file, PHYSFS_uint32 *val);
 
 
 /**
- * \fn int PHYSFS_readSLE64(PHYSFS_file *file, PHYSFS_sint64 *val)
+ * \fn int PHYSFS_readSLE64(PHYSFS_File *file, PHYSFS_sint64 *val)
  * \brief Read and convert a signed 64-bit littleendian value.
  *
  * Convenience function. Read a signed 64-bit littleendian value from a
@@ -1568,11 +1569,11 @@ __EXPORT__ int PHYSFS_readUBE32(PHYSFS_file *file, PHYSFS_uint32 *val);
  * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
-__EXPORT__ int PHYSFS_readSLE64(PHYSFS_file *file, PHYSFS_sint64 *val);
+__EXPORT__ int PHYSFS_readSLE64(PHYSFS_File *file, PHYSFS_sint64 *val);
 
 
 /**
- * \fn int PHYSFS_readULE64(PHYSFS_file *file, PHYSFS_uint64 *val)
+ * \fn int PHYSFS_readULE64(PHYSFS_File *file, PHYSFS_uint64 *val)
  * \brief Read and convert an unsigned 64-bit littleendian value.
  *
  * Convenience function. Read an unsigned 64-bit littleendian value from a
@@ -1587,11 +1588,11 @@ __EXPORT__ int PHYSFS_readSLE64(PHYSFS_file *file, PHYSFS_sint64 *val);
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
-__EXPORT__ int PHYSFS_readULE64(PHYSFS_file *file, PHYSFS_uint64 *val);
+__EXPORT__ int PHYSFS_readULE64(PHYSFS_File *file, PHYSFS_uint64 *val);
 
 
 /**
- * \fn int PHYSFS_readSBE64(PHYSFS_file *file, PHYSFS_sint64 *val)
+ * \fn int PHYSFS_readSBE64(PHYSFS_File *file, PHYSFS_sint64 *val)
  * \brief Read and convert a signed 64-bit bigendian value.
  *
  * Convenience function. Read a signed 64-bit bigendian value from a
@@ -1606,11 +1607,11 @@ __EXPORT__ int PHYSFS_readULE64(PHYSFS_file *file, PHYSFS_uint64 *val);
  * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
-__EXPORT__ int PHYSFS_readSBE64(PHYSFS_file *file, PHYSFS_sint64 *val);
+__EXPORT__ int PHYSFS_readSBE64(PHYSFS_File *file, PHYSFS_sint64 *val);
 
 
 /**
- * \fn int PHYSFS_readUBE64(PHYSFS_file *file, PHYSFS_uint64 *val)
+ * \fn int PHYSFS_readUBE64(PHYSFS_File *file, PHYSFS_uint64 *val)
  * \brief Read and convert an unsigned 64-bit bigendian value.
  *
  * Convenience function. Read an unsigned 64-bit bigendian value from a
@@ -1625,11 +1626,11 @@ __EXPORT__ int PHYSFS_readSBE64(PHYSFS_file *file, PHYSFS_sint64 *val);
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
-__EXPORT__ int PHYSFS_readUBE64(PHYSFS_file *file, PHYSFS_uint64 *val);
+__EXPORT__ int PHYSFS_readUBE64(PHYSFS_File *file, PHYSFS_uint64 *val);
 
 
 /**
- * \fn int PHYSFS_writeSLE16(PHYSFS_file *file, PHYSFS_sint16 val)
+ * \fn int PHYSFS_writeSLE16(PHYSFS_File *file, PHYSFS_sint16 val)
  * \brief Convert and write a signed 16-bit littleendian value.
  *
  * Convenience function. Convert a signed 16-bit value from the platform's
@@ -1640,11 +1641,11 @@ __EXPORT__ int PHYSFS_readUBE64(PHYSFS_file *file, PHYSFS_uint64 *val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_writeSLE16(PHYSFS_file *file, PHYSFS_sint16 val);
+__EXPORT__ int PHYSFS_writeSLE16(PHYSFS_File *file, PHYSFS_sint16 val);
 
 
 /**
- * \fn int PHYSFS_writeULE16(PHYSFS_file *file, PHYSFS_uint16 val)
+ * \fn int PHYSFS_writeULE16(PHYSFS_File *file, PHYSFS_uint16 val)
  * \brief Convert and write an unsigned 16-bit littleendian value.
  *
  * Convenience function. Convert an unsigned 16-bit value from the platform's
@@ -1655,11 +1656,11 @@ __EXPORT__ int PHYSFS_writeSLE16(PHYSFS_file *file, PHYSFS_sint16 val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_writeULE16(PHYSFS_file *file, PHYSFS_uint16 val);
+__EXPORT__ int PHYSFS_writeULE16(PHYSFS_File *file, PHYSFS_uint16 val);
 
 
 /**
- * \fn int PHYSFS_writeSBE16(PHYSFS_file *file, PHYSFS_sint16 val)
+ * \fn int PHYSFS_writeSBE16(PHYSFS_File *file, PHYSFS_sint16 val)
  * \brief Convert and write a signed 16-bit bigendian value.
  *
  * Convenience function. Convert a signed 16-bit value from the platform's
@@ -1670,11 +1671,11 @@ __EXPORT__ int PHYSFS_writeULE16(PHYSFS_file *file, PHYSFS_uint16 val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_writeSBE16(PHYSFS_file *file, PHYSFS_sint16 val);
+__EXPORT__ int PHYSFS_writeSBE16(PHYSFS_File *file, PHYSFS_sint16 val);
 
 
 /**
- * \fn int PHYSFS_writeUBE16(PHYSFS_file *file, PHYSFS_uint16 val)
+ * \fn int PHYSFS_writeUBE16(PHYSFS_File *file, PHYSFS_uint16 val)
  * \brief Convert and write an unsigned 16-bit bigendian value.
  *
  * Convenience function. Convert an unsigned 16-bit value from the platform's
@@ -1685,11 +1686,11 @@ __EXPORT__ int PHYSFS_writeSBE16(PHYSFS_file *file, PHYSFS_sint16 val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_writeUBE16(PHYSFS_file *file, PHYSFS_uint16 val);
+__EXPORT__ int PHYSFS_writeUBE16(PHYSFS_File *file, PHYSFS_uint16 val);
 
 
 /**
- * \fn int PHYSFS_writeSLE32(PHYSFS_file *file, PHYSFS_sint32 val)
+ * \fn int PHYSFS_writeSLE32(PHYSFS_File *file, PHYSFS_sint32 val)
  * \brief Convert and write a signed 32-bit littleendian value.
  *
  * Convenience function. Convert a signed 32-bit value from the platform's
@@ -1700,11 +1701,11 @@ __EXPORT__ int PHYSFS_writeUBE16(PHYSFS_file *file, PHYSFS_uint16 val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_writeSLE32(PHYSFS_file *file, PHYSFS_sint32 val);
+__EXPORT__ int PHYSFS_writeSLE32(PHYSFS_File *file, PHYSFS_sint32 val);
 
 
 /**
- * \fn int PHYSFS_writeULE32(PHYSFS_file *file, PHYSFS_uint32 val)
+ * \fn int PHYSFS_writeULE32(PHYSFS_File *file, PHYSFS_uint32 val)
  * \brief Convert and write an unsigned 32-bit littleendian value.
  *
  * Convenience function. Convert an unsigned 32-bit value from the platform's
@@ -1715,11 +1716,11 @@ __EXPORT__ int PHYSFS_writeSLE32(PHYSFS_file *file, PHYSFS_sint32 val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_writeULE32(PHYSFS_file *file, PHYSFS_uint32 val);
+__EXPORT__ int PHYSFS_writeULE32(PHYSFS_File *file, PHYSFS_uint32 val);
 
 
 /**
- * \fn int PHYSFS_writeSBE32(PHYSFS_file *file, PHYSFS_sint32 val)
+ * \fn int PHYSFS_writeSBE32(PHYSFS_File *file, PHYSFS_sint32 val)
  * \brief Convert and write a signed 32-bit bigendian value.
  *
  * Convenience function. Convert a signed 32-bit value from the platform's
@@ -1730,11 +1731,11 @@ __EXPORT__ int PHYSFS_writeULE32(PHYSFS_file *file, PHYSFS_uint32 val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_writeSBE32(PHYSFS_file *file, PHYSFS_sint32 val);
+__EXPORT__ int PHYSFS_writeSBE32(PHYSFS_File *file, PHYSFS_sint32 val);
 
 
 /**
- * \fn int PHYSFS_writeUBE32(PHYSFS_file *file, PHYSFS_uint32 val)
+ * \fn int PHYSFS_writeUBE32(PHYSFS_File *file, PHYSFS_uint32 val)
  * \brief Convert and write an unsigned 32-bit bigendian value.
  *
  * Convenience function. Convert an unsigned 32-bit value from the platform's
@@ -1745,11 +1746,11 @@ __EXPORT__ int PHYSFS_writeSBE32(PHYSFS_file *file, PHYSFS_sint32 val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_GetLastError().
  */
-__EXPORT__ int PHYSFS_writeUBE32(PHYSFS_file *file, PHYSFS_uint32 val);
+__EXPORT__ int PHYSFS_writeUBE32(PHYSFS_File *file, PHYSFS_uint32 val);
 
 
 /**
- * \fn int PHYSFS_writeSLE64(PHYSFS_file *file, PHYSFS_sint64 val)
+ * \fn int PHYSFS_writeSLE64(PHYSFS_File *file, PHYSFS_sint64 val)
  * \brief Convert and write a signed 64-bit littleendian value.
  *
  * Convenience function. Convert a signed 64-bit value from the platform's
@@ -1763,11 +1764,11 @@ __EXPORT__ int PHYSFS_writeUBE32(PHYSFS_file *file, PHYSFS_uint32 val);
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
-__EXPORT__ int PHYSFS_writeSLE64(PHYSFS_file *file, PHYSFS_sint64 val);
+__EXPORT__ int PHYSFS_writeSLE64(PHYSFS_File *file, PHYSFS_sint64 val);
 
 
 /**
- * \fn int PHYSFS_writeULE64(PHYSFS_file *file, PHYSFS_uint64 val)
+ * \fn int PHYSFS_writeULE64(PHYSFS_File *file, PHYSFS_uint64 val)
  * \brief Convert and write an unsigned 64-bit littleendian value.
  *
  * Convenience function. Convert an unsigned 64-bit value from the platform's
@@ -1781,11 +1782,11 @@ __EXPORT__ int PHYSFS_writeSLE64(PHYSFS_file *file, PHYSFS_sint64 val);
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
-__EXPORT__ int PHYSFS_writeULE64(PHYSFS_file *file, PHYSFS_uint64 val);
+__EXPORT__ int PHYSFS_writeULE64(PHYSFS_File *file, PHYSFS_uint64 val);
 
 
 /**
- * \fn int PHYSFS_writeSBE64(PHYSFS_file *file, PHYSFS_sint64 val)
+ * \fn int PHYSFS_writeSBE64(PHYSFS_File *file, PHYSFS_sint64 val)
  * \brief Convert and write a signed 64-bit bigending value.
  *
  * Convenience function. Convert a signed 64-bit value from the platform's
@@ -1799,11 +1800,11 @@ __EXPORT__ int PHYSFS_writeULE64(PHYSFS_file *file, PHYSFS_uint64 val);
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
-__EXPORT__ int PHYSFS_writeSBE64(PHYSFS_file *file, PHYSFS_sint64 val);
+__EXPORT__ int PHYSFS_writeSBE64(PHYSFS_File *file, PHYSFS_sint64 val);
 
 
 /**
- * \fn int PHYSFS_writeUBE64(PHYSFS_file *file, PHYSFS_uint64 val)
+ * \fn int PHYSFS_writeUBE64(PHYSFS_File *file, PHYSFS_uint64 val)
  * \brief Convert and write an unsigned 64-bit bigendian value.
  *
  * Convenience function. Convert an unsigned 64-bit value from the platform's
@@ -1817,7 +1818,7 @@ __EXPORT__ int PHYSFS_writeSBE64(PHYSFS_file *file, PHYSFS_sint64 val);
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
-__EXPORT__ int PHYSFS_writeUBE64(PHYSFS_file *file, PHYSFS_uint64 val);
+__EXPORT__ int PHYSFS_writeUBE64(PHYSFS_File *file, PHYSFS_uint64 val);
 
 
 /* Everything above this line is part of the PhysicsFS 1.0 API. */

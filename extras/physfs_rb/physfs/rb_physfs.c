@@ -369,7 +369,7 @@ VALUE physfs_last_mod_time (VALUE self, VALUE name)
  */
 VALUE physfs_open_read (VALUE self, VALUE name)
 {
-    PHYSFS_file *file = PHYSFS_openRead (STR2CSTR(name));
+    PHYSFS_File *file = PHYSFS_openRead (STR2CSTR(name));
     return physfs_file_new (file);
 }
 
@@ -380,7 +380,7 @@ VALUE physfs_open_read (VALUE self, VALUE name)
  */
 VALUE physfs_open_write (VALUE self, VALUE name)
 {
-    PHYSFS_file *file = PHYSFS_openWrite (STR2CSTR(name));
+    PHYSFS_File *file = PHYSFS_openWrite (STR2CSTR(name));
     return physfs_file_new (file);
 }
 
@@ -391,7 +391,7 @@ VALUE physfs_open_write (VALUE self, VALUE name)
  */
 VALUE physfs_open_append (VALUE self, VALUE name)
 {
-    PHYSFS_file *file = PHYSFS_openAppend (STR2CSTR(name));
+    PHYSFS_File *file = PHYSFS_openAppend (STR2CSTR(name));
     return physfs_file_new (file);
 }
 

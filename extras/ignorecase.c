@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 {
     int rc;
     char buf[128];
-    PHYSFS_file *f;
+    PHYSFS_File *f;
 
     if (!PHYSFS_init(argv[0]))
     {

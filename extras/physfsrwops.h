@@ -76,7 +76,7 @@ __EXPORT__ SDL_RWops *PHYSFSRWOPS_openAppend(const char *fname);
  *  @return A valid SDL_RWops structure on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-__EXPORT__ SDL_RWops *PHYSFSRWOPS_makeRWops(PHYSFS_file *handle);
+__EXPORT__ SDL_RWops *PHYSFSRWOPS_makeRWops(PHYSFS_File *handle);
 
 #ifdef __cplusplus
 }
