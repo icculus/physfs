@@ -62,9 +62,11 @@
            Fixed. The win32 userdir will default to the base dir, now.
 11142001 - Removed a redundant error check in platform/win32.c
 03052002 - Made unix.c's timeslice implementation more portable, and added a
-            Darwin-specific means to detect CDs (thanks to Patrick Stein).
-            Minor cleanup in win32.c (changed "for (; condition ;)" into
-            "while (condition)" ...)
+           Darwin-specific means to detect CDs (thanks to Patrick Stein).
+           Minor cleanup in win32.c (changed "for (; condition ;)" into
+           "while (condition)" ...)
+03152002 - PHYSFS_setSaneConfig() now handles failure to set the write dir
+           better.
 
 --ryan. (icculus@clutteredmind.org)
 
