@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+04082003 - Minor changes to extras/abs-file.h (Thanks, Adam!)
 03302003 - Fixed seeking in uncompressed ZIP entries, and handle a
            misbehaviour in Java's JAR creation tools. Thanks to "Tree" for
            pointing these bugs out. Added HOG and MVL archive support for
