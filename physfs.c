@@ -1305,8 +1305,10 @@ static int locateInStringList(const char *str,
 {
     PHYSFS_uint32 hi = *pos - 1;
     PHYSFS_uint32 lo = 0;
-    PHYSFS_uint32 i = hi / 2;
+    PHYSFS_uint32 i = hi >> 1;
     int cmp;
+
+    assert(*pos != 0);  /* this doesn't work with empty lists! */
 
     while (hi != lo)
     {
@@ -1314,10 +1316,15 @@ static int locateInStringList(const char *str,
         if (cmp == 0)  /* it's in the list already. */
             return(1);
         else if (cmp < 0)
+        {
             hi = i;
+            i = lo + ((hi - lo) >> 1);
+        } /* else if */
         else
-            lo = i;
-        i = lo + ((hi - lo) / 2);
+        {
+            lo = i + 1;
+            i = lo + ((1 + hi - lo) >> 1);
+        } /* else */
     } /* while */
 
     /* hi == lo, check it in case it's the match... */
