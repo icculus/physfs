@@ -11,6 +11,7 @@
 #endif
 
 #include <windows.h>
+#include <userenv.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -18,9 +19,16 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-
 const char *__PHYSFS_platformDirSeparator = "\\";
 
+static HANDLE ProcessHandle = NULL;     /* Current process handle */
+static HANDLE AccessTokenHandle = NULL; /* Security handle to process */
+static DWORD ProcessID;                 /* ID assigned to current process */
+static int runningNT;                   /* TRUE if NT derived OS */
+static OSVERSIONINFO OSVersionInfo;     /* Information about the OS */
+
+/* NT specific information */
+static char *ProfileDirectory = NULL;   /* User profile folder */
 
 static const char *win32strerror(void)
 {
@@ -149,30 +157,15 @@ static char *copyEnvironmentVariable(const char *varname)
 
 char *__PHYSFS_platformGetUserDir(void)
 {
-    char *home = copyEnvironmentVariable("HOME");
-    const char *homedrive = getenv("HOMEDRIVE");
-    const char *homepath = getenv("HOMEPATH");
+    char *userdir = NULL;
 
-    if (home != NULL)
-        return(home);
-
-    if ((homedrive != NULL) && (homepath != NULL))
+    /*!!!TODO - Need to get the userdir for non-NT based OSes */
+    if(runningNT)
     {
-        char *retval = (char *) malloc(strlen(homedrive)+strlen(homepath)+2);
-        if (retval != NULL)
-        {
-            strcpy(retval, homedrive);
-            if ((homepath[0] != '\\') &&
-                (homedrive[strlen(homedrive)-1] != '\\'))
-            {
-                strcat(retval, "\\");
-            } /* if */
-            strcat(retval, homepath);
-            return(retval);
-        } /* if */
-    } /* if */
+        userdir = ProfileDirectory;
+    }
 
-    return(NULL);
+    return userdir;
 } /* __PHYSFS_platformGetUserDir */
 
 
@@ -461,6 +454,128 @@ int __PHYSFS_platformMkDir(const char *path)
     BAIL_IF_MACRO(rc == 0, win32strerror(), 0);
     return(1);
 } /* __PHYSFS_platformMkDir */
+
+/*
+ * Initialize any NT specific stuff.  This includes any OS based on NT.
+ *
+ * Return zero if there was a catastrophic failure and non-zero otherwise.
+ */
+static int doNTInit()
+{
+    DWORD pathsize = 0;
+    char TempProfileDirectory[1];
+
+    /* Create a process access token handle */
+    if(!OpenProcessToken(ProcessHandle, TOKEN_QUERY, &AccessTokenHandle))
+    {
+        /* Access token is required by other win32 functions */
+        return 0;
+    }
+
+    /* Should fail.  Will write the size of the profile path in pathsize*/
+    /*!!! Second parameter can't be NULL or the function fails??? */
+    if(!GetUserProfileDirectory(AccessTokenHandle, TempProfileDirectory, &pathsize))
+    {
+        const char *temp;
+        temp = win32strerror();
+
+        /* Allocate memory for the profile directory */
+        ProfileDirectory = (char *)malloc(pathsize);
+        BAIL_IF_MACRO(ProfileDirectory == NULL, ERR_OUT_OF_MEMORY, 0);
+        /* Try to get the profile directory */
+        if(!GetUserProfileDirectory(AccessTokenHandle, ProfileDirectory, &pathsize))
+        {
+            free(ProfileDirectory);
+            return 0;
+        }
+    }
+
+    /* Everything initialized okay */
+    return 1;
+}
+
+/* 
+ * Get OS info and save it.
+ *
+ * Returns non-zero if successful, otherwise it returns zero on failure.
+ */
+int getOSInfo(void)
+{
+    /* Get OS info */
+    OSVersionInfo.dwOSVersionInfoSize = sizeof(OSVersionInfo);
+    if(!GetVersionEx(&OSVersionInfo))
+    {
+        return 0;
+    }
+
+    /* Set to TRUE if we are runnign a WinNT based OS 4.0 or greater */
+    runningNT = (OSVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
+        (OSVersionInfo.dwMajorVersion > 3);
+
+    return 1;
+}
+
+int __PHYSFS_platformInit(void)
+{
+    if(!getOSInfo())
+    {
+        return 0;
+    }
+
+    /* Get Windows ProcessID associated with the current process */
+    ProcessID = GetCurrentProcessId();
+    /* Create a process handle associated with the current process ID */
+    ProcessHandle = GetCurrentProcess();
+
+    if(ProcessHandle == NULL)
+    {
+        /* Process handle is required by other win32 functions */
+        return 0;
+    }
+
+    /* If running an NT system (NT/Win2k/XP, etc...) */
+    if(runningNT)
+    {
+        if(!doNTInit())
+        {
+            /* Error initializing NT stuff */
+            return 0;
+        }
+    }
+
+    /* It's all good */
+    return 1;
+}
+
+/*
+ * Uninitialize any NT specific stuff done in doNTInit().
+ *
+ * Return zero if there was a catastrophic failure and non-zero otherwise.
+ */
+static int doNTDeinit()
+{
+    if(CloseHandle(AccessTokenHandle) != S_OK)
+    {
+        return 0;
+    }
+
+    free(ProfileDirectory);
+
+    /* It's all good */
+    return 1;
+}
+
+int __PHYSFS_platformDeinit(void)
+{
+    if(!doNTDeinit())
+        return 0;
+
+    if(CloseHandle(ProcessHandle) != S_OK)
+        return 0;
+
+    /* It's all good */
+    return 1;
+}
 
 /* end of win32.c ... */
 
