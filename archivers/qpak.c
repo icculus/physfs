@@ -289,7 +289,7 @@ static QPAKdirectory *qpak_findDirectory(QPAKdirectory *root, const char *name)
         QPAKdirectory *thisDir = root->dirs;
         while (thisDir != NULL)
         {
-            if (strcmp(thisDir->name, name) == 0)
+            if (__PHYSFS_platformStricmp(thisDir->name, name) == 0)
                 return(thisDir);
             thisDir = thisDir->next;
         } /* while */
@@ -305,7 +305,7 @@ static QPAKdirectory *qpak_findDirectory(QPAKdirectory *root, const char *name)
 
         while (thisDir != NULL)
         {
-            if (strcmp(thisDir->name, temp) == 0)
+            if (__PHYSFS_platformStricmp(thisDir->name, temp) == 0)
                 return(qpak_findDirectory(thisDir, p + 1));
             thisDir = thisDir->next;
         } /* while */
@@ -387,8 +387,8 @@ static QPAKentry *qpak_findEntry(QPAKdirectory *root, const char *name)
 
     while (thisFile != NULL)
     {
-        if (strcmp(thisFile->name, t) == 0)
-            return(thisFile->entry);
+        if (__PHYSFS_platformStricmp(thisFile->name, t) == 0)
+           return(thisFile->entry);
 
         thisFile = thisFile->next;
     } /* while */
