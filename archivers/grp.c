@@ -384,8 +384,8 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
 {
     "GRP",
     "Build engine Groupfile format",
-    "Ryan C. Gordon (icculus@linuxgames.com)",
-    "http://www.icculus.org/~icculus/",
+    "Ryan C. Gordon (icculus@clutteredmind.org)",
+    "http://www.icculus.org/physfs/",
 };
 
 /* end of grp.c ... */

@@ -657,8 +657,8 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 {
     "ZIP",
     "PkZip/WinZip/Info-Zip compatible",
-    "Ryan C. Gordon (icculus@linuxgames.com)",
-    "http://www.icculus.org/~icculus/",
+    "Ryan C. Gordon (icculus@clutteredmind.org)",
+    "http://www.icculus.org/physfs/",
 };
 
 /* end of zip.c ... */
