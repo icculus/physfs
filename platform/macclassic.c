@@ -139,22 +139,22 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
-char *__PHYSFS_platformCalcBaseDir(const char *argv0)
+static char *convFSSpecToPath(FSSpec *spec, int includeFile)
 {
     char *ptr;
     char *retval = NULL;
     UInt32 retLength = 0;
     CInfoPBRec infoPB;
     Str255 str255;
-    FSSpec spec;
-    
-    /* Get the name of the binary's parent directory. */
-    memcpy(&spec, &procfsspec, sizeof (FSSpec));
+
+    str255[0] = spec->name[0];
+    memcpy(&str255[1], &spec->name[1], str255[0]);
+
     memset(&infoPB, '\0', sizeof (CInfoPBRec));
     infoPB.dirInfo.ioNamePtr = str255;          /* put name in here.         */
-    infoPB.dirInfo.ioVRefNum = spec.vRefNum;    /* ID of bin's volume.       */ 
-    infoPB.dirInfo.ioDrParID = spec.parID;      /* ID of bin's dir.          */
-    infoPB.dirInfo.ioFDirIndex = -1;            /* get dir (not file) info.  */
+    infoPB.dirInfo.ioVRefNum = spec->vRefNum;   /* ID of bin's volume.       */ 
+    infoPB.dirInfo.ioDrParID = spec->parID;     /* ID of bin's dir.          */
+    infoPB.dirInfo.ioFDirIndex = (includeFile) ? 0 : -1;
 
     /* walk the tree back to the root dir (volume), building path string... */
     do
@@ -167,7 +167,9 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
                 free(retval);
             BAIL_MACRO(ERR_OS_ERROR, NULL);
         } /* if */
-        
+
+        infoPB.dirInfo.ioFDirIndex = -1;  /* look at parent dir next time. */
+
         /* allocate more space for the retval... */
         retLength += str255[0] + 1; /* + 1 for a ':' or null char... */
         ptr = (char *) malloc(retLength);
@@ -191,6 +193,16 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     } while (infoPB.dirInfo.ioDrDirID != fsRtDirID);
 
     return(retval);
+} /* convFSSpecToPath */
+
+
+char *__PHYSFS_platformCalcBaseDir(const char *argv0)
+{
+    FSSpec spec;
+    
+    /* Get the name of the binary's parent directory. */
+    FSMakeFSSpec(procfsspec.vRefNum, procfsspec.parID, procfsspec.name, &spec);
+    return(convFSSpecToPath(&spec, 0));
 } /* __PHYSFS_platformCalcBaseDir */
 
 
@@ -224,7 +236,12 @@ char *__PHYSFS_platformGetUserName(void)
 
 char *__PHYSFS_platformGetUserDir(void)
 {
+#if 0
     return(NULL);  /* bah...use default behaviour, I guess. */
+#else
+    /* (Hmm. Default behaviour is broken in the base library.  :)  )  */
+    return(__PHYSFS_platformCalcBaseDir(NULL));
+#endif
 } /* __PHYSFS_platformGetUserDir */
 
 
@@ -528,10 +545,16 @@ char *__PHYSFS_platformCurrentDir(void)
 
 char *__PHYSFS_platformRealPath(const char *path)
 {
-    /* !!! FIXME: This isn't nearly right. */
-    char *retval = (char *) malloc(strlen(path) + 1);
-    strcpy(retval, path);
-    return(retval);
+    /*
+     * fnameToFSSpec() will resolve any symlinks to get to the real
+     *  file's FSSpec, which, when converted, will contain the real
+     *  direct path to a given file. convFSSpecToPath() mallocs a
+     *  return value buffer.
+     */
+
+    FSSpec spec;
+    BAIL_IF_MACRO(fnameToFSSpec(path, &spec) != noErr, ERR_OS_ERROR, NULL);
+    return(convFSSpecToPath(&spec, 1));
 } /* __PHYSFS_platformRealPath */
 
 
