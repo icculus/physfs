@@ -424,9 +424,7 @@ void __PHYSFS_platformTimeslice(void)
 LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
                                                   int omitSymLinks)
 {
-    LinkedStringList *retval = NULL;
-    LinkedStringList *l = NULL;
-    LinkedStringList *prev = NULL;
+    LinkedStringList *retval = NULL, *p = NULL;
     HANDLE dir;
     WIN32_FIND_DATA ent;
     char *SearchPath;
@@ -460,26 +458,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
         if (strcmp(ent.cFileName, "..") == 0)
             continue;
 
-        l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
-        if (l == NULL)
-            break;
-
-        l->str = (char *) malloc(strlen(ent.cFileName) + 1);
-        if (l->str == NULL)
-        {
-            free(l);
-            break;
-        } /* if */
-
-        strcpy(l->str, ent.cFileName);
-
-        if (retval == NULL)
-            retval = l;
-        else
-            prev->next = l;
-
-        prev = l;
-        l->next = NULL;
+        retval = __PHYSFS_addToLinkedStringList(retval, &p, ent.cFileName, -1);
     } while (FindNextFile(dir, &ent) != 0);
 
     FindClose(dir);

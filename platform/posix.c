@@ -218,9 +218,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
                                                   int omitSymLinks)
 {
-    LinkedStringList *retval = NULL;
-    LinkedStringList *l = NULL;
-    LinkedStringList *prev = NULL;
+    LinkedStringList *retval = NULL, *p = NULL;
     DIR *dir;
     struct dirent *ent;
     int bufsize = 0;
@@ -250,12 +248,8 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
         BAIL_IF_MACRO(1, strerror(errno), NULL);
     } /* if */
 
-    while (1)
+    while ((ent = readdir(dir)) != NULL)
     {
-        ent = readdir(dir);
-        if (ent == NULL)   /* we're done. */
-            break;
-
         if (strcmp(ent->d_name, ".") == 0)
             continue;
 
@@ -280,26 +274,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
                 continue;
         } /* if */
 
-        l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
-        if (l == NULL)
-            break;
-
-        l->str = (char *) malloc(strlen(ent->d_name) + 1);
-        if (l->str == NULL)
-        {
-            free(l);
-            break;
-        } /* if */
-
-        strcpy(l->str, ent->d_name);
-
-        if (retval == NULL)
-            retval = l;
-        else
-            prev->next = l;
-
-        prev = l;
-        l->next = NULL;
+        retval = __PHYSFS_addToLinkedStringList(retval, &p, ent->d_name, -1);
     } /* while */
 
     if (buf != NULL)

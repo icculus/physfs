@@ -303,9 +303,9 @@ static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
         char *path = alloca(strlen(fname) + 1);
         strcpy(path, fname);
         ptr = strchr(path, ':');
-        BAIL_IF_MACRO(!ptr, ERR_FILE_NOT_FOUND, err); /* just in case */
+        BAIL_IF_MACRO(!ptr, ERR_NO_SUCH_FILE, err); /* just in case */
         ptr = strchr(ptr + 1, ':');
-        BAIL_IF_MACRO(!ptr, ERR_FILE_NOT_FOUND, err); /* just in case */
+        BAIL_IF_MACRO(!ptr, ERR_NO_SUCH_FILE, err); /* just in case */
         *ptr = '\0';
         err = fnameToFSSpecNoAlias(path, spec); /* get first dir. */
         BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, err);
@@ -458,9 +458,7 @@ void __PHYSFS_platformTimeslice(void)
 LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
                                                   int omitSymLinks)
 {
-    LinkedStringList *retval = NULL;
-    LinkedStringList *l = NULL;
-    LinkedStringList *prev = NULL;
+    LinkedStringList *ret = NULL, *p = NULL;
     UInt16 i;
     UInt16 max;
     FSSpec spec;
@@ -509,31 +507,10 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
             continue;
 
         /* still here? Add it to the list. */
-
-        l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
-        if (l == NULL)
-            break;
-
-        l->str = (char *) malloc(str255[0] + 1);
-        if (l->str == NULL)
-        {
-            free(l);
-            break;
-        } /* if */
-
-        memcpy(l->str, &str255[1], str255[0]);
-        l->str[str255[0]] = '\0';
-
-        if (retval == NULL)
-            retval = l;
-        else
-            prev->next = l;
-
-        prev = l;
-        l->next = NULL;
+        ret = __PHYSFS_addToLinkedStringList(ret, &p, &str255[1], str255[0]);
     } /* for */
 
-    return(retval);
+    return(ret);
 } /* __PHYSFS_platformEnumerateFiles */
 
 
@@ -588,7 +565,7 @@ static SInt16 *macDoOpen(const char *fname, SInt8 perm, int createIfMissing)
     BAIL_IF_MACRO((err != noErr) && (err != fnfErr), ERR_OS_ERROR, NULL);
     if (err == fnfErr)
     {
-        BAIL_IF_MACRO(!createIfMissing, ERR_FILE_NOT_FOUND, NULL);
+        BAIL_IF_MACRO(!createIfMissing, ERR_NO_SUCH_FILE, NULL);
         err = HCreate(spec.vRefNum, spec.parID, spec.name,
                       procInfo.processSignature, 'BINA');
         BAIL_IF_MACRO(err != noErr, ERR_OS_ERROR, NULL);
