@@ -4,6 +4,11 @@
    Read unzip.h for more info
 */
 
+#if HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#if (defined PHYSFS_SUPPORTS_ZIP)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,10 +18,6 @@
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
-
-#if (!defined PHYSFS_SUPPORTS_ZIP)
-#error PHYSFS_SUPPORTS_ZIP must be defined.
-#endif
 
 #ifdef STDC
 #  include <stddef.h>
@@ -1316,4 +1317,8 @@ extern int ZEXPORT unzGetGlobalComment (file, szComment, uSizeBuf)
 		*(szComment+s->gi.size_comment)='\0';
 	return (int)uReadThis;
 }
+
+#endif  /* defined PHYSFS_SUPPORTS_ZIP */
+
+/* end of unzip.c ... */
 

@@ -1,335 +1,564 @@
-#-----------------------------------------------------------------------------#
-# PhysicsFS -- A filesystem abstraction.
-#
-#  Please see the file LICENSE in the source's root directory.
-#   This file written by Ryan C. Gordon.
-#-----------------------------------------------------------------------------#
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
+
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
 
 
-#-----------------------------------------------------------------------------#
-# Makefile for building PhysicsFS on Unix-like systems. Follow the
-#  instructions for editing this file, then run "make" on the command line.
-#-----------------------------------------------------------------------------#
 
+SHELL = /bin/sh
 
-#-----------------------------------------------------------------------------#
-# Set to your liking.
-#-----------------------------------------------------------------------------#
+srcdir = .
+top_srcdir = .
+
+prefix = /usr/local
+exec_prefix = ${prefix}
+
+bindir = ${exec_prefix}/bin
+sbindir = ${exec_prefix}/sbin
+libexecdir = ${exec_prefix}/libexec
+datadir = ${prefix}/share
+sysconfdir = ${prefix}/etc
+sharedstatedir = ${prefix}/com
+localstatedir = ${prefix}/var
+libdir = ${exec_prefix}/lib
+infodir = ${prefix}/info
+mandir = ${prefix}/man
+includedir = ${prefix}/include
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/physfs
+pkglibdir = $(libdir)/physfs
+pkgincludedir = $(includedir)/physfs
+top_builddir = .
+
+ACLOCAL = ${SHELL} /home/icculus/projects/physfs/missing --run aclocal
+AUTOCONF = ${SHELL} /home/icculus/projects/physfs/missing --run autoconf
+AUTOMAKE = ${SHELL} /home/icculus/projects/physfs/missing --run automake
+AUTOHEADER = ${SHELL} /home/icculus/projects/physfs/missing --run autoheader
+
+INSTALL = /usr/bin/ginstall -c
+INSTALL_PROGRAM = ${INSTALL}
+INSTALL_DATA = ${INSTALL} -m 644
+INSTALL_SCRIPT = ${INSTALL}
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = s,x,x,
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = 
+host_triplet = i686-pc-linux-gnu
+AMTAR = ${SHELL} /home/icculus/projects/physfs/missing --run tar
+AS = @AS@
+AWK = gawk
+BINARY_AGE = 0
 CC = gcc
-LINKER = gcc
-
-
-#-----------------------------------------------------------------------------#
-# If this makefile fails to detect Cygwin correctly, or you want to force
-#  the build process's behaviour, set it to "true" or "false" (w/o quotes).
-#-----------------------------------------------------------------------------#
-#cygwin := true
-#cygwin := false
-cygwin := autodetect
-
-#-----------------------------------------------------------------------------#
-# Set this to true if you want to create a debug build.
-#-----------------------------------------------------------------------------#
-#debugging := false
-debugging := true
-
-#-----------------------------------------------------------------------------#
-# Set the archive types you'd like to support.
-#  Note that various archives may need external libraries.
-#-----------------------------------------------------------------------------#
-use_archive_zip := true
-use_archive_grp := true
-
-#-----------------------------------------------------------------------------#
-# Set to "true" if you'd like to build a DLL. Set to "false" otherwise.
-#-----------------------------------------------------------------------------#
-#build_dll := false
-build_dll := true
-
-#-----------------------------------------------------------------------------#
-# Set one of the below. Currently, none of these are used.
-#-----------------------------------------------------------------------------#
-#use_asm = -DUSE_I386_ASM
-use_asm = -DUSE_PORTABLE_C
-
-
-#-----------------------------------------------------------------------------#
-# Set this to where you want PhysicsFS installed. It will put the
-#  files in $(install_prefix)/bin, $(install_prefix)/lib, and
-#  $(install_prefix)/include  ...
-#-----------------------------------------------------------------------------#
-install_prefix := /usr/local
-
-
-#-----------------------------------------------------------------------------#
-#-----------------------------------------------------------------------------#
-#-----------------------------------------------------------------------------#
-#-----------------------------------------------------------------------------#
-# Everything below this line is probably okay.
-#-----------------------------------------------------------------------------#
-#-----------------------------------------------------------------------------#
-#-----------------------------------------------------------------------------#
-#-----------------------------------------------------------------------------#
-
-#-----------------------------------------------------------------------------#
-# CygWin autodetect.
-#-----------------------------------------------------------------------------#
-
-ifeq ($(strip $(cygwin)),autodetect)
-  ifneq ($(strip $(shell gcc -v 2>&1 |grep "cygwin")),)
-    cygwin := true
-  else
-    cygwin := false
-  endif
-endif
-
-
-#-----------------------------------------------------------------------------#
-# Platform-specific binary stuff.
-#-----------------------------------------------------------------------------#
-
-ifeq ($(strip $(cygwin)),true)
-  # !!! FIXME
-  build_dll := false
-  # !!! FIXME
-
-  ASM = nasmw
-  EXE_EXT = .exe
-  DLL_EXT = .dll
-  STATICLIB_EXT = .a
-  ASMOBJFMT = win32
-  ASMDEFS = -dC_IDENTIFIERS_UNDERSCORED
-  CFLAGS += -DC_IDENTIFIERS_UNDERSCORED
-else
-  ASM = nasm
-  EXE_EXT =
-  DLL_EXT = .so
-  STATICLIB_EXT = .a
-  ASMOBJFMT = elf
-endif
-
-ifeq ($(strip $(build_dll)),true)
-LIB_EXT := $(DLL_EXT)
-SHAREDFLAGS += -shared
-else
-LIB_EXT := $(STATICLIB_EXT)
-endif
-
-#-----------------------------------------------------------------------------#
-# Version crapola.
-#-----------------------------------------------------------------------------#
-VERMAJOR := $(shell grep "define PHYSFS_VER_MAJOR" physfs.h | sed "s/\#define PHYSFS_VER_MAJOR //")
-VERMINOR := $(shell grep "define PHYSFS_VER_MINOR" physfs.h | sed "s/\#define PHYSFS_VER_MINOR //")
-VERPATCH := $(shell grep "define PHYSFS_VER_PATCH" physfs.h | sed "s/\#define PHYSFS_VER_PATCH //")
-
-VERMAJOR := $(strip $(VERMAJOR))
-VERMINOR := $(strip $(VERMINOR))
-VERPATCH := $(strip $(VERPATCH))
-
-VERFULL := $(VERMAJOR).$(VERMINOR).$(VERPATCH)
-
-#-----------------------------------------------------------------------------#
-# General compiler, assembler, and linker flags.
-#-----------------------------------------------------------------------------#
-
-BINDIR := bin
-SRCDIR := .
-
-CFLAGS += $(use_asm) -I$(SRCDIR) -I/usr/include/readline -D_REENTRANT -fsigned-char -DPLATFORM_UNIX
-CFLAGS += -Wall -Werror -fno-exceptions -fno-rtti -ansi
-#-pedantic
-
-LDFLAGS += -lm
-
-ifeq ($(strip $(debugging)),true)
-  CFLAGS += -DDEBUG -g -fno-omit-frame-pointer
-  LDFLAGS += -g -fno-omit-frame-pointer
-else
-  CFLAGS += -DNDEBUG -O2 -fomit-frame-pointer
-  LDFLAGS += -O2 -fomit-frame-pointer
-endif
-
-ASMFLAGS := -f $(ASMOBJFMT) $(ASMDEFS)
-
-TESTLDFLAGS := -lreadline
-
-#-----------------------------------------------------------------------------#
-# Source and target names.
-#-----------------------------------------------------------------------------#
-
-PUREBASELIBNAME := physfs
-ifeq ($(strip $(cygwin)),true)
-BASELIBNAME := $(strip $(PUREBASELIBNAME))
-else
-BASELIBNAME := lib$(strip $(PUREBASELIBNAME))
-endif
-
-MAINLIB := $(BINDIR)/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
-
-TESTSRCS := test/test_physfs.c
-
-MAINSRCS := physfs.c physfs_byteorder.c archivers/dir.c
-
-ifeq ($(strip $(use_archive_zip)),true)
-  MAINSRCS += archivers/zip.c archivers/unzip.c
-  CFLAGS += -DPHYSFS_SUPPORTS_ZIP
-  LDFLAGS += -lz
-  ifeq ($(strip $(cygwin)),true)
-    EXTRABUILD += zlib114/zlib114.a
-    CFLAGS += -Izlib114
-    LDFLAGS += -Lzlib114
-  endif
-endif
-
-ifeq ($(strip $(use_archive_grp)),true)
-MAINSRCS += archivers/grp.c
-CFLAGS += -DPHYSFS_SUPPORTS_GRP
-endif
-
-ifeq ($(strip $(cygwin)),true)
-MAINSRCS += platform/win32.c
-CFLAGS += -DWIN32
-else
-MAINSRCS += platform/unix.c
-endif
-
-TESTEXE := $(BINDIR)/test_physfs$(EXE_EXT)
-
-# Rule for getting list of objects from source
-MAINOBJS1 := $(MAINSRCS:.c=.o)
-MAINOBJS2 := $(MAINOBJS1:.cpp=.o)
-MAINOBJS3 := $(MAINOBJS2:.asm=.o)
-MAINOBJS := $(foreach f,$(MAINOBJS3),$(BINDIR)/$(f))
-MAINSRCS := $(foreach f,$(MAINSRCS),$(SRCDIR)/$(f))
-
-TESTOBJS1 := $(TESTSRCS:.c=.o)
-TESTOBJS2 := $(TESTOBJS1:.cpp=.o)
-TESTOBJS3 := $(TESTOBJS2:.asm=.o)
-TESTOBJS := $(foreach f,$(TESTOBJS3),$(BINDIR)/$(f))
-TESTSRCS := $(foreach f,$(TESTSRCS),$(SRCDIR)/$(f))
-
-CLEANUP = $(wildcard *.exe) $(wildcard *.obj) \
-          $(wildcard $(BINDIR)/*.exe) $(wildcard $(BINDIR)/*.obj) \
-          $(wildcard *~) $(wildcard *.err) \
-          $(wildcard .\#*) core
-
-
-#-----------------------------------------------------------------------------#
-# Rules.
-#-----------------------------------------------------------------------------#
-
-# Rules for turning source files into .o files
-$(BINDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-$(BINDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-$(BINDIR)/%.o: $(SRCDIR)/%.asm
-	$(ASM) $(ASMFLAGS) -o $@ $<
-
-.PHONY: all clean distclean listobjs install
-
-all: $(BINDIR) $(EXTRABUILD) $(MAINLIB) $(TESTEXE)
-
-$(MAINLIB) : $(BINDIR) $(MAINOBJS)
-	$(LINKER) -o $(MAINLIB) $(SHAREDFLAGS) $(MAINOBJS) $(LDFLAGS)
-
-$(TESTEXE) : $(MAINLIB) $(TESTOBJS)
-	$(LINKER) -o $(TESTEXE) $(TESTOBJS) -L$(BINDIR) -l$(strip $(PUREBASELIBNAME)) $(LDFLAGS) $(TESTLDFLAGS)
-
-
-install: all
-	rm -f $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERMAJOR)).$(strip $(VERMINOR)).*
-	mkdir -p $(install_prefix)/bin
-	mkdir -p $(install_prefix)/lib
-	mkdir -p $(install_prefix)/include
-	cp $(SRCDIR)/physfs.h $(install_prefix)/include
-	cp $(TESTEXE) $(install_prefix)/bin
-ifeq ($(strip $(cygwin)),true)
-	cp $(MAINLIB) $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
-else
-	cp $(MAINLIB) $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERFULL))
-	ln -sf $(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERFULL)) $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
-	ln -sf $(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERFULL)) $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERMAJOR))
-	chmod 0755 $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERFULL))
-	chmod 0644 $(install_prefix)/include/physfs.h
-endif
-
-$(BINDIR):
-	mkdir -p $(BINDIR)
-	mkdir -p $(BINDIR)/archivers
-	mkdir -p $(BINDIR)/platform
-	mkdir -p $(BINDIR)/test
-
-
-ifeq ($(strip $(cygwin)),true)
-zlib114/zlib114.a:
-	cd zlib114 ; $(MAKE) CC=$(CC)
-endif
-
-
-distclean: clean
-
-clean:
-	rm -f $(CLEANUP)
-	rm -rf $(BINDIR)
-ifeq ($(strip $(cygwin)),true)
-	cd zlib114 ; $(MAKE) clean
-endif
-
-listobjs:
-	@echo SOURCES:
-	@echo $(MAINSRCS)
-	@echo
-	@echo OBJECTS:
-	@echo $(MAINOBJS)
-	@echo
-	@echo BINARIES:
-	@echo $(MAINLIB)
-
-showcfg:
-	@echo "Using CygWin   : $(cygwin)"
-	@echo "Debugging      : $(debugging)"
-	@echo "ASM flag       : $(use_asm)"
-	@echo "Building DLLs  : $(build_dll)"
-	@echo "Install prefix : $(install_prefix)"
-	@echo "PhysFS version : $(VERFULL)"
-	@echo "Supports .GRP  : $(use_archive_grp)"
-	@echo "Supports .ZIP  : $(use_archive_zip)"
-
-#-----------------------------------------------------------------------------#
-# This section is pretty much just for Ryan's use to make distributions.
-#  You Probably Should Not Touch.
-#-----------------------------------------------------------------------------#
-
-# These are the files needed in a binary distribution, regardless of what
-#  platform is being used.
-BINSCOMMON := LICENSE.TXT physfs.h
-
-.PHONY: package msbins win32bins nocygwin
-package: clean
-	cd .. ; mv physfs physfs-$(VERFULL) ; tar -czvvf ./physfs-$(VERFULL).tar.gz --exclude="*CVS*" physfs-$(VERFULL) ; mv physfs-$(VERFULL) physfs
-
-
-ifeq ($(strip $(cygwin)),true)
-msbins: win32bins
-
-win32bins: clean all
-	echo -e "\r\n\r\n\r\nHEY YOU.\r\n\r\n\r\nTake a look at README-win32bins.txt FIRST.\r\n\r\n\r\n--ryan. (icculus@clutteredmind.org)\r\n\r\n" |zip -9rz ../physfs-win32bins-$(shell date +%m%d%Y).zip $(MAINLIB) $(EXTRAPACKAGELIBS) README-win32bins.txt
-
-else
-
-msbins: nocygwin
-win32bins: nocygwin
-
-nocygwin:
-	@echo This must be done on a Windows box in the Cygwin environment.
-
-endif
-
-#-----------------------------------------------------------------------------#
-# That's all, folks.
-#-----------------------------------------------------------------------------#
-
-# end of Makefile ...
+DEPDIR = .deps
+DLLTOOL = @DLLTOOL@
+ECHO = echo
+EXEEXT = 
+INSTALL_STRIP_PROGRAM = ${SHELL} $(install_sh) -c -s
+INTERFACE_AGE = 0
+LIBTOOL = $(SHELL) $(top_builddir)/libtool
+LN_S = ln -s
+LT_AGE = 0
+LT_CURRENT = 5
+LT_RELEASE = 0.1
+LT_REVISION = 0
+MAJOR_VERSION = 0
+MICRO_VERSION = 5
+MINOR_VERSION = 1
+OBJDUMP = @OBJDUMP@
+OBJEXT = o
+PACKAGE = physfs
+RANLIB = ranlib
+STRIP = strip
+VERSION = 0.1.5
+am__include = include
+am__quote = 
+install_sh = /home/icculus/projects/physfs/install-sh
+
+lib_LTLIBRARIES = libphysfs.la
+
+SUBDIRS = platform archivers zlib114 . test
+
+libphysfsincludedir = $(includedir)
+libphysfsinclude_HEADERS = \
+	physfs.h
+
+
+libphysfs_la_SOURCES = \
+	physfs.c	\
+	physfs_internal.h	\
+	physfs_byteorder.c
+
+
+#ZLIB_LIB = zlib114/libz.la
+ZLIB_LIB = 
+
+libphysfs_la_LDFLAGS = \
+	-release $(LT_RELEASE)	\
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+
+libphysfs_la_LIBADD = \
+	archivers/libarchivers.la	\
+	platform/libplatform.la	\
+	$(ZLIB_LIB)
+
+
+EXTRA_DIST = \
+	CREDITS \
+	LICENSE \
+	CHANGELOG \
+	INSTALL \
+	TODO
+
+subdir = .
+ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = config.h
+CONFIG_CLEAN_FILES =
+LTLIBRARIES = $(lib_LTLIBRARIES)
+
+#libphysfs_la_DEPENDENCIES = archivers/libarchivers.la \
+#	platform/libplatform.la zlib114/libz.la
+libphysfs_la_DEPENDENCIES = archivers/libarchivers.la \
+	platform/libplatform.la
+am_libphysfs_la_OBJECTS = physfs.lo physfs_byteorder.lo
+libphysfs_la_OBJECTS = $(am_libphysfs_la_OBJECTS)
+
+DEFS = -DHAVE_CONFIG_H
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I.
+CPPFLAGS = 
+LDFLAGS = 
+LIBS =  -lreadline
+depcomp = $(SHELL) $(top_srcdir)/depcomp
+DEP_FILES = $(DEPDIR)/physfs.Plo \
+	$(DEPDIR)/physfs_byteorder.Plo
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
+	$(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+CFLAGS = -g -O0 -Werror
+DIST_SOURCES = $(libphysfs_la_SOURCES)
+HEADERS = $(libphysfsinclude_HEADERS)
+
+
+RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
+	uninstall-info-recursive all-recursive install-data-recursive \
+	install-exec-recursive installdirs-recursive install-recursive \
+	uninstall-recursive check-recursive installcheck-recursive
+DIST_COMMON = $(libphysfsinclude_HEADERS) ./stamp-h.in INSTALL \
+	Makefile.am Makefile.in TODO acconfig.h aclocal.m4 config.guess \
+	config.h.in config.sub configure configure.in depcomp \
+	install-sh ltmain.sh missing mkinstalldirs
+DIST_SUBDIRS = $(SUBDIRS)
+SOURCES = $(libphysfs_la_SOURCES)
+
+all: config.h
+	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+
+.SUFFIXES:
+.SUFFIXES: .c .lo .o .obj
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+	-rm -f libtool
+$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --foreign  Makefile
+Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$@ $(SHELL) ./config.status
+
+$(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+	$(SHELL) ./config.status --recheck
+$(srcdir)/configure:  $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+	cd $(srcdir) && $(AUTOCONF)
+
+$(ACLOCAL_M4):  configure.in 
+	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+config.h: stamp-h
+	@if test ! -f $@; then \
+		rm -f stamp-h; \
+		$(MAKE) stamp-h; \
+	else :; fi
+stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
+	@rm -f stamp-h stamp-hT
+	@echo timestamp > stamp-hT 2> /dev/null
+	cd $(top_builddir) \
+	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
+	     $(SHELL) ./config.status
+	@mv stamp-hT stamp-h
+$(srcdir)/config.h.in:  $(srcdir)/./stamp-h.in
+	@if test ! -f $@; then \
+		rm -f $(srcdir)/./stamp-h.in; \
+		$(MAKE) $(srcdir)/./stamp-h.in; \
+	else :; fi
+$(srcdir)/./stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/acconfig.h
+	@rm -f $(srcdir)/./stamp-h.in $(srcdir)/./stamp-h.inT
+	@echo timestamp > $(srcdir)/./stamp-h.inT 2> /dev/null
+	cd $(top_srcdir) && $(AUTOHEADER)
+	@mv $(srcdir)/./stamp-h.inT $(srcdir)/./stamp-h.in
+
+distclean-hdr:
+	-rm -f config.h
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libdir)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(LIBTOOL) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p"; \
+	    $(LIBTOOL) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$p; \
+	  else :; fi; \
+	done
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p"; \
+	  $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+libphysfs.la: $(libphysfs_la_OBJECTS) $(libphysfs_la_DEPENDENCIES) 
+	$(LINK) -rpath $(libdir) $(libphysfs_la_LDFLAGS) $(libphysfs_la_OBJECTS) $(libphysfs_la_LIBADD) $(LIBS)
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
+
+distclean-compile:
+	-rm -f *.tab.c
+
+include $(DEPDIR)/physfs.Plo
+include $(DEPDIR)/physfs_byteorder.Plo
+
+distclean-depend:
+	-rm -rf $(DEPDIR)
+
+.c.o:
+	source='$<' object='$@' libtool=no \
+	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' \
+	$(CCDEPMODE) $(depcomp) \
+	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+
+.c.obj:
+	source='$<' object='$@' libtool=no \
+	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' \
+	$(CCDEPMODE) $(depcomp) \
+	$(COMPILE) -c `cygpath -w $<`
+
+.c.lo:
+	source='$<' object='$@' libtool=yes \
+	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' \
+	$(CCDEPMODE) $(depcomp) \
+	$(LTCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
+CCDEPMODE = depmode=gcc
+uninstall-info-am:
+install-libphysfsincludeHEADERS: $(libphysfsinclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libphysfsincludedir)
+	@list='$(libphysfsinclude_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(libphysfsincludedir)/$$f"; \
+	  $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(libphysfsincludedir)/$$f; \
+	done
+
+uninstall-libphysfsincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libphysfsinclude_HEADERS)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(libphysfsincludedir)/$$f"; \
+	  rm -f $(DESTDIR)$(libphysfsincludedir)/$$f; \
+	done
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+$(RECURSIVE_TARGETS):
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	case "$@" in \
+	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
+	  *) list='$(SUBDIRS)' ;; \
+	esac; \
+	rev=''; for subdir in $$list; do \
+	  if test "$$subdir" = "."; then :; else \
+	    rev="$$subdir $$rev"; \
+	  fi; \
+	done; \
+	rev="$$rev ."; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique $(LISP)
+
+TAGS: tags-recursive $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
+	  fi; \
+	done; \
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)config.h.in$$unique$(LISP)$$tags" \
+	  || etags $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP)
+
+GTAGS:
+	here=`CDPATH=: && cd $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
+
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+
+top_distdir = .
+# Avoid unsightly `./'.
+distdir = $(PACKAGE)-$(VERSION)
+
+GZIP_ENV = --best
+
+distdir: $(DISTFILES)
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+	mkdir $(distdir)
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+	for subdir in $(SUBDIRS); do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    (cd $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) \
+	        top_distdir="$(top_distdir)" \
+	        distdir=../$(distdir)/$$subdir \
+	        distdir) \
+	      || exit 1; \
+	  fi; \
+	done
+	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
+	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
+	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
+	  ! -type d ! -perm -444 -exec $(SHELL) $(install_sh) -c -m a+r {} {} \; \
+	|| chmod -R a+r $(distdir)
+dist: distdir
+	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+
+# This target untars the dist file and tries a VPATH configuration.  Then
+# it guarantees that the distribution is self-contained by making another
+# tarfile.
+distcheck: dist
+	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
+	GZIP=$(GZIP_ENV) gunzip -c $(distdir).tar.gz | $(AMTAR) xf -
+	chmod -R a-w $(distdir); chmod a+w $(distdir)
+	mkdir $(distdir)/=build
+	mkdir $(distdir)/=inst
+	chmod a-w $(distdir)
+	dc_install_base=`CDPATH=: && cd $(distdir)/=inst && pwd` \
+	  && cd $(distdir)/=build \
+	  && ../configure --srcdir=.. --prefix=$$dc_install_base \
+	  && $(MAKE) $(AM_MAKEFLAGS) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dvi \
+	  && $(MAKE) $(AM_MAKEFLAGS) check \
+	  && $(MAKE) $(AM_MAKEFLAGS) install \
+	  && $(MAKE) $(AM_MAKEFLAGS) installcheck \
+	  && $(MAKE) $(AM_MAKEFLAGS) uninstall \
+	  && (test `find $$dc_install_base -type f -print | wc -l` -le 1 \
+	     || (echo "Error: files left after uninstall" 1>&2; \
+	         exit 1) ) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dist \
+	  && $(MAKE) $(AM_MAKEFLAGS) distclean \
+	  && rm -f $(distdir).tar.gz \
+	  && (test `find . -type f -print | wc -l` -eq 0 \
+	     || (echo "Error: files left after distclean" 1>&2; \
+	         exit 1) )
+	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
+	@echo "$(distdir).tar.gz is ready for distribution" | \
+	  sed 'h;s/./=/g;p;x;p;x'
+check-am: all-am
+check: check-recursive
+all-am: Makefile $(LTLIBRARIES) $(HEADERS) config.h
+installdirs: installdirs-recursive
+installdirs-am:
+	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(libphysfsincludedir)
+
+install: install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
+uninstall: uninstall-recursive
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-recursive
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-recursive
+
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+	mostlyclean-am
+
+dist-all: distdir
+	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+distclean: distclean-recursive
+	-rm -f config.status config.cache config.log
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-hdr distclean-libtool \
+	distclean-tags
+
+dvi: dvi-recursive
+
+dvi-am:
+
+info: info-recursive
+
+info-am:
+
+install-data-am: install-libphysfsincludeHEADERS
+
+install-exec-am: install-libLTLIBRARIES
+
+install-info: install-info-recursive
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-recursive
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-recursive
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
+
+uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
+	uninstall-libphysfsincludeHEADERS
+
+uninstall-info: uninstall-info-recursive
+
+.PHONY: $(RECURSIVE_TARGETS) GTAGS all all-am check check-am clean \
+	clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-recursive dist dist-all distcheck distclean \
+	distclean-compile distclean-depend distclean-generic \
+	distclean-hdr distclean-libtool distclean-recursive \
+	distclean-tags distdir dvi dvi-am dvi-recursive info info-am \
+	info-recursive install install-am install-data install-data-am \
+	install-data-recursive install-exec install-exec-am \
+	install-exec-recursive install-info install-info-am \
+	install-info-recursive install-libLTLIBRARIES \
+	install-libphysfsincludeHEADERS install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	mostlyclean-recursive tags tags-recursive uninstall \
+	uninstall-am uninstall-info-am uninstall-info-recursive \
+	uninstall-libLTLIBRARIES uninstall-libphysfsincludeHEADERS \
+	uninstall-recursive
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

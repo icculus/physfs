@@ -2,6 +2,10 @@
  * CHANGELOG.
  */
 
+05102002 - A trimmed-down zlib 1.1.4 is now included in the source distro, for
+           use by win32, MacOS, and Unix systems that don't have it installed
+           on the system. Autoconf support! Initial attempt at this. Lots of
+           stuff may be very broken.
 05082002 - From Greg: More win32 work. Library is now 95% functional on win32.
            Only known win32 problem is that the CD drives are reported whether
            they contain a disc or not).

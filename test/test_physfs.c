@@ -6,6 +6,10 @@
  *  This file written by Ryan C. Gordon.
  */
 
+#if HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -15,20 +19,10 @@
 #include <SIOUX.h>
 #endif
 
-#if ((defined __APPLE__) && (defined __MACH__))
-#  if (!defined __DARWIN__)
-#    define __DARWIN__
-#  endif
-#endif
-
-#if ((!defined WIN32) && (!defined __MACOS__) && (!defined __DARWIN__))
-#define HAVE_READLINE
-#endif
-
-#if (defined HAVE_READLINE)
+#if (defined PHYSFS_HAVE_READLINE)
 #include <unistd.h>
-#include <readline.h>
-#include <history.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #endif
 
 #include "physfs.h"
@@ -725,7 +719,7 @@ static int process_command(char *complete_cmd)
         if (i->cmd == NULL)
             printf("Unknown command. Enter \"help\" for instructions.\n");
 
-#if (defined HAVE_READLINE)
+#if (defined PHYSFS_HAVE_READLINE)
         add_history(complete_cmd);
         if (history_file)
         {
@@ -743,7 +737,7 @@ static int process_command(char *complete_cmd)
 
 static void open_history_file(void)
 {
-#if (defined HAVE_READLINE)
+#if (defined PHYSFS_HAVE_READLINE)
 #if 0
     const char *envr = getenv("TESTPHYSFS_HISTORY");
     if (!envr)
@@ -820,7 +814,7 @@ int main(int argc, char **argv)
 
     do
     {
-#if (defined HAVE_READLINE)
+#if (defined PHYSFS_HAVE_READLINE)
         buf = readline("> ");
 #else
         int i;
