@@ -2,7 +2,8 @@
  * CHANGELOG.
  */
 
-05242002 - Upped version to 0.1.6.
+05252002 - Added John Hall's file modification time patch.
+05242002 - Upped version to 0.1.6 (not officially released yet).
 05232002 - Fixed the build system to always package the complete source, not
            just what we built for a given system, when doing a "make dist".
            Updated INSTALL. Wrote BeOS platform code (platform/beos.cpp).
