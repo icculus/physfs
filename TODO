@@ -1,3 +1,4 @@
+Stuff that needs to be done and wishlist:
 
 - update the Makefile so that Cygwin can generate a DLL. The entire codebase
   compiles under Cygwin otherwise.
@@ -5,6 +6,8 @@
   decide that there's no disc in the drive?
 - MacOS support.
 - Move the integer types to something abstract. uint32, etc.
+- Platform-specific functions/macros to handle byte ordering.
+- A PHYSFS_readUint32(), _readSint32(), etc API.
 - Ditch the "standard" i/o routines (fopen() and friends) and move this into
   the platform drivers.
 

@@ -43,6 +43,13 @@
            code somewhat). Haven't tried to compile the zipfile support, and
            I still can't link the library. Dunno what the hell I'm supposed
            to do there. Isn't Unix supposed to be hard compared to this?
+09142001 - David Hedbor submitted a patch to handle a case where the
+           current working directory has been deleted out from under the
+           process (both in platform/unix.c and physfs.c itself). Thanks,
+           David! Added a CREDITS file. Changed the format of the author field
+           in PHYSFS_ArchiveInfo to put the email address between "<>" instead
+           of "()" chars. Updated TODO. make install now deletes previous
+           revisions of the library. Changed version to 0.1.4.
 
 --ryan. (icculus@clutteredmind.org)
 
