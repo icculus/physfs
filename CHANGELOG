@@ -3,6 +3,9 @@
  */
 
 03132005 - More mount work, added PHYSFS_getMountPoint() and more cleanups.
+           Replaced all the C runtime allocations with PhysFS allocation hooks.
+           Added pocketpc.c to EXTRA_DIST. Added allocation hooks to some
+           platform drivers.
 03122005 - Added evil GOTO_*_MACRO_* macros. Fixed unix.c to compile again on
            MacOS X. Added PHYSFS_mount() (thanks, Philip!). Cleaned up the
            INSTALL and CREDITS files a little. Split off start of
