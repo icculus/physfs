@@ -254,6 +254,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_IO_ERROR             "I/O error"
 #define ERR_CANT_SET_WRITE_DIR   "Can't set write directory"
 #define ERR_TOO_MANY_SYMLINKS    "Too many symbolic links"
+#define ERR_COMPRESSION          "(De)compression error"
 
 /*
  * Call this to set the message returned by PHYSFS_getLastError().
