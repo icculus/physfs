@@ -239,6 +239,7 @@ $(TESTEXE) : $(MAINLIB) $(TESTOBJS)
 
 
 install: all
+	rm -f $(install_prefix)/lib/$(strip $(BASELIBNAME))$(strip $(LIB_EXT)).$(strip $(VERMAJOR)).$(strip $(VERMINOR)).*
 	mkdir -p $(install_prefix)/bin
 	mkdir -p $(install_prefix)/lib
 	mkdir -p $(install_prefix)/include
