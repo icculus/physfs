@@ -746,7 +746,7 @@ __EXPORT__ char **PHYSFS_getSearchPath(void);
  *    \param appName Program-specific name of your program, to separate it
  *                   from other programs using PhysicsFS.
  *
- *    \param archiveExt File extention used by your program to specify an
+ *    \param archiveExt File extension used by your program to specify an
  *                      archive. For example, Quake 3 uses "pk3", even though
  *                      they are just zipfiles. Specify NULL to not dig out
  *                      archives automatically. Do not specify the '.' char;
