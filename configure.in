@@ -333,11 +333,12 @@ if test x$physfs_valid_lang = xno; then
   AC_MSG_WARN([*** Currently known languages:])
   AC_MSG_WARN([***   --enable-language=english])
   AC_MSG_WARN([***   --enable-language=spanish])
+  AC_MSG_WARN([***   --enable-language=german])
+  AC_MSG_WARN([***   --enable-language=french])
   AC_MSG_WARN([***   --enable-language=russian-koi8-r])
   AC_MSG_WARN([***   --enable-language=russian-cp1251])
   AC_MSG_WARN([***   --enable-language=russian-cp866])
   AC_MSG_WARN([***   --enable-language=russian-iso-8859-5])
-  AC_MSG_WARN([***   --enable-language=french])
   AC_MSG_WARN([***])
   AC_MSG_ERROR([*** unsupported language. stop.])
 fi
@@ -374,6 +375,7 @@ if test x$we_have_sed = xyes; then
   x=`echo $build_os |sed "s/darwin.*/darwin/"`
   if test x$x = xdarwin -a x$build_vendor = xapple; then
     this_is_macosx=yes
+    PHYSFSLDFLAGS="$PHYSFSLDFLAGS -Wl,-framework -Wl,Carbon -Wl,-framework -Wl,IOKit"
   fi
 
   AC_MSG_RESULT([$this_is_macosx])
