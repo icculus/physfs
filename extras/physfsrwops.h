@@ -9,12 +9,13 @@
  *  verbatim into a closed-source project, exploiting it commercially, and
  *  removing any trace of my name from the source (although I hope you won't
  *  do that). I welcome enhancements and corrections to this file, but I do
- *  not require you to send me patches if you make changes.
+ *  not require you to send me patches if you make changes. This code has
+ *  NO WARRANTY.
  *
- * Unless otherwise stated, the rest of PhysicsFS falls under the GNU Lesser
- *  General Public License: http://www.gnu.org/licenses/lgpl.txt
+ * Unless otherwise stated, the rest of PhysicsFS falls under the zlib license.
+ *  Please see LICENSE in the root of the source tree.
  *
- * SDL falls under the LGPL, too. You can get SDL at http://www.libsdl.org/
+ * SDL falls under the LGPL license. You can get SDL at http://www.libsdl.org/
  *
  *  This file was written by Ryan C. Gordon. (icculus@clutteredmind.org).
  */

@@ -8,7 +8,7 @@ Name:		%{name}
 Version:	%{version}
 Release:	%{release}
 Prefix:		%{prefix}
-Copyright:	GNU Lesser General Public License (LGPL)
+Copyright:	zlib license
 Group:		System Environment/Libraries
 URL:		http://www.icculus/physfs/
 Source:		physfs-%{version}.tar.gz

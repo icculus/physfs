@@ -69,11 +69,6 @@ extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_MVL;
 extern const DirFunctions         __PHYSFS_DirFunctions_MVL;
 #endif
 
-#if (defined PHYSFS_SUPPORTS_QPAK)
-extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_QPAK;
-extern const DirFunctions         __PHYSFS_DirFunctions_QPAK;
-#endif
-
 extern const DirFunctions  __PHYSFS_DirFunctions_DIR;
 
 
@@ -95,10 +90,6 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
     &__PHYSFS_ArchiveInfo_MVL,
 #endif
 
-#if (defined PHYSFS_SUPPORTS_QPAK)
-    &__PHYSFS_ArchiveInfo_QPAK,
-#endif
-
     NULL
 };
 
@@ -118,10 +109,6 @@ static const DirFunctions *dirFunctions[] =
 
 #if (defined PHYSFS_SUPPORTS_MVL)
     &__PHYSFS_DirFunctions_MVL,
-#endif
-
-#if (defined PHYSFS_SUPPORTS_QPAK)
-    &__PHYSFS_DirFunctions_QPAK,
 #endif
 
     &__PHYSFS_DirFunctions_DIR,
