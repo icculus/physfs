@@ -3,7 +3,6 @@ Stuff that needs to be done and wishlist:
 These are in no particular order. A 1.0 release is reliant on doing most of
  this stuff. Some might be dupes, some might be done already.
 
-- autoconf support?
 - Include the Visual Studio (6 and .NET) project files in CVS directly.
 - update the Makefile so that Cygwin can generate a DLL. The entire codebase
   compiles under Cygwin otherwise.
@@ -28,8 +27,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - Port to MacOS X (specifically, make Project Builder files; unix.c should
   work with it as-is. Might compile as-is with the current Makefile.)
 - Probably other stuff. Requests and recommendations are welcome.
-
-- Port to BeOS: (unix.c: no realpath, pthreads (?) or mount stuff).
 
 // end of TODO ...
 
