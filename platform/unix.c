@@ -100,7 +100,8 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
             add_it = 1;
         else if ( strcmp( mntbufp[ii].f_fstypename, "cd9660") == 0 )
             add_it = 1;
-        /* !!! other mount types? */
+
+        /* add other mount types here */
 
         if (add_it)
         {
@@ -147,7 +148,8 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
         int add_it = 0;
         if (strcmp(ent->mnt_type, "iso9660") == 0)
             add_it = 1;
-        /* !!! other mount types? */
+
+        /* add other mount types here */
 
         if (add_it)
         {
@@ -190,52 +192,82 @@ static char *copyEnvironmentVariable(const char *varname)
 } /* copyEnvironmentVariable */
 
 
-/* !!! this is ugly. */
+/*
+ * See where program (bin) resides in the $PATH specified by (envr).
+ *  returns a copy of the first element in envr that contains it, or NULL
+ *  if it doesn't exist or there were other problems. PHYSFS_SetError() is
+ *  called if we have a problem.
+ *
+ * (envr) will be scribbled over, and you are expected to free() the
+ *  return value when you're done with it.
+ */
+static char *findBinaryInPath(const char *bin, char *envr)
+{
+    size_t alloc_size = 0;
+    char *exe = NULL;
+    char *start = envr;
+    char *ptr;
+
+    BAIL_IF_MACRO(bin == NULL, ERR_INVALID_ARGUMENT, NULL);
+    BAIL_IF_MACRO(envr == NULL, ERR_INVALID_ARGUMENT, NULL);
+
+    do
+    {
+        size_t size;
+        ptr = strchr(start, ':');  /* find next $PATH separator. */
+        if (ptr)
+            *ptr = '\0';
+
+        size = strlen(start) + strlen(bin) + 2;
+        if (size > alloc_size)
+        {
+            char *x = (char *) realloc(exe, size);
+            if (x == NULL)
+            {
+                if (exe != NULL)
+                    free(exe);
+                BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+            } /* if */
+
+            alloc_size = size;
+            exe = x;
+        } /* if */
+
+        /* build full binary path... */
+        strcpy(exe, start);
+        if (exe[strlen(exe) - 1] != '/')
+            strcat(exe, "/");
+        strcat(exe, bin);
+
+        if (access(exe, X_OK) == 0)  /* Exists as executable? We're done. */
+        {
+            strcpy(exe, start);  /* i'm lazy. piss off. */
+            return(exe);
+        } /* if */
+
+        start = ptr + 1;  /* start points to beginning of next element. */
+    } while (ptr != NULL);
+
+    if (exe != NULL)
+        free(exe);
+
+    return(NULL);  /* doesn't exist in path. */
+} /* findBinaryInPath */
+
+
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
     /* If there isn't a path on argv0, then look through the $PATH for it. */
 
-    char *retval = NULL;
+    char *retval;
     char *envr;
-    char *start;
-    char *ptr;
-    char *exe;
 
     if (strchr(argv0, '/') != NULL)   /* default behaviour can handle this. */
         return(NULL);
 
     envr = copyEnvironmentVariable("PATH");
     BAIL_IF_MACRO(!envr, NULL, NULL);
-
-    start = envr;
-    do
-    {
-        ptr = strchr(start, ':');
-        if (ptr)
-            *ptr = '\0';
-
-        exe = (char *) malloc(strlen(start) + strlen(argv0) + 2);
-        if (!exe)
-        {
-            free(envr);
-            BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
-        } /* if */
-        strcpy(exe, start);
-        if (exe[strlen(exe) - 1] != '/')
-            strcat(exe, "/");
-        strcat(exe, argv0);
-        if (access(exe, X_OK) != 0)
-            free(exe);
-        else
-        {
-            retval = exe;
-            strcpy(retval, start);  /* i'm lazy. piss off. */
-            break;
-        } /* else */
-
-        start = ptr + 1;
-    } while (ptr != NULL);
-
+    retval = findBinaryInPath(argv0, envr);
     free(envr);
     return(retval);
 } /* __PHYSFS_platformCalcBaseDir */
