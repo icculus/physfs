@@ -102,8 +102,6 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
         } /* if */
     }
 
-    free( mntbufp );
-
     retval[cd_count - 1] = NULL;
     return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
