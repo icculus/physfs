@@ -64,9 +64,9 @@ typedef struct
 static void GRP_dirClose(dvoid *opaque)
 {
     GRPinfo *info = ((GRPinfo *) opaque);
-    free(info->filename);
-    free(info->entries);
-    free(info);
+    allocator.Free(info->filename);
+    allocator.Free(info->entries);
+    allocator.Free(info);
 } /* GRP_dirClose */
 
 
@@ -138,7 +138,7 @@ static int GRP_fileClose(fvoid *opaque)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) opaque;
     BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
-    free(finfo);
+    allocator.Free(finfo);
     return(1);
 } /* GRP_fileClose */
 
@@ -221,7 +221,7 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
 
     BAIL_IF_MACRO(!grp_open(name, forWriting, &fh, &fileCount), NULL, 0);
     info->entryCount = fileCount;
-    info->entries = (GRPentry *) malloc(sizeof (GRPentry) * fileCount);
+    info->entries = (GRPentry *) allocator.Malloc(sizeof(GRPentry)*fileCount);
     if (info->entries == NULL)
     {
         __PHYSFS_platformClose(fh);
@@ -264,12 +264,12 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
 static void *GRP_openArchive(const char *name, int forWriting)
 {
     PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
-    GRPinfo *info = malloc(sizeof (GRPinfo));
+    GRPinfo *info = (GRPinfo *) allocator.Malloc(sizeof (GRPinfo));
 
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, 0);
 
     memset(info, '\0', sizeof (GRPinfo));
-    info->filename = (char *) malloc(strlen(name) + 1);
+    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
     GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, GRP_openArchive_failed);
 
     if (!grp_load_entries(name, forWriting, info))
@@ -284,10 +284,10 @@ GRP_openArchive_failed:
     if (info != NULL)
     {
         if (info->filename != NULL)
-            free(info->filename);
+            allocator.Free(info->filename);
         if (info->entries != NULL)
-            free(info->entries);
-        free(info);
+            allocator.Free(info->entries);
+        allocator.Free(info);
     } /* if */
 
     return(NULL);
@@ -390,14 +390,14 @@ static fvoid *GRP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
     *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, NULL);
 
-    finfo = (GRPfileinfo *) malloc(sizeof (GRPfileinfo));
+    finfo = (GRPfileinfo *) allocator.Malloc(sizeof (GRPfileinfo));
     BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     finfo->handle = __PHYSFS_platformOpenRead(info->filename);
     if ( (finfo->handle == NULL) ||
          (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
     {
-        free(finfo);
+        allocator.Free(finfo);
         return(NULL);
     } /* if */
 

@@ -1861,11 +1861,11 @@ __EXPORT__ int PHYSFS_writeUBE64(PHYSFS_File *file, PHYSFS_uint64 val);
  */
 typedef struct
 {
-    int (*init)(void);
-    void (*deinit)(void);
-    void *(*malloc)(size_t);
-    void *(*realloc)(void *, size_t);
-    void (*free)(void *);
+    int (*Init)(void);
+    void (*Deinit)(void);
+    void *(*Malloc)(size_t);
+    void *(*Realloc)(void *, size_t);
+    void (*Free)(void *);
 } PHYSFS_Allocator;
 
 
@@ -1875,6 +1875,8 @@ typedef struct
  *
  * (This is for limited, hardcore use. If you don't immediately see a need
  *  for it, you can probably ignore this forever.)
+ *
+ *  !!! FIXME: don't promise C runtime malloc.
  *
  * By default, PhysicsFS will use ANSI C malloc/realloc/calloc/free calls
  *  to manage dynamic memory, but in some uncommon cases, the app might want

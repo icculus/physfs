@@ -27,8 +27,8 @@
 #include "physfs_internal.h"
 
 /*
- * A buffer of ZIP_READBUFSIZE is malloc() for each compressed file opened,
- *  and is free()'d when you close the file; compressed data is read into
+ * A buffer of ZIP_READBUFSIZE is allocated for each compressed file opened,
+ *  and is freed when you close the file; compressed data is read into
  *  this buffer, and then is decompressed into the buffer passed to
  *  PHYSFS_read().
  *
@@ -121,7 +121,7 @@ typedef struct
  */
 static voidpf zlibPhysfsAlloc(voidpf opaque, uInt items, uInt size)
 {
-    return(((PHYSFS_Allocator *) opaque)->malloc(items * size));
+    return(((PHYSFS_Allocator *) opaque)->Malloc(items * size));
 } /* zlibPhysfsAlloc */
 
 /*
@@ -129,7 +129,7 @@ static voidpf zlibPhysfsAlloc(voidpf opaque, uInt items, uInt size)
  */
 static void zlibPhysfsFree(voidpf opaque, voidpf address)
 {
-    ((PHYSFS_Allocator *) opaque)->free(address);
+    ((PHYSFS_Allocator *) opaque)->Free(address);
 } /* zlibPhysfsFree */
 
 
@@ -141,7 +141,7 @@ static void initializeZStream(z_stream *pstr)
     memset(pstr, '\0', sizeof (z_stream));
     pstr->zalloc = zlibPhysfsAlloc;
     pstr->zfree = zlibPhysfsFree;
-    pstr->opaque = __PHYSFS_getAllocator();
+    pstr->opaque = &allocator;
 } /* initializeZStream */
 
 
@@ -369,9 +369,9 @@ static int ZIP_fileClose(fvoid *opaque)
         inflateEnd(&finfo->stream);
 
     if (finfo->buffer != NULL)
-        free(finfo->buffer);
+        allocator.Free(finfo->buffer);
 
-    free(finfo);
+    allocator.Free(finfo);
     return(1);
 } /* ZIP_fileClose */
 
@@ -388,7 +388,7 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
     PHYSFS_uint32 extra = 0;
 
     filelen = __PHYSFS_platformFileLength(in);
-    BAIL_IF_MACRO(filelen == -1, NULL, 0);
+    BAIL_IF_MACRO(filelen == -1, NULL, 0);  /* !!! FIXME: unlocalized string */
     BAIL_IF_MACRO(filelen > 0xFFFFFFFF, "ZIP bigger than 2 gigs?!", 0);
 
     /*
@@ -501,10 +501,10 @@ static void zip_free_entries(ZIPentry *entries, PHYSFS_uint32 max)
     {
         ZIPentry *entry = &entries[i];
         if (entry->name != NULL)
-            free(entry->name);
+            allocator.Free(entry->name);
     } /* for */
 
-    free(entries);
+    allocator.Free(entries);
 } /* zip_free_entries */
 
 
@@ -658,7 +658,7 @@ static ZIPentry *zip_follow_symlink(void *in, ZIPinfo *info, char *path)
         } /* else */
     } /* if */
 
-    free(path);
+    allocator.Free(path);
     return(entry);
 } /* zip_follow_symlink */
 
@@ -677,7 +677,7 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
 
     BAIL_IF_MACRO(!__PHYSFS_platformSeek(in, entry->offset), NULL, 0);
 
-    path = (char *) malloc(size + 1);
+    path = (char *) allocator.Malloc(size + 1);
     BAIL_IF_MACRO(path == NULL, ERR_OUT_OF_MEMORY, 0);
     
     if (entry->compression_method == COMPMETH_NONE)
@@ -687,7 +687,7 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
     {
         z_stream stream;
         PHYSFS_uint32 compsize = entry->compressed_size;
-        PHYSFS_uint8 *compressed = (PHYSFS_uint8 *) malloc(compsize);
+        PHYSFS_uint8 *compressed = (PHYSFS_uint8 *) allocator.Malloc(compsize);
         if (compressed != NULL)
         {
             if (__PHYSFS_platformRead(in, compressed, compsize, 1) == 1)
@@ -706,12 +706,12 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
                     rc = ((rc == Z_OK) || (rc == Z_STREAM_END));
                 } /* if */
             } /* if */
-            free(compressed);
+            allocator.Free(compressed);
         } /* if */
     } /* else */
 
     if (!rc)
-        free(path);
+        allocator.Free(path);
     else
     {
         path[entry->uncompressed_size] = '\0';    /* null-terminate it. */
@@ -928,7 +928,7 @@ static int zip_load_entry(void *in, ZIPentry *entry, PHYSFS_uint32 ofs_fixup)
     entry->resolved = (zip_has_symlink_attr(entry, external_attr)) ?
                             ZIP_UNRESOLVED_SYMLINK : ZIP_UNRESOLVED_FILE;
 
-    entry->name = (char *) malloc(fnamelen + 1);
+    entry->name = (char *) allocator.Malloc(fnamelen + 1);
     BAIL_IF_MACRO(entry->name == NULL, ERR_OUT_OF_MEMORY, 0);
     if (__PHYSFS_platformRead(in, entry->name, fnamelen, 1) != 1)
         goto zip_load_entry_puked;
@@ -947,7 +947,7 @@ static int zip_load_entry(void *in, ZIPentry *entry, PHYSFS_uint32 ofs_fixup)
     return(1);  /* success. */
 
 zip_load_entry_puked:
-    free(entry->name);
+    allocator.Free(entry->name);
     return(0);  /* failure. */
 } /* zip_load_entry */
 
@@ -978,7 +978,7 @@ static int zip_load_entries(void *in, ZIPinfo *info,
 
     BAIL_IF_MACRO(!__PHYSFS_platformSeek(in, central_ofs), NULL, 0);
 
-    info->entries = (ZIPentry *) malloc(sizeof (ZIPentry) * max);
+    info->entries = (ZIPentry *) allocator.Malloc(sizeof (ZIPentry) * max);
     BAIL_IF_MACRO(info->entries == NULL, ERR_OUT_OF_MEMORY, 0);
 
     for (i = 0; i < max; i++)
@@ -1065,14 +1065,14 @@ static int zip_parse_end_of_central_dir(void *in, ZIPinfo *info,
 static ZIPinfo *zip_create_zipinfo(const char *name)
 {
     char *ptr;
-    ZIPinfo *info = (ZIPinfo *) malloc(sizeof (ZIPinfo));
+    ZIPinfo *info = (ZIPinfo *) allocator.Malloc(sizeof (ZIPinfo));
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, 0);
     memset(info, '\0', sizeof (ZIPinfo));
 
-    ptr = (char *) malloc(strlen(name) + 1);
+    ptr = (char *) allocator.Malloc(strlen(name) + 1);
     if (ptr == NULL)
     {
-        free(info);
+        allocator.Free(info);
         BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
@@ -1110,8 +1110,8 @@ zip_openarchive_failed:
     if (info != NULL)
     {
         if (info->archiveName != NULL)
-            free(info->archiveName);
-        free(info);
+            allocator.Free(info->archiveName);
+        allocator.Free(info);
     } /* if */
 
     if (in != NULL)
@@ -1340,7 +1340,7 @@ static fvoid *ZIP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
     in = zip_get_file_handle(info->archiveName, info, entry);
     BAIL_IF_MACRO(in == NULL, NULL, NULL);
 
-    finfo = (ZIPfileinfo *) malloc(sizeof (ZIPfileinfo));
+    finfo = (ZIPfileinfo *) allocator.Malloc(sizeof (ZIPfileinfo));
     if (finfo == NULL)
     {
         __PHYSFS_platformClose(in);
@@ -1359,7 +1359,7 @@ static fvoid *ZIP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
             return(NULL);
         } /* if */
 
-        finfo->buffer = (PHYSFS_uint8 *) malloc(ZIP_READBUFSIZE);
+        finfo->buffer = (PHYSFS_uint8 *) allocator.Malloc(ZIP_READBUFSIZE);
         if (finfo->buffer == NULL)
         {
             ZIP_fileClose(finfo);
@@ -1387,8 +1387,8 @@ static void ZIP_dirClose(dvoid *opaque)
 {
     ZIPinfo *zi = (ZIPinfo *) (opaque);
     zip_free_entries(zi->entries, zi->entryCount);
-    free(zi->archiveName);
-    free(zi);
+    allocator.Free(zi->archiveName);
+    allocator.Free(zi);
 } /* ZIP_dirClose */
 
 

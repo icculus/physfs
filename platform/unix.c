@@ -57,6 +57,10 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
+/* Seems to get defined in some system header... */
+#ifdef Free
+#undef Free
+#endif
 
 const char *__PHYSFS_platformDirSeparator = "/";
 
@@ -250,7 +254,7 @@ extern char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname);
  *  if it doesn't exist or there were other problems. PHYSFS_SetError() is
  *  called if we have a problem.
  *
- * (envr) will be scribbled over, and you are expected to free() the
+ * (envr) will be scribbled over, and you are expected to allocator.Free() the
  *  return value when you're done with it.
  */
 static char *findBinaryInPath(const char *bin, char *envr)
@@ -273,11 +277,11 @@ static char *findBinaryInPath(const char *bin, char *envr)
         size = strlen(start) + strlen(bin) + 2;
         if (size > alloc_size)
         {
-            char *x = (char *) realloc(exe, size);
+            char *x = (char *) allocator.Realloc(exe, size);
             if (x == NULL)
             {
                 if (exe != NULL)
-                    free(exe);
+                    allocator.Free(exe);
                 BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
             } /* if */
 
@@ -301,7 +305,7 @@ static char *findBinaryInPath(const char *bin, char *envr)
     } while (ptr != NULL);
 
     if (exe != NULL)
-        free(exe);
+        allocator.Free(exe);
 
     return(NULL);  /* doesn't exist in path. */
 } /* findBinaryInPath */
@@ -320,7 +324,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     envr = __PHYSFS_platformCopyEnvironmentVariable("PATH");
     BAIL_IF_MACRO(!envr, NULL, NULL);
     retval = findBinaryInPath(argv0, envr);
-    free(envr);
+    allocator.Free(envr);
     return(retval);
 } /* __PHYSFS_platformCalcBaseDir */
 
@@ -377,11 +381,14 @@ static void stripAppleBundle(char *path)
     char *sub_str = "/contents/macos";
     char *found_ptr = NULL;
     char *tempbuf = NULL;
+    size_t len = strlen(path) + 1;
     int i;
     
-    /* Calloc will place the \0 character in the proper place for us */
     /* !!! FIXME: Can we stack-allocate this? --ryan. */
-    tempbuf = (char*)calloc( (strlen(path)+1), sizeof(char) );
+    tempbuf = (char *) allocator.Malloc(len);
+    if (!tempbuf) return;
+    memset(tempbuf, '\0', len);
+
     /* Unlike other Unix filesystems, HFS is case insensitive
      * It wouldn be nice to use strcasestr, but it doesn't seem
      * to be available in the OSX gcc library right now.
@@ -399,7 +406,7 @@ static void stripAppleBundle(char *path)
     {
         /* It doesn't look like a bundle so we can keep the 
          * original path. Just return */
-        free(tempbuf);
+        allocator.Free(tempbuf);
         return;
     }
     /* We have a bundle, so let's backstep character by character
@@ -424,7 +431,7 @@ static void stripAppleBundle(char *path)
         /* Back up one more to remove trailing '/' and set the '\0' */
         path[i] = '\0';
     }
-    free(tempbuf);
+    allocator.Free(tempbuf);
     return;
 }
 #endif /* defined __MACH__ && defined __APPLE__ */
@@ -437,7 +444,7 @@ char *__PHYSFS_platformRealPath(const char *path)
 
     errno = 0;
     BAIL_IF_MACRO(!realpath(path, resolved_path), strerror(errno), NULL);
-    retval = (char *) malloc(strlen(resolved_path) + 1);
+    retval = (char *) allocator.Malloc(strlen(resolved_path) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, resolved_path);
 
@@ -483,12 +490,13 @@ PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 void *__PHYSFS_platformCreateMutex(void)
 {
     int rc;
-    pthread_mutex_t *m = (pthread_mutex_t *) malloc(sizeof (pthread_mutex_t));
+    pthread_mutex_t *m;
+    m = (pthread_mutex_t *) allocator.Malloc(sizeof (pthread_mutex_t));
     BAIL_IF_MACRO(m == NULL, ERR_OUT_OF_MEMORY, NULL);
     rc = pthread_mutex_init(m, NULL);
     if (rc != 0)
     {
-        free(m);
+        allocator.Free(m);
         BAIL_MACRO(strerror(rc), NULL);
     } /* if */
 
@@ -499,7 +507,7 @@ void *__PHYSFS_platformCreateMutex(void)
 void __PHYSFS_platformDestroyMutex(void *mutex)
 {
     pthread_mutex_destroy((pthread_mutex_t *) mutex);
-    free(mutex);
+    allocator.Free(mutex);
 } /* __PHYSFS_platformDestroyMutex */
 
 

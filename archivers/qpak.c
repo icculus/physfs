@@ -81,9 +81,9 @@ typedef struct
 static void QPAK_dirClose(dvoid *opaque)
 {
     QPAKinfo *info = ((QPAKinfo *) opaque);
-    free(info->filename);
-    free(info->entries);
-    free(info);
+    allocator.Free(info->filename);
+    allocator.Free(info->entries);
+    allocator.Free(info);
 } /* QPAK_dirClose */
 
 
@@ -155,7 +155,7 @@ static int QPAK_fileClose(fvoid *opaque)
 {
     QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
     BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
-    free(finfo);
+    allocator.Free(finfo);
     return(1);
 } /* QPAK_fileClose */
 
@@ -245,7 +245,7 @@ static int qpak_load_entries(const char *name, int forWriting, QPAKinfo *info)
 
     BAIL_IF_MACRO(!qpak_open(name, forWriting, &fh, &fileCount), NULL, 0);
     info->entryCount = fileCount;
-    info->entries = (QPAKentry *) malloc(sizeof (QPAKentry) * fileCount);
+    info->entries = (QPAKentry*) allocator.Malloc(sizeof(QPAKentry)*fileCount);
     if (info->entries == NULL)
     {
         __PHYSFS_platformClose(fh);
@@ -288,13 +288,13 @@ static int qpak_load_entries(const char *name, int forWriting, QPAKinfo *info)
 
 static void *QPAK_openArchive(const char *name, int forWriting)
 {
-    QPAKinfo *info = malloc(sizeof (QPAKinfo));
+    QPAKinfo *info = (QPAKinfo *) allocator.Malloc(sizeof (QPAKinfo));
     PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
 
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (QPAKinfo));
 
-    info->filename = (char *) malloc(strlen(name) + 1);
+    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
     if (info->filename == NULL)
     {
         __PHYSFS_setError(ERR_OUT_OF_MEMORY);
@@ -312,10 +312,10 @@ QPAK_openArchive_failed:
     if (info != NULL)
     {
         if (info->filename != NULL)
-            free(info->filename);
+            allocator.Free(info->filename);
         if (info->entries != NULL)
-            free(info->entries);
-        free(info);
+            allocator.Free(info->entries);
+        allocator.Free(info);
     } /* if */
 
     return(NULL);
@@ -544,14 +544,14 @@ static fvoid *QPAK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
     BAIL_IF_MACRO(isDir, ERR_NOT_A_FILE, NULL);
     BAIL_IF_MACRO(entry == NULL, ERR_NO_SUCH_FILE, NULL);
 
-    finfo = (QPAKfileinfo *) malloc(sizeof (QPAKfileinfo));
+    finfo = (QPAKfileinfo *) allocator.Malloc(sizeof (QPAKfileinfo));
     BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     finfo->handle = __PHYSFS_platformOpenRead(info->filename);
     if ( (finfo->handle == NULL) ||
          (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
     {
-        free(finfo);
+        allocator.Free(finfo);
         return(NULL);
     } /* if */
 

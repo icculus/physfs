@@ -78,9 +78,9 @@ typedef struct
 static void HOG_dirClose(dvoid *opaque)
 {
     HOGinfo *info = ((HOGinfo *) opaque);
-    free(info->filename);
-    free(info->entries);
-    free(info);
+    allocator.Free(info->filename);
+    allocator.Free(info->entries);
+    allocator.Free(info);
 } /* HOG_dirClose */
 
 
@@ -152,7 +152,7 @@ static int HOG_fileClose(fvoid *opaque)
 {
     HOGfileinfo *finfo = (HOGfileinfo *) opaque;
     BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
-    free(finfo);
+    allocator.Free(finfo);
     return(1);
 } /* HOG_fileClose */
 
@@ -256,7 +256,7 @@ static int hog_load_entries(const char *name, int forWriting, HOGinfo *info)
 
     BAIL_IF_MACRO(!hog_open(name, forWriting, &fh, &fileCount), NULL, 0);
     info->entryCount = fileCount;
-    info->entries = (HOGentry *) malloc(sizeof (HOGentry) * fileCount);
+    info->entries = (HOGentry *) allocator.Malloc(sizeof(HOGentry)*fileCount);
     if (info->entries == NULL)
     {
         __PHYSFS_platformClose(fh);
@@ -304,11 +304,11 @@ static int hog_load_entries(const char *name, int forWriting, HOGinfo *info)
 static void *HOG_openArchive(const char *name, int forWriting)
 {
     PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
-    HOGinfo *info = malloc(sizeof (HOGinfo));
+    HOGinfo *info = (HOGinfo *) allocator.Malloc(sizeof (HOGinfo));
 
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, 0);
     memset(info, '\0', sizeof (HOGinfo));
-    info->filename = (char *) malloc(strlen(name) + 1);
+    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
     GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, HOG_openArchive_failed);
 
     if (!hog_load_entries(name, forWriting, info))
@@ -323,10 +323,10 @@ HOG_openArchive_failed:
     if (info != NULL)
     {
         if (info->filename != NULL)
-            free(info->filename);
+            allocator.Free(info->filename);
         if (info->entries != NULL)
-            free(info->entries);
-        free(info);
+            allocator.Free(info->entries);
+        allocator.Free(info);
     } /* if */
 
     return(NULL);
@@ -429,14 +429,14 @@ static fvoid *HOG_openRead(dvoid *opaque, const char *fnm, int *fileExists)
     *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, NULL);
 
-    finfo = (HOGfileinfo *) malloc(sizeof (HOGfileinfo));
+    finfo = (HOGfileinfo *) allocator.Malloc(sizeof (HOGfileinfo));
     BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     finfo->handle = __PHYSFS_platformOpenRead(info->filename);
     if ( (finfo->handle == NULL) ||
          (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
     {
-        free(finfo);
+        allocator.Free(finfo);
         return(NULL);
     } /* if */
 

@@ -199,7 +199,7 @@ int __PHYSFS_platformInit(void)
     /* The string is capitalized! Figure out the REAL case... */
     cvt_path_to_correct_case(buf);
 
-    baseDir = (char *) malloc(len + 1);
+    baseDir = (char *) allocator.Malloc(len + 1);
     BAIL_IF_MACRO(baseDir == NULL, ERR_OUT_OF_MEMORY, 0);
     strcpy(baseDir, buf);
     return(1);  /* success. */
@@ -209,7 +209,7 @@ int __PHYSFS_platformInit(void)
 int __PHYSFS_platformDeinit(void)
 {
     assert(baseDir != NULL);
-    free(baseDir);
+    allocator.Free(baseDir);
     baseDir = NULL;
     return(1);  /* success. */
 } /* __PHYSFS_platformDeinit */
@@ -279,7 +279,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    char *retval = (char *) malloc(strlen(baseDir) + 1);
+    char *retval = (char *) allocator.Malloc(strlen(baseDir) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, baseDir); /* calculated at init time. */
     return(retval);
@@ -365,6 +365,7 @@ int __PHYSFS_platformIsDirectory(const char *fname)
 } /* __PHYSFS_platformIsDirectory */
 
 
+/* !!! FIXME: can we lose the malloc here? */
 char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,
                                       const char *append)
@@ -372,7 +373,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     int len = ((prepend) ? strlen(prepend) : 0) +
               ((append) ? strlen(append) : 0) +
               strlen(dirName) + 1;
-    char *retval = malloc(len);
+    char *retval = allocator.Malloc(len);
     char *p;
 
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -441,14 +442,14 @@ char *__PHYSFS_platformCurrentDir(void)
     /* The first call just tells us how much space we need for the string. */
     rc = DosQueryCurrentDir(currentDisk, &byte, &pathSize);
     pathSize++; /* Add space for null terminator. */
-    retval = (char *) malloc(pathSize + 3);  /* plus "x:\\" */
+    retval = (char *) allocator.Malloc(pathSize + 3);  /* plus "x:\\" */
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     /* Actually get the string this time. */
     rc = DosQueryCurrentDir(currentDisk, (PBYTE) (retval + 3), &pathSize);
     if (os2err(rc) != NO_ERROR)
     {
-        free(retval);
+        allocator.Free(retval);
         return(NULL);
     } /* if */
 
@@ -465,7 +466,7 @@ char *__PHYSFS_platformRealPath(const char *path)
     char *retval;
     APIRET rc = DosQueryPathInfo(path, FIL_QUERYFULLNAME, buf, sizeof (buf));
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, NULL);
-    retval = (char *) malloc(strlen(buf) + 1);
+    retval = (char *) allocator.Malloc(strlen(buf) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, buf);
     return(retval);

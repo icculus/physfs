@@ -83,9 +83,9 @@ typedef struct
 static void WAD_dirClose(dvoid *opaque)
 {
     WADinfo *info = ((WADinfo *) opaque);
-    free(info->filename);
-    free(info->entries);
-    free(info);
+    allocator.Free(info->filename);
+    allocator.Free(info->entries);
+    allocator.Free(info);
 } /* WAD_dirClose */
 
 
@@ -157,7 +157,7 @@ static int WAD_fileClose(fvoid *opaque)
 {
     WADfileinfo *finfo = (WADfileinfo *) opaque;
     BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
-    free(finfo);
+    allocator.Free(finfo);
     return(1);
 } /* WAD_fileClose */
 
@@ -247,7 +247,7 @@ static int wad_load_entries(const char *name, int forWriting, WADinfo *info)
 
     BAIL_IF_MACRO(!wad_open(name, forWriting, &fh, &fileCount,&directoryOffset), NULL, 0);
     info->entryCount = fileCount;
-    info->entries = (WADentry *) malloc(sizeof (WADentry) * fileCount);
+    info->entries = (WADentry *) allocator.Malloc(sizeof(WADentry)*fileCount);
     if (info->entries == NULL)
     {
         __PHYSFS_platformClose(fh);
@@ -292,12 +292,12 @@ static int wad_load_entries(const char *name, int forWriting, WADinfo *info)
 static void *WAD_openArchive(const char *name, int forWriting)
 {
     PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
-    WADinfo *info = malloc(sizeof (WADinfo));
+    WADinfo *info = (WADinfo *) allocator.Malloc(sizeof (WADinfo));
 
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (WADinfo));
 
-    info->filename = (char *) malloc(strlen(name) + 1);
+    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
     GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, WAD_openArchive_failed);
 
     if (!wad_load_entries(name, forWriting, info))
@@ -311,10 +311,10 @@ WAD_openArchive_failed:
     if (info != NULL)
     {
         if (info->filename != NULL)
-            free(info->filename);
+            allocator.Free(info->filename);
         if (info->entries != NULL)
-            free(info->entries);
-        free(info);
+            allocator.Free(info->entries);
+        allocator.Free(info);
     } /* if */
 
     return(NULL);
@@ -449,14 +449,14 @@ static fvoid *WAD_openRead(dvoid *opaque, const char *fnm, int *fileExists)
     *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, NULL);
 
-    finfo = (WADfileinfo *) malloc(sizeof (WADfileinfo));
+    finfo = (WADfileinfo *) allocator.Malloc(sizeof (WADfileinfo));
     BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     finfo->handle = __PHYSFS_platformOpenRead(info->filename);
     if ( (finfo->handle == NULL) ||
          (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
     {
-        free(finfo);
+        allocator.Free(finfo);
         return(NULL);
     } /* if */
 

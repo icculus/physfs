@@ -72,11 +72,11 @@ static char *UnicodeToAsc(const wchar_t *w_str)
     if (w_str != NULL)
     {
         int len = wcslen(w_str) + 1;
-        str = (char *) malloc(len);
+        str = (char *) allocator.Malloc(len);
 
         if (WideCharToMultiByte(CP_ACP,0,w_str,-1,str,len,NULL,NULL) == 0)
         {    /*Conversion failed */
-            free(str);
+            allocator.Free(str);
             return(NULL);
         } /* if */
         else
@@ -98,10 +98,10 @@ static wchar_t *AscToUnicode(const char *str)
     if (str != NULL)
     {
         int len = strlen(str) + 1;
-        w_str = (wchar_t *) malloc(sizeof (wchar_t) * len);
+        w_str = (wchar_t *) allocator.Malloc(sizeof (wchar_t) * len);
         if (MultiByteToWideChar(CP_ACP,0,str,-1,w_str,len) == 0)
         {
-            free(w_str);
+            allocator.Free(w_str);
             return(NULL);
         } /* if */
         else
@@ -121,7 +121,7 @@ static char *getExePath()
     DWORD buflen;
     int success = 0;
     TCHAR *ptr = NULL;
-    TCHAR *retval = (TCHAR *) malloc(sizeof (TCHAR) * (MAX_PATH + 1));
+    TCHAR *retval = (TCHAR*) allocator.Malloc(sizeof (TCHAR) * (MAX_PATH + 1));
     char *charretval;
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
@@ -145,17 +145,17 @@ static char *getExePath()
 
     if (!success)
     {
-        free(retval);
+        allocator.Free(retval);
         return(NULL);  /* physfs error message will be set, above. */
     } /* if */
 
     /* free up the bytes we didn't actually use. */
-    ptr = (TCHAR *) realloc(retval, sizeof(TCHAR) * _tcslen(retval) + 1);
+    ptr = (TCHAR *) allocator.Realloc(retval, sizeof(TCHAR)*_tcslen(retval)+1);
     if (ptr != NULL)
         retval = ptr;
 
     charretval = UnicodeToAsc(retval);
-    free(retval);
+    allocator.Free(retval);
     if(charretval == NULL) {
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     }
@@ -173,7 +173,7 @@ int __PHYSFS_platformInit(void)
 
 int __PHYSFS_platformDeinit(void)
 {
-    free(userDir);
+    allocator.Free(userDir);
     return(1);  /* always succeed. */
 } /* __PHYSFS_platformDeinit */
 
@@ -230,7 +230,7 @@ int __PHYSFS_platformExists(const char *fname)
     if(w_fname!=NULL)
     {
     retval=(GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
-    free(w_fname);
+    allocator.Free(w_fname);
     }
 
     return(retval);
@@ -252,7 +252,7 @@ int __PHYSFS_platformIsDirectory(const char *fname)
     if(w_fname!=NULL)
     {
     retval=((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
-    free(w_fname);
+    allocator.Free(w_fname);
     }
 
     return(retval);
@@ -266,7 +266,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     int len = ((prepend) ? strlen(prepend) : 0) +
     ((append) ? strlen(append) : 0) +
     strlen(dirName) + 1;
-    char *retval = malloc(len);
+    char *retval = (char *) allocator.Malloc(len);
     char *p;
 
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -325,8 +325,8 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     w_SearchPath=AscToUnicode(SearchPath);
 
     dir = FindFirstFile(w_SearchPath, &ent);
-    free(w_SearchPath);
-    free(SearchPath);
+    allocator.Free(w_SearchPath);
+    allocator.Free(SearchPath);
 
     if (dir == INVALID_HANDLE_VALUE)
         return;
@@ -347,7 +347,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
             break;
 
         callback(callbackdata, str);
-        free(str);
+        allocator.Free(str);
     } while (FindNextFile(dir, &ent) != 0);
 
     FindClose(dir);
@@ -362,10 +362,8 @@ char *__PHYSFS_platformCurrentDir(void)
 
 char *__PHYSFS_platformRealPath(const char *path)
 {
-    char *retval=(char *)malloc(strlen(path)+1);
-
+    char *retval = (char *) allocator.Malloc(strlen(path) + 1);
     strcpy(retval,path);
-
     return(retval);
 } /* __PHYSFS_platformRealPath */
 
@@ -376,7 +374,7 @@ int __PHYSFS_platformMkDir(const char *path)
     if(w_path!=NULL)
     {
     DWORD rc = CreateDirectory(w_path, NULL);
-    free(w_path);
+    allocator.Free(w_path);
     if(rc==0)
     {
         return(0);
@@ -399,7 +397,7 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
     fileHandle = CreateFile(w_fname, mode, FILE_SHARE_READ, NULL,
                             creation, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    free(w_fname);
+    allocator.Free(w_fname);
 
     if(fileHandle==INVALID_HANDLE_VALUE)
     {
@@ -408,7 +406,7 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 
     BAIL_IF_MACRO(fileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
 
-    retval = malloc(sizeof (winCEfile));
+    retval = (winCEfile *) allocator.Malloc(sizeof (winCEfile));
     if (retval == NULL)
     {
     CloseHandle(fileHandle);
@@ -443,7 +441,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
         {
             const char *err = win32strerror();
             CloseHandle(h);
-            free(retval);
+            allocator.Free(retval);
             BAIL_MACRO(err, NULL);
         } /* if */
     } /* if */
@@ -604,7 +602,7 @@ int __PHYSFS_platformClose(void *opaque)
 {
     HANDLE Handle = ((winCEfile *) opaque)->handle;
     BAIL_IF_MACRO(!CloseHandle(Handle), win32strerror(), 0);
-    free(opaque);
+    allocator.Free(opaque);
     return(1);
 } /* __PHYSFS_platformClose */
 
@@ -617,13 +615,13 @@ int __PHYSFS_platformDelete(const char *path)
     if (GetFileAttributes(w_path) == FILE_ATTRIBUTE_DIRECTORY)
     {
     int retval=!RemoveDirectory(w_path);
-    free(w_path);
+    allocator.Free(w_path);
         BAIL_IF_MACRO(retval, win32strerror(), 0);
     } /* if */
     else
     {
     int retval=!DeleteFile(w_path);
-    free(w_path);
+    allocator.Free(w_path);
         BAIL_IF_MACRO(retval, win32strerror(), 0);
     } /* else */
 
@@ -659,6 +657,40 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 {
     BAIL_MACRO(ERR_NOT_IMPLEMENTED, -1);
 } /* __PHYSFS_platformGetLastModTime */
+
+
+/* !!! FIXME: Don't use C runtime for allocators? */
+int __PHYSFS_platformAllocatorInit(void)
+{
+    return(1);  /* always succeeds. */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void __PHYSFS_platformAllocatorDeinit(void)
+{
+    /* no-op */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void *__PHYSFS_platformAllocatorMalloc(size_t s)
+{
+    #undef malloc
+    return(malloc(s));
+} /* __PHYSFS_platformMalloc */
+
+
+void *__PHYSFS_platformAllocatorRealloc(void *ptr, size_t s)
+{
+    #undef realloc
+    return(realloc(ptr, s));
+} /* __PHYSFS_platformRealloc */
+
+
+void __PHYSFS_platformAllocatorFree(void *ptr)
+{
+    #undef free
+    free(ptr);
+} /* __PHYSFS_platformAllocatorFree */
 
 /* end of pocketpc.c ... */
 

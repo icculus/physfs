@@ -26,6 +26,11 @@
 extern "C" {
 #endif
 
+/* Use the allocation hooks. */
+#define malloc(x) Do not use malloc() directly.
+#define realloc(x, y) Do not use realloc() directly.
+#define free(x) Do not use free() directly.
+
 
 /* The LANG section. */
 /*  please send questions/translations to Ryan: icculus@clutteredmind.org. */
@@ -1241,10 +1246,12 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 
 
 /*
- * Get the current allocator. Not valid before PHYSFS_init is called!
+ * The current allocator. Not valid before PHYSFS_init is called!
  */
-PHYSFS_Allocator *__PHYSFS_getAllocator(void);
+extern PHYSFS_Allocator __PHYSFS_AllocatorHooks;
 
+/* convenience macro to make this less cumbersome internally... */
+#define allocator __PHYSFS_AllocatorHooks
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
