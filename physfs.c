@@ -1224,7 +1224,7 @@ char * __PHYSFS_convertToDependent(const char *prepend,
     if (append)
     {
         strcat(str, dirsep);
-        strcpy(str, append);
+        strcat(str, append);
     } /* if */
 
     return(str);
