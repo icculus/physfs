@@ -4,6 +4,11 @@ These are in no particular order. A 1.0 release is reliant on doing most of
  this stuff. Some might be dupes, some might be done already.
 
 - Include the Visual Studio.NET project file in CVS directly.
+- Favor archivers that have the same extension as an archive when opening.
+- Some unix systems want you to free() the results of getmntinfo() and some
+  don't. Ugh!
+- Maybe a configure option to disable CD-ROM detection is in order. The API
+  would remain, but just report no mounted discs every time.
 - Change platform detection so it doesn't need sed?
 - Deal with Unix platforms without POSIX threads (NetBSD, etc).
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
