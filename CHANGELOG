@@ -2,6 +2,13 @@
  * CHANGELOG.
  */
 
+03302002 - Mutexes! PhysicsFS should be thread safe now, so long as you
+           don't try to do something like close a file at the same time as
+           you are reading from it in another thread. All reasonable race
+           conditions should now be gone, but the new code will need some
+           eyeballing before we install it on life support systems or anything.
+           The mutex abstraction is implemented in unix.c, win32.c will be
+           updated shortly.
 03292002 - Fixed a potential problem in ZIP_realpath() and some byte order
            issues in zip.c. Converted unzip.c to use physfs file i/o
            abstractions. Converted CHANGELOG to list latest entries first.
