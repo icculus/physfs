@@ -44,3 +44,4 @@ zip.lo
 infutil.lo
 deflate.lo
 beos.lo
+Makefile.am
