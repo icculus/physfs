@@ -300,8 +300,8 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    if (strchr(argv0, '\\') != NULL)   /* default behaviour can handle this. */
-        return(NULL);
+    if ((argv0 != NULL) && (strchr(argv0, '\\') != NULL))
+        return(NULL); /* default behaviour can handle this. */
 
     return(getExePath(argv0));
 } /* __PHYSFS_platformCalcBaseDir */
