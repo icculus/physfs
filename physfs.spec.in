@@ -67,7 +67,7 @@ make DESTDIR=${RPM_BUILD_ROOT} install
 
 %files
 %defattr(-,root,root)
-%doc CHANGELOG CREDITS INSTALL LICENSE TODO
+%doc CHANGELOG CREDITS INSTALL LICENSE TODO zlib_license_change.txt
 %{_bindir}/test_physfs
 %{_libdir}/*so.*
 
@@ -78,6 +78,9 @@ make DESTDIR=${RPM_BUILD_ROOT} install
 %{_includedir}/physfs.h
 
 %changelog
+* Thu Dec 18 2002 Edward Rudd <eddie@omegaware.com>
+- added zlib_license_change.txt to documents
+
 * Wed Jul 10 2002 Edward Rudd <eddie@omegaware.com>
 - added doxygen to build requirements
 
