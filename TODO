@@ -28,6 +28,7 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - Enable more warnings?
 - Use __cdecl in physfs.h?
 - Look for FIXMEs (many marked with "!!!" in comments).
+- Check for tab chars in the source.
 - Probably other stuff. Requests and recommendations are welcome.
 
 // end of TODO ...

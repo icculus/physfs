@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+08302002 - Cleaned tab stops out of zip.c, and fixed a possible infinite loop
+           in zip_find_entry().
 08292002 - Fixed a mistake in makeos2.cmd, and updated the INSTALL docs.
            Added physfs.spec.in to EXTRA_DIST in Makefile.am*
 08292002 - Added a physfs/stdio wrapper header to the "extras" dir,
