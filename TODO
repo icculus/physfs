@@ -25,7 +25,7 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   it.
 - Look for FIXMEs (many marked with "!!!" in comments).
 - Port to MacOS X (specifically, make Project Builder files; unix.c should
-  work with it as-is. Might compile as-is with the current Makefile.)
+  work with it as-is. Might compile as-is with autoconf.)
 - Probably other stuff. Requests and recommendations are welcome.
 - Fill in __PHYSFS_platformGetLastModTime() in all the platform drivers.
 - Implement getlastmodtime for zip.c ... zipfiles contain file modtimes.
