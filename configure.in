@@ -245,6 +245,7 @@ if test x$we_have_sed = xyes; then
   x=`echo $build_os |tr A-Z a-z |sed "s/.*freebsd.*/freebsd/"`
   if test x$x = xfreebsd; then
     this_is_freebsd=yes
+    LDFLAGS="$LDFLAGS -pthread"
   fi
 
   AC_MSG_RESULT([$this_is_freebsd])
@@ -268,10 +269,6 @@ AC_CHECK_FUNCS([memset strrchr])
 
 CFLAGS="$CFLAGS -D_REENTRANT -D_THREAD_SAFE"
 LDFLAGS="$LDFLAGS -no-undefined"
-
-if test x$this_is_freebsd = x$yes; then
-  LDFLAGS="$LDFLAGS -pthread"
-fi
 
 dnl Add Makefile conditionals
 AM_CONDITIONAL(BUILD_ZLIB, test x$enable_internal_zlib = xyes)
