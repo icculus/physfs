@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+06112003 - Patches to globbing.c to handle corner cases (thanks, Bradley!).
+06102003 - Added globbing.c to "extras" directory.
 05232003 - Rewrote MacOSX/Darwin CD-ROM detection code to use IOKit, which is
            much much more accurate than the previous code. Updated
            configure.in and Makefile.am.newautomake for some MacOSX stuff.
