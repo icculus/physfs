@@ -140,6 +140,7 @@ typedef struct
 */
 
 
+#if 0  /* not actually used anymore, at this point. */
 local int unzlocal_getByte(fin,pi)
 	void *fin;
 	int *pi;
@@ -159,7 +160,7 @@ local int unzlocal_getByte(fin,pi)
             return UNZ_ERRNO;
     }
 }
-
+#endif
 
 /* ===========================================================================
    Reads a long in LSB order from the given gz_stream. Sets 

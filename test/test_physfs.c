@@ -508,8 +508,8 @@ static int cmd_append(char *args)
         PHYSFS_sint64 rc = PHYSFS_write(f, WRITESTR, 1, bw);
         if (rc != bw)
         {
-            printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n", rc, bw,
-                   PHYSFS_getLastError());
+            printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n",
+                   (int) rc, (int) bw, PHYSFS_getLastError());
         } /* if */
         else
         {
@@ -542,8 +542,8 @@ static int cmd_write(char *args)
         PHYSFS_sint64 rc = PHYSFS_write(f, WRITESTR, 1, bw);
         if (rc != bw)
         {
-            printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n", rc, bw,
-                   PHYSFS_getLastError());
+            printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n",
+                   (int) rc, (int) bw, PHYSFS_getLastError());
         } /* if */
         else
         {
