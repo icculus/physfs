@@ -5,6 +5,8 @@
 07102002 - Added a byteorder-friendly convenience API, so you can read/write
            data and convert to the native byteorder without too much effort.
            Upped version to 0.1.7.
+           Build system corrections for BeOS and Cygwin (thanks, Alexander!).
+           Added RPM specfile for PhysicsFS (thanks, Edward Rudd!).
 06292002 - Fixed incorrect error message when opening a file for read without
            defining a search path. LOTS of win32 updates and fixes; lots of
            things that were broken work now, and we are slowly becoming
