@@ -28,6 +28,7 @@
      defined(__arm__) || \
     (defined(__mips__) && defined(__MIPSEL__)) || \
      defined(__SYMBIAN32__) || \
+     defined(__x86_64__) || \
      defined(__LITTLE_ENDIAN__)
 #define PHYSFS_BYTEORDER    PHYSFS_LIL_ENDIAN
 #else
