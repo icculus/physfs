@@ -29,6 +29,12 @@ Some might be dupes, some might be done already.
 - mmap() in posix.c
 - OSX shouldn't use ~/.app for userdir.
 - fscanf and fprintf support in extras dir.
+- Why do we call it openArchive and dirClose?
+- Sanity check byte order at runtime.
+- Every DIR_* function requires a malloc/free!
+- Merge DirHandle and PhysDirInfo.
+- Memory locking?
+- Clean up file code to match DirHandle cleanups.
 - maybe other stuff.
 
 // end of TODO ...
