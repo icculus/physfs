@@ -2,7 +2,12 @@
  * CHANGELOG.
  */
 
-04042002 - Mac work continues.
+04042002 - Mac work continues. Almost complete, now. test_physfs now has
+           tests for write, append, and filelength, and most of the
+           commands can tolerate a quoted argument (although this is
+           hacky, it's good enough for these purposes). Upped test_physfs
+           version to 0.1.1. Added a malloc-failure check in the Unix
+           CD-ROM detection code.
 04032002 - PHYSFS_init always makes sure the calling thread initializes its
            error state.
 04022002 - Mac work continues. Found a bug where we put a double dir
