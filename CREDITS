@@ -3,6 +3,7 @@ Unix support,
 Win32 support,
 BeOS support,
 POSIX support,
+MacOS support,
 OS/2 support,
 GRP archiver,
 DIR archiver,
@@ -69,6 +70,9 @@ MIX archiver,
 
 Bug fixes:
     Tolga Dalman
+
+Initial PHYSFS_mount() work:
+    Philip D. Bober
 
 Other stuff:
     Your name here! Patches go to icculus@clutteredmind.org ...

@@ -38,7 +38,7 @@ BeOS:
 Use the "Unix" instructions, above.
 
 
-AtheOS:
+AtheOS/Syllable:
 Use the "Unix" instructions, above.
 
 
@@ -59,7 +59,7 @@ If you're using Visual C++ 6 and want to generate a static LIB file, point
 it at "physfs_static.dsp" in the root of the source tree and build.  This
 will produce a "physfs_static.lib" in either a "physfs_static_debug"
 or a "physfs_static_release" directory, depending on what configuration
-you chose to build.  NOPE: "test_physfs.dsp" does not work with the
+you chose to build.  NOTE: "test_physfs.dsp" does not work with the
 statically linked build.
 
 Visual Studio.NET users should do the same thing, but use the "physfs.vcproj"
@@ -114,7 +114,7 @@ EMX is installed correctly, unpack the source to PhysicsFS and run the script
 file "makeos2.cmd". I know this isn't ideal, but I wanted to have this build
 without users having to hunt down a "make" program (While several exist, EMX
 doesn't come with one). If someone wants to hack some REXX to make this a bit
-more piccky about recompiling, I'll accept the patch.
+more picky about recompiling, I'll accept the patch.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
 OS/2, I'd like to hear from you; send an email to icculus@clutteredmind.org.
