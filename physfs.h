@@ -596,6 +596,9 @@ __EXPORT__ int PHYSFS_mkdir(const char *dirName);
  *
  * A directory must be empty before this call can delete it.
  *
+ * Deleting a symlink will remove the link, not what it points to, regardless
+ *  of whether you "permitSymLinks" or not.
+ *
  * So if you've got the write dir set to "C:\mygame\writedir" and call
  *  PHYSFS_delete("downloads/maps/level1.map") then the file
  *  "C:\mygame\writedir\downloads\maps\level1.map" is removed from the
@@ -605,6 +608,10 @@ __EXPORT__ int PHYSFS_mkdir(const char *dirName);
  * Note that on Unix systems, deleting a file may be successful, but the
  *  actual file won't be removed until all processes that have an open
  *  filehandle to it (including your program) close their handles.
+ *
+ * Chances are, the bits that make up the file still exist, they are just
+ *  made available to be written over at a later point. Don't consider this
+ *  a security method or anything.  :)
  *
  *   @param filename Filename to delete.
  *  @return nonzero on success, zero on error. Specifics of the error can be

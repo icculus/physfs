@@ -299,13 +299,7 @@ static int DIR_remove(DirHandle *h, const char *name)
     int retval;
 
     BAIL_IF_MACRO(f == NULL, NULL, 0);
-
-    /* !!! FIXME: Abstract in platform drivers. */
-    errno = 0;
-    retval = (remove(f) == 0);
-    if (!retval)
-        __PHYSFS_setError(strerror(errno));
-
+    retval = __PHYSFS_platformDelete(f);
     free(f);
     return(retval);
 } /* DIR_remove */

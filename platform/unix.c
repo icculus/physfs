@@ -639,19 +639,26 @@ int __PHYSFS_platformEOF(void *opaque)
 
 int __PHYSFS_platformFlush(void *opaque)
 {
-    int rc = fflush((FILE *) opaque);
-    BAIL_IF_MACRO(rc == EOF, strerror(errno), 0);
+    errno = 0;
+    BAIL_IF_MACRO(fflush((FILE *) opaque) == EOF, strerror(errno), 0);
     return(1);
 } /* __PHYSFS_platformFlush */
 
 
 int __PHYSFS_platformClose(void *opaque)
 {
-    int rc = fclose((FILE *) opaque);
-    BAIL_IF_MACRO(rc == EOF, strerror(errno), 0);
+    errno = 0;
+    BAIL_IF_MACRO(fclose((FILE *) opaque) == EOF, strerror(errno), 0);
     return(1);
 } /* __PHYSFS_platformClose */
 
+
+int __PHYSFS_platformDelete(const char *path)
+{
+    errno = 0;
+    BAIL_IF_MACRO(remove(path) == -1, strerror(errno), 0);
+    return(1);
+} /* __PHYSFS_platformDelete */
 
 /* end of unix.c ... */
 
