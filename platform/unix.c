@@ -303,9 +303,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     pthread_mutex_unlock((pthread_mutex_t *) mutex);
 } /* __PHYSFS_platformReleaseMutex */
 
-#endif /* win32 check. */
-
-#endif /* !defined __BEOS__ */
+#endif /* !defined __BEOS__ && !defined WIN32 */
 
 /* end of unix.c ... */
 
