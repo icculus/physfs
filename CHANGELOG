@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+03302003 - Fixed seeking in uncompressed ZIP entries, and handle a
+           misbehaviour in Java's JAR creation tools. Thanks to "Tree" for
+           pointing these bugs out.
 03192003 - Fixed problem in PHYSFS_mkdir() when dirs to be created already
            exist. Fixed problem where PHYSFS_mkdir() incorrectly tripped an
            alarm in __PHYSFS_verifySecurity().
