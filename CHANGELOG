@@ -4,6 +4,7 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+10302004 - Fixed a strcpy that should have been a strcat. (thanks, Tolga!)
 09212003 - Happy September. Fixes to bootstrap on MacOS X. Seeking now tries
            to respect pre-buffered data.
 
