@@ -1,11 +1,8 @@
-------------------------------------------------------------------------------
 
-NOTE: THESE INSTRUCTIONS NEED TO BE UPDATED FOR THE NEW BUILD SYSTEM. THIS
- AFFECTS UNIX, WIN32 AND MACOS!
-
-Please bitch to Ryan (icculus@clutteredmind.org) until he updates this.
-
-------------------------------------------------------------------------------
+ -----------------------------------------------------------------------------
+   Please note that the win32 and macos support files are out of date, but
+   will be corrected shortly.  --ryan.
+ -----------------------------------------------------------------------------
 
 
 
@@ -21,42 +18,41 @@ The best documentation for the PhysicsFS API is physfs.h. It is VERY heavily
 commented, and makes an excellent, in-depth reference to all the functions.
 
 
-UNIX:
+UNIX and BeOS:
+(If you got this code from CVS, run "./bootstrap" first.)
 
-Edit "Makefile", and follow the instructions. The defaults are probably okay
-for general purposes, but give it a once over to make sure. If you don't have
-zLib on your system, you'll need to disable ZIP support.
+Run ./configure --help and see what features can be optionally enabled or
+disabled. "./configure" does its best to pick optimal defaults for your
+platform.
 
-run "make"
-
-That's it. The library will be sitting in a new directory called "bin".
-
-Run "make install" to install the library for use on your system.
+Run "make".
+As root, run "make install".
+If you get sick of the library, run "make uninstall" as root and it will
+remove all traces of the library from the system paths.
 
 
 WIN32:
-Download http://icculus.org/physfs/downloads/physfs-win32-support.zip, and
-unpack in the root of the source directory, preserving directory names. If
-you did it correctly, there should be a directory named "zlib114" in the
-same directory as "physfs.h". This archive has Visual C project files and
-the code needed for zipfile support in PhysicsFS, since most Windows boxes
-don't have zlib preinstalled.
+If building with CygWin, follow the Unix instructions, above.
+
+Otherwise, get http://icculus.org/physfs/downloads/physfs-win32-support.zip,
+and unpack in the root of the source directory, preserving directory names. If
+you did it correctly, there should be a file named "physfs.dsp" in the
+same directory as "physfs.h". That zipfile has Visual C project files for
+Visual Studio 6.0 and Visual Studio .NET. If you're using Visual C, point the
+IDE at physfs.dsp, and build. If you're using any other compiler, send me a
+patch when you get it working.  :)
 
 IMPORTANT: If you are using anything older than Visual Studio.NET, you
 will _NEED_ to upgrade to the latest Platform SDK from Microsoft. It is a
 free download: http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
-Be sure to install _at least_ the Core SDK and the WMI SDK. I'm not sure if
-this is needed (or usable for Cygwin). Even though you need these SDK updates,
-the compiled PhysicsFS DLL should work on any win32 platform from Win95 and
-WinNT 4.0 and later.
+Be sure to install _at least_ the Core SDK and the WMI SDK. Even though you
+need these SDK updates, the compiled PhysicsFS DLL should work on any win32
+platform from Win95 and WinNT 4.0 and later. IF YOU ARE MISSING CONSTANTS
+AND/OR THE PROJECT REFUSES TO LINK, YOUR PLATFORM SDK IS OUT OF DATE. Do _not_
+complain to us. Suck it up and upgrade your libraries.
 
 No one's tried building this for a WinCE (PocketPC) platform, but it may or
 may not work. Patches are welcome.
-
-After that, if building with CygWin, follow the Unix instructions, above.
-(Which used to work, see caveat about Platform SDK above). If you're using
-Visual C, point the IDE at physfs.dsp, and build. If you're using any other
-compiler, send me a patch when you get it working.  :)
 
 If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
 from you; send an email to icculus@clutteredmind.org.
@@ -65,17 +61,17 @@ from you; send an email to icculus@clutteredmind.org.
 MACOS 8/9:
 Download http://icculus.org/physfs/downloads/mac_classic_support.sit and 
 unpack it in the root of the physfs folder. It should produce a folder 
-called "Mac Classic Support" that has CodeWarrior 6 project files and a 
-copy of zlib for zipfile support.
+called "Mac Classic Support" that has CodeWarrior 6 project files.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
 the Mac, I'd like to hear from you; send an email to icculus@clutteredmind.org.
 
 
 OTHER PLATFORMS:
-Many platforms might "just work" with the Unix Makefile (such as BeOS and 
-MacOS X), but have not been heavily tested, if tested at all. To implement a
-new platform or archiver, please read the heavily-commented physfs_internal.h
+Many platforms, such as Solaris and MacOS X, might "just work" with the Unix
+autoconf tools. Some of these platforms are known to have worked at one time,
+but have not been heavily tested, if tested at all. To implement a new
+platform or archiver, please read the heavily-commented physfs_internal.h
 and look in the platform/ and archiver/ directories for examples.
 
 --ryan. (icculus@clutteredmind.org)
