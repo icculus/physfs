@@ -755,3 +755,32 @@ On Thursday 10 July 2003 12:07 pm, you wrote:
 > Thanks,
 > --ryan.
 
+
+From xxxxxxxxxxxxxx Sun Jul 20 23:59:48 2003
+Date: Mon, 21 Jul 2003 07:09:24 +0400
+From: Ed Sinjiashvili <xxxxxxxxxxxxxxxxxxx>
+To: Ryan C. Gordon <icculus@clutteredmind.org>
+Subject: PhysicsFS license change
+Resent-Date: Mon, 21 Jul 2003 07:15:32 +0400
+Resent-From: Ed Sinjiashvili <xxxxxxxxxxxxxxx>
+Resent-To: "Ryan C. Gordon" <icculus@clutteredmind.org>
+
+Hi,
+
+I have just read the news on icculus.org and I guess I'm one of the
+two contributors you could not contact (at least I did not got any
+mails from PhysicsFS mailing list for quite a while - so I did not
+know what was happenning). 
+
+I really have no problems with this licence switch from LGPL to zlib
+and I agree to sign all my contributions (qpak archiver, ruby bindings
+and russian translations) under zlib.
+
+I saw that you removed all my contributions from PhysicsFS - now that
+I agreed to license change you could revert them. 
+
+-- Ed
+
+P.S. I have mail on icculus.org - if you can't reach me I guess
+xxxxxxxxxxxxxxx is always possible.
+
