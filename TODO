@@ -1,0 +1,6 @@
+- Make win32.c compile under Cygwin. It's just one function (fullpath()) that
+  needs to be replaced.
+
+// end of TODO ...
+
+
