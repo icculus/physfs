@@ -4,7 +4,12 @@
 
 03122005 - Added evil GOTO_*_MACRO_* macros. Fixed unix.c to compile again on
            MacOS X. Added PHYSFS_mount() (thanks, Philip!). Cleaned up the
-           INSTALL and CREDITS files a little.
+           INSTALL and CREDITS files a little. Split off start of
+           verifySecurity() into a path sanitizer and changed entry points to
+           sanitize input paths into a stack-allocated buffer before further
+           processing. This removes the need for a malloc() for almost all
+           file system operations, and generally cleaned things up. Added a
+           "mount" command to test_physfs. Other general cleanups.
 02152005 - Minor comment fix in platform/pocketpc.c
 01052005 - Fixed HOG archiver file lookup (thanks, Chris!)
 12162004 - Fixed some documentation/header comment typos (thanks, Gaetan!)
