@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+05272002 - Added some explicit casts when calling malloc() in platform/posix.c
 05252002 - Added John Hall's file modification time patch, and added a
            getlastmodtime command to test_physfs. Corrected error reporting
            for missing files a little bit. Changed build system to only try
