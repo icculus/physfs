@@ -636,7 +636,7 @@ static const command_info commands[] =
     { "getwritedir",    cmd_getwritedir,    0, NULL                         },
     { "setwritedir",    cmd_setwritedir,    1, "<newWriteDir>"              },
     { "permitsymlinks", cmd_permitsyms,     1, "<1or0>"                     },
-    { "setsaneconfig",  cmd_setsaneconfig,  4, "<appName> <arcExt> <includeCdRoms> <archivesFirst>" },
+    { "setsaneconfig",  cmd_setsaneconfig,  5, "<org> <appName> <arcExt> <includeCdRoms> <archivesFirst>" },
     { "mkdir",          cmd_mkdir,          1, "<dirToMk>"                  },
     { "delete",         cmd_delete,         1, "<dirToDelete>"              },
     { "getrealdir",     cmd_getrealdir,     1, "<fileToFind>"               },
