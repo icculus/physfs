@@ -2,6 +2,14 @@
  * CHANGELOG.
  */
 
+-- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
+
+09212003 - Happy September. Fixes to bootstrap on MacOS X. Seeking now tries
+           to respect pre-buffered data.
+
+
+--- changelog up to 1.0.0 ---
+
 12292003 - Updated CodeWarrior projects from CW6 to CW7, and made a bunch of
            patches to get the Mac Classic target building again. Removed
            zlib114 from CVS repository. Updated OS/2 build batch file.
