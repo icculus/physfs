@@ -2,12 +2,13 @@
  * CHANGELOG.
  */
 
+05212002 - Cleaned up some FIXMEs.
 05202002 - Added .cvsignore files.
 05162002 - Edward Rudd also caught an embarrassing screwup by me in
-           unix.c: the open-for-append call was using "wb+" instead of
-           "ab" when calling fopen(). Doh!
-05152002 - configure script now deals with systems that have a readline
-           lib, but require it to be linked with curses. Thanks to Edward
+           unix.c: the open-for-append call was using "wb+" instead of 
+           "ab" when calling fopen(). Doh! 
+05152002 - configure script now deals with systems that have a readline 
+           lib, but require it to be linked with curses. Thanks to Edward 
            Rudd for the patch.
 05102002 - A trimmed-down zlib 1.1.4 is now included in the source distro, for
            use by win32, MacOS, and Unix systems that don't have it installed
@@ -22,12 +23,12 @@
 04202002 - Added a (very) quick and (very) dirty http server to the
            extras directory (public domain), as another example of using
            the library.
-04192002 - Corrected some win32 info in INSTALL. Changed Makefile to
+04192002 - Corrected some win32 info in INSTALL. Changed Makefile to 
            package releases as .tar.gz instead of .tar.bz2.
-04122002 - Some win32 cleanups and fixes across several files. Upped
+04122002 - Some win32 cleanups and fixes across several files. Upped 
            version to 0.1.5.
 04082002 - Fixed problem when calling __PHYSFS_setError before PHYSFS_init.
-04062002 - Added MacOS info, etc to INSTALL. Patched unix.c and
+04062002 - Added MacOS info, etc to INSTALL. Patched unix.c and 
            test_physfs.c to compile on Darwin again.
 04052002 - Added byte ordering API. Byte ordering fixes in grp.c, and some
            cleanups in unzip.c. Mac work is more or less complete.
@@ -50,7 +51,7 @@
            a type exposed by MacOS's namespace-polluting API, and some
            typecasting issues). Found a call to ferror() I had missed in
            unzip.c.
-03302002 - Mutexes! PhysicsFS should be thread safe now, so long as you
+03302002 - Mutexes! PhysicsFS should be thread safe now, so long as you 
            don't try to do something like close a file at the same time as
            you are reading from it in another thread. All reasonable race
            conditions should now be gone, but the new code will need some
@@ -67,7 +68,7 @@
            to rely on stdio anymore. Updated TODO with my comments on the
            physfs mailing list. 1.0, here we come! Removed race condition from
            grp.c and converted to file i/o abstraction layer calls from stdio.
-           Tons of other fixes and enhancements.
+           Tons of other fixes and enhancements. 
 03202002 - Patched platform/win32.c to compile.
 03152002 - PHYSFS_setSaneConfig() now handles failure to set the write dir
            better. Patched makefile to link the test program. Changed all the
@@ -83,8 +84,8 @@
            crucial line from dir.c a few revisions ago, and no one noticed. :(
            Fixed. The win32 userdir will default to the base dir, now.
 09252001 - Changed API: PHYSFS_setSaneConfig() takes an organization name, and
-           sets up less directories. Be warned. Fixes from David Hedbor:
-           make setSaneConfig() set write directory correctly if it had to
+           sets up less directories. Be warned. Fixes from David Hedbor: 
+           make setSaneConfig() set write directory correctly if it had to 
            create the directory, and make sure that the writing functions
            get used in dir.c when a file is opened for writing/appending.
            Updated CREDITS.
