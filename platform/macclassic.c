@@ -23,6 +23,7 @@
 #include <TextUtils.h>
 #include <Resources.h>
 #include <MacMemory.h>
+#include <Events.h>
 #endif
 
 #define __PHYSICSFS_INTERNAL__
@@ -184,13 +185,36 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,
                                       const char *append)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, NULL);
+    int len = ((prepend) ? strlen(prepend) : 0) +
+              ((append) ? strlen(append) : 0) +
+              strlen(dirName) + 1;
+    const char *src;
+    char *dst;
+    char *retval = malloc(len);
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+
+    if (prepend != NULL)
+    {
+        strcpy(retval, prepend);
+        dst = retval + strlen(retval);
+    } /* if */
+    else
+    {
+        *retval = '\0';
+        dst = retval;
+    } /* else */
+
+    for (src = dirName; *src; src++, dst++)
+        *dst = ((*src == '/') ? ':' : *src);
+
+    *dst = '\0';
+    return(retval);
 } /* __PHYSFS_platformCvtToDependent */
 
 
-/* Much like my college days, try to sleep for 10 milliseconds at a time... */
 void __PHYSFS_platformTimeslice(void)
 {
+    SystemTask();
 } /* __PHYSFS_platformTimeslice */
 
 
@@ -203,7 +227,13 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
 
 char *__PHYSFS_platformCurrentDir(void)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, NULL);
+    /*
+     * I don't think MacOS has a concept of "current directory", beyond
+     *  what is grafted on by a given standard C library implementation,
+     *  so just return the base dir.
+     * We don't use this for anything crucial at the moment anyhow.
+     */
+    return(__PHYSFS_platformCalcBaseDir(NULL));
 } /* __PHYSFS_platformCurrentDir */
 
 
