@@ -2,7 +2,11 @@
  * CHANGELOG.
  */
 
-08222002 - Fixed ZIP_exists() to work with directories.
+08222002 - Fixed ZIP_exists() to work with directories. Now breaks out of
+           __PHYSFS_verifySecurity() early if a path element is missing
+           (since all the others will be, too)...this check is only done
+           if symlinks are disabled, but we might as well save easy cycles
+           where we can.
 08212002 - Did a couple tedious-for-small-rewards cleanups, optimizations,
            corrections and streamlinings I've been meaning to do. Touched a
            lot of code. One of the side results is that ZIP_isDirectory()
