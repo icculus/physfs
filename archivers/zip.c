@@ -409,7 +409,7 @@ static DirHandle *ZIP_openArchive(const char *name, int forWriting)
 } /* ZIP_openArchive */
 
 
-/* !!! This is seriously ugly. */
+/* !!! FIXME: This is seriously ugly. */
 static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
                                             const char *dirname,
                                             int omitSymLinks)
@@ -515,7 +515,7 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
 } /* ZIP_enumerateFiles */
 
 
-/* !!! This is seriously ugly. */
+/* !!! FIXME: This is seriously ugly. */
 static int ZIP_exists_symcheck(DirHandle *h, const char *name, int follow)
 {
     char buf[MAXZIPENTRYSIZE];
@@ -623,7 +623,7 @@ static int ZIP_isDirectory(DirHandle *h, const char *name)
     BAIL_IF_MACRO(is_sym, ERR_TOO_MANY_SYMLINKS, 0);
 
     dlen = strlen(name);
-    /* !!! yikes. Better way to check? */
+    /* !!! FIXME: yikes. Better way to check? */
     retval = (((ZIPinfo *)(h->opaque))->entries[retval].name[dlen] == '/');
     return(retval);
 } /* ZIP_isDirectory */

@@ -266,7 +266,7 @@ static OSErr fnameToFSSpecNoAlias(const char *fname, FSSpec *spec)
 {
     OSErr err;
     Str255 str255;
-    int needColon = (strchr(fname, ':')  == NULL);
+    int needColon = (strchr(fname, ':') == NULL);
     int len = strlen(fname) + ((needColon) ? 1 : 0);
     if (len > 255)
         return(bdNamErr);
@@ -285,7 +285,6 @@ static OSErr fnameToFSSpecNoAlias(const char *fname, FSSpec *spec)
 } /* fnameToFSSpecNoAlias */
 
 
-/* !!! FIXME: This code is pretty heinous. */
 static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
 {
     Boolean alias = 0;
@@ -313,6 +312,7 @@ static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
         start = ptr;
         ptr = strchr(start + 1, ':');
 
+        /* Now check each element of the path for aliases... */
         do
         {
             CInfoPBRec infoPB;
@@ -322,14 +322,15 @@ static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
             infoPB.dirInfo.ioDrDirID = spec->parID;
             infoPB.dirInfo.ioFDirIndex = 0;
             err = PBGetCatInfoSync(&infoPB);
-            if (err != noErr)  /* not an alias, really a bogus path. */
+            if (err != noErr)  /* not an alias, really just a bogus path. */
                 return(fnameToFSSpecNoAlias(fname, spec)); /* reset */
 
             if ((infoPB.dirInfo.ioFlAttrib & kioFlAttribDirMask) != 0)
                 spec->parID = infoPB.dirInfo.ioDrDirID;
 
-            if (ptr != NULL)
+            if (ptr != NULL)  /* terminate string after next element. */
                 *ptr = '\0';
+
             *start = strlen(start + 1);  /* make it a pstring. */
             err = FSMakeFSSpec(spec->vRefNum, spec->parID,
                                (const unsigned char *) start, spec);
@@ -339,7 +340,8 @@ static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
             err = ResolveAliasFileWithMountFlags(spec, 1, &folder, &alias, 0);
             if (err != noErr)  /* not an alias, really a bogus path. */
                 return(fnameToFSSpecNoAlias(fname, spec)); /* reset */
-            start = ptr;
+
+            start = ptr;  /* move to the next element. */
             if (ptr != NULL)
                 ptr = strchr(start + 1, ':');                
         } while (start != NULL);
