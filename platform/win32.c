@@ -23,8 +23,10 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-#ifdef _MSC_VER /* for Cygwin, etc. */
-#define alloca _alloca
+#if (defined _MSC_VER)
+    #define alloca(x) _alloca(x)
+#elif (defined MINGW)  /* scary...hopefully this is okay. */
+    #define alloca(x) __builtin_alloca(x) 
 #endif
 
 #define LOWORDER_UINT64(pos)       (PHYSFS_uint32)(pos & 0x00000000FFFFFFFF)
