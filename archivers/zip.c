@@ -541,25 +541,49 @@ static void zip_free_entries(ZIPentry *entries, PHYSFS_uint32 max)
 } /* zip_free_entries */
 
 
-static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path)
+/*
+ * This will find the ZIPentry associated with a path in platform-independent
+ *  notation. Directories don't have ZIPentries associated with them, but 
+ *  (*isDir) will be set to non-zero if a dir was hit.
+ */
+static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path, int *isDir)
 {
     ZIPentry *a = info->entries;
-    PHYSFS_sint32 lo = 0;
+	PHYSFS_sint32 pathlen = strlen(path);
+	PHYSFS_sint32 lo = 0;
     PHYSFS_sint32 hi = (PHYSFS_sint32) (info->entryCount - 1);
     PHYSFS_sint32 middle;
+	const char *thispath = NULL;
     int rc;
 
     while (lo <= hi)
     {
-        middle = lo + ((hi - lo) / 2);
-        rc = strcmp(path, a[middle].name);
-        if (rc == 0)  /* found it! */
-            return(&a[middle]);
-        else if (rc > 0)
+		middle = lo + ((hi - lo) / 2);
+		thispath = a[middle].name;
+		rc = strncmp(path, thispath, pathlen);
+
+        if (rc > 0)
             lo = middle + 1;
-        else
+
+        else if (rc < 0)
             hi = middle - 1;
-    } /* while */
+
+		else  /* substring match...might be dir or entry or nothing. */
+		{
+            if (isDir != NULL)
+            {
+			    *isDir = (thispath[pathlen] == '/');
+    			if (*isDir)
+                    return(NULL);
+            } /* if */
+
+            if (thispath[pathlen] == '\0') /* found entry? */
+				return(&a[middle]);
+		} /* else */
+	} /* while */
+
+    if (isDir != NULL)
+        *isDir = 0;
 
     BAIL_MACRO(ERR_NO_SUCH_FILE, NULL);
 } /* zip_find_entry */
@@ -651,7 +675,7 @@ static ZIPentry *zip_follow_symlink(void *in, ZIPinfo *info, char *path)
     ZIPentry *entry;
 
     zip_expand_symlink_path(path);
-    entry = zip_find_entry(info, path);
+    entry = zip_find_entry(info, path, NULL);
     if (entry != NULL)
     {
         if (!zip_resolve(in, info, entry))  /* recursive! */
@@ -1240,11 +1264,10 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
 
 static int ZIP_exists(DirHandle *h, const char *name)
 {
+    int isDir;    
     ZIPinfo *info = (ZIPinfo *) h->opaque;
-    int retval = (zip_find_start_of_dir(info, name, 1) != -1);
-    if (!retval)  /* not a dir? Look for a regular file entry... */
-        retval = (zip_find_entry(info, name) != NULL);
-    return(retval);
+    ZIPentry *entry = zip_find_entry(info, name, &isDir);
+    return((entry != NULL) || (isDir));
 } /* ZIP_exists */
 
 
@@ -1252,17 +1275,14 @@ static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h,
                                         const char *name,
                                         int *fileExists)
 {
+    int isDir;
     ZIPinfo *info = (ZIPinfo *) h->opaque;
-    ZIPentry *entry;
+    ZIPentry *entry = zip_find_entry(info, name, &isDir);
 
-    if (zip_find_start_of_dir(info, name, 1) != -1)
-    {
-        *fileExists = 1;
+    *fileExists = ((isDir) || (entry != NULL));
+    if (isDir)
         return(1);  /* Best I can do for a dir... */
-    } /* if */
 
-    entry = zip_find_entry(info, name);
-    *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, -1);
     return(entry->last_mod_time);
 } /* ZIP_getLastModTime */
@@ -1272,18 +1292,14 @@ static int ZIP_isDirectory(DirHandle *h, const char *name, int *fileExists)
 {
     ZIPinfo *info = (ZIPinfo *) h->opaque;
     PHYSFS_sint32 pos;
-    ZIPentry *entry;
+    int isDir;
+    ZIPentry *entry = zip_find_entry(info, name, &isDir);
 
-    pos = zip_find_start_of_dir(info, name, 1);
-    if (pos >= 0)
-    {
-        *fileExists = 1;
+    *fileExists = ((isDir) || (entry != NULL));
+    if (isDir)
         return(1); /* definitely a dir. */
-    } /* if */
 
     /* Follow symlinks. This means we might need to resolve entries. */
-    entry = zip_find_entry(info, name);
-    *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, ERR_NO_SUCH_FILE, 0);
 
     if (entry->resolved == ZIP_UNRESOLVED_SYMLINK) /* gotta resolve it. */
@@ -1306,8 +1322,9 @@ static int ZIP_isDirectory(DirHandle *h, const char *name, int *fileExists)
 
 static int ZIP_isSymLink(DirHandle *h, const char *name, int *fileExists)
 {
-    ZIPentry *entry = zip_find_entry((ZIPinfo *) h->opaque, name);
-    *fileExists = (entry != NULL);
+    int isDir;
+    ZIPentry *entry = zip_find_entry((ZIPinfo *) h->opaque, name, &isDir);
+    *fileExists = ((isDir) || (entry != NULL));
     BAIL_IF_MACRO(entry == NULL, NULL, 0);
     return(zip_entry_is_symlink(entry));
 } /* ZIP_isSymLink */
@@ -1340,7 +1357,7 @@ static void *zip_get_file_handle(const char *fn, ZIPinfo *inf, ZIPentry *entry)
 static FileHandle *ZIP_openRead(DirHandle *h, const char *fnm, int *fileExists)
 {
     ZIPinfo *info = (ZIPinfo *) h->opaque;
-    ZIPentry *entry = zip_find_entry(info, fnm);
+    ZIPentry *entry = zip_find_entry(info, fnm, NULL);
     FileHandle *retval = NULL;
     ZIPfileinfo *finfo = NULL;
     void *in;
