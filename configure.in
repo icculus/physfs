@@ -75,11 +75,11 @@ if test x$enable_debug = xyes; then
     CFLAGS="-O0"
   fi
   CFLAGS="$CFLAGS -Werror -Wall"
-  AC_DEFINE(DEBUG)
-  AC_DEFINE(DEBUG_CHATTER)
+  AC_DEFINE([DEBUG], 1, [define if debug build is enabled])
+  AC_DEFINE([DEBUG_CHATTER], 1, [define if debug chatter is enabled])
 else
   CFLAGS="-O2"
-  AC_DEFINE(NDEBUG)
+  AC_DEFINE([NDEBUG], 1, [define if debug build is disabled])
 fi
 
 
@@ -100,7 +100,7 @@ dnl !!! FIXME: Not sure how to detect this...
 dnl check for 64-bit llseek()...
 dnl AC_CHECK_LIB(c, llseek, have_llseek=yes)
 if test x$have_llseek = xyes; then
-  AC_DEFINE(PHYSFS_HAVE_LLSEEK)
+  AC_DEFINE([PHYSFS_HAVE_LLSEEK], 1, [define if we have llseek])
 fi
 
 require_zlib="no"
@@ -110,7 +110,7 @@ AC_ARG_ENABLE(zip,
 [  --enable-zip               enable ZIP support [default=yes]],
               , enable_zip=yes)
 if test x$enable_zip = xyes; then
-  AC_DEFINE(PHYSFS_SUPPORTS_ZIP)
+  AC_DEFINE([PHYSFS_SUPPORTS_ZIP], 1, [define if zip support is enabled])
   require_zlib="yes"
 fi
 
@@ -120,7 +120,7 @@ AC_ARG_ENABLE(grp,
 [  --enable-grp               enable Build Engine GRP support [default=yes]],
               , enable_grp=yes)
 if test x$enable_grp = xyes; then
-  AC_DEFINE(PHYSFS_SUPPORTS_GRP)
+  AC_DEFINE([PHYSFS_SUPPORTS_GRP], 1, [define if grp support is enabled])
 fi
 
 
@@ -188,7 +188,7 @@ if test x$enable_readline = xyes; then
   AC_CHECK_LIB(readline, add_history, have_history_lib=yes, , -lcurses)
   if test x$have_readline_hdr = xyes -a x$have_readline_lib = xyes; then
     if test x$have_history_hdr = xyes -a x$have_history_lib = xyes; then
-      AC_DEFINE(PHYSFS_HAVE_READLINE)
+      AC_DEFINE([PHYSFS_HAVE_READLINE], 1, [define if we have readline])
       LIBS="$LIBS -lreadline -lcurses"
     fi
   fi
