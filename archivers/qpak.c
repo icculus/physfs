@@ -438,6 +438,9 @@ static int qpak_populateDirectories(QPAKentry *entries, int numEntries,
 
 static void qpak_deletePakInfo (QPAKinfo *pakInfo)
 {
+    if (pakInfo->handle != NULL)
+        __PHYSFS_platformClose(pakInfo->handle);
+
     if (pakInfo->filename != NULL)
         free(pakInfo->filename);
 
@@ -533,10 +536,7 @@ QPAK_openArchive_failed:
 
 static void QPAK_dirClose(DirHandle *dirHandle)
 {
-    QPAKinfo *info = (QPAKinfo *) dirHandle->opaque;
-    __PHYSFS_platformClose(info->handle);
-    free(info->filename);
-    free(info);
+    qpak_deletePakInfo((QPAKinfo *) dirHandle->opaque);
     free(dirHandle);
 } /* QPAK_dirClose */
 
