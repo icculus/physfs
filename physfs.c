@@ -1736,8 +1736,7 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
 
     __PHYSFS_platformGrabMutex(stateLock);
 
-    /* !!! FIXME: should probably be ERR_PATH_NOT_FOUND */
-    BAIL_IF_MACRO_MUTEX(!searchPath, ERR_NOT_IN_SEARCH_PATH, stateLock, NULL);
+    BAIL_IF_MACRO_MUTEX(!searchPath, ERR_PATH_NOT_FOUND, stateLock, NULL);
 
     /* !!! FIXME: Why aren't we using a for loop here? */
     i = searchPath;
