@@ -7,7 +7,7 @@ rem  Patches go to icculus@clutteredmind.org ...
 
 set PHYSFSLANG=PHYSFS_LANG_ENGLISH
 set DEBUGFLAGS=-D_NDEBUG -O2 -s
-set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib114 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_LANG=%PHYSFSLANG% -DHAVE_ASSERT_H=1
+set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib114 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DPHYSFS_LANG=%PHYSFSLANG% -DHAVE_ASSERT_H=1
 
 @echo on
 mkdir bin
@@ -110,6 +110,8 @@ gcc %CFLAGS% -o bin/dir.obj archivers/dir.c
 gcc %CFLAGS% -o bin/grp.obj archivers/grp.c
 gcc %CFLAGS% -o bin/zip.obj archivers/zip.c
 gcc %CFLAGS% -o bin/qpak.obj archivers/qpak.c
+gcc %CFLAGS% -o bin/hog.obj archivers/hog.c
+gcc %CFLAGS% -o bin/mvl.obj archivers/mvl.c
 
 gcc %CFLAGS% -o bin/adler32.obj zlib114/adler32.c
 gcc %CFLAGS% -o bin/compress.obj zlib114/compress.c
