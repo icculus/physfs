@@ -1,8 +1,0 @@
-Makefile
-.deps
-.libs
-libplatform.la
-Makefile.in
-unix.lo
-posix.lo
-beos.lo

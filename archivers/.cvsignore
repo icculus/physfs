@@ -1,9 +1,0 @@
-Makefile
-.deps
-.libs
-unzip.lo
-dir.lo
-Makefile.in
-grp.lo
-zip.lo
-libarchivers.la
