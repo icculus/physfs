@@ -2,6 +2,10 @@
  * CHANGELOG.
  */
 
+07192002 - Cleaned up configure.in and unix.c so that we check by available
+           header to determine the appropriate CD-ROM detection code...this
+           should make this more future-proof (and probably get it building
+           out of the box on other BSD platforms.)
 07172002 - Fixed seeking backwards in ZIP_seek(). Changed the error message
            ERR_TOO_MANY_SYMLINKS to ERR_SYMLINK_LOOP. Patches to build system
            and unix.c for FreeBSD compatibility. Added physfs.spec to
