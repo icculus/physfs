@@ -2,7 +2,8 @@
  * CHANGELOG.
  */
 
-04122002 - Some win32 cleanups and fixes across several files.
+04122002 - Some win32 cleanups and fixes across several files. Upped
+           version to 0.1.5.
 04082002 - Fixed problem when calling __PHYSFS_setError before PHYSFS_init.
 04062002 - Added MacOS info, etc to INSTALL. Patched unix.c and
            test_physfs.c to compile on Darwin again.
