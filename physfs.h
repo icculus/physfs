@@ -493,13 +493,17 @@ __EXPORT__ void PHYSFS_freeList(void *listVar);
  * \fn const char *PHYSFS_getLastError(void)
  * \brief Get human-readable error information.
  *
- * Get the last PhysicsFS error message as a null-terminated string.
- *  This will be NULL if there's been no error since the last call to this
- *  function. The pointer returned by this call points to an internal buffer.
- *  Each thread has a unique error state associated with it, but each time
- *  a new error message is set, it will overwrite the previous one associated
- *  with that thread. It is safe to call this function at anytime, even
- *  before PHYSFS_init().
+ * Get the last PhysicsFS error message as a human-readable, null-terminated
+ *  string. This will be NULL if there's been no error since the last call to
+ *  this function. The pointer returned by this call points to an internal
+ *  buffer. Each thread has a unique error state associated with it, but each
+ *  time a new error message is set, it will overwrite the previous one
+ *  associated with that thread. It is safe to call this function at anytime,
+ *  even before PHYSFS_init().
+ *
+ * It is not wise to expect a specific string of characters here, since the
+ *  error message may be localized into an unfamiliar language. These strings
+ *  are meant to be passed on directly to the user.
  *
  *   \return READ ONLY string of last error message.
  */
@@ -584,6 +588,8 @@ __EXPORT__ void PHYSFS_permitSymbolicLinks(int allow);
  *  resources by calling PHYSFS_freeList() with the returned pointer.
  *
  *   \return Null-terminated array of null-terminated strings.
+ *
+ * \sa PHYSFS_getCdRomDirsCallback
  */
 __EXPORT__ char **PHYSFS_getCdRomDirs(void);
 
@@ -669,53 +675,16 @@ __EXPORT__ int PHYSFS_setWriteDir(const char *newDir);
 
 
 /**
- * \fn int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath);
- * \brief Add an archive or directory to the search path.
- *
- * If this is a duplicate, the entry is not added again, even though the
- *  function succeeds. You may not add the same archive to two different
- *  mountpoints: duplicate checking is done against the archive and not the
- *  mountpoint.
- *
- * When you mount an archive, it is added to a virtual file system...all files
- *  in all of the archives are interpolated into a single hierachical file
- *  tree. Two archives mounted at the same place (or an archive with files
- *  overlapping another mountpoint) may have overlapping files: in such a case,
- *  the file earliest in the search path is selected, and the other files are
- *  inaccessible to the application. This allows archives to be used to
- *  override previous revisions; you can use the mounting mechanism to place
- *  archives at a specific point in the file tree and prevent overlap; this
- *  is useful for downloadable mods that might trample over application data
- *  or each other, for example.
- *
- * The mountpoint does not need to exist prior to mounting, which is different
- *  than those familiar with the Unix concept of "mounting" may not expect.
- *  As well, more than one archive can be mounted to the same mountpoint, or
- *  mountpoints and archive contents can overlap...the interpolation mechanism
- *  still functions as usual.
- *
- *   \param newDir directory or archive to add to the path, in
- *                   platform-dependent notation.
- *   \param mountPoint Location in the interpolated tree that this archive
- *                     will be "mounted", in platform-independent notation.
- *                     NULL or "" is equivalent to "/".
- *   \param appendToPath nonzero to append to search path, zero to prepend.
- *  \return nonzero if added to path, zero on failure (bogus archive, dir
- *                   missing, etc). Specifics of the error can be
- *                   gleaned from PHYSFS_getLastError().
- */
-__EXPORT__ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath);
-
-
-/**
  * \fn int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
  * \brief Add an archive or directory to the search path.
  *
- * This is a legacy call, equivalent to:
+ * This is a legacy call in PhysicsFS 2.0, equivalent to:
  *     PHYSFS_mount(newDir, NULL, appendToPath);
  *
+ * You must use this and not PHYSFS_mount if binary compatibility with
+ *  PhysicsFS 1.0 is important (which it may not be for many people).
+ *
  * \sa PHYSFS_mount
- * \sa PHYSFS_unmount
  * \sa PHYSFS_removeFromSearchPath
  * \sa PHYSFS_getSearchPath
  */
@@ -764,6 +733,7 @@ __EXPORT__ int PHYSFS_removeFromSearchPath(const char *oldDir);
  *   \return Null-terminated array of null-terminated strings. NULL if there
  *            was a problem (read: OUT OF MEMORY).
  *
+ * \sa PHYSFS_getSearchPathCallback
  * \sa PHYSFS_addToSearchPath
  * \sa PHYSFS_removeFromSearchPath
  */
@@ -910,6 +880,10 @@ __EXPORT__ int PHYSFS_delete(const char *filename);
  *  permitted symlinks, then it will be ignored, and the search for a match
  *  will continue.
  *
+ * If you specify a fake directory that only exists as a mount point, it'll
+ *  be associated with the first archive mounted there, even though that
+ *  directory isn't necessarily contained in a real archive.
+ *
  *     \param filename file to look for.
  *    \return READ ONLY string of element of search path containing the
  *             the file in question. NULL if not found.
@@ -952,6 +926,8 @@ __EXPORT__ const char *PHYSFS_getRealDir(const char *filename);
  *
  *    \param dir directory in platform-independent notation to enumerate.
  *   \return Null-terminated array of null-terminated strings.
+ *
+ * \sa PHYSFS_enumerateFilesCallback
  */
 __EXPORT__ char **PHYSFS_enumerateFiles(const char *dir);
 
@@ -1919,6 +1895,73 @@ typedef struct
  *           when used between PHYSFS_init() and PHYSFS_deinit() calls.
  */
 __EXPORT__ int PHYSFS_setAllocator(PHYSFS_Allocator *allocator);
+
+
+/**
+ * \fn int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath);
+ * \brief Add an archive or directory to the search path.
+ *
+ * If this is a duplicate, the entry is not added again, even though the
+ *  function succeeds. You may not add the same archive to two different
+ *  mountpoints: duplicate checking is done against the archive and not the
+ *  mountpoint.
+ *
+ * When you mount an archive, it is added to a virtual file system...all files
+ *  in all of the archives are interpolated into a single hierachical file
+ *  tree. Two archives mounted at the same place (or an archive with files
+ *  overlapping another mountpoint) may have overlapping files: in such a case,
+ *  the file earliest in the search path is selected, and the other files are
+ *  inaccessible to the application. This allows archives to be used to
+ *  override previous revisions; you can use the mounting mechanism to place
+ *  archives at a specific point in the file tree and prevent overlap; this
+ *  is useful for downloadable mods that might trample over application data
+ *  or each other, for example.
+ *
+ * The mountpoint does not need to exist prior to mounting, which is different
+ *  than those familiar with the Unix concept of "mounting" may not expect.
+ *  As well, more than one archive can be mounted to the same mountpoint, or
+ *  mountpoints and archive contents can overlap...the interpolation mechanism
+ *  still functions as usual.
+ *
+ *   \param newDir directory or archive to add to the path, in
+ *                   platform-dependent notation.
+ *   \param mountPoint Location in the interpolated tree that this archive
+ *                     will be "mounted", in platform-independent notation.
+ *                     NULL or "" is equivalent to "/".
+ *   \param appendToPath nonzero to append to search path, zero to prepend.
+ *  \return nonzero if added to path, zero on failure (bogus archive, dir
+ *                   missing, etc). Specifics of the error can be
+ *                   gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_removeFromSearchPath
+ * \sa PHYSFS_getSearchPath
+ * \sa PHYSFS_getMountPoint
+ */
+__EXPORT__ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath);
+
+/**
+ * \fn int PHYSFS_getMountPoint(const char *dir);
+ * \brief Determine a mounted archive's mountpoint.
+ *
+ * You give this function the name of an archive or dir you successfully
+ *  added to the search path, and it reports the location in the interpolated
+ *  tree where it is mounted. Files mounted with a NULL mountpoint or through
+ *  PHYSFS_addToSearchPath() will report "/". The return value is READ ONLY
+ *  and valid until the archive is removed from the search path.
+ *
+ *   \param dir directory or archive previously added to the path, in
+ *              platform-dependent notation. This must match the string
+ *              used when adding, even if your string would also reference
+ *              the same file with a different string of characters.
+ *  \return READ-ONLY string of mount point if added to path, NULL on failure
+ *          (bogus archive, etc) Specifics of the error can be gleaned from
+ *          PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_removeFromSearchPath
+ * \sa PHYSFS_getSearchPath
+ * \sa PHYSFS_getMountPoint
+ */
+__EXPORT__ const char *PHYSFS_getMountPoint(const char *dir);
 
 
 /*
