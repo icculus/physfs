@@ -207,12 +207,14 @@ void __PHYSFS_platformDestroyMutex(void *mutex)
 
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, 0);
+    /* not implemented, but can't call __PHYSFS_setError! */
+    return(0);
 } /* __PHYSFS_platformGrabMutex */
 
 
 void __PHYSFS_platformReleaseMutex(void *mutex)
 {
+    /* not implemented, but can't call __PHYSFS_setError! */
 } /* __PHYSFS_platformReleaseMutex */
 
 /* end of skeleton.c ... */
