@@ -15,6 +15,9 @@
            with license info and Win32 build instructions. Dependency on the
            readline library in test_physfs.c is now optional.
            Changed version to 0.1.2.
+08282001 - win32.c now checks HOMEDRIVE, HOMEPATH, and HOME when calculating
+           the userdir. Added include files that make it a little closer to
+           compiling under Cygwin. Added a TODO file.
 
 --ryan. (icculus@clutteredmind.org)
 
