@@ -302,14 +302,19 @@ if test x$physfslang = xgerman; then
   AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_GERMAN, [define desired natural language])
 fi
 
+if test x$physfslang = xfrench; then
+  physfs_valid_lang=yes
+  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_FRENCH, [define desired natural language])
+fi
+
 if test x$physfslang = xspanish; then
   physfs_valid_lang=yes
   AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_SPANISH, [define desired natural language])
 fi
 
-if test x$physfslang = xfrench; then
+if test x$physfslang = xportuguese-br; then
   physfs_valid_lang=yes
-  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_FRENCH, [define desired natural language])
+  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_PORTUGUESE_BR, [define desired natural language])
 fi
 
 if test x$physfslang = xrussian-koi8-r; then
@@ -355,6 +360,8 @@ if test x$physfs_valid_lang = xno; then
   AC_MSG_WARN([***   --enable-language=spanish])
   AC_MSG_WARN([***   --enable-language=german])
   AC_MSG_WARN([***   --enable-language=french])
+  AC_MSG_WARN([***   --enable-language=spanish])
+  AC_MSG_WARN([***   --enable-language=portuguese-br])
   AC_MSG_WARN([***   --enable-language=russian-koi8-r])
   AC_MSG_WARN([***   --enable-language=russian-cp1251])
   AC_MSG_WARN([***   --enable-language=russian-cp866])
