@@ -886,5 +886,12 @@ static int doNTInit(void)
     return 1;
 }
 #endif
+
+
+PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
+{
+    BAIL_MACRO(ERR_NOT_IMPLEMENTED, -1);  /* !!! FIXME! */
+} /* __PHYSFS_platformGetLastModTime */
+
 /* end of win32.c ... */
 

@@ -176,6 +176,14 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
     int (*isSymLink)(DirHandle *r, const char *name);
 
         /*
+	     * Retrieve the last modification time (mtime) of a file.
+    	 *  Returns -1 on failure, or the file's mtime in seconds since
+    	 *  the epoch (Jan 1, 1970) on success.
+         *  This filename is in platform-independent notation.
+    	 */
+    PHYSFS_sint64 (*getLastModTime)(DirHandle *r, const char *filename);
+
+        /*
          * Open file for reading, and return a FileHandle.
          *  This filename is in platform-independent notation.
          * If you can't handle multiple opens of the same file,
@@ -267,6 +275,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_NOT_A_DIR            "Not a directory"
 #define ERR_FILE_NOT_FOUND       "File not found"
 
+
 /*
  * Call this to set the message returned by PHYSFS_getLastError().
  *  Please only use the ERR_* constants above, or add new constants to the
@@ -343,6 +352,7 @@ extern const char *__PHYSFS_platformDirSeparator;
  */
 int __PHYSFS_platformInit(void);
 
+
 /*
  * Deinitialize the platform. This is called when PHYSFS_deinit() is called
  *  from the application. You can use this to clean up anything you've
@@ -352,6 +362,7 @@ int __PHYSFS_platformInit(void);
  *  functioning at all), and non-zero otherwise.
  */
 int __PHYSFS_platformDeinit(void);
+
 
 /*
  * Open a file for reading. (filename) is in platform-dependent notation. The
@@ -367,6 +378,7 @@ int __PHYSFS_platformDeinit(void);
  * Call __PHYSFS_setError() and return (NULL) if the file can't be opened.
  */
 void *__PHYSFS_platformOpenRead(const char *filename);
+
 
 /*
  * Open a file for writing. (filename) is in platform-dependent notation. If
@@ -384,6 +396,7 @@ void *__PHYSFS_platformOpenRead(const char *filename);
  */
 void *__PHYSFS_platformOpenWrite(const char *filename);
 
+
 /*
  * Open a file for appending. (filename) is in platform-dependent notation. If
  *  the file exists, the file pointer should be place just past the end of the
@@ -400,6 +413,7 @@ void *__PHYSFS_platformOpenWrite(const char *filename);
  * Call __PHYSFS_setError() and return (NULL) if the file can't be opened.
  */
 void *__PHYSFS_platformOpenAppend(const char *filename);
+
 
 /*
  * Read more data from a platform-specific file handle. (opaque) should be
@@ -441,6 +455,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
  */
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos);
 
+
 /*
  * Get the file pointer's position, in an 8-bit byte offset from the start of
  *  the file. (opaque) should be cast to whatever data type your platform
@@ -452,6 +467,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos);
  *  a non-zero value.
  */
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque);
+
 
 /*
  * Determine the current size of a file, in 8-bit bytes, from an open file.
@@ -544,9 +560,19 @@ int __PHYSFS_platformStricmp(const char *str1, const char *str2);
 int __PHYSFS_platformExists(const char *fname);
 
 /*
+ * Return the last modified time (in seconds since the epoch) of a file.
+ *  Returns -1 on failure. (fname) is in platform-dependent notation.
+ *  Symlinks should be followed; if what the symlink points to is missing,
+ *  then the retval is -1.
+ */
+PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname);
+
+
+/*
  * Return non-zero if filename (in platform-dependent notation) is a symlink.
  */
 int __PHYSFS_platformIsSymLink(const char *fname);
+
 
 /*
  * Return non-zero if filename (in platform-dependent notation) is a symlink.
@@ -554,6 +580,7 @@ int __PHYSFS_platformIsSymLink(const char *fname);
  *  or isn't a directory, then the retval is false.
  */
 int __PHYSFS_platformIsDirectory(const char *fname);
+
 
 /*
  * Convert (dirName) to platform-dependent notation, then prepend (prepend)
@@ -576,6 +603,7 @@ int __PHYSFS_platformIsDirectory(const char *fname);
 char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,
                                       const char *append);
+
 
 /*
  * Make the current thread give up a timeslice. This is called in a loop
@@ -625,6 +653,7 @@ char *__PHYSFS_platformRealPath(const char *path);
  *  message. Return non-zero on success.
  */
 int __PHYSFS_platformMkDir(const char *path);
+
 
 /*
  * Remove a file or directory entry in the actual filesystem. (path) is

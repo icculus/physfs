@@ -98,6 +98,7 @@ const DirFunctions __PHYSFS_DirFunctions_GRP =
     GRP_exists,             /* exists() method         */
     GRP_isDirectory,        /* isDirectory() method    */
     GRP_isSymLink,          /* isSymLink() method      */
+    NULL,                   /* getLastModTime() method */
     GRP_openRead,           /* openRead() method       */
     NULL,                   /* openWrite() method      */
     NULL,                   /* openAppend() method     */
