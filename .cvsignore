@@ -46,3 +46,7 @@ deflate.lo
 beos.lo
 Makefile.am
 config.cache
+autom4te.cache
+configure.lineno
+
+
