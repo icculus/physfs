@@ -94,10 +94,11 @@ EXTRA_DIST =	\
 	platform/skeleton.c    \
 	platform/macclassic.c  \
 	platform/win32.c       \
-    docs                   \
     extras/physfsrwops.h   \
     extras/physfsrwops.c   \
     extras/physfshttpd.c   \
+	Makefile.am.oldautomake \
+	Makefile.am.newautomake \
     $(ZLIB_EXTRADIST) $(BEOS_EXTRADIST) $(TEST_EXTRADIST)
 
 else
@@ -132,14 +133,14 @@ EXTRA_DIST =	\
 	Doxyfile \
 	CWProjects.sit \
 	physfs.dsp \
-	test_physfs.dsp \
-    docs
+	test_physfs.dsp
 
 
 endif
 
+
 dist-hook:
-	rm -rf $(distdir)/docs/*
+	mkdir $(distdir)/docs
 	echo "Docs are generated with the program "Doxygen" (http://www.doxygen.org/)," >> $(distdir)/docs/README
 	echo " or can be read online at http://icculus.org/physfs/docs/" >> $(distdir)/docs/README
 	echo >> $(distdir)/docs/README
