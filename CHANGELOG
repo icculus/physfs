@@ -8,6 +8,7 @@
            fast in every reasonable respect, now. GRP archiver now caches
            the file table...it was generally overhauled like the ZIP driver.
            Added "ls" as an alias of "enumerate" in test_physfs.
+           I lied about zip.c's robustness; disabled the enumeration code.
 07212002 - More FreeBSD build system patches. Added some new autoconf spew to
            .cvsignore. bootstrap now copies the appropriate Makefile.am
            instead of rename()ing it.
