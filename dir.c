@@ -39,12 +39,15 @@ const DirFunctions __PHYSFS_DirFunctions_DIR =
     DIR_isArchive,     /* isArchive() method      */
     DIR_openArchive,   /* openArchive() method    */
     DIR_enumerate,     /* enumerateFiles() method */
+    DIR_exists,        /* exists() method         */
     DIR_isDirectory,   /* isDirectory() method    */
     DIR_isSymLink,     /* isSymLink() method      */
-    DIR_isOpenable,    /* isOpenable() method     */
     DIR_openRead,      /* openRead() method       */
     DIR_openWrite,     /* openWrite() method      */
-    DIR_dirClose,      /* close() method          */
+    DIR_openAppend,    /* openAppend() method     */
+    DIR_remove,        /* remove() method         */
+    DIR_mkdir,         /* mkdir() method          */
+    DIR_close,         /* close() method          */
 };
 
 

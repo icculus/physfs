@@ -33,12 +33,15 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
     ZIP_isArchive,     /* isArchive() method      */
     ZIP_openArchive,   /* openArchive() method    */
     ZIP_enumerate,     /* enumerateFiles() method */
+    ZIP_exists,        /* exists() method         */
     ZIP_isDirectory,   /* isDirectory() method    */
     ZIP_isSymLink,     /* isSymLink() method      */
-    ZIP_isOpenable,    /* isOpenable() method     */
     ZIP_openRead,      /* openRead() method       */
     NULL,              /* openWrite() method      */
-    ZIP_dirClose,      /* close() method          */
+    NULL,              /* openAppend() method     */
+    NULL,              /* remove() method         */
+    NULL,              /* mkdir() method          */
+    ZIP_close,         /* close() method          */
 };
 
 const __PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
