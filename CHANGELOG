@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+12032002 - Adam updated his extras/abs-file.h for the new buffering API.
 12022002 - German translation added, compliments of Michael Renner.
 12012002 - Minor fix to configure.in: reported --enable-debug's default
            setting incorrectly. Added buffering to the API: you can now
