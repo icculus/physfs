@@ -194,14 +194,14 @@ static DirInfo *buildDirInfo(const char *newDir, int forWriting)
 
     di = (DirInfo *) malloc(sizeof (DirInfo));
     if (di == NULL)
-        dirHandle->funcs->close(dirHandle);
+        dirHandle->funcs->dirClose(dirHandle);
     BAIL_IF_MACRO(di == NULL, ERR_OUT_OF_MEMORY, 0);
 
     di->dirName = (char *) malloc(strlen(newDir) + 1);
     if (di->dirName == NULL)
     {
         free(di);
-        dirHandle->funcs->close(dirHandle);
+        dirHandle->funcs->dirClose(dirHandle);
         __PHYSFS_setError(ERR_OUT_OF_MEMORY);
         return(0);
     } /* if */
@@ -226,7 +226,7 @@ static int freeDirInfo(DirInfo *di, FileHandleList *openList)
         BAIL_IF_MACRO(h == di->dirHandle, ERR_FILES_STILL_OPEN, 0);
     } /* for */
 
-    di->dirHandle->funcs->close(di->dirHandle);
+    di->dirHandle->funcs->dirClose(di->dirHandle);
     free(di->dirName);
     free(di);
     return(1);
@@ -300,7 +300,7 @@ static int closeFileHandleList(FileHandleList **list)
     {
         next = i->next;
         h = (FileHandle *) (i->handle->opaque);
-        if (!h->funcs->close(i->handle->opaque))
+        if (!h->funcs->fileClose(i->handle->opaque))
         {
             *list = i;
             return(0);
@@ -624,9 +624,9 @@ void PHYSFS_permitSymbolicLinks(int allow)
 
 
 /* string manipulation in C makes my ass itch. */
-char *__PHYSFS_convertToDependentNotation(const char *prepend,
-                                          const char *dirName,
-                                          const char *append)
+char *__PHYSFS_convertToDependent(const char *prepend,
+                                  const char *dirName,
+                                  const char *append)
 {
     const char *dirsep = PHYSFS_getDirSeparator();
     int sepsize = strlen(dirsep);
@@ -658,13 +658,14 @@ char *__PHYSFS_convertToDependentNotation(const char *prepend,
 
     str = (char *) malloc(allocSize);
     BAIL_IF_MACRO(str == NULL, ERR_OUT_OF_MEMORY, NULL);
-    *str = '\0';
 
-    if (prepend)
+    if (prepend == NULL)
+        *str = '\0';
+    else
     {
         strcpy(str, prepend);
         strcat(str, dirsep);
-    } /* if */
+    } /* else */
 
     for (i1 = (char *) dirName, i2 = str + strlen(str); *i1; i1++, i2++)
     {
@@ -709,6 +710,7 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname)
 
         if ( (strcmp(start, ".") == 0) ||
              (strcmp(start, "..") == 0) ||
+             (strchr(start, '\\') != NULL) ||
              (strchr(start, ':') != NULL) )
         {
             __PHYSFS_setError(ERR_INSECURE_FNAME);
@@ -1058,7 +1060,7 @@ int PHYSFS_close(PHYSFS_file *handle)
         {
             if (i->handle == handle)
             {
-                rc = h->funcs->close(h);
+                rc = h->funcs->fileClose(h);
                 if (!rc)
                     return(0);
 

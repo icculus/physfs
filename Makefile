@@ -182,7 +182,7 @@ $(MAINLIB) : $(BINDIR) $(MAINOBJS)
 
 $(BINDIR):
 	mkdir -p $(BINDIR)
-	mkdir -p $(BINDIR)/archive_drivers
+	mkdir -p $(BINDIR)/archivers
 	mkdir -p $(BINDIR)/platform
 
 distclean: clean

@@ -17,6 +17,14 @@
 struct __PHYSFS_DIRHANDLE__;
 struct __PHYSFS_FILEFUNCTIONS__;
 
+
+typedef struct __PHYSFS_LINKEDSTRINGLIST__
+{
+    char *str;
+    struct __PHYSFS_LINKEDSTRINGLIST__ *next;
+} LinkedStringList;
+
+
 typedef struct __PHYSFS_FILEHANDLE__
 {
         /*
@@ -79,7 +87,7 @@ typedef struct __PHYSFS_FILEFUNCTIONS__
          *  returns non-zero on success, zero if can't close file.
          * On failure, call __PHYSFS_setError().
          */
-    int (*close)(FileHandle *handle);
+    int (*fileClose)(FileHandle *handle);
 } FileFunctions;
 
 
@@ -96,12 +104,6 @@ typedef struct __PHYSFS_DIRHANDLE__
     const struct __PHYSFS_DIRFUNCTIONS__ *funcs;
 } DirHandle;
 
-
-typedef struct __PHYSFS_LINKEDSTRINGLIST__
-{
-    char *str;
-    struct __PHYSFS_LINKEDSTRINGLIST__ *next;
-} LinkedStringList;
 
 /*
  * Symlinks should always be followed; PhysicsFS will use
@@ -162,13 +164,17 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  This filename is in platform-independent notation.
          * If you can't handle multiple opens of the same file,
          *  you can opt to fail for the second call.
+         * Fail if the file does not exist.
          * Returns NULL on failure, and calls __PHYSFS_setError().
          */
     FileHandle *(*openRead)(DirHandle *r, const char *filename);
 
         /*
          * Open file for writing, and return a FileHandle.
-         *  This filename is in platform-independent notation.
+         * If the file does not exist, it should be created. If it exists,
+         *  it should be truncated to zero bytes. The writing
+         *  offset should be the start of the file.
+         * This filename is in platform-independent notation.
          *  This method may be NULL.
          * If you can't handle multiple opens of the same file,
          *  you can opt to fail for the second call.
@@ -178,7 +184,9 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 
         /*
          * Open file for appending, and return a FileHandle.
-         *  This filename is in platform-independent notation.
+         * If the file does not exist, it should be created. The writing
+         *  offset should be the end of the file.
+         * This filename is in platform-independent notation.
          *  This method may be NULL.
          * If you can't handle multiple opens of the same file,
          *  you can opt to fail for the second call.
@@ -212,7 +220,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          *  the "opaque" entry. This should assume that it won't be called if
          *  there are still files open from this DirHandle.
          */
-    void (*close)(DirHandle *r);
+    void (*dirClose)(DirHandle *r);
 } DirFunctions;
 
 
@@ -248,7 +256,7 @@ void __PHYSFS_setError(const char *err);
  *  and append (append) to the converted string.
  *
  *  So, on Win32, calling:
- *     __PHYSFS_convertToDependentNotation("C:\", "my/files", NULL);
+ *     __PHYSFS_convertToDependent("C:\", "my/files", NULL);
  *  ...will return the string "C:\my\files".
  *
  * This is a convenience function; you might want to hack something out that
@@ -256,9 +264,9 @@ void __PHYSFS_setError(const char *err);
  *
  * Be sure to free() the return value when done with it.
  */
-char *__PHYSFS_convertToDependentNotation(const char *prepend,
-                                          const char *dirName,
-                                          const char *append);
+char *__PHYSFS_convertToDependent(const char *prepend,
+                                  const char *dirName,
+                                  const char *append);
 
 /*
  * Verify that (fname) (in platform-independent notation), in relation
@@ -337,14 +345,60 @@ int __PHYSFS_platformGetThreadID(void);
 int __PHYSFS_platformStricmp(const char *str1, const char *str2);
 
 /*
- * Return non-zero if filename (in platform-dependent notation) is a symlink.
+ * Return non-zero if filename (in platform-dependent notation) exists.
+ *  Symlinks should be followed; if what the symlink points to is missing,
+ *  then the retval is false.
  */
-int __PHYSFS_platformIsSymlink(const char *fname);
+int __PHYSFS_platformExists(const char *fname);
 
 /*
  * Return non-zero if filename (in platform-dependent notation) is a symlink.
  */
+int __PHYSFS_platformIsSymLink(const char *fname);
+
+/*
+ * Return non-zero if filename (in platform-dependent notation) is a symlink.
+ *  Symlinks should be followed; if what the symlink points to is missing,
+ *  or isn't a directory, then the retval is false.
+ */
 int __PHYSFS_platformIsDirectory(const char *fname);
+
+/*
+ * Convert (dirName) to platform-dependent notation, then prepend (prepend)
+ *  and append (append) to the converted string.
+ *
+ *  So, on Win32, calling:
+ *     __PHYSFS_platformCvtToDependent("C:\", "my/files", NULL);
+ *  ...will return the string "C:\my\files".
+ *
+ * This can be implemented in a platform-specific manner, so you can get
+ *  get a speed boost that the default implementation can't, since
+ *  you can make assumptions about the size of strings, etc..
+ *
+ * Platforms that choose not to implement this may just call
+ *  __PHYSFS_convertToDependent() as a passthrough.
+ *
+ * Be sure to free() the return value when done with it.
+ */
+char *__PHYSFS_platformCvtToDependent(const char *prepend,
+                                      const char *dirName,
+                                      const char *append);
+
+/*
+ * Make the current thread give up a timeslice. This is called in a loop
+ *  while waiting for various external forces to get back to us.
+ */
+void __PHYSFS_platformTimeslice(void);
+
+
+/*
+ * Enumerate a directory of files. This follows the rules for the
+ *  DirFunctions->enumerateFiles() method (see above), except that the
+ *  (dirName) that is passed to this function is converted to
+ *  platform-DEPENDENT notation by the caller. The DirFunctions version
+ *  uses platform-independent notation.
+ */
+LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname);
 
 
 #ifdef __cplusplus
