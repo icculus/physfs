@@ -4,7 +4,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
  this stuff. Some might be dupes, some might be done already.
 
 - Include the Visual Studio.NET project file in CVS directly.
-- A PHYSFS_readUint32(), _readSint32(), etc API.
 - Improve ZIP_seek() (archivers/zip.c)
 - Make the zipfile parse symlinks with relative paths. See the function
   expand_symlink_path() in archivers/zip.c ...
