@@ -382,6 +382,20 @@ if test x$we_have_sed = xyes; then
   AC_MSG_RESULT([$this_is_atheos])
 fi
 
+this_is_os2=no
+if test x$we_have_sed = xyes; then
+  AC_MSG_CHECKING([if this is OS/2])
+  x=`echo $build_os |tr A-Z a-z |sed "s/.*os2.*/os2/"`
+  if test x$x = xos2; then
+    this_is_os2=yes
+    CFLAGS="$CFLAGS -DOS2"
+  fi
+
+  AC_MSG_RESULT([$this_is_os2])
+fi
+
+
+
 dnl Some platform might disable this, so check this down here...
 if test x$enable_cdrom != xyes; then
   AC_DEFINE([PHYSFS_NO_CDROM_SUPPORT], 1, [define if we have no CD support])
