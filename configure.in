@@ -210,4 +210,6 @@ platform/Makefile
 archivers/Makefile
 test/Makefile
 zlib114/Makefile
+extras/Makefile
 ])
+

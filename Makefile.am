@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libphysfs.la
 
-SUBDIRS = platform archivers zlib114 . test
+SUBDIRS = platform archivers zlib114 . test extras
 
 libphysfsincludedir = $(includedir)
 libphysfsinclude_HEADERS =	\
