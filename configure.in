@@ -57,7 +57,8 @@ AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_LIBTOOL_WIN32_DLL 
-AC_PROG_LIBTOOL
+LIBTOOL="libtool"
+AM_PROG_LIBTOOL
 AC_CHECK_PROG(we_have_sed, sed, yes, no)
 
 dnl ---------------------------------------------------------------------
@@ -234,8 +235,18 @@ AC_CHECK_FUNCS([memset strrchr])
 dnl Add Makefile conditionals
 AM_CONDITIONAL(BUILD_ZLIB, test x$enable_internal_zlib = xyes)
 AM_CONDITIONAL(BUILD_TEST_PHYSFS, test x$enable_testprog = xyes)
-AM_CONDITIONAL(BUILD_BEOS_CPP, test x$this_is_beos = xyes)
 AM_CONDITIONAL(BUILD_MACOSX, test x$this_is_macosx = xyes)
+
+if test x$this_is_beos = xyes; then
+  BUILD_BEOS_CPP=beos.cpp
+  BUILD_BEOS_EXTRA=
+else
+  BUILD_BEOS_CPP=
+  BUILD_BEOS_EXTRA=beos.cpp
+fi
+
+AC_SUBST([BUILD_BEOS_CPP])
+AC_SUBST([BUILD_BEOS_EXTRA])
 
 LDFLAGS="$LDFLAGS -no-undefined"
 
