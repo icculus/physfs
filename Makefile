@@ -115,7 +115,7 @@ endif
 BINDIR := bin
 SRCDIR := .
 
-CFLAGS += $(use_asm) -I$(SRCDIR) -D_REENTRANT -fsigned-char -DPLATFORM_UNIX
+CFLAGS += $(use_asm) -I$(SRCDIR) -I/usr/include/readline -D_REENTRANT -fsigned-char -DPLATFORM_UNIX
 CFLAGS += -Wall -Werror -fno-exceptions -fno-rtti -ansi -pedantic
 
 LDFLAGS += -lm
@@ -130,6 +130,7 @@ endif
 
 ASMFLAGS := -f $(ASMOBJFMT) $(ASMDEFS)
 
+TESTLDFLAGS := -lreadline
 
 #-----------------------------------------------------------------------------#
 # Source and target names.
@@ -195,7 +196,7 @@ $(MAINLIB) : $(BINDIR) $(MAINOBJS)
 	$(LINKER) -o $(MAINLIB) $(LDFLAGS) $(SHAREDFLAGS) $(MAINOBJS)
 
 $(TESTEXE) : $(MAINLIB) $(TESTOBJS)
-	$(LINKER) -o $(TESTEXE) $(LDFLAGS) $(TESTOBJS) $(MAINLIB)
+	$(LINKER) -o $(TESTEXE) $(LDFLAGS) $(TESTLDFLAGS) $(TESTOBJS) $(MAINLIB)
 
 
 $(BINDIR):
