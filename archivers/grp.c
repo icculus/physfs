@@ -300,7 +300,6 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h,
     LinkedStringList *l = NULL;
     LinkedStringList *prev = NULL;
 
-    /* !!! FIXME: Does this consider "/" ? */
     if (*dirname != '\0')   /* no directories in GRP files. */
         return(NULL);
 

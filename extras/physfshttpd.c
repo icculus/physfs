@@ -81,7 +81,7 @@ static void feed_file_http(const char *ipstr, int sock, const char *fname)
     {
         printf("%s: Can't open [%s]: %s.\n",
                ipstr, fname, PHYSFS_getLastError());
-        write(sock, txt404, strlen(txt404));  /* !!! Check retval */
+        write(sock, txt404, strlen(txt404));  /* !!! FIXME: Check retval */
     } /* if */
     else
     {
@@ -94,7 +94,7 @@ static void feed_file_http(const char *ipstr, int sock, const char *fname)
                 break;
             } /* if */
 
-            write(sock, buffer, (int) br);   /* !!! CHECK THIS RETVAL! */
+            write(sock, buffer, (int) br);   /* !!! FIXME: CHECK THIS RETVAL! */
         } while (!PHYSFS_eof(in));
 
         PHYSFS_close(in);

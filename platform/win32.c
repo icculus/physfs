@@ -785,7 +785,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     PHYSFS_sint64 retval;
 
     /* Read data from the file */
-    /*!!! - uint32 might be a greater # than DWORD */
+    /* !!! FIXME: uint32 might be a greater # than DWORD */
     if(!ReadFile(FileHandle, buffer, count * size, &CountOfBytesRead, NULL))
     {
         BAIL_MACRO(win32strerror(), -1);
@@ -793,7 +793,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     else
     {
         /* Return the number of "objects" read. */
-        /* !!! - What if not the right amount of bytes was read to make an object? */
+        /* !!! FIXME: What if not the right amount of bytes was read to make an object? */
         retval = CountOfBytesRead / size;
     } /* else */
 
@@ -809,7 +809,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
     PHYSFS_sint64 retval;
 
     /* Read data from the file */
-    /*!!! - uint32 might be a greater # than DWORD */
+    /* !!! FIXME: uint32 might be a greater # than DWORD */
     if(!WriteFile(FileHandle, buffer, count * size, &CountOfBytesWritten, NULL))
     {
         BAIL_MACRO(win32strerror(), -1);
@@ -817,7 +817,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
     else
     {
         /* Return the number of "objects" read. */
-        /*!!! - What if not the right number of bytes was written? */
+        /* !!! FIXME: What if not the right number of bytes was written? */
         retval = CountOfBytesWritten / size;
     } /* else */
 
@@ -834,7 +834,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
     /* Get the high order 32-bits of the position */
     HighOrderPos = HIGHORDER_UINT64(pos);
 
-    /*!!! SetFilePointer needs a signed 64-bit value. */
+    /* !!! FIXME: SetFilePointer needs a signed 64-bit value. */
     /* Move pointer "pos" count from start of file */
     rc = SetFilePointer(FileHandle, LOWORDER_UINT64(pos),
                         &HighOrderPos, FILE_BEGIN);
