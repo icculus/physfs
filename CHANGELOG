@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+12082003 - Fixed some win32.c deficiencies that Robby Dermody pointed
+           out (thanks!)
 12072003 - Upgraded internal zlib to 1.2.1 (thanks, Adam!) Other
            Unix build fixes.
 11112003 - Patches to make OS/2 support compile again.
