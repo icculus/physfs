@@ -107,7 +107,9 @@ static ErrMsg *findErrorForCurrentThread(void)
     ErrMsg *i;
     PHYSFS_uint64 tid;
 
-    __PHYSFS_platformGrabMutex(errorLock);
+    if (initialized)
+        __PHYSFS_platformGrabMutex(errorLock);
+
     if (errorMessages != NULL)
     {
         tid = __PHYSFS_platformGetThreadID();
@@ -121,7 +123,9 @@ static ErrMsg *findErrorForCurrentThread(void)
             } /* if */
         } /* for */
     } /* if */
-    __PHYSFS_platformReleaseMutex(errorLock);
+
+    if (initialized)
+        __PHYSFS_platformReleaseMutex(errorLock);
 
     return(NULL);   /* no error available. */
 } /* findErrorForCurrentThread */
