@@ -2,7 +2,8 @@
  * CHANGELOG.
  */
 
-05222002 - Fixed the build system to always package the complete source, not
+05242002 - Upped version to 0.1.6.
+05232002 - Fixed the build system to always package the complete source, not
            just what we built for a given system, when doing a "make dist".
            Updated INSTALL. Wrote BeOS platform code (platform/beos.cpp).
            Split unix.c into unix.c and posix.c. Linux and BeOS both share
