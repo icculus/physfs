@@ -328,7 +328,9 @@ const DirFunctions __PHYSFS_DirFunctions_DIR =
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 {
     "DIR",
-    "non-archive directory I/O"
+    "non-archive directory I/O",
+    "Ryan C. Gordon",
+    "http://www.icculus.org/",
 };
 #endif
 

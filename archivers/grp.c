@@ -376,7 +376,9 @@ const DirFunctions __PHYSFS_DirFunctions_GRP =
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
 {
     "GRP",
-    "Build engine Groupfile format"
+    "Build engine Groupfile format",
+    "Ryan C. Gordon",
+    "http://www.icculus.org/",
 };
 
 /* end of grp.c ... */

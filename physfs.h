@@ -151,6 +151,8 @@ typedef struct __PHYSFS_ARCHIVEINFO__
 {
     const char *extension;
     const char *description;
+    const char *author;
+    const char *url;
 } PHYSFS_ArchiveInfo;
 
 

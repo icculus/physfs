@@ -123,7 +123,9 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 {
     "ZIP",
-    "PkZip/WinZip/Info-Zip compatible"
+    "PkZip/WinZip/Info-Zip compatible",
+    "Ryan C. Gordon",
+    "http://www.icculus.org/",
 };
 
 /* end of zip.c ... */
