@@ -492,7 +492,7 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
 static int ZIP_isArchive(const char *filename, int forWriting)
 {
     PHYSFS_uint32 sig;
-    int retval;
+    int retval = 0;
     void *in;
 
     in = __PHYSFS_platformOpenRead(filename);
@@ -502,16 +502,18 @@ static int ZIP_isArchive(const char *filename, int forWriting)
      * The first thing in a zip file might be the signature of the
      *  first local file record, so it makes for a quick determination.
      */
-    BAIL_IF_MACRO(!readui32(in, &sig), NULL, 0);
-    retval = (sig == ZIP_LOCAL_FILE_SIG);
-    if (!retval)
+    if (readui32(in, &sig))
     {
-        /*
-         * No sig...might be a ZIP with data at the start
-         *  (a self-extracting executable, etc), so we'll have to do
-         *  it the hard way...
-         */
-        retval = (zip_find_end_of_central_dir(in, NULL) != -1);
+        retval = (sig == ZIP_LOCAL_FILE_SIG);
+        if (!retval)
+        {
+            /*
+             * No sig...might be a ZIP with data at the start
+             *  (a self-extracting executable, etc), so we'll have to do
+             *  it the hard way...
+             */
+            retval = (zip_find_end_of_central_dir(in, NULL) != -1);
+        } /* if */
     } /* if */
 
     __PHYSFS_platformClose(in);
