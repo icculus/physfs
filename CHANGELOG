@@ -21,6 +21,10 @@
            __PHYSFS_platformCalcBaseDir() so that it actually works. Fixed
            Makefile so that it links the test program properly.
            Changed version to 0.1.3.
+08292001 - win32.c calculates the base dir with GetModuleFileName() first, now,
+           and falls back to SearchPath() if there were problems. Changed an
+           occurence of _MAX_PATH to MAX_PATH, so both CygWin and Visual C can
+           handle it.
 
 --ryan. (icculus@clutteredmind.org)
 
