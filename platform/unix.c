@@ -135,9 +135,9 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
             BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
         } /* if */
         strcpy(exe, start);
-        if (start[strlen(start) - 1] != '/')
-            strcat(start, "/");
-        strcat(start, argv0);
+        if (exe[strlen(exe) - 1] != '/')
+            strcat(exe, "/");
+        strcat(exe, argv0);
         if (access(exe, X_OK) != 0)
             free(exe);
         else
