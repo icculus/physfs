@@ -516,7 +516,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     ULONG count = 1;
     APIRET rc;
 
-    BAIL_IF_MACRO(strlen(dirname) > sizeof (spec) - 5, ERR_OS_ERROR, NULL);
+    BAIL_IF_MACRO(strlen(dirname) > sizeof (spec) - 5, ERR_BAD_FILENAME, NULL);
     strcpy(spec, dirname);
     strcat(spec, (spec[strlen(spec) - 1] != '\\') ? "\\*.*" : "*.*");
 
