@@ -866,6 +866,127 @@ __EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos);
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle);
 
+
+/* Byteorder stuff... */
+
+/**
+ * Take a 16-bit signed value in littleendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_sint16 PHYSFS_swapSLE16(PHYSFS_sint16 val);
+
+
+/**
+ * Take a 16-bit unsigned value in littleendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_uint16 PHYSFS_swapULE16(PHYSFS_uint16 val);
+
+/**
+ * Take a 32-bit signed value in littleendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_sint32 PHYSFS_swapSLE32(PHYSFS_sint32 val);
+
+
+/**
+ * Take a 32-bit unsigned value in littleendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_uint32 PHYSFS_swapULE32(PHYSFS_uint32 val);
+
+/**
+ * Take a 64-bit signed value in littleendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_sint64 PHYSFS_swapSLE64(PHYSFS_sint64 val);
+
+
+/**
+ * Take a 64-bit unsigned value in littleendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_uint64 PHYSFS_swapULE64(PHYSFS_uint64 val);
+
+
+/**
+ * Take a 16-bit signed value in bigendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_sint16 PHYSFS_swapSBE16(PHYSFS_sint16 val);
+
+
+/**
+ * Take a 16-bit unsigned value in bigendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_uint16 PHYSFS_swapUBE16(PHYSFS_uint16 val);
+
+/**
+ * Take a 32-bit signed value in bigendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_sint32 PHYSFS_swapSBE32(PHYSFS_sint32 val);
+
+
+/**
+ * Take a 32-bit unsigned value in bigendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_uint32 PHYSFS_swapUBE32(PHYSFS_uint32 val);
+
+
+/**
+ * Take a 64-bit signed value in bigendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_sint64 PHYSFS_swapSBE64(PHYSFS_sint64 val);
+
+
+/**
+ * Take a 64-bit unsigned value in bigendian format and convert it to
+ *  the platform's native byte order.
+ *
+ *    @param val value to convert
+ *   @return converted value.
+ */
+__EXPORT__ PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val);
+
+
+
 #if 0 /* !!! FIXME: add this? */
 #undef __EXPORT__
 #endif
