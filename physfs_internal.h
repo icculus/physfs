@@ -248,6 +248,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_NO_SUCH_FILE         "No such file"
 #define ERR_PAST_EOF             "Past end of file"
 #define ERR_ARC_IS_READ_ONLY     "Archive is read-only"
+#define ERR_IO_ERROR             "I/O error"
 
 /*
  * Call this to set the message returned by PHYSFS_getLastError().
@@ -299,7 +300,7 @@ int __PHYSFS_verifySecurity(DirHandle *h, const char *fname);
 /*------------                                              ----------------*/
 /*------------  You MUST implement the following functions  ----------------*/
 /*------------        if porting to a new platform.         ----------------*/
-/*------------         (see unix.c for an example)          ----------------*/
+/*------------     (see platform/unix.c for an example)     ----------------*/
 /*------------                                              ----------------*/
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
