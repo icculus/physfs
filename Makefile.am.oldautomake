@@ -35,8 +35,10 @@ EXTRA_DIST =	\
 	CWProjects.sit \
 	physfs.dsp \
 	test_physfs.dsp \
-    docs
 
 dist-hook:
-	rm -rf $(distdir)/docs/*
+	mkdir $(distdir)/docs
+	echo "Docs are generated with the program "Doxygen" (http://www.doxygen.org/)," >> $(distdir)/docs/README
+	echo " or can be read online at http://icculus.org/physfs/docs/" >> $(distdir)/docs/README
+	echo >> $(distdir)/docs/README
 
