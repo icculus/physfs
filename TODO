@@ -25,10 +25,11 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   nice for an email program. That's blue sky, unless someone wants to tackle
   it.
 - Look for FIXMEs (many marked with "!!!" in comments).
-- Port to BeOS (might work already? Will work for sure with autoconf support)
 - Port to MacOS X (specifically, make Project Builder files; unix.c should
   work with it as-is. Might compile as-is with the current Makefile.)
 - Probably other stuff. Requests and recommendations are welcome.
+
+- Port to BeOS: (unix.c: no realpath, pthreads (?) or mount stuff).
 
 // end of TODO ...
 
