@@ -8,8 +8,13 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - Deal with Unix platforms without POSIX threads (NetBSD, etc).
 - Make the zipfile parse symlinks with relative paths. See the function
   expand_symlink_path() in archivers/zip.c ...
-- Actually, the zipfile driver could use a lot of tweaking. Please look
-  through it.
+- Make zipfile build a directory tree at runtime, discarding blank directory
+  entries, and parsing the paths of actual entries to find valid dirs.
+  Search this tree for faster entry location, much faster enumeration, and
+  more accurate ZIP_isDirectory results.
+- Change ZIP entry sort code to something faster than a bubble sort.
+- Change zip_find_entry() to do something faster than a linear search.
+- Ditch printf()s in ZIP code.
 - Other archivers: perhaps tar(.gz|.bz2), RPM, etc. These are less
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
@@ -17,9 +22,14 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   support so that both "archives" look identical to an application; might be
   nice for an email program. That's blue sky, unless someone wants to tackle
   it.
+- Platforms to be verified as working: OpenBSD, Solaris, WinNT 3.1, WinME,
+  WinXP, MacOS 8.1
+- Platforms to port to: NetBSD (needs pthreads), OS/2 (needs platform driver),
+  PocketPC (Maybe can just use win32.c?), Amiga (needs platform driver),
+  AtheOS (needs platform driver, maybe can use unix.c and posix.c?)
+- Use __cdecl in physfs.h?
 - Look for FIXMEs (many marked with "!!!" in comments).
 - Probably other stuff. Requests and recommendations are welcome.
-- Use __cdecl in physfs.h?
 
 // end of TODO ...
 
