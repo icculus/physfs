@@ -363,7 +363,7 @@ static QPAKentry *qpak_findEntry(QPAKdirectory *root, const char *name)
 {
     QPAKdirectory *dir = NULL;
     QPAKdirentry *thisFile = NULL;
-    const char *t = strrchr (name, '/');
+    const char *t = strrchr(name, '/');
 
     if (t == NULL)
     {
