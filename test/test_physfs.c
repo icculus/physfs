@@ -31,7 +31,7 @@
 
 #define TEST_VERSION_MAJOR  0
 #define TEST_VERSION_MINOR  1
-#define TEST_VERSION_PATCH  8
+#define TEST_VERSION_PATCH  9
 
 static FILE *history_file = NULL;
 static PHYSFS_uint32 do_buffer_size = 0;

@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+07232003 - Upped version to 0.1.9.
 07202003 - Switched to zlib license (see new LICENSE text in root of source
            tree, and zlib_license_switch.txt for details). Had to remove
            archivers/qpak.c, the Ruby bindings from the extras directory, and
