@@ -19,6 +19,9 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
+#define LOWORDER_UINT64(pos)       (PHYSFS_uint32)(pos & 0x00000000FFFFFFFF)
+#define HIGHORDER_UINT64(pos)      (PHYSFS_uint32)(pos & 0xFFFFFFFF00000000)
+
 const char *__PHYSFS_platformDirSeparator = "\\";
 
 static HANDLE ProcessHandle = NULL;     /* Current process handle */
@@ -159,19 +162,22 @@ char *__PHYSFS_platformGetUserDir(void)
 {
     char *userdir = NULL;
 
-    /*!!!TODO - Need to get the userdir for non-NT based OSes */
     if(runningNT)
     {
         userdir = ProfileDirectory;
+    }
+    else
+    {
+        /*!!!TODO - Need to return something for Win9x/ME */
     }
 
     return userdir;
 } /* __PHYSFS_platformGetUserDir */
 
 
-int __PHYSFS_platformGetThreadID(void)
+PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 {
-    return((int) GetCurrentThreadId());
+    return((PHYSFS_uint64)GetCurrentThreadId());
 } /* __PHYSFS_platformGetThreadID */
 
 
@@ -295,19 +301,6 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     FindClose(dir);
     return(retval);
 } /* __PHYSFS_platformEnumerateFiles */
-
-
-int __PHYSFS_platformFileLength(FILE *handle)
-{
-    fpos_t curpos;
-    int retval;
-
-    fgetpos(handle, &curpos);
-    fseek(handle, 0, SEEK_END);
-    retval = ftell(handle);
-    fsetpos(handle, &curpos);
-    return(retval);
-} /* __PHYSFS_platformFileLength */
 
 
 char *__PHYSFS_platformCurrentDir(void)
@@ -575,6 +568,327 @@ int __PHYSFS_platformDeinit(void)
 
     /* It's all good */
     return 1;
+}
+
+void *__PHYSFS_platformOpenRead(const char *filename)
+{
+    HANDLE FileHandle;
+    
+    /* Open an existing file for read only. File can be opened by others
+       who request read access on the file only. */
+    FileHandle = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, NULL, 
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    /* If CreateFile() failed */
+    if(FileHandle == INVALID_HANDLE_VALUE)
+        return NULL;
+
+    return (void *)FileHandle;
+}
+
+void *__PHYSFS_platformOpenWrite(const char *filename)
+{
+    HANDLE FileHandle;
+    
+    /* Open an existing file for write only.  File can be opened by others
+       who request read access to the file only */
+    FileHandle = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_READ, NULL, 
+        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    /* If CreateFile() failed */
+    if(FileHandle == INVALID_HANDLE_VALUE)
+        return NULL;
+
+    return (void *)FileHandle;
+}
+
+void *__PHYSFS_platformOpenAppend(const char *filename)
+{
+    HANDLE FileHandle;
+    
+    /* Open an existing file for appending only.  File can be opened by others
+       who request read access to the file only. */
+    FileHandle = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_READ, NULL, 
+        TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    /* If CreateFile() failed */
+    if(FileHandle == INVALID_HANDLE_VALUE)
+        /* CreateFile might have failed because the file doesn't exist, so
+           we'll just create a new file for writing then */
+        return __PHYSFS_platformOpenWrite(filename);
+
+    return (void *)FileHandle;
+}
+
+PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
+                                    PHYSFS_uint32 size, PHYSFS_uint32 count)
+{
+    HANDLE FileHandle;
+    DWORD CountOfBytesRead;
+    PHYSFS_sint64 retval;
+
+    /* Cast the generic handle to a Win32 handle */
+    FileHandle = (HANDLE)opaque;
+
+    /* Read data from the file */
+    /*!!! - uint32 might be a greater # than DWORD */
+    if(!ReadFile(FileHandle, buffer, count * size, &CountOfBytesRead, NULL))
+    {
+        /* Set the error to GetLastError */
+        __PHYSFS_setError(win32strerror());
+        /* We errored out */
+        retval = -1;
+    }
+    else
+    {
+        /* Return the number of "objects" read. */
+        /* !!! - What if not the right amount of bytes was read to make an object? */
+        retval = CountOfBytesRead / size;
+    }
+
+    return retval;
+}
+
+PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, void *buffer,
+                                     PHYSFS_uint32 size, PHYSFS_uint32 count)
+{
+    HANDLE FileHandle;
+    DWORD CountOfBytesWritten;
+    PHYSFS_sint64 retval;
+
+    /* Cast the generic handle to a Win32 handle */
+    FileHandle = (HANDLE)opaque;
+
+    /* Read data from the file */
+    /*!!! - uint32 might be a greater # than DWORD */
+    if(!WriteFile(FileHandle, buffer, count * size, &CountOfBytesWritten, NULL))
+    {
+        /* Set the error to GetLastError */
+        __PHYSFS_setError(win32strerror());
+        /* We errored out */
+        retval = -1;
+    }
+    else
+    {
+        /* Return the number of "objects" read. */
+        /*!!! - What if not the right number of bytes was written? */
+        retval = CountOfBytesWritten / size;
+    }
+
+    return retval;
+}
+
+int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
+{
+    HANDLE FileHandle;
+    int retval;
+    DWORD HighOrderPos;
+
+    /* Cast the generic handle to a Win32 handle */
+    FileHandle = (HANDLE)opaque;
+
+    /* Get the high order 32-bits of the position */
+    HighOrderPos = HIGHORDER_UINT64(pos);
+
+    /*!!! SetFilePointer needs a signed 64-bit value. */
+    /* Move pointer "pos" count from start of file */
+    if((SetFilePointer(FileHandle, LOWORDER_UINT64(pos), &HighOrderPos, FILE_BEGIN)
+        == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
+    {
+        /* An error occured.  Set the error to GetLastError */
+        __PHYSFS_setError(win32strerror());
+
+        retval = 0;
+    }
+    else
+    {
+        /* No error occured */
+        retval = 1;
+    }
+
+    return retval;
+}
+
+PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
+{
+    HANDLE FileHandle;
+    DWORD HighOrderPos = 0; 
+    DWORD LowOrderPos;
+    PHYSFS_sint64 retval;
+
+    /* Cast the generic handle to a Win32 handle */
+    FileHandle = (HANDLE)opaque;
+
+    /* Get current position */
+    if(((LowOrderPos = SetFilePointer(FileHandle, 0, &HighOrderPos, FILE_CURRENT))
+        == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
+    {
+        /* Combine the high/low order to create the 64-bit position value */
+        retval = HighOrderPos;
+        retval = retval << 32;
+        retval |= LowOrderPos;
+    }
+    else
+    {
+        /* Set the error to GetLastError */
+        __PHYSFS_setError(win32strerror());
+        /* We errored out */
+        retval = 0;
+    }
+
+    /*!!! Can't find a file pointer routine?!?!?!!?!?*/
+    return retval;
+}
+
+PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle)
+{
+    HANDLE FileHandle;
+    DWORD FileSizeHigh;
+    DWORD FileSizeLow;
+    PHYSFS_sint64 retval;
+
+    /* Cast the generic handle to a Win32 handle */
+    FileHandle = (HANDLE)handle;
+    
+    if(((FileSizeLow = GetFileSize(FileHandle, &FileSizeHigh))
+        == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
+    {
+        /* Combine the high/low order to create the 64-bit position value */
+        retval = FileSizeHigh;
+        retval = retval << 32;
+        retval |= FileSizeLow;
+    }
+    else
+    {
+        /* Set the error to GetLastError */
+        __PHYSFS_setError(win32strerror());
+
+        retval = -1;
+    }
+
+    return retval;
+}
+
+int __PHYSFS_platformEOF(void *opaque)
+{
+    HANDLE FileHandle;
+    PHYSFS_sint64 FilePosition;
+    int retval = 0;
+
+    /* Cast the generic handle to a Win32 handle */
+    FileHandle = (HANDLE)opaque;
+
+    /* Get the current position in the file */
+    if((FilePosition = __PHYSFS_platformTell(opaque)) != 0)
+    {
+        /* Non-zero if EOF is equal to the file length - 1 */
+        retval = FilePosition == __PHYSFS_platformFileLength(opaque) - 1;
+    }
+
+    return retval;
+}
+
+int __PHYSFS_platformFlush(void *opaque)
+{
+    HANDLE FileHandle;
+    int retval;
+
+    /* Cast the generic handle to a Win32 handle */
+    FileHandle = (HANDLE)opaque;
+
+    /* Close the file */
+    if(!(retval = FlushFileBuffers(FileHandle)))
+    {
+        /* Set the error to GetLastError */
+        __PHYSFS_setError(win32strerror());
+    }
+
+    return retval;
+}
+
+int __PHYSFS_platformClose(void *opaque)
+{
+    HANDLE FileHandle;
+    int retval;
+
+    /* Cast the generic handle to a Win32 handle */
+    FileHandle = (HANDLE)opaque;
+
+    /* Close the file */
+    if(!(retval = CloseHandle(FileHandle)))
+    {
+        /* Set the error to GetLastError */
+        __PHYSFS_setError(win32strerror());
+    }
+
+    return retval;
+}
+
+/*
+ * Remove a file or directory entry in the actual filesystem. (path) is
+ *  specified in platform-dependent notation. Note that this deletes files
+ *  _and_ directories, so you might need to do some determination.
+ *  Non-empty directories should report an error and not delete themselves
+ *  or their contents.
+ *
+ * Deleting a symlink should remove the link, not what it points to.
+ *
+ * On error, return zero and set the error message. Return non-zero on success.
+ */
+int __PHYSFS_platformDelete(const char *path)
+{
+    int retval;
+
+    /* If filename is a folder */
+    if(GetFileAttributes(path) == FILE_ATTRIBUTE_DIRECTORY)
+    {
+        retval = RemoveDirectory(path);
+    }
+    else
+    {
+        retval = DeleteFile(path);
+    }
+
+    if(!retval)
+    {
+            /* Set the error to GetLastError */
+        __PHYSFS_setError(win32strerror());
+    }
+
+    return retval;
+}
+
+void *__PHYSFS_platformCreateMutex(void)
+{
+    return (void *)CreateMutex(NULL, FALSE, NULL);
+}
+
+void __PHYSFS_platformDestroyMutex(void *mutex)
+{
+    CloseHandle((HANDLE)mutex);
+}
+
+int __PHYSFS_platformGrabMutex(void *mutex)
+{
+    int retval;
+
+    if(WaitForSingleObject((HANDLE)mutex, INFINITE) == WAIT_FAILED)
+    {
+        /* Our wait failed for some unknown reason */
+        retval = 1;
+    }
+    else
+    {
+        /* Good to go */
+        retval = 0;
+    }
+
+    return retval;
+}
+
+void __PHYSFS_platformReleaseMutex(void *mutex)
+{
+    ReleaseMutex((HANDLE)mutex);
 }
 
 /* end of win32.c ... */
