@@ -2,8 +2,18 @@ noinst_LTLIBRARIES = libplatform.la
 
 INCLUDES = -I$(top_srcdir)
 
-BEOS_SRC = @BUILD_BEOS_CPP@
-BEOS_EXTRADIST = @BUILD_BEOS_EXTRA@
+if BUILD_BEOS
+BEOS_SRC = beos.cpp
+else
+BEOS_SRC =
+endif
+
+if BUILD_BEOS
+BEOS_EXTRADIST =
+else
+BEOS_EXTRADIST = beos.cpp
+endif
+
 
 libplatform_la_SOURCES =	\
 	unix.c                  \

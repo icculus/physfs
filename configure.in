@@ -236,17 +236,7 @@ dnl Add Makefile conditionals
 AM_CONDITIONAL(BUILD_ZLIB, test x$enable_internal_zlib = xyes)
 AM_CONDITIONAL(BUILD_TEST_PHYSFS, test x$enable_testprog = xyes)
 AM_CONDITIONAL(BUILD_MACOSX, test x$this_is_macosx = xyes)
-
-if test x$this_is_beos = xyes; then
-  BUILD_BEOS_CPP=beos.cpp
-  BUILD_BEOS_EXTRA=
-else
-  BUILD_BEOS_CPP=
-  BUILD_BEOS_EXTRA=beos.cpp
-fi
-
-AC_SUBST([BUILD_BEOS_CPP])
-AC_SUBST([BUILD_BEOS_EXTRA])
+AM_CONDITIONAL(BUILD_BEOS, test x$this_is_beos = xyes)
 
 LDFLAGS="$LDFLAGS -no-undefined"
 
