@@ -286,17 +286,40 @@ void __PHYSFS_platformTimeslice(void)
 } /* __PHYSFS_platformTimeslice */
 
 
-LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname)
+LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
+                                                  int omitSymLinks)
 {
     LinkedStringList *retval = NULL;
     LinkedStringList *l = NULL;
     LinkedStringList *prev = NULL;
     DIR *dir;
     struct dirent *ent;
+    int bufsize = 0;
+    char *buf = NULL;
+    int dlen = 0;
+
+    if (omitSymLinks)
+    {
+        dlen = strlen(dirname);
+        bufsize = dlen + 256;
+        buf = malloc(bufsize);
+        BAIL_IF_MACRO(buf == NULL, ERR_OUT_OF_MEMORY, NULL);
+        strcpy(buf, dirname);
+        if (buf[dlen - 1] != '/')
+        {
+            buf[dlen++] = '/';
+            buf[dlen] = '\0';
+        } /* if */
+    } /* if */
 
     errno = 0;
     dir = opendir(dirname);
-    BAIL_IF_MACRO(dir == NULL, strerror(errno), NULL);
+    if (dir == NULL)
+    {
+        if (buf != NULL)
+            free(buf);
+        BAIL_IF_MACRO(1, strerror(errno), NULL);
+    } /* if */
 
     while (1)
     {
@@ -309,6 +332,24 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname)
 
         if (strcmp(ent->d_name, "..") == 0)
             continue;
+
+        if (omitSymLinks)
+        {
+            char *p;
+            int len = strlen(ent->d_name) + dlen + 1;
+            if (len > bufsize)
+            {
+                p = realloc(buf, len);
+                if (p == NULL)
+                    continue;
+                buf = p;
+                bufsize = len;
+            } /* if */
+
+            strcpy(buf + dlen, ent->d_name);
+            if (__PHYSFS_platformIsSymLink(buf))
+                continue;
+        } /* if */
 
         l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
         if (l == NULL)
@@ -333,6 +374,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname)
     } /* while */
 
     closedir(dir);
+    free(buf);
     return(retval);
 } /* __PHYSFS_platformEnumerateFiles */
 

@@ -142,11 +142,14 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          * Returns a list of all files in dirname. Each element of this list
          *  (and its "str" field) will be deallocated with the system's free()
          *  function by the caller, so be sure to explicitly malloc() each
-         *  chunk.
+         *  chunk. Omit symlinks if (omitSymLinks) is non-zero.
          * If you have a memory failure, return as much as you can.
          *  This dirname is in platform-independent notation.
          */
-    LinkedStringList *(*enumerateFiles)(DirHandle *r, const char *dirname);
+    LinkedStringList *(*enumerateFiles)(DirHandle *r,
+                                        const char *dirname,
+                                        int omitSymLinks);
+
 
         /*
          * Returns non-zero if filename can be opened for reading.
@@ -407,9 +410,11 @@ void __PHYSFS_platformTimeslice(void);
  *  DirFunctions->enumerateFiles() method (see above), except that the
  *  (dirName) that is passed to this function is converted to
  *  platform-DEPENDENT notation by the caller. The DirFunctions version
- *  uses platform-independent notation.
+ *  uses platform-independent notation. Note that ".", "..", and other
+ *  metaentries should always be ignored.
  */
-LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname);
+LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
+                                                  int omitSymLinks);
 
 
 /*

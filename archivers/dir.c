@@ -140,13 +140,15 @@ static DirHandle *DIR_openArchive(const char *name, int forWriting)
 } /* DIR_openArchive */
 
 
-static LinkedStringList *DIR_enumerateFiles(DirHandle *h, const char *dname)
+static LinkedStringList *DIR_enumerateFiles(DirHandle *h,
+                                            const char *dname,
+                                            int omitSymLinks)
 {
     char *d = __PHYSFS_platformCvtToDependent((char *)(h->opaque),dname,NULL);
     LinkedStringList *retval;
 
     BAIL_IF_MACRO(d == NULL, NULL, NULL);
-    retval = __PHYSFS_platformEnumerateFiles(d);
+    retval = __PHYSFS_platformEnumerateFiles(d, omitSymLinks);
     free(d);
     return(retval);
 } /* DIR_enumerateFiles */

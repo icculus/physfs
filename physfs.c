@@ -1022,6 +1022,7 @@ char **PHYSFS_enumerateFiles(const char *path)
     char **retval = NULL;
     LinkedStringList *rc;
     LinkedStringList *finalList = NULL;
+    int omitSymLinks = !allowSymLinks;
 
     while (*path == '/')
         path++;
@@ -1031,7 +1032,7 @@ char **PHYSFS_enumerateFiles(const char *path)
         DirHandle *h = i->dirHandle;
         if (__PHYSFS_verifySecurity(h, path))
         {
-            rc = h->funcs->enumerateFiles(h, path);
+            rc = h->funcs->enumerateFiles(h, path, omitSymLinks);
             interpolateStringLists(&finalList, rc);
         } /* if */
     } /* for */

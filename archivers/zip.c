@@ -123,7 +123,9 @@ static DirHandle *ZIP_openArchive(const char *name, int forWriting)
 } /* ZIP_openArchive */
 
 
-static LinkedStringList *ZIP_enumerateFiles(DirHandle *h, const char *dirname)
+static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
+                                            const char *dirname,
+                                            int omitSymLinks)
 {
     ZIPinfo *zi = (ZIPinfo *) (h->opaque);
     unzFile fh = zi->handle;

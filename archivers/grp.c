@@ -197,7 +197,9 @@ static DirHandle *GRP_openArchive(const char *name, int forWriting)
 } /* GRP_openArchive */
 
 
-static LinkedStringList *GRP_enumerateFiles(DirHandle *h, const char *dirname)
+static LinkedStringList *GRP_enumerateFiles(DirHandle *h,
+                                            const char *dirname,
+                                            int omitSymLinks)
 {
     char buf[16];
     GRPinfo *g = (GRPinfo *) (h->opaque);
