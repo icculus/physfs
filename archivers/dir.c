@@ -195,13 +195,13 @@ static DirHandle *DIR_openArchive(const char *name, int forWriting)
     BAIL_IF_MACRO(!DIR_isArchive(name, forWriting),
                     ERR_UNSUPPORTED_ARCHIVE, NULL);
 
-    retval = malloc(sizeof (DirHandle));
+    retval = (DirHandle *) malloc(sizeof (DirHandle));
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     retval->opaque = malloc(namelen + seplen + 1);
     if (retval->opaque == NULL)
     {
         free(retval);
-        BAIL_IF_MACRO(1, ERR_OUT_OF_MEMORY, NULL);
+        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
         /* make sure there's a dir separator at the end of the string */
