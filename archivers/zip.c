@@ -341,7 +341,7 @@ static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset)
     {
         PHYSFS_sint64 newpos = offset + entry->offset;
         BAIL_IF_MACRO(!__PHYSFS_platformSeek(in, newpos), NULL, 0);
-        finfo->uncompressed_position = (PHYSFS_uint32) newpos;
+        finfo->uncompressed_position = (PHYSFS_uint32) offset;
     } /* if */
 
     else
@@ -765,6 +765,13 @@ static int zip_parse_local(void *in, ZIPentry *entry)
     PHYSFS_uint16 fnamelen;
     PHYSFS_uint16 extralen;
 
+    /*
+     * crc and (un)compressed_size are always zero if this is a "JAR"
+     *  archive created with Sun's Java tools, apparently. We only
+     *  consider this archive corrupted if those entries don't match and
+     *  aren't zero. That seems to work well.
+     */
+
     BAIL_IF_MACRO(!__PHYSFS_platformSeek(in, entry->offset), NULL, 0);
     BAIL_IF_MACRO(!readui32(in, &ui32), NULL, 0);
     BAIL_IF_MACRO(ui32 != ZIP_LOCAL_FILE_SIG, ERR_CORRUPTED, 0);
@@ -775,11 +782,11 @@ static int zip_parse_local(void *in, ZIPentry *entry)
     BAIL_IF_MACRO(ui16 != entry->compression_method, ERR_CORRUPTED, 0);
     BAIL_IF_MACRO(!readui32(in, &ui32), NULL, 0);  /* date/time */
     BAIL_IF_MACRO(!readui32(in, &ui32), NULL, 0);
-    BAIL_IF_MACRO(ui32 != entry->crc, ERR_CORRUPTED, 0);
+    BAIL_IF_MACRO(ui32 && (ui32 != entry->crc), ERR_CORRUPTED, 0);
     BAIL_IF_MACRO(!readui32(in, &ui32), NULL, 0);
-    BAIL_IF_MACRO(ui32 != entry->compressed_size, ERR_CORRUPTED, 0);
+    BAIL_IF_MACRO(ui32 && (ui32 != entry->compressed_size), ERR_CORRUPTED, 0);
     BAIL_IF_MACRO(!readui32(in, &ui32), NULL, 0);
-    BAIL_IF_MACRO(ui32 != entry->uncompressed_size, ERR_CORRUPTED, 0);
+    BAIL_IF_MACRO(ui32 && (ui32 != entry->uncompressed_size),ERR_CORRUPTED,0);
     BAIL_IF_MACRO(!readui16(in, &fnamelen), NULL, 0);
     BAIL_IF_MACRO(!readui16(in, &extralen), NULL, 0);
 
