@@ -8,26 +8,13 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   compiles under Cygwin otherwise.
 - Hmm...we can determine the actual CD-ROM drives under Win32, but how do you
   decide that there's no disc in the drive?
-- Platform-specific functions/macros to handle byte ordering.
 - A PHYSFS_readUint32(), _readSint32(), etc API.
 - Patch the zlib used on win32 to 1.1.4.
-- Switch the CHANGELOG to list newest changes first.
 - Write manpages, preferrably generated from some javadoc-style solution
   so we can make HTML versions etc from the same data.
-- Byte order API; just something simple like:
-    __EXPORT__ PHYSFS_uint16 PHYSFS_swapBE16(PHYSFS_uint16 val);
-    __EXPORT__ PHYSFS_uint16 PHYSFS_swapLE16(PHYSFS_uint16 val);
-
-   (these can be macros. The hard part is determining the architecture at
-    compile time, and whether a given platform offers accelerated
-    conversion macros already. We can probably jack this from SDL, too.)
-- Make win32.c respect the more strict filesystem layout enforced by
-  Win2000 and later.
 - Improve ZIP_seek() (archivers/zip.c)
 - Make the zipfile parse symlinks with relative paths. See the function
   expand_symlink_path() in archivers/zip.c ...
-- Make archivers/unzip.c use the new byte order API for a little more
-  efficiency (it gets 32-bit ints as four 1-byte reads; yuck.)
 - Actually, the zipfile driver could use a lot of tweaking. Please look
   through it.
 - Other archivers: perhaps tar(.gz|.bz2), RPM, etc. These are less
@@ -39,7 +26,7 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   it.
 - Look for FIXMEs (many marked with "!!!" in comments).
 - Port to BeOS (might work already? Will work for sure with autoconf support)
-- Port to MacOS Classic (needs a platform driver, byte order fixes mentioned)
+- Make MacOS Classic use aliases as symlinks.
 - Port to MacOS X (specifically, make Project Builder files; unix.c should
   work with it as-is. Might compile as-is with the current Makefile, byte
   ordering fixes mentioned).
