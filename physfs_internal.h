@@ -418,7 +418,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
  *  __PHYSFS_setError() to describe the problem; the file pointer should not
  *  move in such a case.
  */
-PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, void *buffer,
+PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint32 size, PHYSFS_uint32 count);
 
 /*
@@ -618,7 +618,6 @@ char *__PHYSFS_platformRealPath(const char *path);
  *  message. Return non-zero on success.
  */
 int __PHYSFS_platformMkDir(const char *path);
-
 
 #ifdef __cplusplus
 }
