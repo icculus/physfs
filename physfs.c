@@ -11,8 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
@@ -700,13 +698,13 @@ int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
     {
         char **rc = PHYSFS_enumerateFiles("");
         char **i;
-        int extlen = strlen(archiveExt);
+        size_t extlen = strlen(archiveExt);
         char *ext;
 
         for (i = rc; *i != NULL; i++)
         {
-            int l = strlen(*i);
-            if ((l > extlen) && ((*i)[l - extlen - 1] == '.'));
+            size_t l = strlen(*i);
+            if ((l > extlen) && ((*i)[l - extlen - 1] == '.'))
             {
                 ext = (*i) + (l - extlen);
                 if (__PHYSFS_platformStricmp(ext, archiveExt) == 0)
@@ -742,7 +740,7 @@ char * __PHYSFS_convertToDependent(const char *prepend,
                                               const char *append)
 {
     const char *dirsep = PHYSFS_getDirSeparator();
-    int sepsize = strlen(dirsep);
+    size_t sepsize = strlen(dirsep);
     char *str;
     char *i1;
     char *i2;
@@ -966,7 +964,7 @@ static char **convertStringListToPhysFSList(LinkedStringList *finalList)
         finalList = next;
     } /* for */
 
-    if (retval != NULL);
+    if (retval != NULL)
         retval[i] = NULL;
 
     return(retval);

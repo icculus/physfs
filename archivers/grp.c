@@ -32,8 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <assert.h>
 #include "physfs.h"
@@ -41,10 +39,11 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
+#if 0
 #if (!defined PHYSFS_SUPPORTS_GRP)
 #error PHYSFS_SUPPORTS_GRP must be defined.
 #endif
-
+#endif
 
 typedef struct
 {
@@ -60,8 +59,68 @@ typedef struct
 } GRPfileinfo;
 
 
-extern const DirFunctions __PHYSFS_DirFunctions_GRP;
-static const FileFunctions __PHYSFS_FileFunctions_GRP;
+static void GRP_dirClose(DirHandle *h);
+static int GRP_read(FileHandle *handle, void *buffer,
+                    unsigned int objSize, unsigned int objCount);
+static int GRP_eof(FileHandle *handle);
+static int GRP_tell(FileHandle *handle);
+static int GRP_seek(FileHandle *handle, int offset);
+static int GRP_fileLength(FileHandle *handle);
+static int GRP_fileClose(FileHandle *handle);
+static int GRP_isArchive(const char *filename, int forWriting);
+static DirHandle *GRP_openArchive(const char *name, int forWriting);
+static LinkedStringList *GRP_enumerateFiles(DirHandle *h,
+                                            const char *dirname,
+                                            int omitSymLinks);
+static int GRP_exists(DirHandle *h, const char *name);
+static int GRP_isDirectory(DirHandle *h, const char *name);
+static int GRP_isSymLink(DirHandle *h, const char *name);
+static FileHandle *GRP_openRead(DirHandle *h, const char *name);
+
+static const FileFunctions __PHYSFS_FileFunctions_GRP =
+{
+    GRP_read,       /* read() method       */
+    NULL,           /* write() method      */
+    GRP_eof,        /* eof() method        */
+    GRP_tell,       /* tell() method       */
+    GRP_seek,       /* seek() method       */
+    GRP_fileLength, /* fileLength() method */
+    GRP_fileClose   /* fileClose() method  */
+};
+
+
+const DirFunctions __PHYSFS_DirFunctions_GRP =
+{
+    GRP_isArchive,          /* isArchive() method      */
+    GRP_openArchive,        /* openArchive() method    */
+    GRP_enumerateFiles,     /* enumerateFiles() method */
+    GRP_exists,             /* exists() method         */
+    GRP_isDirectory,        /* isDirectory() method    */
+    GRP_isSymLink,          /* isSymLink() method      */
+    GRP_openRead,           /* openRead() method       */
+    NULL,                   /* openWrite() method      */
+    NULL,                   /* openAppend() method     */
+    NULL,                   /* remove() method         */
+    NULL,                   /* mkdir() method          */
+    GRP_dirClose            /* dirClose() method       */
+};
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
+{
+    "GRP",
+    "Build engine Groupfile format",
+    "Ryan C. Gordon (icculus@clutteredmind.org)",
+    "http://www.icculus.org/physfs/",
+};
+
+
+
+static void GRP_dirClose(DirHandle *h)
+{
+    fclose( ((GRPinfo *) h->opaque)->handle );
+    free(h->opaque);
+    free(h);
+} /* GRP_dirClose */
 
 
 static int GRP_read(FileHandle *handle, void *buffer,
@@ -71,7 +130,7 @@ static int GRP_read(FileHandle *handle, void *buffer,
     FILE *fh = (FILE *) (((GRPinfo *) (handle->dirHandle->opaque))->handle);
     int bytesLeft = (finfo->startPos + finfo->size) - finfo->curPos;
     unsigned int objsLeft = bytesLeft / objSize;
-    int retval = 0;
+    size_t retval = 0;
 
     if (objsLeft < objCount)
         objCount = objsLeft;
@@ -82,10 +141,10 @@ static int GRP_read(FileHandle *handle, void *buffer,
     errno = 0;
     retval = fread(buffer, objSize, objCount, fh);
     finfo->curPos += (retval * objSize);
-    BAIL_IF_MACRO((retval < (signed int) objCount) && (ferror(fh)),
-                   strerror(errno),retval);
+    BAIL_IF_MACRO((retval < (size_t) objCount) && (ferror(fh)),
+                   strerror(errno), (int) retval);
 
-    return(retval);
+    return((int) retval);
 } /* GRP_read */
 
 
@@ -344,51 +403,6 @@ static FileHandle *GRP_openRead(DirHandle *h, const char *name)
     retval->dirHandle = h;
     return(retval);
 } /* GRP_openRead */
-
-
-static void GRP_dirClose(DirHandle *h)
-{
-    fclose( ((GRPinfo *) h->opaque)->handle );
-    free(h->opaque);
-    free(h);
-} /* GRP_dirClose */
-
-
-static const FileFunctions __PHYSFS_FileFunctions_GRP =
-{
-    GRP_read,       /* read() method       */
-    NULL,           /* write() method      */
-    GRP_eof,        /* eof() method        */
-    GRP_tell,       /* tell() method       */
-    GRP_seek,       /* seek() method       */
-    GRP_fileLength, /* fileLength() method */
-    GRP_fileClose   /* fileClose() method  */
-};
-
-
-const DirFunctions __PHYSFS_DirFunctions_GRP =
-{
-    GRP_isArchive,          /* isArchive() method      */
-    GRP_openArchive,        /* openArchive() method    */
-    GRP_enumerateFiles,     /* enumerateFiles() method */
-    GRP_exists,             /* exists() method         */
-    GRP_isDirectory,        /* isDirectory() method    */
-    GRP_isSymLink,          /* isSymLink() method      */
-    GRP_openRead,           /* openRead() method       */
-    NULL,                   /* openWrite() method      */
-    NULL,                   /* openAppend() method     */
-    NULL,                   /* remove() method         */
-    NULL,                   /* mkdir() method          */
-    GRP_dirClose            /* dirClose() method       */
-};
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
-{
-    "GRP",
-    "Build engine Groupfile format",
-    "Ryan C. Gordon (icculus@clutteredmind.org)",
-    "http://www.icculus.org/physfs/",
-};
 
 /* end of grp.c ... */
 

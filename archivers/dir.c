@@ -10,30 +10,102 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include "physfs.h"
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-extern const DirFunctions __PHYSFS_DirFunctions_DIR;
-static const FileFunctions __PHYSFS_FileFunctions_DIR;
-static const FileFunctions __PHYSFS_FileFunctions_DIRW;
+static int DIR_read(FileHandle *handle, void *buffer,
+                    unsigned int objSize, unsigned int objCount);
+static int DIR_write(FileHandle *handle, void *buffer,
+                     unsigned int objSize, unsigned int objCount);
+static int DIR_eof(FileHandle *handle);
+static int DIR_tell(FileHandle *handle);
+static int DIR_seek(FileHandle *handle, int offset);
+static int DIR_fileLength(FileHandle *handle);
+static int DIR_fileClose(FileHandle *handle);
+static int DIR_isArchive(const char *filename, int forWriting);
+static DirHandle *DIR_openArchive(const char *name, int forWriting);
+static LinkedStringList *DIR_enumerateFiles(DirHandle *h,
+                                            const char *dname,
+                                            int omitSymLinks);
+static int DIR_exists(DirHandle *h, const char *name);
+static int DIR_isDirectory(DirHandle *h, const char *name);
+static int DIR_isSymLink(DirHandle *h, const char *name);
+static FileHandle *DIR_openRead(DirHandle *h, const char *filename);
+static FileHandle *DIR_openWrite(DirHandle *h, const char *filename);
+static FileHandle *DIR_openAppend(DirHandle *h, const char *filename);
+static int DIR_remove(DirHandle *h, const char *name);
+static int DIR_mkdir(DirHandle *h, const char *name);
+static void DIR_dirClose(DirHandle *h);
+
+
+static const FileFunctions __PHYSFS_FileFunctions_DIR =
+{
+    DIR_read,       /* read() method      */
+    NULL,           /* write() method     */
+    DIR_eof,        /* eof() method       */
+    DIR_tell,       /* tell() method      */
+    DIR_seek,       /* seek() method      */
+    DIR_fileLength, /* fileLength() method */
+    DIR_fileClose   /* fileClose() method */
+};
+
+
+static const FileFunctions __PHYSFS_FileFunctions_DIRW =
+{
+    NULL,           /* read() method       */
+    DIR_write,      /* write() method      */
+    DIR_eof,        /* eof() method        */
+    DIR_tell,       /* tell() method       */
+    DIR_seek,       /* seek() method       */
+    DIR_fileLength, /* fileLength() method */
+    DIR_fileClose   /* fileClose() method  */
+};
+
+
+const DirFunctions __PHYSFS_DirFunctions_DIR =
+{
+    DIR_isArchive,          /* isArchive() method      */
+    DIR_openArchive,        /* openArchive() method    */
+    DIR_enumerateFiles,     /* enumerateFiles() method */
+    DIR_exists,             /* exists() method         */
+    DIR_isDirectory,        /* isDirectory() method    */
+    DIR_isSymLink,          /* isSymLink() method      */
+    DIR_openRead,           /* openRead() method       */
+    DIR_openWrite,          /* openWrite() method      */
+    DIR_openAppend,         /* openAppend() method     */
+    DIR_remove,             /* remove() method         */
+    DIR_mkdir,              /* mkdir() method          */
+    DIR_dirClose            /* dirClose() method       */
+};
+
+
+/* This doesn't get listed, since it's technically not an archive... */
+#if 0
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
+{
+    "DIR",
+    "non-archive directory I/O",
+    "Ryan C. Gordon (icculus@clutteredmind.org)",
+    "http://www.icculus.org/physfs/",
+};
+#endif
+
 
 static int DIR_read(FileHandle *handle, void *buffer,
                     unsigned int objSize, unsigned int objCount)
 {
     FILE *h = (FILE *) (handle->opaque);
-    int retval;
+    size_t retval;
 
     errno = 0;
     retval = fread(buffer, objSize, objCount, h);
-    BAIL_IF_MACRO((retval < (signed int) objCount) && (ferror(h)),
-                   strerror(errno),retval);
+    BAIL_IF_MACRO((retval < (size_t) objCount) && (ferror(h)),
+                   strerror(errno), (int) retval);
 
-    return(retval);
+    return((int) retval);
 } /* DIR_read */
 
 
@@ -41,14 +113,14 @@ static int DIR_write(FileHandle *handle, void *buffer,
                      unsigned int objSize, unsigned int objCount)
 {
     FILE *h = (FILE *) (handle->opaque);
-    int retval;
+    size_t retval;
 
     errno = 0;
-    retval = fwrite(buffer, objSize, objCount, h);
+    retval = fwrite(buffer, (size_t) objSize, objCount, h);
     if ( (retval < (signed int) objCount) && (ferror(h)) )
         __PHYSFS_setError(strerror(errno));
 
-    return(retval);
+    return((int) retval);
 } /* DIR_write */
 
 
@@ -80,6 +152,7 @@ static int DIR_fileClose(FileHandle *handle)
 {
     FILE *h = (FILE *) (handle->opaque);
 
+#if 0
     /*
      * we manually fflush() the buffer, since that's the place fclose() will
      *  most likely fail, but that will leave the file handle in an undefined
@@ -94,6 +167,7 @@ static int DIR_fileClose(FileHandle *handle)
 
     /* EBADF == "Not open for writing". That's fine. */
     BAIL_IF_MACRO((errno != 0) && (errno != EBADF), strerror(errno), 0);
+#endif
 
     /* if fclose fails anyhow, we just have to pray that it's still usable. */
     errno = 0;
@@ -115,8 +189,8 @@ static DirHandle *DIR_openArchive(const char *name, int forWriting)
 {
     const char *dirsep = PHYSFS_getDirSeparator();
     DirHandle *retval = NULL;
-    int namelen = strlen(name);
-    int seplen = strlen(dirsep);
+    size_t namelen = strlen(name);
+    size_t seplen = strlen(dirsep);
 
     BAIL_IF_MACRO(!DIR_isArchive(name, forWriting),
                     ERR_UNSUPPORTED_ARCHIVE, NULL);
@@ -281,60 +355,6 @@ static void DIR_dirClose(DirHandle *h)
     free(h->opaque);
     free(h);
 } /* DIR_dirClose */
-
-
-
-static const FileFunctions __PHYSFS_FileFunctions_DIR =
-{
-    DIR_read,       /* read() method      */
-    NULL,           /* write() method     */
-    DIR_eof,        /* eof() method       */
-    DIR_tell,       /* tell() method      */
-    DIR_seek,       /* seek() method      */
-    DIR_fileLength, /* fileLength() method */
-    DIR_fileClose   /* fileClose() method */
-};
-
-
-static const FileFunctions __PHYSFS_FileFunctions_DIRW =
-{
-    NULL,           /* read() method       */
-    DIR_write,      /* write() method      */
-    DIR_eof,        /* eof() method        */
-    DIR_tell,       /* tell() method       */
-    DIR_seek,       /* seek() method       */
-    DIR_fileLength, /* fileLength() method */
-    DIR_fileClose   /* fileClose() method  */
-};
-
-
-const DirFunctions __PHYSFS_DirFunctions_DIR =
-{
-    DIR_isArchive,          /* isArchive() method      */
-    DIR_openArchive,        /* openArchive() method    */
-    DIR_enumerateFiles,     /* enumerateFiles() method */
-    DIR_exists,             /* exists() method         */
-    DIR_isDirectory,        /* isDirectory() method    */
-    DIR_isSymLink,          /* isSymLink() method      */
-    DIR_openRead,           /* openRead() method       */
-    DIR_openWrite,          /* openWrite() method      */
-    DIR_openAppend,         /* openAppend() method     */
-    DIR_remove,             /* remove() method         */
-    DIR_mkdir,              /* mkdir() method          */
-    DIR_dirClose            /* dirClose() method       */
-};
-
-
-/* This doesn't get listed, since it's technically not an archive... */
-#if 0
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
-{
-    "DIR",
-    "non-archive directory I/O",
-    "Ryan C. Gordon",
-    "http://www.icculus.org/",
-};
-#endif
 
 /* end of dir.c ... */
 

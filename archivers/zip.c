@@ -54,12 +54,66 @@ typedef struct
 } ZIPfileinfo;
 
 
-extern const DirFunctions __PHYSFS_DirFunctions_ZIP;
-static const FileFunctions __PHYSFS_FileFunctions_ZIP;
-
-
 /* Number of symlinks to follow before we assume it's a recursive link... */
 #define SYMLINK_RECURSE_COUNT 20
+
+
+static int ZIP_read(FileHandle *handle, void *buffer,
+                    unsigned int objSize, unsigned int objCount);
+static int ZIP_eof(FileHandle *handle);
+static int ZIP_tell(FileHandle *handle);
+static int ZIP_seek(FileHandle *handle, int offset);
+static int ZIP_fileLength(FileHandle *handle);
+static int ZIP_fileClose(FileHandle *handle);
+static int ZIP_isArchive(const char *filename, int forWriting);
+static char *ZIP_realpath(unzFile fh, unz_file_info *info);
+static DirHandle *ZIP_openArchive(const char *name, int forWriting);
+static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
+                                            const char *dirname,
+                                            int omitSymLinks);
+static int ZIP_exists(DirHandle *h, const char *name);
+static int ZIP_isDirectory(DirHandle *h, const char *name);
+static int ZIP_isSymLink(DirHandle *h, const char *name);
+static FileHandle *ZIP_openRead(DirHandle *h, const char *filename);
+static void ZIP_dirClose(DirHandle *h);
+
+
+static const FileFunctions __PHYSFS_FileFunctions_ZIP =
+{
+    ZIP_read,       /* read() method       */
+    NULL,           /* write() method      */
+    ZIP_eof,        /* eof() method        */
+    ZIP_tell,       /* tell() method       */
+    ZIP_seek,       /* seek() method       */
+    ZIP_fileLength, /* fileLength() method */
+    ZIP_fileClose   /* fileClose() method  */
+};
+
+
+const DirFunctions __PHYSFS_DirFunctions_ZIP =
+{
+    ZIP_isArchive,          /* isArchive() method      */
+    ZIP_openArchive,        /* openArchive() method    */
+    ZIP_enumerateFiles,     /* enumerateFiles() method */
+    ZIP_exists,             /* exists() method         */
+    ZIP_isDirectory,        /* isDirectory() method    */
+    ZIP_isSymLink,          /* isSymLink() method      */
+    ZIP_openRead,           /* openRead() method       */
+    NULL,                   /* openWrite() method      */
+    NULL,                   /* openAppend() method     */
+    NULL,                   /* remove() method         */
+    NULL,                   /* mkdir() method          */
+    ZIP_dirClose            /* dirClose() method       */
+};
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
+{
+    "ZIP",
+    "PkZip/WinZip/Info-Zip compatible",
+    "Ryan C. Gordon (icculus@clutteredmind.org)",
+    "http://www.icculus.org/physfs/",
+};
+
 
 
 static int ZIP_read(FileHandle *handle, void *buffer,
@@ -90,9 +144,6 @@ static int ZIP_tell(FileHandle *handle)
 {
     return(unztell(((ZIPfileinfo *) (handle->opaque))->handle));
 } /* ZIP_tell */
-
-
-static int ZIP_fileLength(FileHandle *handle);
 
 
 static int ZIP_seek(FileHandle *handle, int offset)
@@ -622,43 +673,6 @@ static void ZIP_dirClose(DirHandle *h)
     free(zi);
     free(h);
 } /* ZIP_dirClose */
-
-
-static const FileFunctions __PHYSFS_FileFunctions_ZIP =
-{
-    ZIP_read,       /* read() method       */
-    NULL,           /* write() method      */
-    ZIP_eof,        /* eof() method        */
-    ZIP_tell,       /* tell() method       */
-    ZIP_seek,       /* seek() method       */
-    ZIP_fileLength, /* fileLength() method */
-    ZIP_fileClose   /* fileClose() method  */
-};
-
-
-const DirFunctions __PHYSFS_DirFunctions_ZIP =
-{
-    ZIP_isArchive,          /* isArchive() method      */
-    ZIP_openArchive,        /* openArchive() method    */
-    ZIP_enumerateFiles,     /* enumerateFiles() method */
-    ZIP_exists,             /* exists() method         */
-    ZIP_isDirectory,        /* isDirectory() method    */
-    ZIP_isSymLink,          /* isSymLink() method      */
-    ZIP_openRead,           /* openRead() method       */
-    NULL,                   /* openWrite() method      */
-    NULL,                   /* openAppend() method     */
-    NULL,                   /* remove() method         */
-    NULL,                   /* mkdir() method          */
-    ZIP_dirClose            /* dirClose() method       */
-};
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
-{
-    "ZIP",
-    "PkZip/WinZip/Info-Zip compatible",
-    "Ryan C. Gordon (icculus@clutteredmind.org)",
-    "http://www.icculus.org/physfs/",
-};
 
 /* end of zip.c ... */
 
