@@ -219,10 +219,5 @@ AM_CONDITIONAL(BUILD_BEOS_CPP, test x$this_is_beos = xyes)
 
 AC_OUTPUT([
 Makefile
-platform/Makefile
-archivers/Makefile
-test/Makefile
-zlib114/Makefile
-extras/Makefile
 ])
 
