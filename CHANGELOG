@@ -50,6 +50,8 @@
            in PHYSFS_ArchiveInfo to put the email address between "<>" instead
            of "()" chars. Updated TODO. make install now deletes previous
            revisions of the library. Changed version to 0.1.4.
+09252001 - Changed API: PHYSFS_setSaneConfig() takes an organization name, and
+           sets up less directories. Be warned.
 
 --ryan. (icculus@clutteredmind.org)
 
