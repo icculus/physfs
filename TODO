@@ -41,6 +41,13 @@ Some might be dupes, some might be done already.
 - Deprecate PHYSFS_setSaneConfig and move it to extras?
 - (Re)move the profiling code in physfs.c.
 - Why is physfsrwops.c cut-and-pasted into the ruby bindings?
+- Get rid of addToLinkedStringList
+- Replace code from SDL...
+- MIX grabs all archives that no other archivers claim.
+- MIX enumerates files as hash values.
+- Should file enumeration return an error or set error state?
+- Ryanify pocketpc.c ...
+- CFLAGS fix.
 - maybe other stuff.
 
 // end of TODO ...
