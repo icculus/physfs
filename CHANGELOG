@@ -3,6 +3,7 @@
  */
 
 12112002 - Added Ruby bindings to extras directory (thanks, Ed Sinjiashvili!).
+           Patched win32.c to compile with Mingw32 (thanks, Niels Wagenaar!).
 12032002 - Adam updated his extras/abs-file.h for the new buffering API.
 12022002 - German translation added, compliments of Michael Renner.
 12012002 - Minor fix to configure.in: reported --enable-debug's default
