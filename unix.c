@@ -14,7 +14,7 @@
 #include "physfs_internal.h"
 
 
-const char *__PHYSFS_PlatformDirSeparator = "/";
+const char *__PHYSFS_platformDirSeparator = "/";
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
 {
@@ -25,6 +25,16 @@ char *__PHYSFS_platformCalcBaseDir(char *argv0)
 {
     return(NULL);
 } /* __PHYSFS_platformCalcBaseDir */
+
+
+char *__PHYSFS_platformGetUserName(void)
+{
+} /* __PHYSFS_platformGetUserName */
+
+
+char *__PHYSFS_platformGetUserDir(void)
+{
+} /* __PHYSFS_platformGetUserDir */
 
 
 int __PHYSFS_platformGetThreadID(void)
@@ -44,14 +54,9 @@ int __PHYSFS_platformIsSymlink(const char *fname)
 } /* __PHYSFS_platformIsSymlink */
 
 
-char *__PHYSFS_platformGetUserName(void)
+int __PHYSFS_platformIsDirectory(const char *fname)
 {
-} /* __PHYSFS_platformGetUserName */
-
-
-char *__PHYSFS_platformGetUserDir(void);
-{
-} /* __PHYSFS_platformGetUserDir */
+} /* __PHYSFS_platformIsDirectory */
 
 
 /* end of unix.c ... */

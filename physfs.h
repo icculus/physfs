@@ -211,16 +211,22 @@ int PHYSFS_init(const char *argv0);
  * Shutdown PhysicsFS. This closes any files opened via PhysicsFS, blanks the
  *  search/write paths, frees memory, and invalidates all of your handles.
  *
- * Once deinitialized, PHYSFS_init() can be called again to restart the
- *  subsystem.
+ * Note that this call can FAIL if there's a file open for writing that
+ *  refuses to close (for example, the underlying operating system was
+ *  buffering writes to network filesystem, and the fileserver has crashed,
+ *  or a hard drive has failed, etc). It is usually best to close all write
+ *  handles yourself before calling this function, so that you can gracefully
+ *  handle a specific failure.
  *
- * This function can be used with atexit(), if you feel it's prudent to do so.
+ * Once successfully deinitialized, PHYSFS_init() can be called again to
+ *  restart the subsystem. All defaults API states are restored at this
+ *  point.
  *
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError(). If failure, state of PhysFS is
  *          undefined, and probably badly screwed up.
  */
-void PHYSFS_deinit(void);
+int PHYSFS_deinit(void);
 
 
 /**
@@ -284,6 +290,30 @@ const char *PHYSFS_getLastError(void);
  *   @return READ ONLY null-terminated string of platform's dir separator.
  */
 const char *PHYSFS_getDirSeparator(void);
+
+
+/**
+ * Enable symbolic links. Some physical filesystems and archives contain
+ *  files that are just pointers to other files. On the physical filesystem,
+ *  opening such a link will (transparently) open the file that is pointed to.
+ *
+ * By default, PhysicsFS will check if a file is really a symlink during open
+ *  calls and fail if it is. Otherwise, the link could take you outside the
+ *  write and search paths, and compromise security.
+ *
+ * If you want to take that risk, call this function with a non-zero parameter.
+ *  Note that this is more for sandboxing a program's scripting language, in
+ *  case untrusted scripts try to compromise the system. Generally speaking,
+ *  a user could very well have a legitimate reason to set up a symlink, so
+ *  unless you feel there's a specific danger in allowing them, you should
+ *  permit them.
+ *
+ * Symbolic link permission can be enabled or disabled at any time, and is
+ *  disabled by default.
+ *
+ *   @param allow nonzero to permit symlinks, zero to deny linking.
+ */
+void PHYSFS_permitSymbolicLinks(int allow);
 
 
 /**
@@ -529,30 +559,6 @@ int PHYSFS_delete(const char *filename);
 
 
 /**
- * Enable symbolic links. Some physical filesystems and archives contain
- *  files that are just pointers to other files. On the physical filesystem,
- *  opening such a link will (transparently) open the file that is pointed to.
- *
- * By default, PhysicsFS will check if a file is really a symlink during open
- *  calls and fail if it is. Otherwise, the link could take you outside the
- *  write and search paths, and compromise security.
- *
- * If you want to take that risk, call this function with a non-zero parameter.
- *  Note that this is more for sandboxing a program's scripting language, in
- *  case untrusted scripts try to compromise the system. Generally speaking,
- *  a user could very well have a legitimate reason to set up a symlink, so
- *  unless you feel there's a specific danger in allowing them, you should
- *  permit them.
- *
- * Symbolic link permission can be enabled or disabled at any time, and is
- *  disabled by default.
- *
- *   @param allow nonzero to permit symlinks, zero to deny linking.
- */
-void PHYSFS_permitSymbolicLinks(int allow);
-
-
-/**
  * Figure out where in the search path a file resides. The file is specified
  *  in platform-independent notation. The returned filename will be the
  *  element of the search path where the file was found, which may be a
@@ -563,8 +569,9 @@ void PHYSFS_permitSymbolicLinks(int allow);
  * So, if you look for "maps/level1.map", and C:\mygame is in your search
  *  path and C:\mygame\maps\level1.map exists, then "C:\mygame" is returned.
  *
- * If a match is a symbolic link, and you've not explicitly permitted symlinks,
- *  then it will be ignored, and the search for a match will continue.
+ * If a any part of a match is a symbolic link, and you've not explicitly
+ *  permitted symlinks, then it will be ignored, and the search for a match
+ *  will continue.
  *
  *     @param filename file to look for.
  *    @return READ ONLY string of element of search path containing the
@@ -613,10 +620,56 @@ char **PHYSFS_enumerateFiles(const char *dir);
 
 
 /**
+ * Determine if there is an entry anywhere in the search path by the
+ *  name of (fname).
+ *
+ * Note that entries that are symlinks are ignored if
+ *  PHYSFS_permitSymbolicLinks(1) hasn't been called, so you
+ *  might end up further down in the search path than expected.
+ *
+ *    @param fname filename in platform-independent notation.
+ *   @return non-zero if filename exists. zero otherwise.
+ */
+int PHYSFS_exists(const char *fname);
+
+
+/**
+ * Determine if the first occurence of (fname) in the search path is
+ *  really a directory entry.
+ *
+ * Note that entries that are symlinks are ignored if
+ *  PHYSFS_permitSymbolicLinks(1) hasn't been called, so you
+ *  might end up further down in the search path than expected.
+ *
+ *    @param fname filename in platform-independent notation.
+ *   @return non-zero if filename exists and is a directory.  zero otherwise.
+ */
+int PHYSFS_isDirectory(const char *fname);
+
+
+/**
+ * Determine if the first occurence of (fname) in the search path is
+ *  really a symbolic link.
+ *
+ * Note that entries that are symlinks are ignored if
+ *  PHYSFS_permitSymbolicLinks(1) hasn't been called, and as such,
+ *  this function will always return 0 in that case.
+ *
+ *    @param fname filename in platform-independent notation.
+ *   @return non-zero if filename exists and is a symlink.  zero otherwise.
+ */
+int PHYSFS_isSymbolicLink(const char *fname);
+
+
+/**
  * Open a file for writing, in platform-independent notation and in relation
  *  to the write dir as the root of the writable filesystem. The specified
  *  file is created if it doesn't exist. If it does exist, it is truncated to
  *  zero bytes, and the writing offset is set to the start.
+ *
+ * Note that entries that are symlinks are ignored if
+ *  PHYSFS_permitSymbolicLinks(1) hasn't been called, and opening a
+ *  symlink with this function will fail in such a case.
  *
  *   @param filename File to open.
  *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
@@ -632,6 +685,10 @@ PHYSFS_file *PHYSFS_openWrite(const char *filename);
  *  is set to the end of the file, so the first write will be the byte after
  *  the end.
  *
+ * Note that entries that are symlinks are ignored if
+ *  PHYSFS_permitSymbolicLinks(1) hasn't been called, and opening a
+ *  symlink with this function will fail in such a case.
+ *
  *   @param filename File to open.
  *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
@@ -644,6 +701,10 @@ PHYSFS_file *PHYSFS_openAppend(const char *filename);
  *  is checked one at a time until a matching file is found, in which case an
  *  abstract filehandle is associated with it, and reading may be done.
  *  The reading offset is set to the first byte of the file.
+ *
+ * Note that entries that are symlinks are ignored if
+ *  PHYSFS_permitSymbolicLinks(1) hasn't been called, and opening a
+ *  symlink with this function will fail in such a case.
  *
  *   @param filename File to open.
  *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
