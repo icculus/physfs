@@ -12,7 +12,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   entries, and parsing the paths of actual entries to find valid dirs.
   Search this tree for faster entry location, much faster enumeration, and
   more accurate ZIP_isDirectory results.
-- Change ZIP entry sort code to something faster than a bubble sort.
 - Change zip_find_entry() to do something faster than a linear search.
 - Ditch printf()s in ZIP code.
 - Other archivers: perhaps tar(.gz|.bz2), RPM, etc. These are less
