@@ -2,32 +2,44 @@
  * CHANGELOG.
  */
 
-07282001 - Initial release.
-08012001 - Added a safety memset in error setting, fixed URLs and email addr.
-08062001 - Added CD-ROM detection code to the unix platform driver.
-08072001 - Changed version to 0.1.1.
-08232001 - Fixed a potential free()ing of a NULL pointer in
-           __PHYSFS_platformEnumerateFiles() in platform/unix.c. Added
-           platform/win32.c. Other cleanups to get this compiling with
-           Visual C and CygWin. Added BAIL_MACRO for times when we were doing
-           BAIL_IF_MACRO(1, ...). Abstracted mkdir() in the platform drivers.
-           Added GRP setting output to showcfg in the Makefile. Updated INSTALL
-           with license info and Win32 build instructions. Dependency on the
-           readline library in test_physfs.c is now optional.
-           Changed version to 0.1.2.
-08282001 - win32.c now checks HOMEDRIVE, HOMEPATH, and HOME when calculating
-           the userdir. Added include files that make it a little closer to
-           compiling under Cygwin. Added a TODO file. Fixed unix.c's
-           __PHYSFS_platformCalcBaseDir() so that it actually works. Fixed
-           Makefile so that it links the test program properly.
-           Changed version to 0.1.3.
-08292001 - win32.c calculates the base dir with GetModuleFileName() first, now,
-           and falls back to SearchPath() if there were problems. Changed an
-           occurence of _MAX_PATH to MAX_PATH, so both CygWin and Visual C can
-           handle it.
-08312001 - Built PhysicsFS on Mandrake 8.0 for the PowerPC. Compiles clean,
-           but there's at least one byte-ordering issue in zip.c that needs
-           to be fixed.
+03292002 - Fixed a potential problem in ZIP_realpath() and some byte order
+           issues in zip.c. Converted unzip.c to use physfs file i/o
+           abstractions. Converted CHANGELOG to list latest entries first.
+03242002 - Added __PHYSFS_platformInit() and __PHYSFS_platformDeinit(). Win32
+           improvements by Gregory S. Read. Added PHYSFS_[us]int(8|16|32)
+           types...this breaks binary compatibility with previous PhysicsFS
+           releases! Added platform specific i/o functions, so we don't have
+           to rely on stdio anymore. Updated TODO with my comments on the
+           physfs mailing list. 1.0, here we come! Removed race condition from
+           grp.c and converted to file i/o abstraction layer calls from stdio.
+           Tons of other fixes and enhancements.
+03202002 - Patched platform/win32.c to compile.
+03152002 - PHYSFS_setSaneConfig() now handles failure to set the write dir
+           better. Patched makefile to link the test program. Changed all the
+           "write" functions to get data from a "const" buffer. Added an
+           "extras" dir, which currently contains PhysFS->SDL_RWops glue code.
+03052002 - Made unix.c's timeslice implementation more portable, and added a
+           Darwin-specific means to detect CDs (thanks to Patrick Stein).
+           Minor cleanup in win32.c (changed "for (; condition ;)" into
+           "while (condition)" ...)
+11142001 - Removed a redundant error check in platform/win32.c
+10092001 - Syntax fixes in dir.c, a FIXME in grp.c, and a "cat" command in
+           the test program. Apparently I had accidentally removed a rather
+           crucial line from dir.c a few revisions ago, and no one noticed. :(
+           Fixed. The win32 userdir will default to the base dir, now.
+09252001 - Changed API: PHYSFS_setSaneConfig() takes an organization name, and
+           sets up less directories. Be warned. Fixes from David Hedbor:
+           make setSaneConfig() set write directory correctly if it had to
+           create the directory, and make sure that the writing functions
+           get used in dir.c when a file is opened for writing/appending.
+           Updated CREDITS.
+09142001 - David Hedbor submitted a patch to handle a case where the
+           current working directory has been deleted out from under the
+           process (both in platform/unix.c and physfs.c itself). Thanks,
+           David! Added a CREDITS file. Changed the format of the author field
+           in PHYSFS_ArchiveInfo to put the email address between "<>" instead
+           of "()" chars. Updated TODO. make install now deletes previous
+           revisions of the library. Changed version to 0.1.4.
 09012001 - Happy September. Moved the Visual C project files and the zlib
            source to a separate download. Look for it at
            http://icculus.org/physfs/downloads/physfs-win32-support.zip ...
@@ -43,41 +55,32 @@
            code somewhat). Haven't tried to compile the zipfile support, and
            I still can't link the library. Dunno what the hell I'm supposed
            to do there. Isn't Unix supposed to be hard compared to this?
-09142001 - David Hedbor submitted a patch to handle a case where the
-           current working directory has been deleted out from under the
-           process (both in platform/unix.c and physfs.c itself). Thanks,
-           David! Added a CREDITS file. Changed the format of the author field
-           in PHYSFS_ArchiveInfo to put the email address between "<>" instead
-           of "()" chars. Updated TODO. make install now deletes previous
-           revisions of the library. Changed version to 0.1.4.
-09252001 - Changed API: PHYSFS_setSaneConfig() takes an organization name, and
-           sets up less directories. Be warned. Fixes from David Hedbor:
-           make setSaneConfig() set write directory correctly if it had to
-           create the directory, and make sure that the writing functions
-           get used in dir.c when a file is opened for writing/appending.
-           Updated CREDITS.
-10092001 - Syntax fixes in dir.c, a FIXME in grp.c, and a "cat" command in
-           the test program. Apparently I had accidentally removed a rather
-           crucial line from dir.c a few revisions ago, and no one noticed. :(
-           Fixed. The win32 userdir will default to the base dir, now.
-11142001 - Removed a redundant error check in platform/win32.c
-03052002 - Made unix.c's timeslice implementation more portable, and added a
-           Darwin-specific means to detect CDs (thanks to Patrick Stein).
-           Minor cleanup in win32.c (changed "for (; condition ;)" into
-           "while (condition)" ...)
-03152002 - PHYSFS_setSaneConfig() now handles failure to set the write dir
-           better. Patched makefile to link the test program. Changed all the
-           "write" functions to get data from a "const" buffer. Added an
-           "extras" dir, which currently contains PhysFS->SDL_RWops glue code.
-03202002 - Patched platform/win32.c to compile.
-03242002 - Added __PHYSFS_platformInit() and __PHYSFS_platformDeinit(). Win32
-           improvements by Gregory S. Read. Added PHYSFS_[us]int(8|16|32)
-           types...this breaks binary compatibility with previous PhysicsFS
-           releases! Added platform specific i/o functions, so we don't have
-           to rely on stdio anymore. Updated TODO with my comments on the
-           physfs mailing list. 1.0, here we come! Removed race condition from
-           grp.c and converted to file i/o abstraction layer calls from stdio.
-           Tons of other fixes and enhancements.
+08312001 - Built PhysicsFS on Mandrake 8.0 for the PowerPC. Compiles clean,
+           but there's at least one byte-ordering issue in zip.c that needs
+           to be fixed.
+08292001 - win32.c calculates the base dir with GetModuleFileName() first, now,
+           and falls back to SearchPath() if there were problems. Changed an
+           occurence of _MAX_PATH to MAX_PATH, so both CygWin and Visual C can
+           handle it.
+08282001 - win32.c now checks HOMEDRIVE, HOMEPATH, and HOME when calculating
+           the userdir. Added include files that make it a little closer to
+           compiling under Cygwin. Added a TODO file. Fixed unix.c's
+           __PHYSFS_platformCalcBaseDir() so that it actually works. Fixed
+           Makefile so that it links the test program properly.
+           Changed version to 0.1.3.
+08232001 - Fixed a potential free()ing of a NULL pointer in
+           __PHYSFS_platformEnumerateFiles() in platform/unix.c. Added
+           platform/win32.c. Other cleanups to get this compiling with
+           Visual C and CygWin. Added BAIL_MACRO for times when we were doing
+           BAIL_IF_MACRO(1, ...). Abstracted mkdir() in the platform drivers.
+           Added GRP setting output to showcfg in the Makefile. Updated INSTALL
+           with license info and Win32 build instructions. Dependency on the
+           readline library in test_physfs.c is now optional.
+           Changed version to 0.1.2.
+08072001 - Changed version to 0.1.1.
+08062001 - Added CD-ROM detection code to the unix platform driver.
+08012001 - Added a safety memset in error setting, fixed URLs and email addr.
+07282001 - Initial release.
 
 --ryan. (icculus@clutteredmind.org)
 
