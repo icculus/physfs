@@ -1820,6 +1820,92 @@ __EXPORT__ int PHYSFS_writeSBE64(PHYSFS_file *file, PHYSFS_sint64 val);
 __EXPORT__ int PHYSFS_writeUBE64(PHYSFS_file *file, PHYSFS_uint64 val);
 
 
+/* Everything above this line is part of the PhysicsFS 1.0 API. */
+
+
+/**
+ * \typedef PHYSFS_memhandle
+ * \brief Used to represent memory blocks.
+ *
+ * (This is for limited, hardcore use. If you don't immediately see a need
+ *  for it, you can probably ignore this forever.)
+ *
+ * The allocator routines will pass these around. They are void pointers
+ *  because it's convenient for systems to have handles be the same size
+ *  as a pointer, but they shouldn't be assumed to point to valid memory
+ *  (or to memory at all). The allocator in use will convert from memhandles
+ *  to valid pointers to allocated memory.
+ *
+ * \sa PHYSFS_allocator
+ * \sa PHYSFS_setAllocator
+ */
+typedef void *PHYSFS_memhandle;
+
+
+/**
+ * \struct PHYSFS_allocator
+ * \brief PhysicsFS allocation function pointers.
+ *
+ * (This is for limited, hardcore use. If you don't immediately see a need
+ *  for it, you can probably ignore this forever.)
+ *
+ * You create one of these structures for use with PHYSFS_setAllocator.
+ *  It should be noted that, in order to accomodate platforms like PalmOS,
+ *  we don't just ask for a block of memory and get a pointer. We work on
+ *  a "handle" system, which requires PhysicsFS to "lock" before accessing,
+ *  and "unlock" when not using. This is also useful for systems that are
+ *  concerned about memory fragmentation; you can rearrange unlocked memory
+ *  blocks in your address space, since PhysicsFS will re-request the pointer
+ *  by relocking the block.
+ *
+ * Locked memory is assumed to be non-reentrant, and locking an already-locked
+ *  handle (and unlocking an unlocked handle) has undefined results. Use
+ *  mutexes if not sure.
+ *
+ * \sa PHYSFS_memhandle
+ * \sa PHYSFS_setAllocator
+ */
+typedef struct
+{
+    PHYSFS_memhandle (*malloc)(size_t);
+    PHYSFS_memhandle (*realloc)(PHYSFS_memhandle, size_t);
+    void (*free)(PHYSFS_memhandle);
+    void *(*lock)(PHYSFS_memhandle);
+    void *(*unlock)(PHYSFS_memhandle);
+} PHYSFS_allocator;
+
+
+/**
+ * \fn int PHYSFS_setAllocator(PHYSFS_allocator *allocator)
+ * \brief Hook your own allocation routines into PhysicsFS.
+ *
+ * (This is for limited, hardcore use. If you don't immediately see a need
+ *  for it, you can probably ignore this forever.)
+ *
+ * By default, PhysicsFS will use ANSI C malloc/realloc/calloc/free calls
+ *  to manage dynamic memory, but in some uncommon cases, the app might want
+ *  more control over the library's memory management. This lets you redirect
+ *  physfs to use your own allocation routines instead. You can only call this
+ *  function before PHYSFS_init(); if the library is initialized, it'll
+ *  reject your efforts to change the allocator mid-stream. You may call this
+ *  function after PHYSFS_deinit() if you are willing to shutdown the library
+ *  and restart it with a new allocator; this is a safe and supported
+ *  operation. The allocator remains intact between deinit/init calls.
+ *  If you want to return to the default allocator, pass a NULL in here.
+ *
+ * If you aren't immediately sure what to do with this function, you can
+ *  safely ignore it altogether.
+ *
+ *    \param allocator Structure containing your allocator's entry points.
+ *   \return zero on failure, non-zero on success. This call only fails
+ *           when used between PHYSFS_init() and PHYSFS_deinit() calls.
+ */
+__EXPORT__ int PHYSFS_setAllocator(PHYSFS_allocator *allocator);
+
+
+/* Everything above this line is part of the PhysicsFS 2.0 API. */
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -182,6 +182,47 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
 };
 
 
+
+/*
+ * Bridge physfs allocation functions to zlib's format...
+ */
+static voidpf zlibPhysfsAlloc(voidpf opaque, uInt items, uInt size)
+{
+    /* must lock the whole time, since zlib doesn't deal with that. :( */
+    PHYSFS_allocator *allocator = __PHYSFS_getAllocator();
+    size_t total = (items * size) + sizeof (PHYSFS_memhandle);
+    PHYSFS_memhandle h = allocator->malloc(total);
+    char *ptr = (char *) allocator->lock(h);
+    PHYSFS_memhandle *ph = (PHYSFS_memhandle *) ptr;
+    *ph = h; /* tuck the memhandle in front of the memory block... */
+    return(ptr + sizeof (PHYSFS_memhandle));
+} /* zlibPhysfsAlloc */
+
+
+/*
+ * Bridge physfs allocation functions to zlib's format...
+ */
+static void zlibPhysfsFree(voidpf opaque, voidpf address)
+{
+    char *ptr = ((char *) address) - (sizeof (PHYSFS_memhandle));
+    PHYSFS_allocator *allocator = __PHYSFS_getAllocator();
+    PHYSFS_memhandle *ph = (PHYSFS_memhandle *) ptr;
+    allocator->unlock(*ph);
+    allocator->free(*ph);
+} /* zlibPhysfsFree */
+
+
+/*
+ * Construct a new z_stream to a sane state.
+ */
+static void initializeZStream(z_stream *pstr)
+{
+    memset(pstr, '\0', sizeof (z_stream));
+    pstr->zalloc = zlibPhysfsAlloc;
+    pstr->zfree = zlibPhysfsFree;
+} /* initializeZStream */
+
+
 static const char *zlib_error_string(int rc)
 {
     switch (rc)
@@ -360,7 +401,7 @@ static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset)
         {
             /* we do a copy so state is sane if inflateInit2() fails. */
             z_stream str;
-            memset(&str, '\0', sizeof (z_stream));
+            initializeZStream(&str);
             if (zlib_err(inflateInit2(&str, -MAX_WBITS)) != Z_OK)
                 return(0);
 
@@ -728,7 +769,7 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
         {
             if (__PHYSFS_platformRead(in, compressed, compsize, 1) == 1)
             {
-                memset(&stream, '\0', sizeof (z_stream));
+                initializeZStream(&stream);
                 stream.next_in = compressed;
                 stream.avail_in = compsize;
                 stream.next_out = (unsigned char *) path;
@@ -1404,6 +1445,7 @@ static FileHandle *ZIP_openRead(DirHandle *h, const char *fnm, int *fileExists)
     memset(finfo, '\0', sizeof (ZIPfileinfo));
     finfo->handle = in;
     finfo->entry = ((entry->symlink != NULL) ? entry->symlink : entry);
+    initializeZStream(&finfo->stream);
     if (finfo->entry->compression_method != COMPMETH_NONE)
     {
         if (zlib_err(inflateInit2(&finfo->stream, -MAX_WBITS)) != Z_OK)

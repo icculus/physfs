@@ -1295,6 +1295,10 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 #define BAIL_IF_MACRO_MUTEX(c, e, m, r) if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; }
 
 
+/*
+ * Get the current allocator. Not valid before PHYSFS_init is called!
+ */
+PHYSFS_allocator *__PHYSFS_getAllocator(void);
 
 
 /*--------------------------------------------------------------------------*/
@@ -1693,6 +1697,35 @@ int __PHYSFS_platformGrabMutex(void *mutex);
  *  use the BAIL_*MACRO* macros, either.
  */
 void __PHYSFS_platformReleaseMutex(void *mutex);
+
+/*
+ * Implement malloc. It's safe to just pass through from the C runtime.
+ */
+PHYSFS_memhandle __PHYSFS_platformMalloc(size_t s);
+
+/*
+ * Implement realloc. It's safe to just pass through from the C runtime.
+ */
+PHYSFS_memhandle __PHYSFS_platformRealloc(PHYSFS_memhandle h, size_t s);
+
+/*
+ * Implement free. It's safe to just pass through from the C runtime.
+ */
+void __PHYSFS_platformFree(PHYSFS_memhandle h);
+
+/*
+ * Lock a memhandle. If you are just passing through from the C runtime,
+ *  it is safe to make this a no-op. Otherwise, convert to a real pointer
+ *  in the address space and return it.
+ */
+void *__PHYSFS_platformLock(PHYSFS_memhandle h);
+
+/*
+ * Unlock a memhandle. If you are just passing through from the C runtime,
+ *  it is safe to make this a no-op. Otherwise, you can consider the data in
+ *  the address space safe to move around until the handle is relocked.
+ */
+void __PHYSFS_platformUnlock(PHYSFS_memhandle h);
 
 #ifdef __cplusplus
 }

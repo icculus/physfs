@@ -171,6 +171,10 @@ static int allowSymLinks = 0;
 static void *errorLock = NULL;     /* protects error message list.        */
 static void *stateLock = NULL;     /* protects other PhysFS static state. */
 
+/* allocator ... */
+static int externalAllocator = 0;
+static PHYSFS_allocator allocator;
+
 
 /* functions ... */
 
@@ -752,11 +756,17 @@ initializeMutexes_failed:
 } /* initializeMutexes */
 
 
+static void setDefaultAllocator(void);
+
 int PHYSFS_init(const char *argv0)
 {
     char *ptr;
 
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
+
+    if (!externalAllocator)
+        setDefaultAllocator();
+
     BAIL_IF_MACRO(!__PHYSFS_platformInit(), NULL, 0);
 
     BAIL_IF_MACRO(!initializeMutexes(), NULL, 0);
@@ -1994,6 +2004,35 @@ LinkedStringList *__PHYSFS_addToLinkedStringList(LinkedStringList *retval,
     l->next = NULL;
     return(retval);
 } /* __PHYSFS_addToLinkedStringList */
+
+
+int PHYSFS_setAllocator(PHYSFS_allocator *a)
+{
+    BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
+    externalAllocator = (a != NULL);
+    if (externalAllocator)
+        memcpy(&allocator, a, sizeof (PHYSFS_allocator));
+
+    return(1);
+} /* PHYSFS_setAllocator */
+
+
+static void setDefaultAllocator(void)
+{
+    assert(!externalAllocator);
+    allocator.malloc = __PHYSFS_platformMalloc;
+    allocator.realloc = __PHYSFS_platformRealloc;
+    allocator.free = __PHYSFS_platformFree;
+    allocator.lock = __PHYSFS_platformLock;
+    allocator.unlock = __PHYSFS_platformUnlock;
+} /* setDefaultAllocator */
+
+
+PHYSFS_allocator *__PHYSFS_getAllocator(void)
+{
+    return(&allocator);
+} /* __PHYFS_getAllocator */
+
 
 /* end of physfs.c ... */
 

@@ -500,6 +500,37 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
     return statbuf.st_mtime;
 } /* __PHYSFS_platformGetLastModTime */
 
+
+PHYSFS_memhandle __PHYSFS_platformMalloc(size_t s)
+{
+    assert(sizeof (h) == sizeof (void *));
+    return((PHYSFS_memhandle) malloc(s));
+} /* __PHYSFS_platformMalloc */
+
+
+PHYSFS_memhandle __PHYSFS_platformRealloc(PHYSFS_memhandle h, size_t s)
+{
+    return((PHYSFS_memhandle) realloc((void *) h, s));
+} /* __PHYSFS_platformRealloc */
+
+
+void __PHYSFS_platformFree(PHYSFS_memhandle h)
+{
+    free((void *) h);
+} /* __PHYSFS_platformFree */
+
+
+void *__PHYSFS_platformLock(PHYSFS_memhandle h)
+{
+    return((void *) h);
+} /* __PHYSFS_platformLock */
+
+
+void __PHYSFS_platformUnlock(PHYSFS_memhandle h)
+{
+    /* no-op. */
+} /* __PHYSFS_platformUnlock */
+
 #endif /* !defined WIN32 */
 
 /* end of posix.c ... */
