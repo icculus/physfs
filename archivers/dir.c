@@ -18,7 +18,7 @@
 
 static int DIR_read(FileHandle *handle, void *buffer,
                     unsigned int objSize, unsigned int objCount);
-static int DIR_write(FileHandle *handle, void *buffer,
+static int DIR_write(FileHandle *handle, const void *buffer,
                      unsigned int objSize, unsigned int objCount);
 static int DIR_eof(FileHandle *handle);
 static int DIR_tell(FileHandle *handle);
@@ -109,7 +109,7 @@ static int DIR_read(FileHandle *handle, void *buffer,
 } /* DIR_read */
 
 
-static int DIR_write(FileHandle *handle, void *buffer,
+static int DIR_write(FileHandle *handle, const void *buffer,
                      unsigned int objSize, unsigned int objCount)
 {
     FILE *h = (FILE *) (handle->opaque);

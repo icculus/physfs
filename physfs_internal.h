@@ -62,7 +62,7 @@ typedef struct __PHYSFS_FILEFUNCTIONS__
          *  if complete failure.
          * On failure, call __PHYSFS_setError().
          */
-    int (*write)(FileHandle *handle, void *buffer,
+    int (*write)(FileHandle *handle, const void *buffer,
                  unsigned int objSize, unsigned int objCount);
 
         /*

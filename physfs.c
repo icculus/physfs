@@ -1230,7 +1230,7 @@ int PHYSFS_close(PHYSFS_file *handle)
 
 
 int PHYSFS_read(PHYSFS_file *handle, void *buffer,
-                            unsigned int objSize, unsigned int objCount)
+                unsigned int objSize, unsigned int objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);
@@ -1240,8 +1240,8 @@ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
 } /* PHYSFS_read */
 
 
-int PHYSFS_write(PHYSFS_file *handle, void *buffer,
-                            unsigned int objSize, unsigned int objCount)
+int PHYSFS_write(PHYSFS_file *handle, const void *buffer,
+                 unsigned int objSize, unsigned int objCount)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     assert(h != NULL);

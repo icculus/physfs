@@ -772,7 +772,7 @@ __EXPORT__ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
  *  @return number of objects written. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount). -1 if complete failure.
  */
-__EXPORT__ int PHYSFS_write(PHYSFS_file *handle, void *buffer,
+__EXPORT__ int PHYSFS_write(PHYSFS_file *handle, const void *buffer,
                             unsigned int objSize, unsigned int objCount);
 
 
@@ -811,7 +811,7 @@ __EXPORT__ int PHYSFS_seek(PHYSFS_file *handle, int pos);
 /**
  * Get total length of a file in bytes. Note that if the file size can't
  *  be determined (since the archive is "streamed" or whatnot) than this
- *  with report (-1). Also note that if another process/thread is writing
+ *  will report (-1). Also note that if another process/thread is writing
  *  to this file at the same time, then the information this function
  *  supplies could be incorrect before you get it. Use with caution, or
  *  better yet, don't use at all.
