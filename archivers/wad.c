@@ -58,7 +58,7 @@
 
 typedef struct
 {
-    char name[9];
+    char name[18];
     PHYSFS_uint32 startPos;
     PHYSFS_uint32 size;
 } WADentry;
@@ -309,6 +309,9 @@ static int wad_load_entries(const char *name, int forWriting, WADinfo *info)
     PHYSFS_uint32 fileCount;
     PHYSFS_uint32 directoryOffset;
     WADentry *entry;
+    char lastDirectory[9],buffer[9];
+
+    lastDirectory[8] = 0; /* Make sure lastDirectory stays null-terminated. */
 
     BAIL_IF_MACRO(!wad_open(name, forWriting, &fh, &fileCount,&directoryOffset), NULL, 0);
     info->entryCount = fileCount;
@@ -412,33 +415,46 @@ static LinkedStringList *WAD_enumerateFiles(DirHandle *h,
     LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_uint32 max = info->entryCount;
     PHYSFS_uint32 i;
+    char *sep;
 
-    /* no directories in WAD files. */
-    BAIL_IF_MACRO(*dirname != '\0', ERR_NOT_A_DIR, NULL);
-
-    for (i = 0; i < max; i++, entry++)
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, entry->name, -1);
-
+    if (dirname[0] == 0)
+    {
+        for (i = 0; i < max; i++, entry++)
+        {
+            if (strchr(entry->name, '/') == NULL)
+            {
+                retval = __PHYSFS_addToLinkedStringList(retval, &p,
+                                                        entry->name, -1);
+            } /* if */
+        } /* for */
+    } /* if */
+    else
+    {
+        for (i = 0; i < max; i++, entry++)
+        {
+            sep = strchr(entry->name, '/');
+            if (sep != NULL)
+            {
+                if (strncmp(dirname, entry->name, (sep-entry->name)) == 0)
+                {
+                    retval = __PHYSFS_addToLinkedStringList(retval, &p,
+                                                            sep + 1, -1);
+                } /* if */
+            } /* if */
+        } /* for */
+    } /* else */
+    
     return(retval);
 } /* WAD_enumerateFiles */
 
 
 static WADentry *wad_find_entry(WADinfo *info, const char *name)
 {
-    char *ptr = strchr(name, '.');
     WADentry *a = info->entries;
     PHYSFS_sint32 lo = 0;
     PHYSFS_sint32 hi = (PHYSFS_sint32) (info->entryCount - 1);
     PHYSFS_sint32 middle;
     int rc;
-
-    /*
-     * Rule out filenames to avoid unneeded processing...no dirs,
-     *   big filenames, or extensions > 3 chars.
-     */
-    BAIL_IF_MACRO((ptr) && (strlen(ptr) > 4), ERR_NO_SUCH_FILE, NULL);
-    BAIL_IF_MACRO(strlen(name) > 12, ERR_NO_SUCH_FILE, NULL);
-    BAIL_IF_MACRO(strchr(name, '/') != NULL, ERR_NO_SUCH_FILE, NULL);
 
     while (lo <= hi)
     {
@@ -464,8 +480,31 @@ static int WAD_exists(DirHandle *h, const char *name)
 
 static int WAD_isDirectory(DirHandle *h, const char *name, int *fileExists)
 {
-    *fileExists = WAD_exists(h, name);
-    return(0);  /* never directories in a wad. */
+    WADentry *entry = wad_find_entry(((WADinfo *) h->opaque), name);
+    if (entry != NULL)
+    {
+        char *n;
+
+        *fileExists = 1;
+
+        /* Can't be a directory if it's a subdirectory. */
+        if (strchr(entry->name, '/') != NULL)
+            return(0);
+
+        /* Check if it matches "MAP??" or "E?M?" ... */
+        n = entry->name;
+        if ((n[0] == 'E' && n[2] == 'M') ||
+            (n[0] == 'M' && n[1] == 'A' && n[2] == 'P' && n[6] == 0))
+        {
+            return(1);
+        } /* if */
+        return(0);
+    } /* if */
+    else
+    {
+        *fileExists = 0;
+        return(0);
+    } /* else */
 } /* WAD_isDirectory */
 
 
