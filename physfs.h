@@ -1432,7 +1432,7 @@ __EXPORT__ PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_readSLE16(PHYSFS_File *file, PHYSFS_sint16 *val);
 
@@ -1448,7 +1448,7 @@ __EXPORT__ int PHYSFS_readSLE16(PHYSFS_File *file, PHYSFS_sint16 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  *
  */
 __EXPORT__ int PHYSFS_readULE16(PHYSFS_File *file, PHYSFS_uint16 *val);
@@ -1465,7 +1465,7 @@ __EXPORT__ int PHYSFS_readULE16(PHYSFS_File *file, PHYSFS_uint16 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_readSBE16(PHYSFS_File *file, PHYSFS_sint16 *val);
 
@@ -1481,7 +1481,7 @@ __EXPORT__ int PHYSFS_readSBE16(PHYSFS_File *file, PHYSFS_sint16 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  *
  */
 __EXPORT__ int PHYSFS_readUBE16(PHYSFS_File *file, PHYSFS_uint16 *val);
@@ -1498,7 +1498,7 @@ __EXPORT__ int PHYSFS_readUBE16(PHYSFS_File *file, PHYSFS_uint16 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_readSLE32(PHYSFS_File *file, PHYSFS_sint32 *val);
 
@@ -1514,7 +1514,7 @@ __EXPORT__ int PHYSFS_readSLE32(PHYSFS_File *file, PHYSFS_sint32 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  *
  */
 __EXPORT__ int PHYSFS_readULE32(PHYSFS_File *file, PHYSFS_uint32 *val);
@@ -1531,7 +1531,7 @@ __EXPORT__ int PHYSFS_readULE32(PHYSFS_File *file, PHYSFS_uint32 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_readSBE32(PHYSFS_File *file, PHYSFS_sint32 *val);
 
@@ -1547,7 +1547,7 @@ __EXPORT__ int PHYSFS_readSBE32(PHYSFS_File *file, PHYSFS_sint32 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  *
  */
 __EXPORT__ int PHYSFS_readUBE32(PHYSFS_File *file, PHYSFS_uint32 *val);
@@ -1564,7 +1564,7 @@ __EXPORT__ int PHYSFS_readUBE32(PHYSFS_File *file, PHYSFS_uint32 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  *
  * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1583,7 +1583,7 @@ __EXPORT__ int PHYSFS_readSLE64(PHYSFS_File *file, PHYSFS_sint64 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1602,7 +1602,7 @@ __EXPORT__ int PHYSFS_readULE64(PHYSFS_File *file, PHYSFS_uint64 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  *
  * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1621,7 +1621,7 @@ __EXPORT__ int PHYSFS_readSBE64(PHYSFS_File *file, PHYSFS_sint64 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_GetLastError().
+ *           from PHYSFS_getLastError().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1639,7 +1639,7 @@ __EXPORT__ int PHYSFS_readUBE64(PHYSFS_File *file, PHYSFS_uint64 *val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_writeSLE16(PHYSFS_File *file, PHYSFS_sint16 val);
 
@@ -1654,7 +1654,7 @@ __EXPORT__ int PHYSFS_writeSLE16(PHYSFS_File *file, PHYSFS_sint16 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_writeULE16(PHYSFS_File *file, PHYSFS_uint16 val);
 
@@ -1669,7 +1669,7 @@ __EXPORT__ int PHYSFS_writeULE16(PHYSFS_File *file, PHYSFS_uint16 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_writeSBE16(PHYSFS_File *file, PHYSFS_sint16 val);
 
@@ -1684,7 +1684,7 @@ __EXPORT__ int PHYSFS_writeSBE16(PHYSFS_File *file, PHYSFS_sint16 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_writeUBE16(PHYSFS_File *file, PHYSFS_uint16 val);
 
@@ -1699,7 +1699,7 @@ __EXPORT__ int PHYSFS_writeUBE16(PHYSFS_File *file, PHYSFS_uint16 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_writeSLE32(PHYSFS_File *file, PHYSFS_sint32 val);
 
@@ -1714,7 +1714,7 @@ __EXPORT__ int PHYSFS_writeSLE32(PHYSFS_File *file, PHYSFS_sint32 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_writeULE32(PHYSFS_File *file, PHYSFS_uint32 val);
 
@@ -1729,7 +1729,7 @@ __EXPORT__ int PHYSFS_writeULE32(PHYSFS_File *file, PHYSFS_uint32 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_writeSBE32(PHYSFS_File *file, PHYSFS_sint32 val);
 
@@ -1744,7 +1744,7 @@ __EXPORT__ int PHYSFS_writeSBE32(PHYSFS_File *file, PHYSFS_sint32 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  */
 __EXPORT__ int PHYSFS_writeUBE32(PHYSFS_File *file, PHYSFS_uint32 val);
 
@@ -1759,7 +1759,7 @@ __EXPORT__ int PHYSFS_writeUBE32(PHYSFS_File *file, PHYSFS_uint32 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1777,7 +1777,7 @@ __EXPORT__ int PHYSFS_writeSLE64(PHYSFS_File *file, PHYSFS_sint64 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1795,7 +1795,7 @@ __EXPORT__ int PHYSFS_writeULE64(PHYSFS_File *file, PHYSFS_uint64 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1813,7 +1813,7 @@ __EXPORT__ int PHYSFS_writeSBE64(PHYSFS_File *file, PHYSFS_sint64 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_GetLastError().
+ *           find out what went wrong from PHYSFS_getLastError().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.

@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+
+12162004 - Fixed some documentation/header comment typos (thanks, Gaetan!)
 10302004 - Fixed a strcpy that should have been a strcat. (thanks, Tolga!)
            Build system respects external CFLAGS now. (thanks, Adam!)
            Fixed infinite loop in new enumeration code. (thanks, Adam!)
