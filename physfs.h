@@ -300,10 +300,13 @@ const char *PHYSFS_getDirSeparator(void);
  * The returned value is an array of strings, with a NULL entry to signify the
  *  end of the list:
  *
+ * char **cds = PHYSFS_getCdRomDirs();
  * char **i;
  *
- * for (i = PHYSFS_getCdRomDirs(); *i != NULL; i++)
+ * for (i = cds; *i != NULL; i++)
  *     printf("cdrom dir [%s] is available.\n", *i);
+ *
+ * PHYSFS_freeList(cds);
  *
  * This call may block while drives spin up. Be forewarned.
  *
@@ -461,7 +464,9 @@ char **PHYSFS_getSearchPath(void);
  *    @param archiveExt File extention used by your program to specify an
  *                      archive. For example, Quake 3 uses "pk3", even though
  *                      they are just zipfiles. Specify NULL to not dig out
- *                      archives automatically.
+ *                      archives automatically. Do not specify the '.' char;
+ *                      If you want to look for ZIP files, specify "ZIP" and
+ *                      not ".ZIP" ... the archive search is case-insensitive.
  *
  *    @param includeCdRoms Non-zero to include CD-ROMs in the search path, and
  *                         (if (archiveExt) != NULL) search them for archives.
@@ -474,8 +479,10 @@ char **PHYSFS_getSearchPath(void);
  *
  *    @param archivesFirst Non-zero to prepend the archives to the search path.
  *                          Zero to append them. Ignored if !(archiveExt).
+ *  @return nonzero on success, zero on error. Specifics of the error can be
+ *          gleaned from PHYSFS_getLastError().
  */
-void PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
+int PHYSFS_setSaneConfig(const char *appName, const char *archiveExt,
                           int includeCdRoms, int archivesFirst);
 
 
@@ -669,6 +676,7 @@ int PHYSFS_close(PHYSFS_file *handle);
  *   @param objCount number of (objSize) objects to read from (handle).
  *  @return number of objects read. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount), as can PHYSFS_eof().
+ *            -1 if complete failure.
  */
 int PHYSFS_read(PHYSFS_file *handle, void *buffer,
                 unsigned int objSize, unsigned int objCount);
@@ -681,8 +689,8 @@ int PHYSFS_read(PHYSFS_file *handle, void *buffer,
  *   @param buffer buffer to store read data into.
  *   @param objSize size in bytes of objects being read from (handle).
  *   @param objCount number of (objSize) objects to read from (handle).
- *  @return number of objects read. PHYSFS_getLastError() can shed light on
- *           the reason this might be < (objCount).
+ *  @return number of objects written. PHYSFS_getLastError() can shed light on
+ *           the reason this might be < (objCount). -1 if complete failure.
  */
 int PHYSFS_write(PHYSFS_file *handle, void *buffer,
                  unsigned int objSize, unsigned int objCount);
