@@ -267,7 +267,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_ARC_IS_READ_ONLY     "Archive is read-only"
 #define ERR_IO_ERROR             "I/O error"
 #define ERR_CANT_SET_WRITE_DIR   "Can't set write directory"
-#define ERR_TOO_MANY_SYMLINKS    "Too many symbolic links"
+#define ERR_SYMLINK_LOOP         "Infinite symbolic link loop"
 #define ERR_COMPRESSION          "(De)compression error"
 #define ERR_NOT_IMPLEMENTED      "Not implemented"
 #define ERR_OS_ERROR             "Operating system reported error"
