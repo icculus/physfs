@@ -29,7 +29,7 @@
 
 #define TEST_VERSION_MAJOR  0
 #define TEST_VERSION_MINOR  1
-#define TEST_VERSION_PATCH  0
+#define TEST_VERSION_PATCH  1
 
 static FILE *history_file = NULL;
 
@@ -80,6 +80,12 @@ static int cmd_quit(char *args)
 
 static int cmd_init(char *args)
 {
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
     if (PHYSFS_init(args))
         printf("Successful.\n");
     else
@@ -110,7 +116,7 @@ static int cmd_addarchive(char *args)
     {
         args++;
         *(ptr - 1) = '\0';
-    }
+    } /* if */
 
     /*printf("[%s], [%d]\n", args, appending);*/
 
@@ -125,6 +131,12 @@ static int cmd_addarchive(char *args)
 
 static int cmd_removearchive(char *args)
 {
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
     if (PHYSFS_removeFromSearchPath(args))
         printf("Successful.\n");
     else
@@ -136,7 +148,15 @@ static int cmd_removearchive(char *args)
 
 static int cmd_enumerate(char *args)
 {
-    char **rc = PHYSFS_enumerateFiles(args);
+    char **rc;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    rc = PHYSFS_enumerateFiles(args);
 
     if (rc == NULL)
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
@@ -174,7 +194,7 @@ static int cmd_getcdromdirs(char *args)
     char **rc = PHYSFS_getCdRomDirs();
 
     if (rc == NULL)
-        printf("Failure. reason: %s.\n", PHYSFS_getLastError());
+        printf("Failure. Reason: [%s].\n", PHYSFS_getLastError());
     else
     {
         int dir_count;
@@ -234,6 +254,12 @@ static int cmd_getwritedir(char *args)
 
 static int cmd_setwritedir(char *args)
 {
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
     if (PHYSFS_setWriteDir(args))
         printf("Successful.\n");
     else
@@ -245,7 +271,15 @@ static int cmd_setwritedir(char *args)
 
 static int cmd_permitsyms(char *args)
 {
-    int num = atoi(args);
+    int num;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    num = atoi(args);
     PHYSFS_permitSymbolicLinks(num);
     printf("Symlinks are now %s.\n", num ? "permitted" : "forbidden");
     return(1);
@@ -282,6 +316,12 @@ static int cmd_setsaneconfig(char *args)
 
 static int cmd_mkdir(char *args)
 {
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
     if (PHYSFS_mkdir(args))
         printf("Successful.\n");
     else
@@ -293,6 +333,12 @@ static int cmd_mkdir(char *args)
 
 static int cmd_delete(char *args)
 {
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
     if (PHYSFS_delete(args))
         printf("Successful.\n");
     else
@@ -304,7 +350,15 @@ static int cmd_delete(char *args)
 
 static int cmd_getrealdir(char *args)
 {
-    const char *rc = PHYSFS_getRealDir(args);
+    const char *rc;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    rc = PHYSFS_getRealDir(args);
     if (rc)
         printf("Found at [%s].\n", rc);
     else
@@ -316,7 +370,15 @@ static int cmd_getrealdir(char *args)
 
 static int cmd_exists(char *args)
 {
-    int rc = PHYSFS_exists(args);
+    int rc;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    rc = PHYSFS_exists(args);
     printf("File %sexists.\n", rc ? "" : "does not ");
     return(1);
 } /* cmd_exists */
@@ -324,7 +386,15 @@ static int cmd_exists(char *args)
 
 static int cmd_isdir(char *args)
 {
-    int rc = PHYSFS_isDirectory(args);
+    int rc;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    rc = PHYSFS_isDirectory(args);
     printf("File %s a directory.\n", rc ? "is" : "is NOT");
     return(1);
 } /* cmd_isdir */
@@ -332,7 +402,15 @@ static int cmd_isdir(char *args)
 
 static int cmd_issymlink(char *args)
 {
-    int rc = PHYSFS_isSymbolicLink(args);
+    int rc;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    rc = PHYSFS_isSymbolicLink(args);
     printf("File %s a symlink.\n", rc ? "is" : "is NOT");
     return(1);
 } /* cmd_issymlink */
@@ -340,7 +418,15 @@ static int cmd_issymlink(char *args)
 
 static int cmd_cat(char *args)
 {
-    PHYSFS_file *f = PHYSFS_openRead(args);
+    PHYSFS_file *f;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    f = PHYSFS_openRead(args);
     if (f == NULL)
         printf("failed to open. Reason: [%s].\n", PHYSFS_getLastError());
     else
@@ -371,6 +457,104 @@ static int cmd_cat(char *args)
 
     return(1);
 } /* cmd_cat */
+
+
+static int cmd_filelength(char *args)
+{
+    PHYSFS_file *f;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    f = PHYSFS_openRead(args);
+    if (f == NULL)
+        printf("failed to open. Reason: [%s].\n", PHYSFS_getLastError());
+    else
+    {
+        PHYSFS_sint64 len = PHYSFS_fileLength(f);
+        if (len == -1)
+            printf("failed to determine length. Reason: [%s].\n", PHYSFS_getLastError());
+        else
+            printf(" (cast to int) %d bytes.\n", (int) len);
+
+        PHYSFS_close(f);
+    } /* else */
+
+    return(1);
+} /* cmd_filelength */
+
+
+#define WRITESTR "The cat sat on the mat.\n\n"
+
+static int cmd_append(char *args)
+{
+    PHYSFS_file *f;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    f = PHYSFS_openAppend(args);
+    if (f == NULL)
+        printf("failed to open. Reason: [%s].\n", PHYSFS_getLastError());
+    else
+    {
+        size_t bw = strlen(WRITESTR);
+        PHYSFS_sint64 rc = PHYSFS_write(f, WRITESTR, 1, bw);
+        if (rc != bw)
+        {
+            printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n", rc, bw,
+                   PHYSFS_getLastError());
+        } /* if */
+        else
+        {
+            printf("Successful.\n");
+        } /* else */
+
+        PHYSFS_close(f);
+    } /* else */
+
+    return(1);
+} /* cmd_append */
+
+
+static int cmd_write(char *args)
+{
+    PHYSFS_file *f;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    f = PHYSFS_openWrite(args);
+    if (f == NULL)
+        printf("failed to open. Reason: [%s].\n", PHYSFS_getLastError());
+    else
+    {
+        size_t bw = strlen(WRITESTR);
+        PHYSFS_sint64 rc = PHYSFS_write(f, WRITESTR, 1, bw);
+        if (rc != bw)
+        {
+            printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n", rc, bw,
+                   PHYSFS_getLastError());
+        } /* if */
+        else
+        {
+            printf("Successful.\n");
+        } /* else */
+
+        PHYSFS_close(f);
+    } /* else */
+
+    return(1);
+} /* cmd_write */
 
 
 /* must have spaces trimmed prior to this call. */
@@ -432,6 +616,9 @@ static const command_info commands[] =
     { "isdir",          cmd_isdir,          1, "<fileToCheck>"              },
     { "issymlink",      cmd_issymlink,      1, "<fileToCheck>"              },
     { "cat",            cmd_cat,            1, "<fileToCat>"                },
+    { "filelength",     cmd_filelength,     1, "<fileToCheck>"              },
+    { "append",         cmd_append,         1, "<fileToAppend>"             },
+    { "write",          cmd_write,          1, "<fileToCreateOrTrash>"      },
     { NULL,             NULL,              -1, NULL                         }
 };
 
