@@ -74,8 +74,11 @@ Bug fixes:
 Initial PHYSFS_mount() work:
     Philip D. Bober
 
-Translation work:
+Brazillian Portuguese translation:
     Danny Angelo Carminati Grein
+
+Spanish translation:
+    Pedro J. Pérez
 
 MacOS Classic fixes,
 MPW support:
