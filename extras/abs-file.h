@@ -1,13 +1,11 @@
 /*
- * stdio/physfs abstraction layer 2002-08-29
+ * stdio/physfs abstraction layer 2002-12-03
  *
  * Adam D. Moss <adam@gimp.org> <aspirin@icculus.org>
  *
  * These wrapper macros and functions are designed to allow a program
  * to perform file I/O with identical semantics and syntax regardless
- * of whether PhysicsFS is being used or not.  Define USE_PHYSFS if
- * PhysicsFS is being usedl in this case you will still need to initialize
- * PhysicsFS yourself and set up its search-paths.
+ * of whether PhysicsFS is being used or not.
  */
 #ifndef _ABS_FILE_H
 #define _ABS_FILE_H
@@ -45,13 +43,69 @@ from the Author.
 #include <stdlib.h>
 #include <stdio.h>
 
+/*
+ * API:
+ *
+ * Macro/function       use like stdio equivalent...
+ * --------------       ----------------------------
+ * MY_FILETYPE          FILE
+ * MY_OPEN_FOR_READ     fopen(..., "rb")
+ * MY_READ              fread(...)
+ * MY_CLOSE             fclose(...)
+ * MY_GETC              fgetc(...)
+ * MY_GETS              fgets(...)
+ * MY_ATEOF             feof(...)
+ * MY_REWIND            rewind(...)
+ * MY_SETBUFFER         (not a standard for stdio, does nothing there)
+ */
+
+/*
+ * Important DEFINEs:
+ *   It is important to define these consistantly across the various
+ *   compilation modules of your program if you wish to exchange file
+ *   handles between them.
+ *
+ *   USE_PHYSFS: Define USE_PHYSFS if PhysicsFS is being used; note that if
+ *     you do intend to use PhysicsFS then you will still need to initialize
+ *     PhysicsFS yourself and set up its search-paths.
+ *
+ * Optional DEFINEs:
+ *
+ *   PHYSFS_DEFAULT_READ_BUFFER <bytes>: If set then abs-file.h sets the
+ *     PhysicsFS buffer size to this value whenever you open a file.  You
+ *     may over-ride this on a per-filehandle basis by using the
+ *     MY_SETBUFFER() macro (which simply does nothing when not using
+ *     PhysicsFS).  If you have not defined this value explicitly then
+ *     abs-file.h will default to the same default buffer size as used by
+ *     stdio if it can be determined, or 8192 bytes otherwise.
+ */
+#ifndef PHYSFS_DEFAULT_READ_BUFFER
+#ifdef BUFSIZ
+#define PHYSFS_DEFAULT_READ_BUFFER BUFSIZ
+#else
+#define PHYSFS_DEFAULT_READ_BUFFER 8192
+#endif
+#endif
+
 #ifdef USE_PHYSFS
 
 #include <physfs.h>
 #define MY_FILETYPE PHYSFS_file
+#define MY_SETBUFFER(fp,size) PHYSFS_setBuffer(fp,size)
 #define MY_READ(p,s,n,fp) PHYSFS_read(fp,p,s,n)
+#if PHYSFS_DEFAULT_READ_BUFFER
+static MY_FILETYPE* MY_OPEN_FOR_READ(const char *const filename)
+{
+  MY_FILETYPE *const file = PHYSFS_openRead(filename);
+  if (file) {
+    MY_SETBUFFER(file, PHYSFS_DEFAULT_READ_BUFFER);
+  }
+  return file;
+}
+#else
 #define MY_OPEN_FOR_READ(fn) PHYSFS_openRead(fn)
-static int MY_GETC(MY_FILETYPE * fp) {
+#endif
+static int MY_GETC(MY_FILETYPE *const fp) {
   unsigned char c;
   /*if (PHYSFS_eof(fp)) {
     return EOF;
@@ -62,7 +116,8 @@ static int MY_GETC(MY_FILETYPE * fp) {
   }
   return c;
 }
-static char * MY_GETS(char * const str, int size, MY_FILETYPE * fp) {
+static char * MY_GETS(char * const str, const int size,
+		      MY_FILETYPE *const fp) {
   int i = 0;
   int c;
   do {
@@ -97,7 +152,7 @@ static char * MY_GETS(char * const str, int size, MY_FILETYPE * fp) {
 #define MY_CLOSE(fp) fclose(fp)
 #define MY_ATEOF(fp) feof(fp)
 #define MY_REWIND(fp) rewind(fp)
-
+static void MY_SETBUFFER(const MY_FILETYPE *const file, const int num) { }
 #endif
 
 #endif
