@@ -207,7 +207,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
                 size = (size_t) volName[0];  /* convert to ASCIZ string... */
                 memmove(&volName[0], &volName[1], size);
                 volName[size] = '\0';
-                cb(data, volName);
+                cb(data, (const char *) volName);
             } /* if */
         } /* if */
 
@@ -619,8 +619,10 @@ static int macClassicEnumerateFiles(const char *dirname,
         size = (size_t) str255[0];  /* (convert to ASCIZ string...) */
         memmove(&str255[0], &str255[1], size);
         str255[size] = '\0';
-        callback(callbackdata, str255);
+        callback(callbackdata, (const char *) str255);
     } /* for */
+
+    return(1);
 } /* macClassicEnumerateFiles */
 
 

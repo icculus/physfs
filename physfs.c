@@ -1302,8 +1302,8 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
     if (h->mountPoint != NULL)  /* NULL mountpoint means "/". */
     {
         size_t mntpntlen = strlen(h->mountPoint);
-        assert(mntpntlen > 1); /* root mount points should be NULL. */
         size_t len = strlen(fname);
+        assert(mntpntlen > 1); /* root mount points should be NULL. */
         /* not under the mountpoint, so skip this archive. */
         BAIL_IF_MACRO(len < mntpntlen-1, ERR_NO_SUCH_PATH, 0);
         /* !!! FIXME: Case insensitive? */
@@ -2064,12 +2064,6 @@ static void setDefaultAllocator(void)
     allocator.Realloc = __PHYSFS_platformAllocatorRealloc;
     allocator.Free = __PHYSFS_platformAllocatorFree;
 } /* setDefaultAllocator */
-
-
-PHYSFS_Allocator *__PHYSFS_getAllocator(void)
-{
-    return(&allocator);
-} /* __PHYFS_getAllocator */
 
 /* end of physfs.c ... */
 
