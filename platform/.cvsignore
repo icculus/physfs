@@ -7,3 +7,4 @@ unix.lo
 posix.lo
 beos.lo
 win32.lo
+os2.lo
