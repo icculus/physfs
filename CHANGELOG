@@ -61,8 +61,8 @@
            crucial line from dir.c a few revisions ago, and no one noticed. :(
            Fixed. The win32 userdir will default to the base dir, now.
 11142001 - Removed a redundant error check in platform/win32.c
-03052002 - Made unix.c's timeslice implementation more portable (thanks to
-            Patrick Stein).
+03052002 - Made unix.c's timeslice implementation more portable, and added a
+            Darwin-specific means to detect CDs (thanks to Patrick Stein).
 
 --ryan. (icculus@clutteredmind.org)
 
