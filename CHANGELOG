@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+06012002 - Added -Wall to debug builds. Removed ANSI stdio calls from
+           platform/posix.c, and replaced them with actual POSIX calls (that
+           is, fopen() became open(), fseek() became lseek(), etc...)
 05272002 - Added some explicit casts when calling malloc() in platform/posix.c
 05252002 - Added John Hall's file modification time patch, and added a
            getlastmodtime command to test_physfs. Corrected error reporting
