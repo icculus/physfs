@@ -312,7 +312,7 @@ typedef struct
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 #define PHYSFS_VER_MAJOR 0
 #define PHYSFS_VER_MINOR 1
-#define PHYSFS_VER_PATCH 6
+#define PHYSFS_VER_PATCH 7
 #endif  /* DOXYGEN_SHOULD_IGNORE_THIS */
 
 /**
@@ -1337,6 +1337,407 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_swapSBE64(PHYSFS_sint64 val);
  *          any sort of 64-bit support.
  */
 __EXPORT__ PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val);
+
+
+/**
+ * \fn int PHYSFS_readSLE16(PHYSFS_file *file, PHYSFS_sint16 *val)
+ * \brief Read and convert a signed 16-bit littleendian value.
+ *
+ * Convenience function. Read a signed 16-bit littleendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_readSLE16(PHYSFS_file *file, PHYSFS_sint16 *val);
+
+
+/**
+ * \fn int PHYSFS_readULE16(PHYSFS_file *file, PHYSFS_uint16 *val)
+ * \brief Read and convert an unsigned 16-bit littleendian value.
+ *
+ * Convenience function. Read an unsigned 16-bit littleendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ *
+ */
+__EXPORT__ int PHYSFS_readULE16(PHYSFS_file *file, PHYSFS_uint16 *val);
+
+
+/**
+ * \fn int PHYSFS_readSBE16(PHYSFS_file *file, PHYSFS_sint16 *val)
+ * \brief Read and convert a signed 16-bit bigendian value.
+ *
+ * Convenience function. Read a signed 16-bit bigendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_readSBE16(PHYSFS_file *file, PHYSFS_sint16 *val);
+
+
+/**
+ * \fn int PHYSFS_readUBE16(PHYSFS_file *file, PHYSFS_uint16 *val)
+ * \brief Read and convert an unsigned 16-bit bigendian value.
+ *
+ * Convenience function. Read an unsigned 16-bit bigendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ *
+ */
+__EXPORT__ int PHYSFS_readUBE16(PHYSFS_file *file, PHYSFS_uint16 *val);
+
+
+/**
+ * \fn int PHYSFS_readSLE32(PHYSFS_file *file, PHYSFS_sint32 *val)
+ * \brief Read and convert a signed 32-bit littleendian value.
+ *
+ * Convenience function. Read a signed 32-bit littleendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_readSLE32(PHYSFS_file *file, PHYSFS_sint32 *val);
+
+
+/**
+ * \fn int PHYSFS_readULE32(PHYSFS_file *file, PHYSFS_uint32 *val)
+ * \brief Read and convert an unsigned 32-bit littleendian value.
+ *
+ * Convenience function. Read an unsigned 32-bit littleendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ *
+ */
+__EXPORT__ int PHYSFS_readULE32(PHYSFS_file *file, PHYSFS_uint32 *val);
+
+
+/**
+ * \fn int PHYSFS_readSBE32(PHYSFS_file *file, PHYSFS_sint32 *val)
+ * \brief Read and convert a signed 32-bit bigendian value.
+ *
+ * Convenience function. Read a signed 32-bit bigendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_readSBE32(PHYSFS_file *file, PHYSFS_sint32 *val);
+
+
+/**
+ * \fn int PHYSFS_readUBE32(PHYSFS_file *file, PHYSFS_uint32 *val)
+ * \brief Read and convert an unsigned 32-bit bigendian value.
+ *
+ * Convenience function. Read an unsigned 32-bit bigendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ *
+ */
+__EXPORT__ int PHYSFS_readUBE32(PHYSFS_file *file, PHYSFS_uint32 *val);
+
+
+/**
+ * \fn int PHYSFS_readSLE64(PHYSFS_file *file, PHYSFS_sint64 *val)
+ * \brief Read and convert a signed 64-bit littleendian value.
+ *
+ * Convenience function. Read a signed 64-bit littleendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ *
+ * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
+ */
+__EXPORT__ int PHYSFS_readSLE64(PHYSFS_file *file, PHYSFS_sint64 *val);
+
+
+/**
+ * \fn int PHYSFS_readULE64(PHYSFS_file *file, PHYSFS_uint64 *val)
+ * \brief Read and convert an unsigned 64-bit littleendian value.
+ *
+ * Convenience function. Read an unsigned 64-bit littleendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
+ */
+__EXPORT__ int PHYSFS_readULE64(PHYSFS_file *file, PHYSFS_uint64 *val);
+
+
+/**
+ * \fn int PHYSFS_readSBE64(PHYSFS_file *file, PHYSFS_sint64 *val)
+ * \brief Read and convert a signed 64-bit bigendian value.
+ *
+ * Convenience function. Read a signed 64-bit bigendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ *
+ * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
+ */
+__EXPORT__ int PHYSFS_readSBE64(PHYSFS_file *file, PHYSFS_sint64 *val);
+
+
+/**
+ * \fn int PHYSFS_readUBE64(PHYSFS_file *file, PHYSFS_uint64 *val)
+ * \brief Read and convert an unsigned 64-bit bigendian value.
+ *
+ * Convenience function. Read an unsigned 64-bit bigendian value from a
+ *  file and convert it to the platform's native byte order.
+ *
+ *    \param file PhysicsFS file handle from which to read.
+ *    \param val pointer to where value should be stored.
+ *   \return zero on failure, non-zero on success. If successful, (*val) will
+ *           store the result. On failure, you can find out what went wrong
+ *           from PHYSFS_GetLastError().
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
+ */
+__EXPORT__ int PHYSFS_readUBE64(PHYSFS_file *file, PHYSFS_uint64 *val);
+
+
+/**
+ * \fn int PHYSFS_writeSLE16(PHYSFS_file *file, PHYSFS_sint16 val)
+ * \brief Convert and write a signed 16-bit littleendian value.
+ *
+ * Convenience function. Convert a signed 16-bit value from the platform's
+ *  native byte order to littleendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_writeSLE16(PHYSFS_file *file, PHYSFS_sint16 val);
+
+
+/**
+ * \fn int PHYSFS_writeULE16(PHYSFS_file *file, PHYSFS_uint16 val)
+ * \brief Convert and write an unsigned 16-bit littleendian value.
+ *
+ * Convenience function. Convert an unsigned 16-bit value from the platform's
+ *  native byte order to littleendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_writeULE16(PHYSFS_file *file, PHYSFS_uint16 val);
+
+
+/**
+ * \fn int PHYSFS_writeSBE16(PHYSFS_file *file, PHYSFS_sint16 val)
+ * \brief Convert and write a signed 16-bit bigendian value.
+ *
+ * Convenience function. Convert a signed 16-bit value from the platform's
+ *  native byte order to bigendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_writeSBE16(PHYSFS_file *file, PHYSFS_sint16 val);
+
+
+/**
+ * \fn int PHYSFS_writeUBE16(PHYSFS_file *file, PHYSFS_uint16 val)
+ * \brief Convert and write an unsigned 16-bit bigendian value.
+ *
+ * Convenience function. Convert an unsigned 16-bit value from the platform's
+ *  native byte order to bigendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_writeUBE16(PHYSFS_file *file, PHYSFS_uint16 val);
+
+
+/**
+ * \fn int PHYSFS_writeSLE32(PHYSFS_file *file, PHYSFS_sint32 val)
+ * \brief Convert and write a signed 32-bit littleendian value.
+ *
+ * Convenience function. Convert a signed 32-bit value from the platform's
+ *  native byte order to littleendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_writeSLE32(PHYSFS_file *file, PHYSFS_sint32 val);
+
+
+/**
+ * \fn int PHYSFS_writeULE32(PHYSFS_file *file, PHYSFS_uint32 val)
+ * \brief Convert and write an unsigned 32-bit littleendian value.
+ *
+ * Convenience function. Convert an unsigned 32-bit value from the platform's
+ *  native byte order to littleendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_writeULE32(PHYSFS_file *file, PHYSFS_uint32 val);
+
+
+/**
+ * \fn int PHYSFS_writeSBE32(PHYSFS_file *file, PHYSFS_sint32 val)
+ * \brief Convert and write a signed 32-bit bigendian value.
+ *
+ * Convenience function. Convert a signed 32-bit value from the platform's
+ *  native byte order to bigendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_writeSBE32(PHYSFS_file *file, PHYSFS_sint32 val);
+
+
+/**
+ * \fn int PHYSFS_writeUBE32(PHYSFS_file *file, PHYSFS_uint32 val)
+ * \brief Convert and write an unsigned 32-bit bigendian value.
+ *
+ * Convenience function. Convert an unsigned 32-bit value from the platform's
+ *  native byte order to bigendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ */
+__EXPORT__ int PHYSFS_writeUBE32(PHYSFS_file *file, PHYSFS_uint32 val);
+
+
+/**
+ * \fn int PHYSFS_writeSLE64(PHYSFS_file *file, PHYSFS_sint64 val)
+ * \brief Convert and write a signed 64-bit littleendian value.
+ *
+ * Convenience function. Convert a signed 64-bit value from the platform's
+ *  native byte order to littleendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
+ */
+__EXPORT__ int PHYSFS_writeSLE64(PHYSFS_file *file, PHYSFS_sint64 val);
+
+
+/**
+ * \fn int PHYSFS_writeULE64(PHYSFS_file *file, PHYSFS_uint64 val)
+ * \brief Convert and write an unsigned 64-bit littleendian value.
+ *
+ * Convenience function. Convert an unsigned 64-bit value from the platform's
+ *  native byte order to littleendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
+ */
+__EXPORT__ int PHYSFS_writeULE64(PHYSFS_file *file, PHYSFS_uint64 val);
+
+
+/**
+ * \fn int PHYSFS_writeSBE64(PHYSFS_file *file, PHYSFS_sint64 val)
+ * \brief Convert and write a signed 64-bit bigending value.
+ *
+ * Convenience function. Convert a signed 64-bit value from the platform's
+ *  native byte order to bigendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
+ */
+__EXPORT__ int PHYSFS_writeSBE64(PHYSFS_file *file, PHYSFS_sint64 val);
+
+
+/**
+ * \fn int PHYSFS_writeUBE64(PHYSFS_file *file, PHYSFS_uint64 val)
+ * \brief Convert and write an unsigned 64-bit bigendian value.
+ *
+ * Convenience function. Convert an unsigned 64-bit value from the platform's
+ *  native byte order to bigendian and write it to a file.
+ *
+ *    \param file PhysicsFS file handle to which to write.
+ *    \param val Value to convert and write.
+ *   \return zero on failure, non-zero on success. On failure, you can
+ *           find out what went wrong from PHYSFS_GetLastError().
+ *
+ * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ *          any sort of 64-bit support.
+ */
+__EXPORT__ int PHYSFS_writeUBE64(PHYSFS_file *file, PHYSFS_uint64 val);
+
 
 #ifdef __cplusplus
 }
