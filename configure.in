@@ -208,6 +208,7 @@ AC_CHECK_FUNCS([memset strrchr])
 dnl Add Makefile conditionals
 AM_CONDITIONAL(BUILD_ZLIB, test x$enable_internal_zlib = xyes)
 AM_CONDITIONAL(BUILD_TEST_PHYSFS, test x$enable_testprog = xyes)
+AM_CONDITIONAL(BUILD_BEOS_CPP, test x$this_is_beos = xyes)
 
 AC_OUTPUT([
 Makefile
