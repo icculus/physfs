@@ -309,7 +309,7 @@ BINSCOMMON := LICENSE.TXT physfs.h
 
 .PHONY: package msbins win32bins nocygwin
 package: clean
-	cd .. ; mv physfs physfs-$(VERFULL) ; tar -cyvvf ./physfs-$(VERFULL).tar.bz2 --exclude="*CVS*" physfs-$(VERFULL) ; mv physfs-$(VERFULL) physfs
+	cd .. ; mv physfs physfs-$(VERFULL) ; tar -czvvf ./physfs-$(VERFULL).tar.gz --exclude="*CVS*" physfs-$(VERFULL) ; mv physfs-$(VERFULL) physfs
 
 
 ifeq ($(strip $(cygwin)),true)
