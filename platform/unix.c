@@ -581,7 +581,7 @@ void *__PHYSFS_platformOpenWrite(const char *filename)
 
 void *__PHYSFS_platformOpenAppend(const char *filename)
 {
-    return(doOpen(filename, "wb+"));
+    return(doOpen(filename, "ab"));
 } /* __PHYSFS_platformOpenAppend */
 
 
