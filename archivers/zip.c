@@ -168,8 +168,6 @@ static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset)
 
     while (offset > 0)
     {
-        /* !!! - RYAN, CHECK THIS CAST */
-        /* !!! This should be okay since offset will be <= bufsize */
         PHYSFS_uint32 chunk = (offset > bufsize) ? bufsize : (PHYSFS_uint32)offset;
         PHYSFS_sint32 rc = unzReadCurrentFile(fh, buf, chunk);
         BAIL_IF_MACRO(rc == 0, ERR_IO_ERROR, 0);  /* shouldn't happen. */
@@ -273,9 +271,7 @@ static char *ZIP_realpath(unzFile fh, unz_file_info *info, ZIPentry *entry)
 static int version_does_symlinks(uLong version)
 {
     int retval = 0;
-    /* !!! - RYAN, CHECK THIS CAST */
-    /* !!! - You AND the result with 0xFF, so it can't be larger than 0xFF */
-    unsigned char hosttype = (unsigned char)((version >> 8) & 0xFF);
+    PHYSFS_uint8 hosttype = (PHYSFS_uint8) ((version >> 8) & 0xFF);
 
     /*
      * These are the platforms that can build an archive with symlinks,

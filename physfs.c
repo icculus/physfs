@@ -21,7 +21,7 @@
 
 typedef struct __PHYSFS_ERRMSGTYPE__
 {
-    int tid;
+    PHYSFS_uint64 tid;
     int errorAvailable;
     char errorString[80];
     struct __PHYSFS_ERRMSGTYPE__ *next;
@@ -105,13 +105,12 @@ static void *stateLock = NULL;     /* protects other PhysFS static state. */
 static ErrMsg *findErrorForCurrentThread(void)
 {
     ErrMsg *i;
-    int tid;
+    PHYSFS_uint64 tid;
 
     __PHYSFS_platformGrabMutex(errorLock);
     if (errorMessages != NULL)
     {
-        /*!!! I think tid needs to be a 64-bit value??? */
-        tid = (int)__PHYSFS_platformGetThreadID();
+        tid = __PHYSFS_platformGetThreadID();
 
         for (i = errorMessages; i != NULL; i = i->next)
         {
@@ -144,8 +143,7 @@ void __PHYSFS_setError(const char *str)
             return;   /* uhh...? */
 
         memset((void *) err, '\0', sizeof (ErrMsg));
-        /*!!! I think tid needs to be a 64-bit value??? */
-        err->tid = (int)__PHYSFS_platformGetThreadID();
+        err->tid = __PHYSFS_platformGetThreadID();
 
         __PHYSFS_platformGrabMutex(errorLock);
         err->next = errorMessages;
