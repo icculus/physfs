@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=".,zlib114"
-				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_USRDLL;PHYSFS_EXPORTS;PHYSFS_SUPPORTS_GRP;PHYSFS_SUPPORTS_ZIP;PHYSFS_SUPPORTS_QPAK"
+				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_USRDLL;PHYSFS_EXPORTS;PHYSFS_SUPPORTS_GRP;PHYSFS_SUPPORTS_WAD;PHYSFS_SUPPORTS_ZIP;PHYSFS_SUPPORTS_QPAK"
 				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -94,7 +94,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="FALSE"
 				AdditionalIncludeDirectories=".,zlib114"
-				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_USRDLL;PHYSFS_EXPORTS;PHYSFS_SUPPORTS_GRP;PHYSFS_SUPPORTS_ZIP;PHYSFS_SUPPORTS_QPAK"
+				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_USRDLL;PHYSFS_EXPORTS;PHYSFS_SUPPORTS_GRP;PHYSFS_SUPPORTS_WAD;PHYSFS_SUPPORTS_ZIP;PHYSFS_SUPPORTS_QPAK"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
 				RuntimeLibrary="2"
@@ -171,6 +171,9 @@
 			</File>
 			<File
 				RelativePath=".\archivers\grp.c">
+			</File>
+			<File
+				RelativePath=".\archivers\wad.c">
 			</File>
 			<File
 				RelativePath=".\zlib114\infblock.c">

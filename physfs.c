@@ -74,6 +74,11 @@ extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_MVL;
 extern const DirFunctions         __PHYSFS_DirFunctions_MVL;
 #endif
 
+#if (defined PHYSFS_SUPPORTS_WAD)
+extern const PHYSFS_ArchiveInfo   __PHYSFS_ArchiveInfo_WAD;
+extern const DirFunctions         __PHYSFS_DirFunctions_WAD;
+#endif
+
 extern const DirFunctions  __PHYSFS_DirFunctions_DIR;
 
 
@@ -99,6 +104,11 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
     &__PHYSFS_ArchiveInfo_MVL,
 #endif
 
+#if (defined PHYSFS_SUPPORTS_WAD)
+    &__PHYSFS_ArchiveInfo_WAD,
+#endif
+
+
     NULL
 };
 
@@ -122,6 +132,10 @@ static const DirFunctions *dirFunctions[] =
 
 #if (defined PHYSFS_SUPPORTS_MVL)
     &__PHYSFS_DirFunctions_MVL,
+#endif
+
+#if (defined PHYSFS_SUPPORTS_WAD)
+    &__PHYSFS_DirFunctions_WAD,
 #endif
 
     &__PHYSFS_DirFunctions_DIR,

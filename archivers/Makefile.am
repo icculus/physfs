@@ -9,6 +9,7 @@ endif
 libarchivers_la_SOURCES =	\
 	dir.c		\
 	grp.c		\
+	wad.c		\
 	hog.c		\
 	mvl.c		\
 	zip.c		\

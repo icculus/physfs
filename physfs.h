@@ -131,6 +131,7 @@
  *   - .PAK (Quake I/II archive format)
  *   - .HOG (Descent I/II HOG file archives)
  *   - .MVL (Descent II movielib archives)
+ *   - .WAD (DOOM engine archives)
  *
  * Please see the file LICENSE in the source's root directory for licensing
  *  and redistribution rights.
