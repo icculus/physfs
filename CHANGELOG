@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+06282002 - Reworked build system _AGAIN_.
 06222002 - Alexander Pipelka spotted a bug in the file open routines in
            posix.c; patched.
 06152002 - Autoconf build system will now generate shared libraries on BeOS,
