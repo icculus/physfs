@@ -1816,6 +1816,7 @@ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
     BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, 0);
+    h->buffill = h->bufpos = 0;     /* just in case. */
     return(h->funcs->seek(h, pos));
 } /* PHYSFS_seek */
 
@@ -1880,7 +1881,6 @@ int PHYSFS_flush(PHYSFS_file *handle)
     /* dump buffer to disk. */
     rc = h->funcs->write(h, h->buffer + h->bufpos, h->buffill - h->bufpos, 1);
     BAIL_IF_MACRO(rc <= 0, NULL, 0);
-
     h->bufpos = h->buffill = 0;
     return(1);
 } /* PHYSFS_flush */
