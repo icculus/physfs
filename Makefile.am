@@ -32,6 +32,9 @@ EXTRA_DIST =	\
 	INSTALL \
 	TODO \
 	Doxyfile \
+	CWProjects.sit \
+	physfs.dsp \
+	test_physfs.dsp \
     docs
 
 dist-hook:
