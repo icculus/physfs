@@ -17,13 +17,23 @@
 #define INCL_DOSFILEMGR
 #define INCL_DOSMODULEMGR
 #define INCL_DOSERRORS
+#define INCL_DOSPROCESS
 #define INCL_DOSDEVICES
+#define INCL_DOSDEVIOCTL
+#define INCL_DOSMISC
 #include <os2.h>
 
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
+#include <ctype.h>
+
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_internal.h"
+
+const char *__PHYSFS_platformDirSeparator = "\\";
 
 
 static APIRET os2err(APIRET retval)
@@ -62,10 +72,6 @@ static APIRET os2err(APIRET retval)
             err = "Not a DOS disk";
             break;
 
-        case ERROR_DRIVE_LOCKED:
-            err = "Drive is locked";
-            break;
-
         case ERROR_SHARING_VIOLATION:
             err = "Sharing violation";
             break;
@@ -78,10 +84,6 @@ static APIRET os2err(APIRET retval)
             err = "Device already in use";
             break;
 
-        case ERROR_DRIVE_LOCKED:
-            err = "Drive is locked";
-            break;
-
         case ERROR_OPEN_FAILED:
             err = "Open failed";
             break;
@@ -90,7 +92,7 @@ static APIRET os2err(APIRET retval)
             err = "Disk is full";
             break;
 
-        case ERROR_DISK_FULL:
+        case ERROR_PIPE_BUSY:
             err = "Pipe busy";
             break;
 
@@ -104,7 +106,7 @@ static APIRET os2err(APIRET retval)
             break;
 
         case ERROR_TOO_MANY_HANDLES:
-        case ERROR_TOO_OPEN_FILES:
+        case ERROR_TOO_MANY_OPEN_FILES:
         case ERROR_NO_MORE_SEARCH_HANDLES:
             err = "Too many open handles";
             break;
@@ -192,10 +194,6 @@ static APIRET os2err(APIRET retval)
             err = "OS/2 reported an inconsistent Extended Attribute list";
             break;
 
-        case ERROR_EA_VALUE_UNSUPPORTABLE:
-            err = "OS/2 reported an unsupportable Extended Attribute value";
-            break;
-
         case ERROR_SEM_OWNER_DIED:
             err = "OS/2 reported that semaphore owner died";
             break;
@@ -230,18 +228,18 @@ int __PHYSFS_platformInit(void)
 {
     char buf[CCHMAXPATH];
     APIRET rc;
-    TIB tib;
-    PIB pib;
+    PTIB ptib;
+    PPIB ppib;
 
     assert(baseDir == NULL);
 
-    BAIL_IF_MACRO(os2err(DosGetInfoBlocks(&tib, &pib)) != NO_ERROR, NULL, 0);
-    rc = DosQueryModuleName(pib.pib_hmte, sizeof (buf), (PCHAR) buf);
+    BAIL_IF_MACRO(os2err(DosGetInfoBlocks(&ptib, &ppib)) != NO_ERROR, NULL, 0);
+    rc = DosQueryModuleName(ppib->pib_hmte, sizeof (buf), (PCHAR) buf);
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, 0);
 
     baseDir = (char *) malloc(strlen(buf) + 1);
     BAIL_IF_MACRO(baseDir == NULL, ERR_OUT_OF_MEMORY, 0);
-    strcpy(baseDir);
+    strcpy(baseDir, buf);
 
     return(1);  /* success. */
 } /* __PHYSFS_platformInit */
@@ -277,13 +275,13 @@ static int is_cdrom_drive(ULONG drive)
     rc = DosDevIOCtl((HFILE) -1, IOCTL_DISK,
                      DSK_GETDEVICEPARAMS,
                      &cmd, sizeof (cmd), &ul1,
-                     &bpb, sizeof (bpb), &u2);
+                     &bpb, sizeof (bpb), &ul2);
 
     /*
      * !!! FIXME: Note that this tells us that the media is REMOVABLE...
      * !!! FIXME:  but it might not be a CD-ROM...check driver name?
      */
-    return((rc == NO_ERROR) && ((DiskData.fsDeviceAttr & 0x0001) == 0));
+    return((rc == NO_ERROR) && ((bpb.fsDeviceAttr & 0x0001) == 0));
 } /* is_cdrom_drive */
 
 
@@ -304,7 +302,7 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, retval);
 
     /* !!! FIXME: the a, b, and c drives are almost certainly NOT cdroms... */
-    for (i = 0, bit = 1; i < 26; i++, bit << 1)
+    for (i = 0, bit = 1; i < 26; i++, bit <<= 1)
     {
         if (drivemap & bit)  /* this logical drive exists. */
         {
@@ -431,19 +429,19 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
 {
     char spec[CCHMAXPATH];
     LinkedStringList *retval = NULL, *p = NULL;
-    FINDFILEBUF3 fb;
+    FILEFINDBUF3 fb;
     HDIR hdir = HDIR_CREATE;
     ULONG count = 1;
     APIRET rc;
 
     BAIL_IF_MACRO(strlen(dirname) > sizeof (spec) - 4, ERR_OS_ERROR, NULL);
-    strcpy(spec, dname)
+    strcpy(spec, dirname);
     strcat(spec, "*.*");
 
     rc = DosFindFirst(spec, &hdir,
                       FILE_DIRECTORY | FILE_ARCHIVED |
                       FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM,
-                      &fb, sizeof (fb), &count, FIL_STANDARD)
+                      &fb, sizeof (fb), &count, FIL_STANDARD);
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, 0);
     while (count == 1)
     {
@@ -500,7 +498,7 @@ char *__PHYSFS_platformRealPath(const char *path)
 {
     char buf[CCHMAXPATH];
     char *retval;
-    APIRET rc = DosQueryPathInfo(fname, FIL_QUERYFULLNAME, buf, sizeof (buf));
+    APIRET rc = DosQueryPathInfo(path, FIL_QUERYFULLNAME, buf, sizeof (buf));
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, NULL);
     retval = (char *) malloc(strlen(buf) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -527,7 +525,7 @@ void *__PHYSFS_platformOpenRead(const char *filename)
     os2err(DosOpen(filename, &hfile, &actionTaken, 0, FILE_NORMAL,
                    OPEN_ACTION_OPEN_IF_EXISTS | OPEN_ACTION_FAIL_IF_NEW,
                    OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
-                   OPEN_FLAGS_NO_INHERIT | OPEN_SHARE_DENYWRITE |
+                   OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
                    OPEN_ACCESS_READONLY, NULL));
 
     return((void *) hfile);
@@ -546,7 +544,7 @@ void *__PHYSFS_platformOpenWrite(const char *filename)
     os2err(DosOpen(filename, &hfile, &actionTaken, 0, FILE_NORMAL,
                    OPEN_ACTION_REPLACE_IF_EXISTS | OPEN_ACTION_CREATE_IF_NEW,
                    OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
-                   OPEN_FLAGS_NO_INHERIT | OPEN_SHARE_DENYWRITE |
+                   OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
                    OPEN_ACCESS_READWRITE, NULL));
 
     return((void *) hfile);
@@ -557,6 +555,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 {
     ULONG dummy = 0;
     HFILE hfile = NULLHANDLE;
+    APIRET rc;
 
     /*
      * File must be opened SHARE_DENYWRITE and ACCESS_READWRITE, otherwise
@@ -565,7 +564,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
     rc = os2err(DosOpen(filename, &hfile, &dummy, 0, FILE_NORMAL,
                    OPEN_ACTION_OPEN_IF_EXISTS | OPEN_ACTION_CREATE_IF_NEW,
                    OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
-                   OPEN_FLAGS_NO_INHERIT | OPEN_SHARE_DENYWRITE |
+                   OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
                    OPEN_ACCESS_READWRITE, NULL));
 
     if (rc == NO_ERROR)
@@ -590,14 +589,14 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
 
     for (retval = 0; retval < count; retval++)
     {
-        APIRET rc = os2err(DosRead(hfile, buffer, size, &br));
+        os2err(DosRead(hfile, buffer, size, &br));
         if (br < size)
         {
-            DosSetFilePtr(hfile, -bw, FILE_CURRENT, &br); /* try to cleanup. */
+            DosSetFilePtr(hfile, -br, FILE_CURRENT, &br); /* try to cleanup. */
             return(retval);
         } /* if */
 
-        buffer = (void *) ( ((char *) buffer) + size) );
+        buffer = (void *) ( ((char *) buffer) + size );
     } /* for */
 
     return(retval);
@@ -613,14 +612,14 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 
     for (retval = 0; retval < count; retval++)
     {
-        APIRET rc = os2err(DosWrite(hfile, buffer, size, &bw));
+        os2err(DosWrite(hfile, buffer, size, &bw));
         if (bw < size)
         {
             DosSetFilePtr(hfile, -bw, FILE_CURRENT, &bw); /* try to cleanup. */
             return(retval);
         } /* if */
 
-        buffer = (void *) ( ((char *) buffer) + size) );
+        buffer = (void *) ( ((char *) buffer) + size );
     } /* for */
 
     return(retval);
@@ -675,7 +674,7 @@ int __PHYSFS_platformEOF(void *opaque)
 
 int __PHYSFS_platformFlush(void *opaque)
 {
-    return(os2err(DosResetBuffers((HFILE) opaque) == NO_ERROR));
+    return(os2err(DosResetBuffer((HFILE) opaque) == NO_ERROR));
 } /* __PHYSFS_platformFlush */
 
 
@@ -696,6 +695,7 @@ int __PHYSFS_platformDelete(const char *path)
 
 PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 {
+    PHYSFS_sint64 retval;
     struct tm tm;
     FILESTATUS3 fs;
     APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
@@ -728,15 +728,15 @@ void __PHYSFS_platformTimeslice(void)
 
 PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 {
-    TIB tib;
-    PIB pib;
+    PTIB ptib;
+    PPIB ppib;
 
     /*
      * Allegedly, this API never fails, but we'll punt and return a
      *  default value (zero might as well do) if it does.
      */
-    BAIL_IF_MACRO(os2err(DosGetInfoBlocks(&tib, &pib)) != NO_ERROR, 0, 0);
-    return((PHYSFS_uint64) tib.tib_ordinal);
+    BAIL_IF_MACRO(os2err(DosGetInfoBlocks(&ptib, &ppib)) != NO_ERROR, 0, 0);
+    return((PHYSFS_uint64) ptib->tib_ordinal);
 } /* __PHYSFS_platformGetThreadID */
 
 
