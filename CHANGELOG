@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+06112002 - Updated CodeWarrior projects and added them to CVS. _Finally_
+           officially released 0.1.6.
 06102002 - Major overhauls to platform/win32.c ... should work on all Windows
            platforms, including 95/98/ME and NT/2K/XP flavors. Someone should
            see if this builds on WinCE!  :)  You no longer need the latest
