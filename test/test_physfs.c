@@ -11,6 +11,10 @@
 #include <errno.h>
 #include <string.h>
 
+#if (defined __MWERKS__)
+#include <SIOUX.h>
+#endif
+
 #if ((!defined WIN32) && (!defined __MACOS__))
 #define HAVE_READLINE
 #endif
@@ -586,6 +590,14 @@ int main(int argc, char **argv)
 {
     char *buf = NULL;
     int rc = 0;
+
+#if (defined __MWERKS__)
+    extern tSIOUXSettings SIOUXSettings;
+    SIOUXSettings.asktosaveonclose = 0;
+    SIOUXSettings.autocloseonquit = 1;
+    SIOUXSettings.rows = 40;
+    SIOUXSettings.columns = 120;
+#endif
 
     printf("\n");
 
