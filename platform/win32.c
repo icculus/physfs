@@ -349,18 +349,27 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     HANDLE dir;
     WIN32_FIND_DATA ent;
     char *SearchPath;
+    size_t len = strlen(dirname);
 
-    /* Allocate a new string for path, "*", and NULL terminator */
-    SearchPath = malloc(strlen(dirname) + 2);
+    /* Allocate a new string for path, maybe '\\', "*", and NULL terminator */
+    SearchPath = alloca(len + 3);
     /* Copy current dirname */
     strcpy(SearchPath, dirname);
+
+    /* if there's no '\\' at the end of the path, stick one in there. */
+    if (dirname[len - 1] != '\\')
+    {
+        dirname[len++] = '\\';
+        dirname[len] = '\0';
+    } /* if */
+
     /* Append the "*" to the end of the string */
     strcat(SearchPath, "*");
 
     dir = FindFirstFile(SearchPath, &ent);
     BAIL_IF_MACRO(dir == INVALID_HANDLE_VALUE, win32strerror(), NULL);
 
-    while (FindNextFile(dir, &ent) != 0)
+    do
     {
         if (strcmp(ent.cFileName, ".") == 0)
             continue;
@@ -388,7 +397,7 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
 
         prev = l;
         l->next = NULL;
-    } /* while */
+    } while (FindNextFile(dir, &ent) != 0);
 
     FindClose(dir);
     return(retval);
