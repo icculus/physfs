@@ -230,6 +230,7 @@ int __PHYSFS_platformInit(void)
     APIRET rc;
     PTIB ptib;
     PPIB ppib;
+    PHYSFS_sint32 len;
 
     assert(baseDir == NULL);
 
@@ -237,7 +238,19 @@ int __PHYSFS_platformInit(void)
     rc = DosQueryModuleName(ppib->pib_hmte, sizeof (buf), (PCHAR) buf);
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, 0);
 
-    baseDir = (char *) malloc(strlen(buf) + 1);
+    /* chop off filename, leave path. */
+    for (len = strlen(buf) - 1; len >= 0; len--)
+    {
+        if (buf[len] == '\\')
+        {
+            buf[++len] = '\0';
+            break;
+        } /* if */
+    } /* for */
+
+    assert(len > 0);  /* should have been an "x:\\" on the front on string. */
+
+    baseDir = (char *) malloc(len + 1);
     BAIL_IF_MACRO(baseDir == NULL, ERR_OUT_OF_MEMORY, 0);
     strcpy(baseDir, buf);
 
