@@ -14,7 +14,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"

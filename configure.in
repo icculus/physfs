@@ -436,7 +436,7 @@ fi
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdlib.h string.h])
+AC_CHECK_HEADERS([stdlib.h string.h assert.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 dnl AC_C_CONST

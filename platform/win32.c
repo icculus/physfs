@@ -19,7 +19,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
-#include <assert.h>
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
