@@ -9,7 +9,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - Hmm...we can determine the actual CD-ROM drives under Win32, but how do you
   decide that there's no disc in the drive?
 - A PHYSFS_readUint32(), _readSint32(), etc API.
-- Patch the zlib used on win32 to 1.1.4.
 - Write manpages, preferrably generated from some javadoc-style solution
   so we can make HTML versions etc from the same data.
 - Improve ZIP_seek() (archivers/zip.c)
