@@ -2,6 +2,10 @@
  * CHANGELOG.
  */
 
+07142002 - Use GetVolumeInformation() instead of GetDiskFreeSpace() in
+           win32.c's mediaInDrive() function. This allows Windows NT 3.x to
+           correctly detect CD-ROM drives. Library now appears to be fully
+           functional on WinNT 3.51...need to try NT 3.1 still.  :)
 07122002 - Rewrote the ZIP archiver to no longer use Gilles Vollant's unzip.c
            code. Losing that abstraction should make the ZIP archiver
            significantly more efficient, and halved the amount of code used.
