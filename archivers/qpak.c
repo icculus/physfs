@@ -192,7 +192,7 @@ static int QPAK_isArchive(const char *filename, int forWriting)
 static int qpak_loadEntries(void *fh, int dirOffset, int numEntries,
                             QPAKentry *entries)
 {
-    PHYSFS_uint32 i;
+    PHYSFS_sint32 i;
 
     BAIL_IF_MACRO(__PHYSFS_platformSeek(fh, dirOffset) == 0, NULL, 0);
 
@@ -403,7 +403,7 @@ static QPAKentry *qpak_findEntry(QPAKdirectory *root, const char *name)
 static int qpak_populateDirectories(QPAKentry *entries, int numEntries,
                                     QPAKdirectory *root)
 {
-    PHYSFS_uint32 i;
+    PHYSFS_sint32 i;
     QPAKentry *entry = entries;
 
     for (i = 0; i < numEntries; i++, entry++)

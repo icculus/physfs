@@ -1293,7 +1293,6 @@ static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h,
 static int ZIP_isDirectory(DirHandle *h, const char *name, int *fileExists)
 {
     ZIPinfo *info = (ZIPinfo *) h->opaque;
-    PHYSFS_sint32 pos;
     int isDir;
     ZIPentry *entry = zip_find_entry(info, name, &isDir);
 
