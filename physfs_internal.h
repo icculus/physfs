@@ -837,12 +837,12 @@ typedef struct __PHYSFS_FILEHANDLE__
         /*
          * This is the buffer fill size. Don't touch.
          */
-    PHYSFS_uint64 buffill;
+    PHYSFS_uint32 buffill;
 
         /*
          * This is the buffer position. Don't touch.
          */
-    PHYSFS_uint64 bufpos;
+    PHYSFS_uint32 bufpos;
 
         /*
          * This should be the DirHandle that created this FileHandle.

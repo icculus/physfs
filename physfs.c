@@ -1710,9 +1710,9 @@ static PHYSFS_sint64 doBufferedRead(PHYSFS_file *handle, void *buffer,
 
     while (objCount > 0)
     {
-        PHYSFS_uint64 buffered = h->buffill - h->bufpos;
+        PHYSFS_uint32 buffered = h->buffill - h->bufpos;
         PHYSFS_uint64 mustread = (objSize * objCount) - remainder;
-        PHYSFS_uint64 copied;
+        PHYSFS_uint32 copied;
 
         if (buffered == 0) /* need to refill buffer? */
         {
@@ -1723,12 +1723,12 @@ static PHYSFS_sint64 doBufferedRead(PHYSFS_file *handle, void *buffer,
                 return(((rc == -1) && (retval == 0)) ? -1 : retval);
             } /* if */
 
-            buffered = h->buffill = rc;
+            buffered = h->buffill = (PHYSFS_uint32) rc;
             h->bufpos = 0;
         } /* if */
 
         if (buffered > mustread)
-            buffered = mustread;
+            buffered = (PHYSFS_uint32) mustread;
 
         memcpy(buffer, h->buffer + h->bufpos, (size_t) buffered);
         buffer = ((PHYSFS_uint8 *) buffer) + buffered;
@@ -1828,10 +1828,12 @@ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_file *handle)
 } /* PHYSFS_filelength */
 
 
-int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 bufsize)
+int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 _bufsize)
 {
     FileHandle *h = (FileHandle *) handle->opaque;
+	PHYSFS_uint32 bufsize = (PHYSFS_uint32) _bufsize;
 
+    BAIL_IF_MACRO(_bufsize > 0xFFFFFFFF, "buffer must fit in 32-bits", 0);
     BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, 0);
 
     /*

@@ -423,6 +423,7 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
 
     filelen = __PHYSFS_platformFileLength(in);
     BAIL_IF_MACRO(filelen == -1, NULL, 0);
+    BAIL_IF_MACRO(filelen > 0xFFFFFFFF, "ZIP bigger than 2 gigs?!", 0);
 
     /*
      * Jump to the end of the file and start reading backwards.
@@ -444,7 +445,7 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
     else
     {
         filepos = 0;
-        maxread = filelen;
+        maxread = (PHYSFS_uint32) filelen;
     } /* else */
 
     while ((totalread < filelen) && (totalread < 65557))
@@ -1062,7 +1063,7 @@ static int zip_parse_end_of_central_dir(void *in, DirHandle *dirh,
      *  sizeof central dir)...the difference in bytes is how much arbitrary
      *  data is at the start of the physical file.
      */
-    *data_start = pos - (*central_dir_ofs + ui32);
+    *data_start = (PHYSFS_uint32) (pos - (*central_dir_ofs + ui32));
 
     /* Now that we know the difference, fix up the central dir offset... */
     *central_dir_ofs += *data_start;
