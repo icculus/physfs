@@ -67,6 +67,8 @@ typedef struct
 static void GRP_dirClose(DirHandle *h);
 static PHYSFS_sint64 GRP_read(FileHandle *handle, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+static PHYSFS_sint64 GRP_write(FileHandle *handle, const void *buffer,
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static int GRP_eof(FileHandle *handle);
 static PHYSFS_sint64 GRP_tell(FileHandle *handle);
 static int GRP_seek(FileHandle *handle, PHYSFS_uint64 offset);
@@ -78,10 +80,14 @@ static LinkedStringList *GRP_enumerateFiles(DirHandle *h,
                                             const char *dirname,
                                             int omitSymLinks);
 static int GRP_exists(DirHandle *h, const char *name);
-static int GRP_isDirectory(DirHandle *h, const char *name);
-static int GRP_isSymLink(DirHandle *h, const char *name);
-static PHYSFS_sint64 GRP_getLastModTime(DirHandle *h, const char *name);
-static FileHandle *GRP_openRead(DirHandle *h, const char *name);
+static int GRP_isDirectory(DirHandle *h, const char *name, int *fileExists);
+static int GRP_isSymLink(DirHandle *h, const char *name, int *fileExists);
+static PHYSFS_sint64 GRP_getLastModTime(DirHandle *h, const char *n, int *e);
+static FileHandle *GRP_openRead(DirHandle *h, const char *name, int *exist);
+static FileHandle *GRP_openWrite(DirHandle *h, const char *name);
+static FileHandle *GRP_openAppend(DirHandle *h, const char *name);
+static int GRP_remove(DirHandle *h, const char *name);
+static int GRP_mkdir(DirHandle *h, const char *name);
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
 {
@@ -95,7 +101,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
 static const FileFunctions __PHYSFS_FileFunctions_GRP =
 {
     GRP_read,       /* read() method       */
-    NULL,           /* write() method      */
+    GRP_write,      /* write() method      */
     GRP_eof,        /* eof() method        */
     GRP_tell,       /* tell() method       */
     GRP_seek,       /* seek() method       */
@@ -115,10 +121,10 @@ const DirFunctions __PHYSFS_DirFunctions_GRP =
     GRP_isSymLink,          /* isSymLink() method      */
     GRP_getLastModTime,     /* getLastModTime() method */
     GRP_openRead,           /* openRead() method       */
-    NULL,                   /* openWrite() method      */
-    NULL,                   /* openAppend() method     */
-    NULL,                   /* remove() method         */
-    NULL,                   /* mkdir() method          */
+    GRP_openWrite,          /* openWrite() method      */
+    GRP_openAppend,         /* openAppend() method     */
+    GRP_remove,             /* remove() method         */
+    GRP_mkdir,              /* mkdir() method          */
     GRP_dirClose            /* dirClose() method       */
 };
 
@@ -152,6 +158,13 @@ static PHYSFS_sint64 GRP_read(FileHandle *handle, void *buffer,
 
     return(rc);
 } /* GRP_read */
+
+
+static PHYSFS_sint64 GRP_write(FileHandle *handle, const void *buffer,
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
+} /* GRP_write */
 
 
 static int GRP_eof(FileHandle *handle)
@@ -427,37 +440,44 @@ static int GRP_exists(DirHandle *h, const char *name)
 } /* GRP_exists */
 
 
-static int GRP_isDirectory(DirHandle *h, const char *name)
+static int GRP_isDirectory(DirHandle *h, const char *name, int *fileExists)
 {
+    *fileExists = GRP_exists(h, name);
     return(0);  /* never directories in a groupfile. */
 } /* GRP_isDirectory */
 
 
-static int GRP_isSymLink(DirHandle *h, const char *name)
+static int GRP_isSymLink(DirHandle *h, const char *name, int *fileExists)
 {
+    *fileExists = GRP_exists(h, name);
     return(0);  /* never symlinks in a groupfile. */
 } /* GRP_isSymLink */
 
 
-static PHYSFS_sint64 GRP_getLastModTime(DirHandle *h, const char *name)
+static PHYSFS_sint64 GRP_getLastModTime(DirHandle *h,
+                                        const char *name,
+                                        int *fileExists)
 {
     GRPinfo *info = ((GRPinfo *) h->opaque);
-    if (grp_find_entry(info, name) == NULL)
-        return(-1);  /* no such entry. */
+    PHYSFS_sint64 retval = -1;
 
-    /* Just return the time of the GRP itself in the physical filesystem. */
-    return(((GRPinfo *) h->opaque)->last_mod_time);
+    *fileExists = (grp_find_entry(info, name) != NULL);
+    if (*fileExists)  /* use time of GRP itself in the physical filesystem. */
+        retval = ((GRPinfo *) h->opaque)->last_mod_time;
+
+    return(retval);
 } /* GRP_getLastModTime */
 
 
-static FileHandle *GRP_openRead(DirHandle *h, const char *name)
+static FileHandle *GRP_openRead(DirHandle *h, const char *fnm, int *fileExists)
 {
     GRPinfo *info = ((GRPinfo *) h->opaque);
     FileHandle *retval;
     GRPfileinfo *finfo;
     GRPentry *entry;
 
-    entry = grp_find_entry(info, name);
+    entry = grp_find_entry(info, fnm);
+    *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, NULL);
 
     retval = (FileHandle *) malloc(sizeof (FileHandle));
@@ -485,6 +505,30 @@ static FileHandle *GRP_openRead(DirHandle *h, const char *name)
     retval->dirHandle = h;
     return(retval);
 } /* GRP_openRead */
+
+
+static FileHandle *GRP_openWrite(DirHandle *h, const char *name)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+} /* GRP_openWrite */
+
+
+static FileHandle *GRP_openAppend(DirHandle *h, const char *name)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+} /* GRP_openAppend */
+
+
+static int GRP_remove(DirHandle *h, const char *name)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+} /* GRP_remove */
+
+
+static int GRP_mkdir(DirHandle *h, const char *name)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+} /* GRP_mkdir */
 
 #endif  /* defined PHYSFS_SUPPORTS_GRP */
 

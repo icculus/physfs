@@ -144,10 +144,17 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
 } /* __PHYSFS_platformStricmp */
 
 
+#if (defined __PHYSFS_NO_SYMLINKS__)
+#define doStat stat
+#else
+#define doStat lstat
+#endif
+
 int __PHYSFS_platformExists(const char *fname)
 {
     struct stat statbuf;
-    return(stat(fname, &statbuf) == 0);
+    BAIL_IF_MACRO(doStat(fname, &statbuf) == -1, strerror(errno), 0);
+    return(1);
 } /* __PHYSFS_platformExists */
 
 
@@ -156,18 +163,9 @@ int __PHYSFS_platformIsSymLink(const char *fname)
 #if (defined __PHYSFS_NO_SYMLINKS__)
     return(0);
 #else
-
     struct stat statbuf;
-    int retval = 0;
-
-    if (lstat(fname, &statbuf) == 0)
-    {
-        if (S_ISLNK(statbuf.st_mode))
-            retval = 1;
-    } /* if */
-    
-    return(retval);
-
+    BAIL_IF_MACRO(lstat(fname, &statbuf) == -1, strerror(errno), 0);
+    return( (S_ISLNK(statbuf.st_mode)) ? 1 : 0 );
 #endif
 } /* __PHYSFS_platformIsSymlink */
 
@@ -175,15 +173,8 @@ int __PHYSFS_platformIsSymLink(const char *fname)
 int __PHYSFS_platformIsDirectory(const char *fname)
 {
     struct stat statbuf;
-    int retval = 0;
-
-    if (stat(fname, &statbuf) == 0)
-    {
-        if (S_ISDIR(statbuf.st_mode))
-            retval = 1;
-    } /* if */
-    
-    return(retval);
+    BAIL_IF_MACRO(stat(fname, &statbuf) == -1, strerror(errno), 0);
+    return( (S_ISDIR(statbuf.st_mode)) ? 1 : 0 );
 } /* __PHYSFS_platformIsDirectory */
 
 

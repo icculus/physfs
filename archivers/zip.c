@@ -118,6 +118,8 @@ typedef struct
 
 static PHYSFS_sint64 ZIP_read(FileHandle *handle, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+static PHYSFS_sint64 ZIP_write(FileHandle *handle, const void *buffer,
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
 static int ZIP_eof(FileHandle *handle);
 static PHYSFS_sint64 ZIP_tell(FileHandle *handle);
 static int ZIP_seek(FileHandle *handle, PHYSFS_uint64 offset);
@@ -129,12 +131,16 @@ static LinkedStringList *ZIP_enumerateFiles(DirHandle *h,
                                             const char *dirname,
                                             int omitSymLinks);
 static int ZIP_exists(DirHandle *h, const char *name);
-static int ZIP_isDirectory(DirHandle *h, const char *name);
-static int ZIP_isSymLink(DirHandle *h, const char *name);
-static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h, const char *name);
-static FileHandle *ZIP_openRead(DirHandle *h, const char *filename);
+static int ZIP_isDirectory(DirHandle *h, const char *name, int *fileExists);
+static int ZIP_isSymLink(DirHandle *h, const char *name, int *fileExists);
+static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h, const char *n, int *e);
+static FileHandle *ZIP_openRead(DirHandle *h, const char *filename, int *e);
+static FileHandle *ZIP_openWrite(DirHandle *h, const char *filename);
+static FileHandle *ZIP_openAppend(DirHandle *h, const char *filename);
 static void ZIP_dirClose(DirHandle *h);
 static int zip_resolve(void *in, ZIPinfo *info, ZIPentry *entry);
+static int ZIP_remove(DirHandle *h, const char *name);
+static int ZIP_mkdir(DirHandle *h, const char *name);
 
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
@@ -148,7 +154,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 static const FileFunctions __PHYSFS_FileFunctions_ZIP =
 {
     ZIP_read,       /* read() method       */
-    NULL,           /* write() method      */
+    ZIP_write,      /* write() method      */
     ZIP_eof,        /* eof() method        */
     ZIP_tell,       /* tell() method       */
     ZIP_seek,       /* seek() method       */
@@ -168,10 +174,10 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
     ZIP_isSymLink,          /* isSymLink() method      */
     ZIP_getLastModTime,     /* getLastModTime() method */
     ZIP_openRead,           /* openRead() method       */
-    NULL,                   /* openWrite() method      */
-    NULL,                   /* openAppend() method     */
-    NULL,                   /* remove() method         */
-    NULL,                   /* mkdir() method          */
+    ZIP_openWrite,          /* openWrite() method      */
+    ZIP_openAppend,         /* openAppend() method     */
+    ZIP_remove,             /* remove() method         */
+    ZIP_mkdir,              /* mkdir() method          */
     ZIP_dirClose            /* dirClose() method       */
 };
 
@@ -303,6 +309,13 @@ static PHYSFS_sint64 ZIP_read(FileHandle *handle, void *buf,
 
     return(retval);
 } /* ZIP_read */
+
+
+static PHYSFS_sint64 ZIP_write(FileHandle *handle, const void *buf,
+                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
+} /* ZIP_write */
 
 
 static int ZIP_eof(FileHandle *handle)
@@ -1233,15 +1246,18 @@ static int ZIP_exists(DirHandle *h, const char *name)
 } /* ZIP_exists */
 
 
-static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h, const char *name)
+static PHYSFS_sint64 ZIP_getLastModTime(DirHandle *h,
+                                        const char *name,
+                                        int *fileExists)
 {
     ZIPentry *entry = zip_find_entry((ZIPinfo *) h->opaque, name);
+    *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, -1);
     return(entry->last_mod_time);
 } /* ZIP_getLastModTime */
 
 
-static int ZIP_isDirectory(DirHandle *h, const char *name)
+static int ZIP_isDirectory(DirHandle *h, const char *name, int *fileExists)
 {
     ZIPinfo *info = (ZIPinfo *) h->opaque;
     PHYSFS_uint32 pos;
@@ -1249,10 +1265,14 @@ static int ZIP_isDirectory(DirHandle *h, const char *name)
 
     pos = zip_find_start_of_dir(info, name, 1);
     if (pos >= 0)
+    {
+        *fileExists = 1;
         return(1); /* definitely a dir. */
+    } /* if */
 
     /* Follow symlinks. This means we might need to resolve entries. */
     entry = zip_find_entry(info, name);
+    *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, ERR_NO_SUCH_FILE, 0);
 
     if (entry->resolved == ZIP_UNRESOLVED_SYMLINK) /* gotta resolve it. */
@@ -1273,9 +1293,10 @@ static int ZIP_isDirectory(DirHandle *h, const char *name)
 } /* ZIP_isDirectory */
 
 
-static int ZIP_isSymLink(DirHandle *h, const char *name)
+static int ZIP_isSymLink(DirHandle *h, const char *name, int *fileExists)
 {
     ZIPentry *entry = zip_find_entry((ZIPinfo *) h->opaque, name);
+    *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, 0);
     return(zip_entry_is_symlink(entry));
 } /* ZIP_isSymLink */
@@ -1305,14 +1326,15 @@ static void *zip_get_file_handle(const char *fn, ZIPinfo *inf, ZIPentry *entry)
 } /* zip_get_file_handle */
 
 
-static FileHandle *ZIP_openRead(DirHandle *h, const char *filename)
+static FileHandle *ZIP_openRead(DirHandle *h, const char *fnm, int *fileExists)
 {
     ZIPinfo *info = (ZIPinfo *) h->opaque;
-    ZIPentry *entry = zip_find_entry(info, filename);
+    ZIPentry *entry = zip_find_entry(info, fnm);
     FileHandle *retval = NULL;
     ZIPfileinfo *finfo = NULL;
     void *in;
 
+    *fileExists = (entry != NULL);
     BAIL_IF_MACRO(entry == NULL, NULL, NULL);
 
     in = zip_get_file_handle(info->archiveName, info, entry);
@@ -1354,6 +1376,18 @@ static FileHandle *ZIP_openRead(DirHandle *h, const char *filename)
 } /* ZIP_openRead */
 
 
+static FileHandle *ZIP_openWrite(DirHandle *h, const char *filename)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+} /* ZIP_openWrite */
+
+
+static FileHandle *ZIP_openAppend(DirHandle *h, const char *filename)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+} /* ZIP_openAppend */
+
+
 static void ZIP_dirClose(DirHandle *h)
 {
     ZIPinfo *zi = (ZIPinfo *) (h->opaque);
@@ -1362,6 +1396,18 @@ static void ZIP_dirClose(DirHandle *h)
     free(zi);
     free(h);
 } /* ZIP_dirClose */
+
+
+static int ZIP_remove(DirHandle *h, const char *name)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+} /* ZIP_remove */
+
+
+static int ZIP_mkdir(DirHandle *h, const char *name)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+} /* ZIP_mkdir */
 
 #endif  /* defined PHYSFS_SUPPORTS_ZIP */
 
