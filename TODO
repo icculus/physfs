@@ -13,7 +13,7 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   it.
 - Need PHYSFS_LANG_GERMAN.
 - I'm a little nervous about the use of linked lists in qpak.c.
-- Add qpak.c and PHYSFS_SUPPORTS_QPAK to mac classic and win32 projects.
+- Add qpak.c and PHYSFS_SUPPORTS_QPAK to mac classic and vc++6 projects.
 - Figure out that pesky pthread casting problem.
 - macclassic.c :
   "/* (Hmm. Default behaviour is broken in the base library.  :)  )  */"
