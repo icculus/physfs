@@ -209,17 +209,64 @@ void PHYSFS_getLinkedVersion(PHYSFS_Version *ver)
 } /* PHYSFS_getLinkedVersion */
 
 
+static const char *find_filename_extension(const char *fname)
+{
+    const char *retval = strchr(fname, '.');
+    const char *p = retval;
+
+    while (p != NULL)
+    {
+        p = strchr(p + 1, '.');
+        if (p != NULL)
+            retval = p;
+    } /* while */
+
+    if (retval != NULL)
+        retval++;  /* skip '.' */
+
+    return(retval);
+} /* find_filename_extension */
+
+
 static DirHandle *openDirectory(const char *d, int forWriting)
 {
     const DirFunctions **i;
+    const char *ext;
 
     BAIL_IF_MACRO(!__PHYSFS_platformExists(d), ERR_NO_SUCH_FILE, NULL);
 
-    for (i = dirFunctions; *i != NULL; i++)
+    ext = find_filename_extension(d);
+    if (ext != NULL)
     {
-        if ((*i)->isArchive(d, forWriting))
-            return( (*i)->openArchive(d, forWriting) );
-    } /* for */
+        /* Look for archivers with matching file extensions first... */
+        for (i = dirFunctions; *i != NULL; i++)
+        {
+            if (__PHYSFS_platformStricmp(ext, (*i)->info->extension) == 0)
+            {
+                if ((*i)->isArchive(d, forWriting))
+                    return( (*i)->openArchive(d, forWriting) );
+            } /* if */
+        } /* for */
+
+        /* failing an exact file extension match, try all the others... */
+        for (i = dirFunctions; *i != NULL; i++)
+        {
+            if (__PHYSFS_platformStricmp(ext, (*i)->info->extension) != 0)
+            {
+                if ((*i)->isArchive(d, forWriting))
+                    return( (*i)->openArchive(d, forWriting) );
+            } /* if */
+        } /* for */
+    } /* if */
+
+    else  /* no extension? Try them all. */
+    {
+        for (i = dirFunctions; *i != NULL; i++)
+        {
+            if ((*i)->isArchive(d, forWriting))
+                return( (*i)->openArchive(d, forWriting) );
+        } /* for */
+    } /* else */
 
     __PHYSFS_setError(ERR_UNSUPPORTED_ARCHIVE);
     return(NULL);
