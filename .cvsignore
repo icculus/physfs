@@ -48,5 +48,5 @@ Makefile.am
 config.cache
 autom4te.cache
 configure.lineno
-
+docs
 
