@@ -399,6 +399,7 @@ static int ZIP_fileClose(FileHandle *handle)
         free(finfo->buffer);
 
     free(finfo);
+    free(handle);
     return(1);
 } /* ZIP_fileClose */
 
