@@ -1,29 +1,86 @@
 lib_LTLIBRARIES = libphysfs.la
 
-SUBDIRS = platform archivers zlib114 . test extras
+#SUBDIRS = platform archivers zlib114 . test extras
+
+ZLIB_FILES = zlib114/adler32.c		\
+             zlib114/compress.c		\
+             zlib114/crc32.c		\
+             zlib114/deflate.c		\
+             zlib114/deflate.h		\
+             zlib114/infblock.c		\
+             zlib114/infblock.h		\
+             zlib114/infcodes.c		\
+             zlib114/infcodes.h		\
+             zlib114/inffast.c		\
+             zlib114/inffast.h		\
+             zlib114/inffixed.h		\
+             zlib114/inflate.c		\
+             zlib114/inftrees.c		\
+             zlib114/inftrees.h		\
+             zlib114/infutil.c		\
+             zlib114/infutil.h		\
+             zlib114/trees.c		\
+             zlib114/trees.h		\
+             zlib114/uncompr.c		\
+             zlib114/zconf.h		\
+             zlib114/zlib.h			\
+             zlib114/zutil.c		\
+             zlib114/zutil.h
+
+
+if BUILD_ZLIB
+  ZLIB_SRC = $(ZLIB_FILES)
+  ZLIB_INC = -I$(top_srcdir)/zlib114
+  ZLIB_EXTRADIST =
+else
+  ZLIB_SRC =
+  ZLIB_INC =
+  ZLIB_EXTRADIST = $(ZLIB_FILES)
+endif
+
+if BUILD_BEOS_CPP
+  BEOS_SRC = platform/beos.cpp
+  BEOS_EXTRADIST =
+else
+  BEOS_SRC =
+  BEOS_EXTRADIST = platform/beos.cpp
+endif
+
 
 libphysfsincludedir = $(includedir)
 libphysfsinclude_HEADERS =	\
 	physfs.h
 
 libphysfs_la_SOURCES =	\
-	physfs.c	\
+	physfs.c	        \
 	physfs_internal.h	\
-	physfs_byteorder.c
+	physfs_byteorder.c  \
+	archivers/dir.c		\
+	archivers/grp.c		\
+	archivers/zip.c		\
+	archivers/unzip.c   \
+	archivers/unzip.h   \
+	platform/unix.c     \
+	platform/posix.c    \
+    $(ZLIB_SRC) $(BEOS_SRC)
 
-if BUILD_ZLIB
-ZLIB_LIB = zlib114/libz.la
-else
-ZLIB_LIB =
-endif
+libphysfs_la_INCLUDES = $(ZLIB_INC)
 
 libphysfs_la_LDFLAGS = 		\
 	-release $(LT_RELEASE)	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
-libphysfs_la_LIBADD =	\
-	archivers/libarchivers.la	\
-	platform/libplatform.la	\
-	$(ZLIB_LIB)
+
+
+if BUILD_TEST_PHYSFS
+bin_PROGRAMS = test_physfs
+test_physfs_INCLUDES = -I$(top_srcdir)
+test_physfs_LDADD = $(top_srcdir)/libphysfs.la
+test_physfs_SOURCES = test/test_physfs.c
+TEST_EXTRADIST =
+else
+TEST_EXTRADIST = test/test_physfs.c
+endif
+
 
 EXTRA_DIST =	\
 	CREDITS \
@@ -35,8 +92,18 @@ EXTRA_DIST =	\
 	CWProjects.sit \
 	physfs.dsp \
 	test_physfs.dsp \
-    docs
+	platform/skeleton.c    \
+	platform/macclassic.c  \
+	platform/win32.c       \
+    docs                   \
+    extras/physfsrwops.h   \
+    extras/physfsrwops.c   \
+    extras/physfshttpd.c   \
+    $(ZLIB_EXTRADIST) $(BEOS_EXTRADIST) $(TEST_EXTRADIST)
 
 dist-hook:
 	rm -rf $(distdir)/docs/*
+	echo "Docs are generated with the program "Doxygen" (http://www.doxygen.org/)," >> $(distdir)/docs/README
+	echo " or can be read online at http://icculus.org/physfs/docs/" >> $(distdir)/docs/README
+	echo >> $(distdir)/docs/README
 
