@@ -2,7 +2,9 @@
  * CHANGELOG.
  */
 
-01302003 - Added buffering API to OS/2 build's exported symbol list.
+01302003 - Added buffering API to OS/2 build's exported symbol list. Updated
+           CWProjects.sit and made several fixes to get physfs building on
+           MacOS Classic again.
 01282003 - Fixed seeking in buffered files opened for read.
 01072003 - .NET assembly and C# wrapper by Gregory S. Read in the extras dir.
 01042003 - Added a hack for dealing with OSX bundles and newer PBProjects
