@@ -79,10 +79,31 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     if (strchr(argv0, '\\') != NULL)   /* default behaviour can handle this. */
         return(NULL);
 
+    retval = (char *) malloc(sizeof (TCHAR) * (MAX_PATH + 1));
+    buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
+    retval[buflen] = '\0';  /* does API always null-terminate the string? */
+
+        /* make sure the string was not truncated. */
+    if (__PHYSFS_platformStricmp(&retval[buflen - 4], ".exe") == 0)
+    {
+        char *ptr = strrchr(retval, '\\');
+        if (ptr != NULL)
+        {
+            *(ptr + 1) = '\0';  /* chop off filename. */
+
+            /* free up the bytes we didn't actually use. */            
+            retval = (char *) realloc(retval, strlen(retval) + 1);
+            if (retval != NULL)
+                return(retval);
+        } /* if */
+    } /* if */
+
+    /* if any part of the previous approach failed, try SearchPath()... */
     buflen = SearchPath(NULL, argv0, NULL, buflen, NULL, NULL);
-    retval = (char *) malloc(buflen);
+    retval = (char *) realloc(retval, buflen);
     BAIL_IF_MACRO(!retval, ERR_OUT_OF_MEMORY, NULL);
     SearchPath(NULL, argv0, NULL, buflen, retval, &filepart);
+
     return(retval);
 } /* __PHYSFS_platformCalcBaseDir */
 
@@ -308,7 +329,7 @@ char *__PHYSFS_platformCurrentDir(void)
 char *__PHYSFS_platformRealPath(const char *path)
 {
     /* !!! FIXME: This isn't supported on CygWin! */
-    return(_fullpath(NULL, path, _MAX_PATH));
+    return(_fullpath(NULL, path, MAX_PATH));
 } /* __PHYSFS_platformRealPath */
 
 
