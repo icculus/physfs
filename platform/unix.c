@@ -221,7 +221,7 @@ static char *findBinaryInPath(const char *bin, char *envr)
 
         /* build full binary path... */
         strcpy(exe, start);
-        if (exe[strlen(exe) - 1] != '/')
+        if ((exe[0] == '\0') || (exe[strlen(exe) - 1] != '/'))
             strcat(exe, "/");
         strcat(exe, bin);
 
