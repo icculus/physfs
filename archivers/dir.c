@@ -209,7 +209,6 @@ static DirHandle *DIR_openArchive(const char *name, int forWriting)
     if (strcmp((name + namelen) - seplen, dirsep) != 0)
         strcat((char *) (retval->opaque), dirsep);
 
-    retval->funcs = &__PHYSFS_DirFunctions_DIR;
     return(retval);
 } /* DIR_openArchive */
 
@@ -293,7 +292,8 @@ static FileHandle *doOpen(DirHandle *h, const char *name, const char *mode)
 
     retval->opaque = (void *) rc;
     retval->dirHandle = h;
-    retval->funcs = &__PHYSFS_FileFunctions_DIR;
+    retval->funcs = (mode[0] == 'r') ?
+                &__PHYSFS_FileFunctions_DIR : &__PHYSFS_FileFunctions_DIRW;
     return(retval);
 } /* doOpen */
 
