@@ -471,9 +471,8 @@ int __PHYSFS_platformInit(void)
         return 0;
     }
 
-    /* TODO - Probably want to change this to something like the basedir */
-    /* Default profile directory */
-	ProfileDirectory = "C:\\";
+    /* Default profile directory is the exe path */
+	ProfileDirectory = getExePath(NULL);
 
 #ifndef DISABLE_NT_SUPPORT
     /* If running an NT system (NT/Win2k/XP, etc...) */
@@ -658,17 +657,17 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
     if(((LowOrderPos = SetFilePointer(FileHandle, 0, &HighOrderPos, FILE_CURRENT))
         == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
     {
-        /* Combine the high/low order to create the 64-bit position value */
-        retval = HighOrderPos;
-        retval = retval << 32;
-        retval |= LowOrderPos;
-    }
-    else
-    {
         /* Set the error to GetLastError */
         __PHYSFS_setError(win32strerror());
         /* We errored out */
         retval = 0;
+    }
+    else
+    {
+        /* Combine the high/low order to create the 64-bit position value */
+        retval = HighOrderPos;
+        retval = retval << 32;
+        retval |= LowOrderPos;
     }
 
     /*!!! Can't find a file pointer routine?!?!?!!?!?*/
@@ -684,21 +683,22 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle)
 
     /* Cast the generic handle to a Win32 handle */
     FileHandle = (HANDLE)handle;
-    
+
+    /* Get the file size.  Condition evaluates to TRUE if an error occured */
     if(((FileSizeLow = GetFileSize(FileHandle, &FileSizeHigh))
         == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
-    {
-        /* Combine the high/low order to create the 64-bit position value */
-        retval = FileSizeHigh;
-        retval = retval << 32;
-        retval |= FileSizeLow;
-    }
-    else
     {
         /* Set the error to GetLastError */
         __PHYSFS_setError(win32strerror());
 
         retval = -1;
+    }
+    else
+    {
+        /* Combine the high/low order to create the 64-bit position value */
+        retval = FileSizeHigh;
+        retval = retval << 32;
+        retval |= FileSizeLow;
     }
 
     return retval;
@@ -716,8 +716,8 @@ int __PHYSFS_platformEOF(void *opaque)
     /* Get the current position in the file */
     if((FilePosition = __PHYSFS_platformTell(opaque)) != 0)
     {
-        /* Non-zero if EOF is equal to the file length - 1 */
-        retval = FilePosition == __PHYSFS_platformFileLength(opaque) - 1;
+        /* Non-zero if EOF is equal to the file length */
+        retval = FilePosition == __PHYSFS_platformFileLength(opaque);
     }
 
     return retval;
