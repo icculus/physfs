@@ -56,37 +56,37 @@ static DirHandle *ZIP_openArchive(const char *name, int forWriting)
 } /* ZIP_openArchive */
 
 
-static LinkedStringList *ZIP_enumerateFiles(DirHandle *r, const char *dirname)
+static LinkedStringList *ZIP_enumerateFiles(DirHandle *h, const char *dirname)
 {
 } /* ZIP_enumerateFiles */
 
 
-static int ZIP_exists(DirHandle *r, const char *name)
+static int ZIP_exists(DirHandle *h, const char *name)
 {
 } /* ZIP_exists */
 
 
-static int ZIP_isDirectory(DirHandle *r, const char *name)
+static int ZIP_isDirectory(DirHandle *h, const char *name)
 {
 } /* ZIP_isDirectory */
 
 
-static int ZIP_isSymLink(DirHandle *r, const char *name)
+static int ZIP_isSymLink(DirHandle *h, const char *name)
 {
 } /* ZIP_isSymLink */
 
 
-static FileHandle *ZIP_openRead(DirHandle *r, const char *filename)
+static FileHandle *ZIP_openRead(DirHandle *h, const char *filename)
 {
 } /* ZIP_openRead */
 
 
-static void ZIP_dirClose(DirHandle *r)
+static void ZIP_dirClose(DirHandle *h)
 {
 } /* ZIP_dirClose */
 
 
-static const FileFunctions __PHYSFS_FileHandle_ZIP =
+static const FileFunctions __PHYSFS_FileFunctions_ZIP =
 {
     ZIP_read,       /* read() method  */
     NULL,           /* write() method */

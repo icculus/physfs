@@ -38,13 +38,13 @@ debugging := true
 #  Note that various archives may need external libraries.
 #-----------------------------------------------------------------------------#
 use_archive_zip := false
+use_archive_grp := true
 
 #-----------------------------------------------------------------------------#
 # Set to "true" if you'd like to build a DLL. Set to "false" otherwise.
 #-----------------------------------------------------------------------------#
 #build_dll := false
 build_dll := true
-
 
 #-----------------------------------------------------------------------------#
 # Set one of the below. Currently, none of these are used.

@@ -19,8 +19,8 @@
 #include "physfs_internal.h"
 
 extern const DirFunctions __PHYSFS_DirFunctions_DIR;
-static const FileFunctions __PHYSFS_FileHandle_DIR;
-static const FileFunctions __PHYSFS_FileHandle_DIRW;
+static const FileFunctions __PHYSFS_FileFunctions_DIR;
+static const FileFunctions __PHYSFS_FileFunctions_DIRW;
 
 static int DIR_read(FileHandle *handle, void *buffer,
                     unsigned int objSize, unsigned int objCount)
@@ -112,7 +112,8 @@ static DirHandle *DIR_openArchive(const char *name, int forWriting)
     int namelen = strlen(name);
     int seplen = strlen(dirsep);
 
-    BAIL_IF_MACRO(!DIR_isArchive(name, 0), ERR_UNSUPPORTED_ARCHIVE, NULL);
+    BAIL_IF_MACRO(!DIR_isArchive(name, forWriting),
+                    ERR_UNSUPPORTED_ARCHIVE, NULL);
 
     retval = malloc(sizeof (DirHandle));
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -210,7 +211,7 @@ static FileHandle *doOpen(DirHandle *h, const char *name, const char *mode)
 
     retval->opaque = (void *) rc;
     retval->dirHandle = h;
-    retval->funcs = &__PHYSFS_FileHandle_DIR;
+    retval->funcs = &__PHYSFS_FileFunctions_DIR;
     return(retval);
 } /* doOpen */
 
@@ -275,7 +276,7 @@ static void DIR_dirClose(DirHandle *h)
 
 
 
-static const FileFunctions __PHYSFS_FileHandle_DIR =
+static const FileFunctions __PHYSFS_FileFunctions_DIR =
 {
     DIR_read,       /* read() method      */
     NULL,           /* write() method     */
@@ -286,7 +287,7 @@ static const FileFunctions __PHYSFS_FileHandle_DIR =
 };
 
 
-static const FileFunctions __PHYSFS_FileHandle_DIRW =
+static const FileFunctions __PHYSFS_FileFunctions_DIRW =
 {
     NULL,           /* read() method      */
     DIR_write,      /* write() method     */

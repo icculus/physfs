@@ -54,6 +54,10 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
     &__PHYSFS_ArchiveInfo_ZIP,
 #endif
 
+#if (defined PHYSFS_SUPPORTS_GRP)
+    &__PHYSFS_ArchiveInfo_GRP,
+#endif
+
     NULL
 };
 
@@ -61,6 +65,10 @@ static const DirFunctions *dirFunctions[] =
 {
 #if (defined PHYSFS_SUPPORTS_ZIP)
     &__PHYSFS_DirFunctions_ZIP,
+#endif
+
+#if (defined PHYSFS_SUPPORTS_GRP)
+    &__PHYSFS_DirFunctions_GRP,
 #endif
 
     &__PHYSFS_DirFunctions_DIR,
