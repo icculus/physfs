@@ -82,7 +82,7 @@ static int GRP_read(FileHandle *handle, void *buffer,
 
     errno = 0;
     retval = fread(buffer, objSize, objCount, fh);
-    finfo->curPos += retval;
+    finfo->curPos += (retval * objSize);
     BAIL_IF_MACRO((retval < objCount) && (ferror(fh)),strerror(errno),retval);
 
     return(retval);
@@ -106,7 +106,7 @@ static int GRP_tell(FileHandle *handle)
 static int GRP_seek(FileHandle *handle, int offset)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
-    int newPos = finfo->curPos + offset;
+    int newPos = finfo->startPos + offset;
 
     BAIL_IF_MACRO(offset < 0, ERR_INVALID_ARGUMENT, 0);
     BAIL_IF_MACRO(newPos > finfo->startPos + finfo->size, ERR_PAST_EOF, 0);
@@ -242,7 +242,7 @@ static int getFileEntry(DirHandle *h, const char *name, int *size)
     FILE *fh = g->handle;
     int i;
     char *ptr;
-    int retval = 0; /*(g->totalEntries + 1) * 16;*/ /* offset of raw file data */
+    int retval = (g->totalEntries + 1) * 16; /* offset of raw file data */
 
     /* Rule out filenames to avoid unneeded file i/o... */
     if (strchr(name, '/') != NULL)  /* no directories in groupfiles. */
