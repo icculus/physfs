@@ -1321,6 +1321,7 @@ PHYSFS_file *PHYSFS_openRead(const char *fname)
         fname++;
 
     __PHYSFS_platformGrabMutex(stateLock);
+    BAIL_IF_MACRO_MUTEX(!searchPath, ERR_NOT_IN_SEARCH_PATH, stateLock, NULL);
     for (i = searchPath; i != NULL; i = i->next)
     {
         DirHandle *h = i->dirHandle;
