@@ -28,7 +28,6 @@ Some might be dupes, some might be done already.
 - fscanf and fprintf support in extras dir.
 - Why do we call it openArchive and dirClose?
 - Sanity check byte order at runtime.
-- Every DIR_* function requires a malloc/free!
 - Memory locking?
 - Find a better name than dvoid and fvoid.
 - Can win32.c and pocketpc.c get merged?
