@@ -27,6 +27,18 @@
 #include <errno.h>
 #include <sys/mount.h>
 
+#ifndef PHYSFS_DARWIN
+#  if defined(__MACH__) && defined(__APPLE__)
+#    define PHYSFS_DARWIN 1
+#    include <CoreFoundation/CoreFoundation.h>
+#    include <CoreServices/CoreServices.h>
+#    include <IOKit/IOKitLib.h>
+#    include <IOKit/storage/IOMedia.h>
+#    include <IOKit/storage/IOCDMedia.h>
+#    include <IOKit/storage/IODVDMedia.h>
+#  endif
+#endif
+
 #if (!defined PHYSFS_NO_PTHREADS_SUPPORT)
 #include <pthread.h>
 #endif
@@ -72,10 +84,133 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
-#else
+
+#elif (defined PHYSFS_DARWIN)  /* "Big Nasty." */
+/*
+ * Code based on sample from Apple Developer Connection:
+ *  http://developer.apple.com/samplecode/Sample_Code/Devices_and_Hardware/Disks/VolumeToBSDNode/VolumeToBSDNode.c.htm
+ */
+
+static int darwinIsWholeMedia(io_service_t service)
+{
+    int retval = 0;
+    CFTypeRef wholeMedia;
+
+    if (!IOObjectConformsTo(service, kIOMediaClass))
+        return(0);
+        
+    wholeMedia = IORegistryEntryCreateCFProperty(service,
+                                                 CFSTR(kIOMediaWholeKey),
+                                                 kCFAllocatorDefault, 0);
+    if (wholeMedia == NULL)
+        return(0);
+
+    retval = CFBooleanGetValue(wholeMedia);
+    CFRelease(wholeMedia);
+
+    return retval;
+} /* darwinIsWholeMedia */
 
 
-#ifdef PHYSFS_HAVE_SYS_UCRED_H
+static int darwinIsMountedDisc(char *bsdName, mach_port_t masterPort)
+{
+    int retval = 0;
+    CFMutableDictionaryRef matchingDict;
+    kern_return_t rc;
+    io_iterator_t iter;
+    io_service_t service;
+
+    if ((matchingDict = IOBSDNameMatching(masterPort, 0, bsdName)) == NULL)
+        return(0);
+
+    rc = IOServiceGetMatchingServices(masterPort, matchingDict, &iter);
+    if ((rc != KERN_SUCCESS) || (!iter))
+        return(0);
+
+    service = IOIteratorNext(iter);
+    IOObjectRelease(iter);
+    if (!service)
+        return(0);
+
+    rc = IORegistryEntryCreateIterator(service, kIOServicePlane,
+             kIORegistryIterateRecursively | kIORegistryIterateParents, &iter);
+    
+    if (!iter)
+        return(0);
+
+    if (rc != KERN_SUCCESS)
+    {
+        IOObjectRelease(iter);
+        return(0);
+    } /* if */
+
+    IOObjectRetain(service);  /* add an extra object reference... */
+
+    do
+    {
+        if (darwinIsWholeMedia(service))
+        {
+            if ( (IOObjectConformsTo(service, kIOCDMediaClass)) ||
+                 (IOObjectConformsTo(service, kIODVDMediaClass)) )
+            {
+                retval = 1;
+            } /* if */
+        } /* if */
+        IOObjectRelease(service);
+    } while ((service = IOIteratorNext(iter)) && (!retval));
+                
+    IOObjectRelease(iter);
+    IOObjectRelease(service);
+
+    return(retval);
+} /* darwinIsMountedDisc */
+
+
+char **__PHYSFS_platformDetectAvailableCDs(void)
+{
+    const char *devPrefix = "/dev/";
+    int prefixLen = strlen(devPrefix);
+    mach_port_t masterPort = 0;
+    char **retval = (char **) malloc(sizeof (char *));
+    int cd_count = 1;  /* We count the NULL entry. */
+    struct statfs *mntbufp;
+    int i, mounts;
+
+    retval[0] = NULL;
+
+    if (IOMasterPort(MACH_PORT_NULL, &masterPort) != KERN_SUCCESS)
+        return(retval);
+
+    mounts = getmntinfo(&mntbufp, MNT_WAIT);  /* NOT THREAD SAFE! */
+    for (i = 0; i < mounts; i++)
+    {
+        char *dev = mntbufp[i].f_mntfromname;
+        char *mnt = mntbufp[i].f_mntonname;
+        if (strncmp(dev, devPrefix, prefixLen) != 0)  /* a virtual device? */
+            continue;
+
+        dev += prefixLen;
+        if (darwinIsMountedDisc(dev, masterPort))
+        {
+            char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
+            if (tmp)
+            {
+                retval = tmp;
+                retval[cd_count - 1] = (char *) malloc(strlen(mnt) + 1);
+                if (retval[cd_count - 1])
+                {
+                    strcpy(retval[cd_count - 1], mnt);
+                    cd_count++;
+                } /* if */
+            } /* if */
+        } /* if */
+    } /* for */
+
+    retval[cd_count - 1] = NULL;
+    return(retval);
+} /* __PHYSFS_platformDetectAvailableCDs */
+
+#elif (defined PHYSFS_HAVE_SYS_UCRED_H)
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
 {
@@ -121,10 +256,7 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
     return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
-#endif
-
-
-#ifdef PHYSFS_HAVE_MNTENT_H
+#elif (defined PHYSFS_HAVE_MNTENT_H)
 
 char **__PHYSFS_platformDetectAvailableCDs(void)
 {
@@ -170,8 +302,6 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 #endif
-
-#endif  /* !PHYSFS_NO_CDROM_SUPPORT */
 
 
 /* this is in posix.c ... */
@@ -266,7 +396,7 @@ void __PHYSFS_platformTimeslice(void)
 } /* __PHYSFS_platformTimeslice */
 
 
-#if defined(__MACH__) && defined(__APPLE__)
+#if PHYSFS_DARWIN
 /* 
  * This function is only for OSX. The problem is that Apple's applications
  * can actually be directory structures with the actual executable nested
@@ -314,6 +444,7 @@ static void stripAppleBundle(char *path)
     int i;
     
     /* Calloc will place the \0 character in the proper place for us */
+    /* !!! FIXME: Can we stack-allocate this? --ryan. */
     tempbuf = (char*)calloc( (strlen(path)+1), sizeof(char) );
     /* Unlike other Unix filesystems, HFS is case insensitive
      * It wouldn be nice to use strcasestr, but it doesn't seem
