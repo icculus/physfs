@@ -6,15 +6,8 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - Include the Visual Studio.NET project file in CVS directly.
 - Change platform detection so it doesn't need sed?
 - Deal with Unix platforms without POSIX threads (NetBSD, etc).
-- Make the zipfile parse symlinks with relative paths. See the function
-  expand_symlink_path() in archivers/zip.c ...
-- Make zipfile build a directory tree at runtime, discarding blank directory
-  entries, and parsing the paths of actual entries to find valid dirs.
-  Search this tree for faster entry location, much faster enumeration, and
-  more accurate ZIP_isDirectory results.
-- Change zip_find_entry() to do something faster than a linear search.
-- Ditch printf()s in ZIP code.
-- Other archivers: perhaps tar(.gz|.bz2), RPM, etc. These are less
+- !!! FIXME in zip.c: enumerate /dir works, but enumerate /dir/ is buggy.
+- Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
   an installer/updater. I thought it might be neat to have MBOX and Maildir
