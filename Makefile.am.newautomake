@@ -86,11 +86,13 @@ EXTRA_DIST =	\
 	platform/macclassic.c  \
 	platform/win32.c       \
 	platform/beos.cpp      \
+	platform/os2.c         \
     extras/physfsrwops.h   \
     extras/physfsrwops.c   \
     extras/physfshttpd.c   \
 	Makefile.am.oldautomake \
 	Makefile.am.newautomake \
+    makeos2.cmd             \
     $(ZLIB_EXTRADIST) $(BEOS_EXTRADIST) $(TEST_EXTRADIST)
 
 else
@@ -126,7 +128,8 @@ EXTRA_DIST =	\
 	CWProjects.sit \
 	physfs.spec \
 	physfs.dsp \
-	test_physfs.dsp
+	test_physfs.dsp \
+	makeos2.cmd
 
 
 endif
