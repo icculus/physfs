@@ -5,7 +5,9 @@
 07262002 - Fixed a typo in documentation. Archivers with matching file
            extensions are now given first shot at opening an archive, but if
            they fail, the other archivers are tried. More fixes to zip.c's
-           ZIP_enumerateFiles().
+           ZIP_enumerateFiles(). Wrote an OS/2 platform driver based on API
+           specs and a heavy pounding of Google Groups...as I don't have an
+           OS/2 compiler at the moment, it probably doesn't even compile.  :)
 07252002 - configure.in and unix.c now deal with platforms that lack a
            functional pthread library. Edward Rudd sent in a patch to the RPM
            specfile to have the build system set the correct version.
