@@ -262,6 +262,7 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
 #define ERR_TOO_MANY_SYMLINKS    "Too many symbolic links"
 #define ERR_COMPRESSION          "(De)compression error"
 #define ERR_NOT_IMPLEMENTED      "Not implemented"
+#define ERR_OS_ERROR             "Operating system reported error"
 
 /*
  * Call this to set the message returned by PHYSFS_getLastError().
@@ -663,6 +664,10 @@ void __PHYSFS_platformDestroyMutex(void *mutex);
  *  unrecoverable problem grabbing it (this should not be a matter of 
  *  timing out! We're talking major system errors; block until the mutex 
  *  is available otherwise.)
+ *
+ * _DO NOT_ call __PHYSFS_setError() in here! Since setError calls this
+ *  function, you'll cause an infinite recursion. This means you can't
+ *  use the BAIL_*MACRO* macros, either.
  */
 int __PHYSFS_platformGrabMutex(void *mutex);
 
@@ -671,6 +676,10 @@ int __PHYSFS_platformGrabMutex(void *mutex);
  *  once for each time that platformGrabMutex was called. Once possession has
  *  been released, the next thread in line to grab the mutex (if any) may
  *  proceed.
+ *
+ * _DO NOT_ call __PHYSFS_setError() in here! Since setError calls this
+ *  function, you'll cause an infinite recursion. This means you can't
+ *  use the BAIL_*MACRO* macros, either.
  */
 void __PHYSFS_platformReleaseMutex(void *mutex);
 
