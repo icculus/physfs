@@ -244,7 +244,6 @@ static FileHandle *doOpen(DirHandle *h, const char *name,
     char *f = __PHYSFS_platformCvtToDependent((char *)(h->opaque), name, NULL);
     void *rc;
     FileHandle *retval;
-    char *str;
 
     BAIL_IF_MACRO(f == NULL, NULL, NULL);
 
@@ -261,7 +260,7 @@ static FileHandle *doOpen(DirHandle *h, const char *name,
     if (!rc)
     {
         free(retval);
-        BAIL_MACRO(str, NULL);
+        return(NULL);
     } /* if */
 
     retval->opaque = (void *) rc;
