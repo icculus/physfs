@@ -42,14 +42,6 @@ else
   ZLIB_EXTRADIST = $(ZLIB_FILES)
 endif
 
-if BUILD_BEOS_CPP
-  BEOS_SRC = platform/beos.cpp
-  BEOS_EXTRADIST =
-else
-  BEOS_SRC =
-  BEOS_EXTRADIST = platform/beos.cpp
-endif
-
 libphysfs_la_SOURCES =	\
 	physfs.c	        \
 	physfs_internal.h	\
@@ -61,7 +53,7 @@ libphysfs_la_SOURCES =	\
 	archivers/unzip.h   \
 	platform/unix.c     \
 	platform/posix.c    \
-    $(ZLIB_SRC) $(BEOS_SRC)
+    $(ZLIB_SRC) @BUILD_BEOS_CPP@
 
 libphysfs_la_INCLUDES = $(ZLIB_INC)
 
@@ -99,7 +91,7 @@ EXTRA_DIST =	\
     extras/physfshttpd.c   \
 	Makefile.am.oldautomake \
 	Makefile.am.newautomake \
-    $(ZLIB_EXTRADIST) $(BEOS_EXTRADIST) $(TEST_EXTRADIST)
+    $(ZLIB_EXTRADIST) @BUILD_BEOS_EXTRA@ $(TEST_EXTRADIST)
 
 else
 
