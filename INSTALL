@@ -1,4 +1,4 @@
-Building is very easy.
+Building is (ahem) very easy.
 
 
 ALL PLATFORMS:
@@ -31,9 +31,21 @@ same directory as "physfs.h". This archive has Visual C project files and
 the code needed for zipfile support in PhysicsFS, since most Windows boxes
 don't have zlib preinstalled.
 
+IMPORTANT: If you are using anything older than Visual Studio.NET, you
+will _NEED_ to upgrade to the latest Platform SDK from Microsoft. It is a
+free download: http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
+Be sure to install _at least_ the Core SDK and the WMI SDK. I'm not sure if
+this is needed (or usable for Cygwin). Even though you need these SDK updates,
+the compiled PhysicsFS DLL should work on any win32 platform from Win95 and
+WinNT 4.0 and later.
+
+No one's tried building this for a WinCE (PocketPC) platform, but it may or
+may not work. Patches are welcome.
+
 After that, if building with CygWin, follow the Unix instructions, above.
-If you're using Visual C, point the IDE at physfs.dsp, and build. If
-you're using any other compiler, send me a patch when you get it working.  :)
+(Which used to work, see caveat about Platform SDK above). If you're using
+Visual C, point the IDE at physfs.dsp, and build. If you're using any other
+compiler, send me a patch when you get it working.  :)
 
 If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
 from you; send an email to icculus@clutteredmind.org.
@@ -51,9 +63,9 @@ the Mac, I'd like to hear from you; send an email to icculus@clutteredmind.org.
 
 OTHER PLATFORMS:
 Many platforms might "just work" with the Unix Makefile (such as BeOS and 
-MacOS X), but have not been tested. To implement a new platform or 
-archiver, please read the heavily-commented physfs_internal.h and look 
-in the platform/ and archiver/ directories for examples.
+MacOS X), but have not been heavily tested, if tested at all. To implement a
+new platform or archiver, please read the heavily-commented physfs_internal.h
+and look in the platform/ and archiver/ directories for examples.
 
 --ryan. (icculus@clutteredmind.org)
 
