@@ -7,9 +7,7 @@ run "make"
 
 That's it. The library will be sitting in a new directory called "bin".
 
-Coming soon: "make install".
+Run "make install" to install the library for use on your system.
 
 --ryan. (icculus@clutteredmind.org)
-
-
 

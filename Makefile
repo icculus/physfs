@@ -289,7 +289,7 @@ ifeq ($(strip $(cygwin)),true)
 msbins: win32bins
 
 win32bins: clean all
-	echo -e "\r\n\r\n\r\nHEY YOU.\r\n\r\n\r\nTake a look at README-win32bins.txt FIRST.\r\n\r\n\r\n--ryan. (icculus@linuxgames.com)\r\n\r\n" |zip -9rz ../physfs-win32bins-$(shell date +%m%d%Y).zip $(MAINLIB) $(EXTRAPACKAGELIBS) README-win32bins.txt
+	echo -e "\r\n\r\n\r\nHEY YOU.\r\n\r\n\r\nTake a look at README-win32bins.txt FIRST.\r\n\r\n\r\n--ryan. (icculus@clutteredmind.org)\r\n\r\n" |zip -9rz ../physfs-win32bins-$(shell date +%m%d%Y).zip $(MAINLIB) $(EXTRAPACKAGELIBS) README-win32bins.txt
 
 else
 
