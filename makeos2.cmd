@@ -5,8 +5,9 @@ rem
 rem This script (and, indeed, our OS/2 support) could use some tweaking.
 rem  Patches go to icculus@clutteredmind.org ...
 
+set PHYSFSLANG=PHYSFS_LANG_ENGLISH
 set DEBUGFLAGS=-D_NDEBUG -O2 -s
-set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib114 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP
+set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib114 -c -D__ST_MT_ERRNO__ -DOS2 -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_LANG=%PHYSFSLANG%
 
 @echo on
 mkdir bin
