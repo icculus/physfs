@@ -458,5 +458,14 @@ char *__PHYSFS_platformRealPath(const char *path)
     return(retval);
 } /* __PHYSFS_platformRealPath */
 
+
+int __PHYSFS_platformMkDir(const char *path)
+{
+    errno = 0;
+    rc = mkdir(path, S_IRWXU);
+    BAIL_IF_MACRO(rc == -1, strerror(errno), 0);
+    return(1);
+} /* __PHYSFS_platformMkDir */
+
 /* end of unix.c ... */
 

@@ -6,6 +6,13 @@
 08012001 - Added a safety memset in error setting, fixed URLs and email addr.
 08062001 - Added CD-ROM detection code to the unix platform driver.
 08072001 - Changed version to 0.1.1.
+08232001 - Fixed a potential free()ing of a NULL pointer in
+           __PHYSFS_platformEnumerateFiles() in platform/unix.c. Added
+           platform/win32.c. Other cleanups to get this compiling with
+           Visual C and CygWin. Added BAIL_MACRO for times when we were doing
+           BAIL_IF_MACRO(1, ...). Abstracted mkdir() in the platform drivers.
+           Added GRP setting output to showcfg in the Makefile. Changed
+           version to 0.1.2.
 
 --ryan. (icculus@clutteredmind.org)
 

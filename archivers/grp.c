@@ -35,7 +35,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <assert.h>
 #include "physfs.h"
 
@@ -71,7 +70,7 @@ static int GRP_read(FileHandle *handle, void *buffer,
     GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
     FILE *fh = (FILE *) (((GRPinfo *) (handle->dirHandle->opaque))->handle);
     int bytesLeft = (finfo->startPos + finfo->size) - finfo->curPos;
-    int objsLeft = bytesLeft / objSize;
+    unsigned int objsLeft = bytesLeft / objSize;
     int retval = 0;
 
     if (objsLeft < objCount)
@@ -83,7 +82,8 @@ static int GRP_read(FileHandle *handle, void *buffer,
     errno = 0;
     retval = fread(buffer, objSize, objCount, fh);
     finfo->curPos += (retval * objSize);
-    BAIL_IF_MACRO((retval < objCount) && (ferror(fh)),strerror(errno),retval);
+    BAIL_IF_MACRO((retval < (signed int) objCount) && (ferror(fh)),
+                   strerror(errno),retval);
 
     return(retval);
 } /* GRP_read */
@@ -134,7 +134,9 @@ static int openGrp(const char *filename, int forWriting, FILE **fh, int *count)
 {
     char buf[12];
 
-    assert(sizeof (int) == 4);
+     /* !!! FIXME: Get me platform-independent typedefs! */
+    if (sizeof (int) != 4)
+        assert(0);
 
     *fh = NULL;
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);

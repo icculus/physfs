@@ -165,7 +165,7 @@ MAINLIB := $(BINDIR)/$(strip $(BASELIBNAME))$(strip $(LIB_EXT))
 
 TESTSRCS := test/test_physfs.c
 
-MAINSRCS := physfs.c platform/unix.c archivers/dir.c
+MAINSRCS := physfs.c archivers/dir.c
 
 ifeq ($(strip $(use_archive_zip)),true)
 MAINSRCS += archivers/zip.c archivers/unzip.c
@@ -176,6 +176,12 @@ endif
 ifeq ($(strip $(use_archive_grp)),true)
 MAINSRCS += archivers/grp.c
 CFLAGS += -DPHYSFS_SUPPORTS_GRP
+endif
+
+ifeq ($(strip $(cygwin)),true)
+MAINSRCS += platform/win32.c
+else
+MAINSRCS += platform/unix.c
 endif
 
 TESTEXE := $(BINDIR)/test_physfs$(EXE_EXT)
@@ -269,6 +275,7 @@ showcfg:
 	@echo "Building DLLs  : $(build_dll)"
 	@echo "Install prefix : $(install_prefix)"
 	@echo "PhysFS version : $(VERFULL)"
+	@echo "Supports .GRP  : $(use_archive_grp)"
 	@echo "Supports .ZIP  : $(use_archive_zip)"
 
 #-----------------------------------------------------------------------------#

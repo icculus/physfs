@@ -295,7 +295,8 @@ char *__PHYSFS_convertToDependent(const char *prepend,
 int __PHYSFS_verifySecurity(DirHandle *h, const char *fname);
 
 
-/* This gets used all over for lessening code clutter. */
+/* These get used all over for lessening code clutter. */
+#define BAIL_MACRO(e, r) { __PHYSFS_setError(e); return r; }
 #define BAIL_IF_MACRO(c, e, r) if (c) { __PHYSFS_setError(e); return r; }
 
 
@@ -446,6 +447,14 @@ char *__PHYSFS_platformCurrentDir(void);
  * On error, return NULL and set the error message.
  */
 char *__PHYSFS_platformRealPath(const char *path);
+
+
+/*
+ * Make a directory in the actual filesystem. (path) is specified in
+ *  platform-dependent notation. On error, return zero and set the error
+ *  message. Return non-zero on success.
+ */
+int __PHYSFS_platformMkDir(const char *path);
 
 
 #ifdef __cplusplus

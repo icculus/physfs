@@ -13,7 +13,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include "physfs.h"
 
 #define __PHYSICSFS_INTERNAL__
@@ -31,7 +30,8 @@ static int DIR_read(FileHandle *handle, void *buffer,
 
     errno = 0;
     retval = fread(buffer, objSize, objCount, h);
-    BAIL_IF_MACRO((retval < objCount) && (ferror(h)),strerror(errno),retval);
+    BAIL_IF_MACRO((retval < (signed int) objCount) && (ferror(h)),
+                   strerror(errno),retval);
 
     return(retval);
 } /* DIR_read */
@@ -45,7 +45,7 @@ static int DIR_write(FileHandle *handle, void *buffer,
 
     errno = 0;
     retval = fwrite(buffer, objSize, objCount, h);
-    if ( (retval < objCount) && (ferror(h)) )
+    if ( (retval < (signed int) objCount) && (ferror(h)) )
         __PHYSFS_setError(strerror(errno));
 
     return(retval);
@@ -267,7 +267,7 @@ static int DIR_mkdir(DirHandle *h, const char *name)
     BAIL_IF_MACRO(f == NULL, NULL, 0);
 
     errno = 0;
-    retval = (mkdir(f, S_IRWXU) == 0);
+    retval = __PHYSFS_platformMkDir(f);
     if (!retval)
         __PHYSFS_setError(strerror(errno));
 
