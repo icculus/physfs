@@ -549,18 +549,18 @@ static void zip_free_entries(ZIPentry *entries, PHYSFS_uint32 max)
 static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path, int *isDir)
 {
     ZIPentry *a = info->entries;
-	PHYSFS_sint32 pathlen = strlen(path);
-	PHYSFS_sint32 lo = 0;
+    PHYSFS_sint32 pathlen = strlen(path);
+    PHYSFS_sint32 lo = 0;
     PHYSFS_sint32 hi = (PHYSFS_sint32) (info->entryCount - 1);
     PHYSFS_sint32 middle;
-	const char *thispath = NULL;
+    const char *thispath = NULL;
     int rc;
 
     while (lo <= hi)
     {
-		middle = lo + ((hi - lo) / 2);
-		thispath = a[middle].name;
-		rc = strncmp(path, thispath, pathlen);
+        middle = lo + ((hi - lo) / 2);
+        thispath = a[middle].name;
+        rc = strncmp(path, thispath, pathlen);
 
         if (rc > 0)
             lo = middle + 1;
@@ -568,19 +568,21 @@ static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path, int *isDir)
         else if (rc < 0)
             hi = middle - 1;
 
-		else  /* substring match...might be dir or entry or nothing. */
-		{
+        else /* substring match...might be dir or entry or nothing. */
+        {
             if (isDir != NULL)
             {
-			    *isDir = (thispath[pathlen] == '/');
-    			if (*isDir)
+                *isDir = (thispath[pathlen] == '/');
+                if (*isDir)
                     return(NULL);
             } /* if */
 
             if (thispath[pathlen] == '\0') /* found entry? */
-				return(&a[middle]);
-		} /* else */
-	} /* while */
+                return(&a[middle]);
+            else
+                hi = middle - 1;  /* adjust search params, try again. */
+        } /* if */
+    } /* while */
 
     if (isDir != NULL)
         *isDir = 0;
@@ -1024,31 +1026,31 @@ static int zip_parse_end_of_central_dir(void *in, DirHandle *dirh,
     /* find the end-of-central-dir record, and seek to it. */
     pos = zip_find_end_of_central_dir(in, &len);
     BAIL_IF_MACRO(pos == -1, NULL, 0);
-	BAIL_IF_MACRO(!__PHYSFS_platformSeek(in, pos), NULL, 0);
+    BAIL_IF_MACRO(!__PHYSFS_platformSeek(in, pos), NULL, 0);
 
     /* check signature again, just in case. */
     BAIL_IF_MACRO(!readui32(in, &ui32), NULL, 0);
     BAIL_IF_MACRO(ui32 != ZIP_END_OF_CENTRAL_DIR_SIG, ERR_NOT_AN_ARCHIVE, 0);
 
-	/* number of this disk */
+    /* number of this disk */
     BAIL_IF_MACRO(!readui16(in, &ui16), NULL, 0);
     BAIL_IF_MACRO(ui16 != 0, ERR_UNSUPPORTED_ARCHIVE, 0);
 
-	/* number of the disk with the start of the central directory */
+    /* number of the disk with the start of the central directory */
     BAIL_IF_MACRO(!readui16(in, &ui16), NULL, 0);
     BAIL_IF_MACRO(ui16 != 0, ERR_UNSUPPORTED_ARCHIVE, 0);
 
-	/* total number of entries in the central dir on this disk */
+    /* total number of entries in the central dir on this disk */
     BAIL_IF_MACRO(!readui16(in, &ui16), NULL, 0);
 
-	/* total number of entries in the central dir */
+    /* total number of entries in the central dir */
     BAIL_IF_MACRO(!readui16(in, &zipinfo->entryCount), NULL, 0);
     BAIL_IF_MACRO(ui16 != zipinfo->entryCount, ERR_UNSUPPORTED_ARCHIVE, 0);
 
-	/* size of the central directory */
+    /* size of the central directory */
     BAIL_IF_MACRO(!readui32(in, &ui32), NULL, 0);
 
-	/* offset of central directory */
+    /* offset of central directory */
     BAIL_IF_MACRO(!readui32(in, central_dir_ofs), NULL, 0);
     BAIL_IF_MACRO(pos < *central_dir_ofs + ui32, ERR_UNSUPPORTED_ARCHIVE, 0);
 
@@ -1060,12 +1062,12 @@ static int zip_parse_end_of_central_dir(void *in, DirHandle *dirh,
      *  sizeof central dir)...the difference in bytes is how much arbitrary
      *  data is at the start of the physical file.
      */
-	*data_start = pos - (*central_dir_ofs + ui32);
+    *data_start = pos - (*central_dir_ofs + ui32);
 
     /* Now that we know the difference, fix up the central dir offset... */
     *central_dir_ofs += *data_start;
 
-	/* zipfile comment length */
+    /* zipfile comment length */
     BAIL_IF_MACRO(!readui16(in, &ui16), NULL, 0);
 
     /*
