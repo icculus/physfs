@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /WX /Gm /ZI /Od /I "." /I "zlibwin32" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_ZIP" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /WX /Gm /ZI /Od /I "." /I "zlib114" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_ZIP" /D "PHYSFS_SUPPORTS_QPAK" /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /WX /Gm- /GX- /Zi /Od /I "." /I "zlib114" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_ZIP" /D "PHYSFS_SUPPORTS_QPAK" /FR /YX /FD /GZ /c
 # SUBTRACT CPP /X
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
