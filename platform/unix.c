@@ -170,10 +170,8 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     struct statfs *mntbufp;
     int i, mounts;
 
-    retval[0] = NULL;
-
     if (IOMasterPort(MACH_PORT_NULL, &masterPort) != KERN_SUCCESS)
-        return(retval);
+        BAIL_MACRO(ERR_OS_ERROR, /*return void*/);
 
     mounts = getmntinfo(&mntbufp, MNT_WAIT);  /* NOT THREAD SAFE! */
     for (i = 0; i < mounts; i++)
