@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "physfs_static_release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "zlib114" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "zlib114" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_MVL=1 /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -63,8 +63,8 @@ LIB32=link.exe -lib
 # PROP Output_Dir "physfs_static_debug"
 # PROP Intermediate_Dir "physfs_static_debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ  /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "zlib114" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /YX /FD /GZ  /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "zlib114" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_MVL=1 /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -72,7 +72,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"Debug\physfs_static.lib"
+# ADD LIB32 /nologo
 
 !ENDIF 
 
@@ -109,6 +109,10 @@ SOURCE=.\archivers\grp.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\archivers\hog.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\zlib114\infblock.c
 # End Source File
 # Begin Source File
@@ -130,6 +134,10 @@ SOURCE=.\zlib114\inftrees.c
 # Begin Source File
 
 SOURCE=.\zlib114\infutil.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\archivers\mvl.c
 # End Source File
 # Begin Source File
 
