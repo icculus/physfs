@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+05222003 - Fixed win32 crash if PHYSFS_init() is called with a NULL.
 05182003 - PocketPC fixes (thanks, David Hedbor!)
 05162003 - Compiler warning cleanup in HOG and MVL archivers (Thanks, Bradley!)
 04082003 - Minor changes to extras/abs-file.h (Thanks, Adam!)
