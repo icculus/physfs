@@ -38,6 +38,22 @@ any other compiler, send me a patch when you get it working.  :)
 If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
 from you; send an email to icculus@clutteredmind.org.
 
---ryan. (icculus@clutteredmind.org)
 
+MACOS 8/9:
+Download http://icculus.org/physfs/downloads/mac_classic_support.sit and 
+unpack it in the root of the physfs folder. It should produce a folder 
+called "Mac Classic Support" that has CodeWarrior 6 project files and a 
+copy of zlib for zipfile support.
+
+If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
+the Mac, I'd like to hear from you; send an email to icculus@clutteredmind.org.
+
+
+OTHER PLATFORMS:
+Many platforms might "just work" with the Unix Makefile (such as BeOS and 
+MacOS X), but have not been tested. To implement a new platform or 
+archiver, please read the heavily-commented physfs_internal.h and look 
+in the platform/ and archiver/ directories for examples.
+
+--ryan. (icculus@clutteredmind.org)
 
