@@ -39,7 +39,11 @@ static int matchesPattern(const char *fname, const char *wildcard,
         y = *wildptr;
         if (y == '*')
         {
-            wildptr++;
+            do
+            {
+                wildptr++;  /* skip multiple '*' in a row... */
+            } while (*wildptr == '*');
+
             y = (caseSensitive) ? *wildptr : (char) tolower(*wildptr);
 
             while (1)
@@ -74,8 +78,10 @@ static int matchesPattern(const char *fname, const char *wildcard,
             if (x != y)
                 return(0);
         } /* else */
-
     } /* while */
+
+    while (*wildptr == '*')
+        wildptr++;
 
     return(*fnameptr == *wildptr);
 } /* matchesPattern */
