@@ -12,7 +12,8 @@
 
 #include <windows.h>
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <ctype.h>
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -106,9 +107,48 @@ char *__PHYSFS_platformGetUserName(void)
 } /* __PHYSFS_platformGetUserName */
 
 
+static char *copyEnvironmentVariable(const char *varname)
+{
+    const char *envr = getenv(varname);
+    char *retval = NULL;
+
+    if (envr != NULL)
+    {
+        retval = malloc(strlen(envr) + 1);
+        if (retval != NULL)
+            strcpy(retval, envr);
+    } /* if */
+
+    return(retval);
+} /* copyEnvironmentVariable */
+
+
 char *__PHYSFS_platformGetUserDir(void)
 {
-    return(NULL);  /* no user dir on win32. */
+    char *home = copyEnvironmentVariable("HOME");
+    const char *homedrive = getenv("HOMEDRIVE");
+    const char *homepath = getenv("HOMEPATH");
+
+    if (home != NULL)
+        return(home);
+
+    if ((homedrive != NULL) && (homepath != NULL))
+    {
+        char *retval = (char *) malloc(strlen(homedrive)+strlen(homepath)+2);
+        if (retval != NULL)
+        {
+            strcpy(retval, homedrive);
+            if ((homepath[0] != '\\') &&
+                (homedrive[strlen(homedrive)-1] != '\\'))
+            {
+                strcat(retval, "\\");
+            } /* if */
+            strcat(retval, homepath);
+            return(retval);
+        } /* if */
+    } /* if */
+
+    return(NULL);  /* fall through to default rules. */
 } /* __PHYSFS_platformGetUserDir */
 
 
