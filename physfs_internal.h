@@ -20,6 +20,117 @@
 extern "C" {
 #endif
 
+
+/* The LANG section. */
+/*  please send questions/translations to Ryan: icculus@clutteredmind.org. */
+
+#if (!defined PHYSFS_LANG)
+#  define PHYSFS_LANG PHYSFS_LANG_ENGLISH
+#endif
+
+#define PHYSFS_LANG_ENGLISH 1  /* English text by Ryan C. Gordon */
+
+
+#if (PHYSFS_LANG == PHYSFS_LANG_ENGLISH)
+ #define DIR_ARCHIVE_DESCRIPTION  "Non-archive, direct filesystem I/O"
+ #define GRP_ARCHIVE_DESCRIPTION  "Build engine Groupfile format"
+ #define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip compatible"
+
+ #define ERR_IS_INITIALIZED       "Already initialized"
+ #define ERR_NOT_INITIALIZED      "Not initialized"
+ #define ERR_INVALID_ARGUMENT     "Invalid argument"
+ #define ERR_FILES_STILL_OPEN     "Files still open"
+ #define ERR_NO_DIR_CREATE        "Failed to create directories"
+ #define ERR_OUT_OF_MEMORY        "Out of memory"
+ #define ERR_NOT_IN_SEARCH_PATH   "No such entry in search path"
+ #define ERR_NOT_SUPPORTED        "Operation not supported"
+ #define ERR_UNSUPPORTED_ARCHIVE  "Archive type unsupported"
+ #define ERR_NOT_A_HANDLE         "Not a file handle"
+ #define ERR_INSECURE_FNAME       "Insecure filename"
+ #define ERR_SYMLINK_DISALLOWED   "Symbolic links are disabled"
+ #define ERR_NO_WRITE_DIR         "Write directory is not set"
+ #define ERR_NO_SUCH_FILE         "File not found"
+ #define ERR_NO_SUCH_PATH         "Path not found"
+ #define ERR_NO_SUCH_VOLUME       "Volume not found"
+ #define ERR_PAST_EOF             "Past end of file"
+ #define ERR_ARC_IS_READ_ONLY     "Archive is read-only"
+ #define ERR_IO_ERROR             "I/O error"
+ #define ERR_CANT_SET_WRITE_DIR   "Can't set write directory"
+ #define ERR_SYMLINK_LOOP         "Infinite symbolic link loop"
+ #define ERR_COMPRESSION          "(De)compression error"
+ #define ERR_NOT_IMPLEMENTED      "Not implemented"
+ #define ERR_OS_ERROR             "Operating system reported error"
+ #define ERR_FILE_EXISTS          "File already exists"
+ #define ERR_NOT_A_FILE           "Not a file"
+ #define ERR_NOT_A_DIR            "Not a directory"
+ #define ERR_NOT_AN_ARCHIVE       "Not an archive"
+ #define ERR_CORRUPTED            "Corrupted archive"
+ #define ERR_SEEK_OUT_OF_RANGE    "Seek out of range"
+ #define ERR_BAD_FILENAME         "Bad filename"
+ #define ERR_PHYSFS_BAD_OS_CALL   "(BUG) PhysicsFS made a bad system call"
+ #define ERR_ARGV0_IS_NULL        "argv0 is NULL"
+ #define ERR_ZLIB_NEED_DICT       "zlib: need dictionary"
+ #define ERR_ZLIB_DATA_ERROR      "zlib: data error"
+ #define ERR_ZLIB_MEMORY_ERROR    "zlib: memory error"
+ #define ERR_ZLIB_BUFFER_ERROR    "zlib: buffer error"
+ #define ERR_ZLIB_VERSION_ERROR   "zlib: version error"
+ #define ERR_ZLIB_UNKNOWN_ERROR   "zlib: unknown error"
+ #define ERR_SEARCHPATH_TRUNC     "Search path was truncated"
+ #define ERR_GETMODFN_TRUNC       "GetModuleFileName() was truncated"
+ #define ERR_GETMODFN_NO_DIR      "GetModuleFileName() had no dir"
+ #define ERR_DISK_FULL            "Disk is full"
+ #define ERR_DIRECTORY_FULL       "Directory full"
+ #define ERR_MACOS_GENERIC        "MacOS reported error (%d)"
+ #define ERR_OS2_GENERIC          "OS/2 reported error (%d)"
+ #define ERR_VOL_LOCKED_HW        "Volume is locked through hardware"
+ #define ERR_VOL_LOCKED_SW        "Volume is locked through software"
+ #define ERR_FILE_LOCKED          "File is locked"
+ #define ERR_FILE_OR_DIR_BUSY     "File/directory is busy"
+ #define ERR_FILE_ALREADY_OPEN_W  "File already open for writing"
+ #define ERR_FILE_ALREADY_OPEN_R  "File already open for reading"
+ #define ERR_INVALID_REFNUM       "Invalid reference number"
+ #define ERR_GETTING_FILE_POS     "Error getting file position"
+ #define ERR_VOLUME_OFFLINE       "Volume is offline"
+ #define ERR_PERMISSION_DENIED    "Permission denied"
+ #define ERR_VOL_ALREADY_ONLINE   "Volume already online"
+ #define ERR_NO_SUCH_DRIVE        "No such drive"
+ #define ERR_NOT_MAC_DISK         "Not a Macintosh disk"
+ #define ERR_VOL_EXTERNAL_FS      "Volume belongs to an external filesystem"
+ #define ERR_PROBLEM_RENAME       "Problem during rename"
+ #define ERR_BAD_MASTER_BLOCK     "Bad master directory block"
+ #define ERR_CANT_MOVE_FORBIDDEN  "Attempt to move forbidden"
+ #define ERR_WRONG_VOL_TYPE       "Wrong volume type"
+ #define ERR_SERVER_VOL_LOST      "Server volume has been disconnected"
+ #define ERR_FILE_ID_NOT_FOUND    "File ID not found"
+ #define ERR_FILE_ID_EXISTS       "File ID already exists"
+ #define ERR_SERVER_NO_RESPOND    "Server not responding"
+ #define ERR_USER_AUTH_FAILED     "User authentication failed"
+ #define ERR_PWORD_EXPIRED        "Password has expired on server"
+ #define ERR_ACCESS_DENIED        "Access denied"
+ #define ERR_NOT_A_DOS_DISK       "Not a DOS disk"
+ #define ERR_SHARING_VIOLATION    "Sharing violation"
+ #define ERR_CANNOT_MAKE          "Cannot make"
+ #define ERR_DEV_IN_USE           "Device already in use"
+ #define ERR_OPEN_FAILED          "Open failed"
+ #define ERR_PIPE_BUSY            "Pipe is busy"
+ #define ERR_SHARING_BUF_EXCEEDED "Sharing buffer exceeded"
+ #define ERR_TOO_MANY_HANDLES     "Too many open handles"
+ #define ERR_SEEK_ERROR           "Seek error"
+ #define ERR_DEL_CWD              "Trying to delete current working directory"
+ #define ERR_WRITE_PROTECT_ERROR  "Write protect error"
+ #define ERR_WRITE_FAULT          "Write fault"
+ #define ERR_LOCK_VIOLATION       "Lock violation"
+ #define ERR_GEN_FAILURE          "General failure"
+ #define ERR_UNCERTAIN_MEDIA      "Uncertain media"
+ #define ERR_PROT_VIOLATION       "Protection violation"
+ #define ERR_BROKEN_PIPE          "Broken pipe"
+#else
+ #error Please define PHYSFS_LANG.
+#endif
+
+/* end LANG section. */
+
+
 struct __PHYSFS_DIRHANDLE__;
 struct __PHYSFS_FILEFUNCTIONS__;
 
@@ -250,38 +361,6 @@ typedef struct __PHYSFS_DIRFUNCTIONS__
          */
     void (*dirClose)(DirHandle *r);
 } DirFunctions;
-
-
-/* error messages... */
-#define ERR_IS_INITIALIZED       "Already initialized"
-#define ERR_NOT_INITIALIZED      "Not initialized"
-#define ERR_INVALID_ARGUMENT     "Invalid argument"
-#define ERR_FILES_STILL_OPEN     "Files still open"
-#define ERR_NO_DIR_CREATE        "Failed to create directories"
-#define ERR_OUT_OF_MEMORY        "Out of memory"
-#define ERR_NOT_IN_SEARCH_PATH   "No such entry in search path"
-#define ERR_NOT_SUPPORTED        "Operation not supported"
-#define ERR_UNSUPPORTED_ARCHIVE  "Archive type unsupported"
-#define ERR_NOT_A_HANDLE         "Not a file handle"
-#define ERR_INSECURE_FNAME       "Insecure filename"
-#define ERR_SYMLINK_DISALLOWED   "Symbolic links are disabled"
-#define ERR_NO_WRITE_DIR         "Write directory is not set"
-#define ERR_NO_SUCH_FILE         "No such file"
-#define ERR_PAST_EOF             "Past end of file"
-#define ERR_ARC_IS_READ_ONLY     "Archive is read-only"
-#define ERR_IO_ERROR             "I/O error"
-#define ERR_CANT_SET_WRITE_DIR   "Can't set write directory"
-#define ERR_SYMLINK_LOOP         "Infinite symbolic link loop"
-#define ERR_COMPRESSION          "(De)compression error"
-#define ERR_NOT_IMPLEMENTED      "Not implemented"
-#define ERR_OS_ERROR             "Operating system reported error"
-#define ERR_FILE_EXISTS          "File already exists"
-#define ERR_NOT_A_DIR            "Not a directory"
-#define ERR_FILE_NOT_FOUND       "File not found"
-#define ERR_NOT_AN_ARCHIVE       "Not an archive"
-#define ERR_CORRUPTED            "Corrupted archive"
-#define ERR_SEEK_OUT_OF_RANGE    "Seek out of range"
-#define ERR_BAD_FILENAME         "Bad filename"
 
 
 /*

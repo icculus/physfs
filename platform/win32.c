@@ -125,12 +125,12 @@ static char *getExePath(const char *argv0)
 
             /* make sure the string was not truncated. */
         if (__PHYSFS_platformStricmp(&retval[buflen - 4], ".exe") != 0)
-            __PHYSFS_setError("WIN32: GetModuleFileName() got truncated.");
+            __PHYSFS_setError(ERR_GOTMODFN_TRUNC);
         else
         {
             ptr = strrchr(retval, '\\');
             if (ptr == NULL)
-                __PHYSFS_setError("WIN32: GetModuleFileName() had no dir.");
+                __PHYSFS_setError(ERR_GETMODFN_NO_DIR);
             else
             {
                 *(ptr + 1) = '\0';  /* chop off filename. */
@@ -144,14 +144,14 @@ static char *getExePath(const char *argv0)
     if (!success)
     {
         if (argv0 == NULL)
-            __PHYSFS_setError("WIN32: argv0 is NULL.");
+            __PHYSFS_setError(ERR_ARGV0_IS_NULL);
         else
         {
             buflen = SearchPath(NULL, argv0, NULL, MAX_PATH+1, retval, &ptr);
             if (buflen == 0)
                 __PHYSFS_setError(win32strerror());
             else if (buflen > MAX_PATH)
-                __PHYSFS_setError("Win32: SearchPath() got truncated.");
+                __PHYSFS_setError(ERR_SEARCHPATH_TRUNC);
             else
                 success = 1;
         } /* else */

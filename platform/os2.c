@@ -36,116 +36,40 @@
 const char *__PHYSFS_platformDirSeparator = "\\";
 
 
-static APIRET os2err(APIRET retval)
+static const char *get_os2_error_string(APIRET rc)
 {
-    const char *err = NULL;
-
-    /*
-     * The ones that say "OS/2 reported" are more for PhysicsFS developer
-     *  debugging. We give more generic messages for ones that are likely to
-     *  fall through to an application.
-     */
-    switch (retval)
+    switch (rc)
     {
-        case NO_ERROR: /* Don't set the PhysicsFS error message for these... */
-        case ERROR_INTERRUPT:
-        case ERROR_TIMEOUT:
-            break;
-
-        case ERROR_NOT_ENOUGH_MEMORY:
-            err = ERR_OUT_OF_MEMORY;
-            break;
-
-        case ERROR_FILE_NOT_FOUND:
-            err = "File not found";
-            break;
-
-        case ERROR_PATH_NOT_FOUND:
-            err = "Path not found";
-            break;
-
-        case ERROR_ACCESS_DENIED:
-            err = "Access denied";
-            break;
-
-        case ERROR_NOT_DOS_DISK:
-            err = "Not a DOS disk";
-            break;
-
-        case ERROR_SHARING_VIOLATION:
-            err = "Sharing violation";
-            break;
-
-        case ERROR_CANNOT_MAKE:
-            err = "Cannot make";
-            break;
-
-        case ERROR_DEVICE_IN_USE:
-            err = "Device already in use";
-            break;
-
-        case ERROR_OPEN_FAILED:
-            err = "Open failed";
-            break;
-
-        case ERROR_DISK_FULL:
-            err = "Disk is full";
-            break;
-
-        case ERROR_PIPE_BUSY:
-            err = "Pipe busy";
-            break;
-
-        case ERROR_SHARING_BUFFER_EXCEEDED:
-            err = "Sharing buffer exceeded";
-            break;
-
-        case ERROR_FILENAME_EXCED_RANGE:
-        case ERROR_META_EXPANSION_TOO_LONG:
-            err = "Filename too big";
-            break;
-
-        case ERROR_TOO_MANY_HANDLES:
-        case ERROR_TOO_MANY_OPEN_FILES:
-        case ERROR_NO_MORE_SEARCH_HANDLES:
-            err = "Too many open handles";
-            break;
-
-        case ERROR_SEEK_ON_DEVICE:
-            err = "Seek error";  /* Is that what this error means? */
-            break;
-
-        case ERROR_NEGATIVE_SEEK:
-            err = "Seek past start of file";
-            break;
-
-        case ERROR_CURRENT_DIRECTORY:
-            err = "Trying to delete current working directory";
-            break;
-
-        case ERROR_WRITE_PROTECT:
-            err = "Write protect error";
-            break;
-
-        case ERROR_WRITE_FAULT:
-            err = "Write fault";
-            break;
-
-        case ERROR_LOCK_VIOLATION:
-            err = "Lock violation";
-            break;
-
-        case ERROR_GEN_FAILURE:
-            err = "General failure";
-            break;
-
-        case ERROR_UNCERTAIN_MEDIA:
-            err = "Uncertain media";
-            break;
-
-        case ERROR_PROTECTION_VIOLATION:
-            err = "Protection violation";
-            break;
+        case NO_ERROR: return(NULL);  /* not an error. */
+        case ERROR_INTERRUPT: return(NULL);  /* not an error. */
+        case ERROR_TIMEOUT: return(NULL);  /* not an error. */
+        case ERROR_NOT_ENOUGH_MEMORY: return(ERR_OUT_OF_MEMORY);
+        case ERROR_FILE_NOT_FOUND: return(ERR_NO_SUCH_FILE);
+        case ERROR_PATH_NOT_FOUND: return(ERR_NO_SUCH_PATH);
+        case ERROR_ACCESS_DENIED: return(ERR_ACCESS_DENIED);
+        case ERROR_NOT_DOS_DISK: return(ERR_NOT_A_DOS_DISK);
+        case ERROR_SHARING_VIOLATION: return(ERR_SHARING_VIOLATION);
+        case ERROR_CANNOT_MAKE: return(ERR_CANNOT_MAKE);
+        case ERROR_DEVICE_IN_USE: return(ERR_DEV_IN_USE);
+        case ERROR_OPEN_FAILED: return(ERR_OPEN_FAILED);
+        case ERROR_DISK_FULL: return(ERR_DISK_FULL);
+        case ERROR_PIPE_BUSY: return(ERR_PIPE_BUSY);
+        case ERROR_SHARING_BUFFER_EXCEEDED: return(ERR_SHARING_BUF_EXCEEDED);
+        case ERROR_FILENAME_EXCED_RANGE: return(ERR_BAD_FILENAME);
+        case ERROR_META_EXPANSION_TOO_LONG: return(ERR_BAD_FILENAME);
+        case ERROR_TOO_MANY_HANDLES: return(ERR_TOO_MANY_HANDLES);
+        case ERROR_TOO_MANY_OPEN_FILES: return(ERR_TOO_MANY_HANDLES);
+        case ERROR_NO_MORE_SEARCH_HANDLES: return(ERR_TOO_MANY_HANDLES);
+        case ERROR_SEEK_ON_DEVICE: return(ERR_SEEK_ERROR);
+        case ERROR_NEGATIVE_SEEK: return(ERR_SEEK_OUT_OF_RANGE);
+        case ERROR_DEL_CURRENT_DIRECTORY: return(ERR_DEL_CWD);
+        case ERROR_WRITE_PROTECT: return(ERR_WRITE_PROTECT_ERROR);
+        case ERROR_WRITE_FAULT: return(ERR_WRITE_FAULT);
+        case ERROR_LOCK_VIOLATION: return(ERR_LOCK_VIOLATION);
+        case ERROR_GEN_FAILURE: return(ERR_GENERAL_FAILURE);
+        case ERROR_UNCERTAIN_MEDIA: return(ERR_UNCERTAIN_MEDIA);
+        case ERROR_PROTECTION_VIOLATION: return(ERR_PROT_VIOLATION);
+        case ERROR_BROKEN_PIPE: return(ERR_BROKEN_PIPE);
 
         case ERROR_INVALID_PARAMETER:
         case ERROR_INVALID_NAME:
@@ -159,66 +83,30 @@ static APIRET os2err(APIRET retval)
         case ERROR_BAD_LENGTH:
         case ERROR_BAD_DRIVER_LEVEL:
         case ERROR_DIRECT_ACCESS_HANDLE:
-            err = "OS/2 reported an invalid parameter to an API function";
-            break;
-
-        case ERROR_NO_VOLUME_LABEL:
-            err = "OS/2 reported no volume label";
-            break;
-
-        case ERROR_NO_MORE_FILES:
-            err = "OS/2 reported no more files";
-            break;
-
-        case ERROR_MONITORS_NOT_SUPPORTED:
-            err = "OS/2 reported monitors not supported";
-            break;
-
-        case ERROR_BROKEN_PIPE:
-            err = "OS/2 reported a broken pipe";
-            break;
-
-        case ERROR_MORE_DATA:
-            err = "OS/2 reported \"more data\" (?)";
-            break;
-
-        case ERROR_EAS_DIDNT_FIT:
-            err = "OS/2 reported Extended Attributes didn't fit";
-            break;
-
-        case ERROR_INVALID_EA_NAME:
-            err = "OS/2 reported an invalid Extended Attribute name";
-            break;
-
-        case ERROR_EA_LIST_INCONSISTENT:
-            err = "OS/2 reported an inconsistent Extended Attribute list";
-            break;
-
-        case ERROR_SEM_OWNER_DIED:
-            err = "OS/2 reported that semaphore owner died";
-            break;
-
-        case ERROR_TOO_MANY_SEM_REQUESTS:
-            err = "OS/2 reported too many semaphore requests";
-            break;
-
-        case ERROR_SEM_BUSY:
-            err = "OS/2 reported a blocked semaphore";
-            break;
-
         case ERROR_NOT_OWNER:
-            err = "OS/2 reported that we used a resource we don't own.";
-            break;
+            return(ERR_PHYSFS_BAD_OS_CALL);
 
-        default:
-            err = "OS/2 reported back with unrecognized error code";
-            break;
+        default: return(ERR_OS2_GENERIC);
     } /* switch */
+
+    return(NULL);
+} /* get_os2_error_string */
+
+
+static APIRET os2err(APIRET retval)
+{
+    char buf[128];
+    const char *err = get_os2_error_string(retval);
+    if (err == ERR_OS2_GENERIC)
+    {
+        snprintf(buf, ERR_OS2_GENERIC, (int) retval);
+        err = buf;
+    } /* if */
 
     if (err != NULL)
         __PHYSFS_setError(err);
 
-    return(retval);
+    return(err);
 } /* os2err */
 
 
