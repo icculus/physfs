@@ -10,11 +10,8 @@
 #  include <config.h>
 #endif
 
-#if (!defined __BEOS__) /* BeOS uses beos.cpp and posix.c ... */
-
-#if (defined WIN32) /* cygwin/mingw32? */
-#include "win32.c"  /* !!! FIXME: holy friggin' hack. */
-#else
+/* BeOS uses beos.cpp and posix.c ... Cygwin and such use win32.c ... */
+#if ((!defined __BEOS__) && (!defined WIN32))
 
 #if ((defined __APPLE__) && (defined __MACH__))
 #  if (!defined __DARWIN__)
