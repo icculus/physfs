@@ -93,6 +93,13 @@ dnl ---------------------------------------------------------------------
 dnl Checks for libraries.
 dnl ---------------------------------------------------------------------
 
+dnl !!! FIXME: Not sure how to detect this...
+dnl check for 64-bit llseek()...
+dnl AC_CHECK_LIB(c, llseek, have_llseek=yes)
+if test x$have_llseek = xyes; then
+  AC_DEFINE(PHYSFS_HAVE_LLSEEK)
+fi
+
 require_zlib="no"
 
 dnl Check for zip archiver inclusion...
