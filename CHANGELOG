@@ -5,6 +5,7 @@
 07252002 - configure.in and unix.c now deal with platforms that lack a
            functional pthread library. Edward Rudd sent in a patch to the RPM
            specfile to have the build system set the correct version.
+           Clean ups in grp.c, beos.cpp and macclassic.c.
 07242002 - Rewrote ZIP_enumerate(). Hopefully it sucks less this time.
            unix.c and configure.in now have the infrastructure to disable
            the CD-ROM detection code, and use a stub that successfully (and
