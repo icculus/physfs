@@ -4,6 +4,8 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+03162005 - Readded Spanish translation. Added Brazillian Portguese translation
+           and fixed unlocalized string in wad.c (thanks Danny!).
 02152005 - Minor comment fix in platform/pocketpc.c
 01052004 - Fixed HOG archiver sorting/file lookup (thanks, Chris!)
 12162004 - Fixed some documentation/header comment typos (thanks, Gaetan!)
