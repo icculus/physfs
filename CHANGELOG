@@ -1,12 +1,16 @@
 /*
  * CHANGELOG.
  */
-12222003 - Converted VC6 .dsp to use zlib121; made Z_PREFIX=1 enabled by
-	   default to avoid link clashes; put zlib files in separate
-	   logical folder in .dsp project; updated zlib121/zconf.h to
-	   address remaining symbols that were still causing link warnings
+
+12292003 - Updated CodeWarrior projects from CW6 to CW7, and made a bunch of
+           patches to get the Mac Classic target building again. Removed
+           zlib114 from CVS repository. Updated OS/2 build batch file.
 12222003 - Fixed a search-and-replace mistake in win32.c that preventing
-           compiling on Windows. (thanks, Brian!)
+           compiling on Windows. (thanks, Brian!) Converted VC6 .dsp to use
+           zlib121; made Z_PREFIX=1 enabled by default to avoid link clashes;
+           put zlib files in separate logical folder in .dsp project; updated
+           zlib121/zconf.h to address remaining symbols that were still
+           causing link warnings.
 12182003 - WAD archiver now puts maps into subdirectories, making them
            accessible to the application. (Thanks, Travis!) RPM spec and
            Makefile.am* now package zlib_license_change.txt (Thanks, Edward!)
