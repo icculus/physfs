@@ -80,65 +80,6 @@ typedef struct
     void *handle; /* filehandle */
 } MIXfileinfo;
 
-static PHYSFS_sint64 MIX_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 MIX_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int MIX_eof(fvoid *opaque);
-static PHYSFS_sint64 MIX_tell(fvoid *opaque);
-static int MIX_seek(fvoid *opaque, PHYSFS_uint64 offset);
-static PHYSFS_sint64 MIX_fileLength(fvoid *opaque);
-static int MIX_fileClose(fvoid *opaque);
-static int MIX_isArchive(const char *filename, int forWriting);
-static void *MIX_openArchive(const char *name, int forWriting);
-static void MIX_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata)
-static int MIX_exists(dvoid *opaque, const char *name);
-static int MIX_isDirectory(dvoid *opaque, const char *name, int *fileExists);
-static int MIX_isSymLink(dvoid *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 MIX_getLastModTime(dvoid *opaque, const char *n, int *e);
-static fvoid *MIX_openRead(dvoid *opaque, const char *name, int *exist);
-static fvoid *MIX_openWrite(dvoid *opaque, const char *name);
-static fvoid *MIX_openAppend(dvoid *opaque, const char *name);
-static int MIX_remove(dvoid *opaque, const char *name);
-static int MIX_mkdir(dvoid *opaque, const char *name);
-static void MIX_dirClose(dvoid *opaque);
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MIX =
-{
-    "MIX",
-    "Westwood archive (Tiberian Dawn / Red Alert)",
-    "Sebastian Steinhauer <steini@steini-welt.de>",
-    "http://icculus.org/physfs/",
-};
-
-
-const PHYSFS_Archiver __PHYSFS_Archiver_MIX =
-{
-    &__PHYSFS_ArchiveInfo_MIX,
-    MIX_isArchive,          /* isArchive() method      */
-    MIX_openArchive,        /* openArchive() method    */
-    MIX_enumerateFiles,     /* enumerateFiles() method */
-    MIX_exists,             /* exists() method         */
-    MIX_isDirectory,        /* isDirectory() method    */
-    MIX_isSymLink,          /* isSymLink() method      */
-    MIX_getLastModTime,     /* getLastModTime() method */
-    MIX_openRead,           /* openRead() method       */
-    MIX_openWrite,          /* openWrite() method      */
-    MIX_openAppend,         /* openAppend() method     */
-    MIX_remove,             /* remove() method         */
-    MIX_mkdir,              /* mkdir() method          */
-    MIX_dirClose,           /* dirClose() method       */
-    MIX_read,               /* read() method           */
-    MIX_write,              /* write() method          */
-    MIX_eof,                /* eof() method            */
-    MIX_tell,               /* tell() method           */
-    MIX_seek,               /* seek() method           */
-    MIX_fileLength,         /* fileLength() method     */
-    MIX_fileClose           /* fileClose() method      */
-};
-
 
 static PHYSFS_uint32 MIX_hash(const char *name)
 {
@@ -477,6 +418,41 @@ static int MIX_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* MIX_mkdir */
+
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MIX =
+{
+    "MIX",
+    "Westwood archive (Tiberian Dawn / Red Alert)",
+    "Sebastian Steinhauer <steini@steini-welt.de>",
+    "http://icculus.org/physfs/",
+};
+
+
+const PHYSFS_Archiver __PHYSFS_Archiver_MIX =
+{
+    &__PHYSFS_ArchiveInfo_MIX,
+    MIX_isArchive,          /* isArchive() method      */
+    MIX_openArchive,        /* openArchive() method    */
+    MIX_enumerateFiles,     /* enumerateFiles() method */
+    MIX_exists,             /* exists() method         */
+    MIX_isDirectory,        /* isDirectory() method    */
+    MIX_isSymLink,          /* isSymLink() method      */
+    MIX_getLastModTime,     /* getLastModTime() method */
+    MIX_openRead,           /* openRead() method       */
+    MIX_openWrite,          /* openWrite() method      */
+    MIX_openAppend,         /* openAppend() method     */
+    MIX_remove,             /* remove() method         */
+    MIX_mkdir,              /* mkdir() method          */
+    MIX_dirClose,           /* dirClose() method       */
+    MIX_read,               /* read() method           */
+    MIX_write,              /* write() method          */
+    MIX_eof,                /* eof() method            */
+    MIX_tell,               /* tell() method           */
+    MIX_seek,               /* seek() method           */
+    MIX_fileLength,         /* fileLength() method     */
+    MIX_fileClose           /* fileClose() method      */
+};
 
 #endif  /* defined PHYSFS_SUPPORTS_MIX */
 

@@ -116,69 +116,6 @@ typedef struct
 #define UNIX_FILETYPE_SYMLINK 0120000
 
 
-static PHYSFS_sint64 ZIP_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 ZIP_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int ZIP_eof(fvoid *opaque);
-static PHYSFS_sint64 ZIP_tell(fvoid *opaque);
-static int ZIP_seek(fvoid *opaque, PHYSFS_uint64 offset);
-static PHYSFS_sint64 ZIP_fileLength(fvoid *opaque);
-static int ZIP_fileClose(fvoid *opaque);
-static int ZIP_isArchive(const char *filename, int forWriting);
-static void *ZIP_openArchive(const char *name, int forWriting);
-static void ZIP_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata);
-static int ZIP_exists(dvoid *opaque, const char *name);
-static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists);
-static int ZIP_isSymLink(dvoid *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 ZIP_getLastModTime(dvoid *opaque, const char *n, int *e);
-static fvoid *ZIP_openRead(dvoid *opaque, const char *filename, int *e);
-static fvoid *ZIP_openWrite(dvoid *opaque, const char *filename);
-static fvoid *ZIP_openAppend(dvoid *opaque, const char *filename);
-static void ZIP_dirClose(dvoid *opaque);
-static int zip_resolve(void *in, ZIPinfo *info, ZIPentry *entry);
-static int ZIP_remove(dvoid *opaque, const char *name);
-static int ZIP_mkdir(dvoid *opaque, const char *name);
-
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
-{
-    "ZIP",
-    ZIP_ARCHIVE_DESCRIPTION,
-    "Ryan C. Gordon <icculus@clutteredmind.org>",
-    "http://icculus.org/physfs/",
-};
-
-
-const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
-{
-    &__PHYSFS_ArchiveInfo_ZIP,
-    ZIP_isArchive,          /* isArchive() method      */
-    ZIP_openArchive,        /* openArchive() method    */
-    ZIP_enumerateFiles,     /* enumerateFiles() method */
-    ZIP_exists,             /* exists() method         */
-    ZIP_isDirectory,        /* isDirectory() method    */
-    ZIP_isSymLink,          /* isSymLink() method      */
-    ZIP_getLastModTime,     /* getLastModTime() method */
-    ZIP_openRead,           /* openRead() method       */
-    ZIP_openWrite,          /* openWrite() method      */
-    ZIP_openAppend,         /* openAppend() method     */
-    ZIP_remove,             /* remove() method         */
-    ZIP_mkdir,              /* mkdir() method          */
-    ZIP_dirClose,           /* dirClose() method       */
-    ZIP_read,               /* read() method           */
-    ZIP_write,              /* write() method          */
-    ZIP_eof,                /* eof() method            */
-    ZIP_tell,               /* tell() method           */
-    ZIP_seek,               /* seek() method           */
-    ZIP_fileLength,         /* fileLength() method     */
-    ZIP_fileClose           /* fileClose() method      */
-};
-
-
-
 /*
  * Bridge physfs allocation functions to zlib's format...
  */
@@ -694,6 +631,8 @@ static void zip_expand_symlink_path(char *path)
     } /* while */
 } /* zip_expand_symlink_path */
 
+/* (forward reference: zip_follow_symlink and zip_resolve call each other.) */
+static int zip_resolve(void *in, ZIPinfo *info, ZIPentry *entry);
 
 /*
  * Look for the entry named by (path). If it exists, resolve it, and return
@@ -1463,6 +1402,41 @@ static int ZIP_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* ZIP_mkdir */
+
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
+{
+    "ZIP",
+    ZIP_ARCHIVE_DESCRIPTION,
+    "Ryan C. Gordon <icculus@clutteredmind.org>",
+    "http://icculus.org/physfs/",
+};
+
+
+const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
+{
+    &__PHYSFS_ArchiveInfo_ZIP,
+    ZIP_isArchive,          /* isArchive() method      */
+    ZIP_openArchive,        /* openArchive() method    */
+    ZIP_enumerateFiles,     /* enumerateFiles() method */
+    ZIP_exists,             /* exists() method         */
+    ZIP_isDirectory,        /* isDirectory() method    */
+    ZIP_isSymLink,          /* isSymLink() method      */
+    ZIP_getLastModTime,     /* getLastModTime() method */
+    ZIP_openRead,           /* openRead() method       */
+    ZIP_openWrite,          /* openWrite() method      */
+    ZIP_openAppend,         /* openAppend() method     */
+    ZIP_remove,             /* remove() method         */
+    ZIP_mkdir,              /* mkdir() method          */
+    ZIP_dirClose,           /* dirClose() method       */
+    ZIP_read,               /* read() method           */
+    ZIP_write,              /* write() method          */
+    ZIP_eof,                /* eof() method            */
+    ZIP_tell,               /* tell() method           */
+    ZIP_seek,               /* seek() method           */
+    ZIP_fileLength,         /* fileLength() method     */
+    ZIP_fileClose           /* fileClose() method      */
+};
 
 #endif  /* defined PHYSFS_SUPPORTS_ZIP */
 

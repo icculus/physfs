@@ -64,67 +64,6 @@ typedef struct
 } MVLfileinfo;
 
 
-static PHYSFS_sint64 MVL_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 MVL_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int MVL_eof(fvoid *opaque);
-static PHYSFS_sint64 MVL_tell(fvoid *opaque);
-static int MVL_seek(fvoid *opaque, PHYSFS_uint64 offset);
-static PHYSFS_sint64 MVL_fileLength(fvoid *opaque);
-static int MVL_fileClose(fvoid *opaque);
-static int MVL_isArchive(const char *filename, int forWriting);
-static void *MVL_openArchive(const char *name, int forWriting);
-static void MVL_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata);
-static int MVL_exists(dvoid *opaque, const char *name);
-static int MVL_isDirectory(dvoid *opaque, const char *name, int *fileExists);
-static int MVL_isSymLink(dvoid *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 MVL_getLastModTime(dvoid *opaque, const char *n, int *e);
-static fvoid *MVL_openRead(dvoid *opaque, const char *name, int *exist);
-static fvoid *MVL_openWrite(dvoid *opaque, const char *name);
-static fvoid *MVL_openAppend(dvoid *opaque, const char *name);
-static int MVL_remove(dvoid *opaque, const char *name);
-static int MVL_mkdir(dvoid *opaque, const char *name);
-static void MVL_dirClose(dvoid *opaque);
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MVL =
-{
-    "MVL",
-    MVL_ARCHIVE_DESCRIPTION,
-    "Bradley Bell <btb@icculus.org>",
-    "http://icculus.org/physfs/",
-};
-
-
-const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
-{
-    &__PHYSFS_ArchiveInfo_MVL,
-    MVL_isArchive,          /* isArchive() method      */
-    MVL_openArchive,        /* openArchive() method    */
-    MVL_enumerateFiles,     /* enumerateFiles() method */
-    MVL_exists,             /* exists() method         */
-    MVL_isDirectory,        /* isDirectory() method    */
-    MVL_isSymLink,          /* isSymLink() method      */
-    MVL_getLastModTime,     /* getLastModTime() method */
-    MVL_openRead,           /* openRead() method       */
-    MVL_openWrite,          /* openWrite() method      */
-    MVL_openAppend,         /* openAppend() method     */
-    MVL_remove,             /* remove() method         */
-    MVL_mkdir,              /* mkdir() method          */
-    MVL_dirClose,           /* dirClose() method       */
-    MVL_read,               /* read() method           */
-    MVL_write,              /* write() method          */
-    MVL_eof,                /* eof() method            */
-    MVL_tell,               /* tell() method           */
-    MVL_seek,               /* seek() method           */
-    MVL_fileLength,         /* fileLength() method     */
-    MVL_fileClose           /* fileClose() method      */
-};
-
-
-
 static void MVL_dirClose(dvoid *opaque)
 {
     MVLinfo *info = ((MVLinfo *) opaque);
@@ -491,6 +430,41 @@ static int MVL_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* MVL_mkdir */
+
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MVL =
+{
+    "MVL",
+    MVL_ARCHIVE_DESCRIPTION,
+    "Bradley Bell <btb@icculus.org>",
+    "http://icculus.org/physfs/",
+};
+
+
+const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
+{
+    &__PHYSFS_ArchiveInfo_MVL,
+    MVL_isArchive,          /* isArchive() method      */
+    MVL_openArchive,        /* openArchive() method    */
+    MVL_enumerateFiles,     /* enumerateFiles() method */
+    MVL_exists,             /* exists() method         */
+    MVL_isDirectory,        /* isDirectory() method    */
+    MVL_isSymLink,          /* isSymLink() method      */
+    MVL_getLastModTime,     /* getLastModTime() method */
+    MVL_openRead,           /* openRead() method       */
+    MVL_openWrite,          /* openWrite() method      */
+    MVL_openAppend,         /* openAppend() method     */
+    MVL_remove,             /* remove() method         */
+    MVL_mkdir,              /* mkdir() method          */
+    MVL_dirClose,           /* dirClose() method       */
+    MVL_read,               /* read() method           */
+    MVL_write,              /* write() method          */
+    MVL_eof,                /* eof() method            */
+    MVL_tell,               /* tell() method           */
+    MVL_seek,               /* seek() method           */
+    MVL_fileLength,         /* fileLength() method     */
+    MVL_fileClose           /* fileClose() method      */
+};
 
 #endif  /* defined PHYSFS_SUPPORTS_MVL */
 

@@ -78,67 +78,6 @@ typedef struct
 #define QPAK_SIGNATURE 0x4b434150   /* "PACK" in ASCII. */
 
 
-static PHYSFS_sint64 QPAK_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 QPAK_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int QPAK_eof(fvoid *opaque);
-static PHYSFS_sint64 QPAK_tell(fvoid *opaque);
-static int QPAK_seek(fvoid *opaque, PHYSFS_uint64 offset);
-static PHYSFS_sint64 QPAK_fileLength(fvoid *opaque);
-static int QPAK_fileClose(fvoid *opaque);
-static int QPAK_isArchive(const char *filename, int forWriting);
-static void *QPAK_openArchive(const char *name, int forWriting);
-static void QPAK_enumerateFiles(dvoid *opaque, const char *dname,
-                                int omitSymLinks, PHYSFS_StringCallback cb,
-                                void *callbackdata);
-static int QPAK_exists(dvoid *opaque, const char *name);
-static int QPAK_isDirectory(dvoid *opaque, const char *name, int *fileExists);
-static int QPAK_isSymLink(dvoid *opaque, const char *name, int *fileExists);
-static PHYSFS_sint64 QPAK_getLastModTime(dvoid *opaque, const char *n, int *e);
-static fvoid *QPAK_openRead(dvoid *opaque, const char *name, int *exist);
-static fvoid *QPAK_openWrite(dvoid *opaque, const char *name);
-static fvoid *QPAK_openAppend(dvoid *opaque, const char *name);
-static int QPAK_remove(dvoid *opaque, const char *name);
-static int QPAK_mkdir(dvoid *opaque, const char *name);
-static void QPAK_dirClose(dvoid *opaque);
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_QPAK =
-{
-    "PAK",
-    QPAK_ARCHIVE_DESCRIPTION,
-    "Ryan C. Gordon <icculus@clutteredmind.org>",
-    "http://icculus.org/physfs/",
-};
-
-
-const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
-{
-    &__PHYSFS_ArchiveInfo_QPAK,
-    QPAK_isArchive,          /* isArchive() method      */
-    QPAK_openArchive,        /* openArchive() method    */
-    QPAK_enumerateFiles,     /* enumerateFiles() method */
-    QPAK_exists,             /* exists() method         */
-    QPAK_isDirectory,        /* isDirectory() method    */
-    QPAK_isSymLink,          /* isSymLink() method      */
-    QPAK_getLastModTime,     /* getLastModTime() method */
-    QPAK_openRead,           /* openRead() method       */
-    QPAK_openWrite,          /* openWrite() method      */
-    QPAK_openAppend,         /* openAppend() method     */
-    QPAK_remove,             /* remove() method         */
-    QPAK_mkdir,              /* mkdir() method          */
-    QPAK_dirClose,           /* dirClose() method       */
-    QPAK_read,               /* read() method           */
-    QPAK_write,              /* write() method          */
-    QPAK_eof,                /* eof() method            */
-    QPAK_tell,               /* tell() method           */
-    QPAK_seek,               /* seek() method           */
-    QPAK_fileLength,         /* fileLength() method     */
-    QPAK_fileClose           /* fileClose() method      */
-};
-
-
-
 static void QPAK_dirClose(dvoid *opaque)
 {
     QPAKinfo *info = ((QPAKinfo *) opaque);
@@ -651,6 +590,41 @@ static int QPAK_mkdir(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* QPAK_mkdir */
+
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_QPAK =
+{
+    "PAK",
+    QPAK_ARCHIVE_DESCRIPTION,
+    "Ryan C. Gordon <icculus@clutteredmind.org>",
+    "http://icculus.org/physfs/",
+};
+
+
+const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
+{
+    &__PHYSFS_ArchiveInfo_QPAK,
+    QPAK_isArchive,          /* isArchive() method      */
+    QPAK_openArchive,        /* openArchive() method    */
+    QPAK_enumerateFiles,     /* enumerateFiles() method */
+    QPAK_exists,             /* exists() method         */
+    QPAK_isDirectory,        /* isDirectory() method    */
+    QPAK_isSymLink,          /* isSymLink() method      */
+    QPAK_getLastModTime,     /* getLastModTime() method */
+    QPAK_openRead,           /* openRead() method       */
+    QPAK_openWrite,          /* openWrite() method      */
+    QPAK_openAppend,         /* openAppend() method     */
+    QPAK_remove,             /* remove() method         */
+    QPAK_mkdir,              /* mkdir() method          */
+    QPAK_dirClose,           /* dirClose() method       */
+    QPAK_read,               /* read() method           */
+    QPAK_write,              /* write() method          */
+    QPAK_eof,                /* eof() method            */
+    QPAK_tell,               /* tell() method           */
+    QPAK_seek,               /* seek() method           */
+    QPAK_fileLength,         /* fileLength() method     */
+    QPAK_fileClose           /* fileClose() method      */
+};
 
 #endif  /* defined PHYSFS_SUPPORTS_QPAK */
 

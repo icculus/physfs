@@ -19,68 +19,6 @@
 #include "physfs_internal.h"
 
 static PHYSFS_sint64 DIR_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static PHYSFS_sint64 DIR_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
-static int DIR_eof(fvoid *opaque);
-static PHYSFS_sint64 DIR_tell(fvoid *opaque);
-static int DIR_seek(fvoid *opaque, PHYSFS_uint64 offset);
-static PHYSFS_sint64 DIR_fileLength(fvoid *opaque);
-static int DIR_fileClose(fvoid *opaque);
-static int DIR_isArchive(const char *filename, int forWriting);
-static void *DIR_openArchive(const char *name, int forWriting);
-static void DIR_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata);
-static int DIR_exists(dvoid *opaque, const char *name);
-static int DIR_isDirectory(dvoid *opaque, const char *name, int *fileExists);
-static int DIR_isSymLink(dvoid *opaque, const char *name, int *fileExists);
-static fvoid *DIR_openRead(dvoid *opaque, const char *fnm, int *exist);
-static PHYSFS_sint64 DIR_getLastModTime(dvoid *opaque, const char *f, int *e);
-static fvoid *DIR_openWrite(dvoid *opaque, const char *filename);
-static fvoid *DIR_openAppend(dvoid *opaque, const char *filename);
-static int DIR_remove(dvoid *opaque, const char *name);
-static int DIR_mkdir(dvoid *opaque, const char *name);
-static void DIR_dirClose(dvoid *opaque);
-
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
-{
-    "",
-    DIR_ARCHIVE_DESCRIPTION,
-    "Ryan C. Gordon <icculus@clutteredmind.org>",
-    "http://icculus.org/physfs/",
-};
-
-
-
-const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
-{
-    &__PHYSFS_ArchiveInfo_DIR,
-    DIR_isArchive,          /* isArchive() method      */
-    DIR_openArchive,        /* openArchive() method    */
-    DIR_enumerateFiles,     /* enumerateFiles() method */
-    DIR_exists,             /* exists() method         */
-    DIR_isDirectory,        /* isDirectory() method    */
-    DIR_isSymLink,          /* isSymLink() method      */
-    DIR_getLastModTime,     /* getLastModTime() method */
-    DIR_openRead,           /* openRead() method       */
-    DIR_openWrite,          /* openWrite() method      */
-    DIR_openAppend,         /* openAppend() method     */
-    DIR_remove,             /* remove() method         */
-    DIR_mkdir,              /* mkdir() method          */
-    DIR_dirClose,           /* dirClose() method       */
-    DIR_read,               /* read() method           */
-    DIR_write,              /* write() method          */
-    DIR_eof,                /* eof() method            */
-    DIR_tell,               /* tell() method           */
-    DIR_seek,               /* seek() method           */
-    DIR_fileLength,         /* fileLength() method     */
-    DIR_fileClose           /* fileClose() method      */
-};
-
-
-static PHYSFS_sint64 DIR_read(fvoid *opaque, void *buffer,
                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
 {
     PHYSFS_sint64 retval;
@@ -306,6 +244,43 @@ static void DIR_dirClose(dvoid *opaque)
 {
     free(opaque);
 } /* DIR_dirClose */
+
+
+
+const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
+{
+    "",
+    DIR_ARCHIVE_DESCRIPTION,
+    "Ryan C. Gordon <icculus@clutteredmind.org>",
+    "http://icculus.org/physfs/",
+};
+
+
+
+const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
+{
+    &__PHYSFS_ArchiveInfo_DIR,
+    DIR_isArchive,          /* isArchive() method      */
+    DIR_openArchive,        /* openArchive() method    */
+    DIR_enumerateFiles,     /* enumerateFiles() method */
+    DIR_exists,             /* exists() method         */
+    DIR_isDirectory,        /* isDirectory() method    */
+    DIR_isSymLink,          /* isSymLink() method      */
+    DIR_getLastModTime,     /* getLastModTime() method */
+    DIR_openRead,           /* openRead() method       */
+    DIR_openWrite,          /* openWrite() method      */
+    DIR_openAppend,         /* openAppend() method     */
+    DIR_remove,             /* remove() method         */
+    DIR_mkdir,              /* mkdir() method          */
+    DIR_dirClose,           /* dirClose() method       */
+    DIR_read,               /* read() method           */
+    DIR_write,              /* write() method          */
+    DIR_eof,                /* eof() method            */
+    DIR_tell,               /* tell() method           */
+    DIR_seek,               /* seek() method           */
+    DIR_fileLength,         /* fileLength() method     */
+    DIR_fileClose           /* fileClose() method      */
+};
 
 /* end of dir.c ... */
 
