@@ -49,7 +49,7 @@ static void DIR_dirClose(DirHandle *h);
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 {
     "",
-    "non-archive directory I/O",
+    DIR_ARCHIVE_DESCRIPTION,
     "Ryan C. Gordon <icculus@clutteredmind.org>",
     "http://icculus.org/physfs/",
 };

@@ -61,56 +61,56 @@
 const char *__PHYSFS_platformDirSeparator = ":";
 
 
-static const char *get_os_error_string(OSErr err)
+static const char *get_macos_error_string(OSErr err)
 {
     if (err == noErr)
         return(NULL);
 
     switch (err)
     {
-        case fnfErr: return("File not found");
-        case notOpenErr: return("Volume not found");
-        case dirFulErr: return("Directory full");
-        case dskFulErr: return("Disk full");
-        case nsvErr: return("Volume not found");
+        case fnfErr: return(ERR_NO_SUCH_FILE);
+        case notOpenErr: return(ERR_NO_SUCH_VOLUME);
+        case dirFulErr: return(ERR_DIRECTORY_FULL);
+        case dskFulErr: return(ERR_DISK_FULL);
+        case nsvErr: return(ERR_NO_SUCH_VOLUME);
         case ioErr: return(ERR_IO_ERROR);
         case bdNamErr: return(ERR_BAD_FILENAME);
         case fnOpnErr: return(ERR_NOT_A_HANDLE);
         case eofErr: return(ERR_PAST_EOF);
         case posErr: return(ERR_SEEK_OUT_OF_RANGE);
-        case tmfoErr: return("Too many files open");
-        case wPrErr: return("Volume is locked through hardware");
-        case fLckdErr: return("File is locked");
-        case vLckdErr: return("Volume is locked through software");
-        case fBsyErr: return("File/directory is busy");
-        case dupFNErr: return(FILE_ALREADY_EXISTS);
-        case opWrErr: return("File already open for writing");
-        case rfNumErr: return("Invalid reference number");
-        case gfpErr: return("Error getting file position");
-        case volOffLinErr: return("Volume is offline");
-        case permErr: return("Permission denied");
-        case volOnLinErr: return("Volume already online");
-        case nsDrvErr: return("No such drive");
-        case noMacDskErr: return("Not a Macintosh disk");
-        case extFSErr: return("Volume belongs to an external file system");
-        case fsRnErr: return("Problem during rename");
-        case badMDBErr: return("Bad master directory block");
-        case wrPermErr: return("Write permission denied");
+        case tmfoErr: return(ERR_TOO_MANY_HANDLES);
+        case wPrErr: return(ERR_VOL_LOCKED_HW);
+        case fLckdErr: return(ERR_FILE_LOCKED);
+        case vLckdErr: return(ERR_VOL_LOCKED_SW);
+        case fBsyErr: return(ERR_FILE_OR_DIR_BUSY);
+        case dupFNErr: return(ERR_FILE_ALREADY_EXISTS);
+        case opWrErr: return(ERR_FILE_ALREADY_OPEN_W);
+        case rfNumErr: return(ERR_INVALID_REFNUM);
+        case gfpErr: return(ERR_GETTING_FILE_POS);
+        case volOffLinErr: return(ERR_VOLUME_OFFLINE);
+        case permErr: return(ERR_PERMISSION_DENIED);
+        case volOnLinErr: return(ERR_VOL_ALREADY_ONLINE);
+        case nsDrvErr: return(ERR_NO_SUCH_DRIVE);
+        case noMacDskErr: return(ERR_NOT_MAC_DISK);
+        case extFSErr: return(ERR_VOL_EXTERNAL_FS);
+        case fsRnErr: return(ERR_PROBLEM_RENAME);
+        case badMDBErr: return(ERR_BAD_MASTER_BLOCK);
+        case wrPermErr: return(ERR_PERMISSION_DENIED);
         case memFullErr: return(ERR_OUT_OF_MEMORY);
-        case dirNFErr: return("Directory not found or incomplete pathname");
-        case tmwdoErr: return("Too many working directories open");
-        case badMovErr: return("Attempt to move forbidden");
-        case wrgVolTypErr: return("Wrong volume type");
-        case volGoneErr: return("Server volume has been disconnected");
+        case dirNFErr: return(ERR_NO_SUCH_PATH);
+        case tmwdoErr: return(ERR_TOO_MANY_HANDLES);
+        case badMovErr: return(ERR_CANT_MOVE_FORBIDDEN);
+        case wrgVolTypErr: return(ERR_WRONG_VOL_TYPE);
+        case volGoneErr: return(ERR_SERVER_VOL_LOST);
         case errFSNameTooLong: return(ERR_BAD_FILENAME);
-        case errFSNotAFolder: return("Not a folder");
-        case errFSNotAFile: return("Not a file");
-        case fidNotFound: return("File ID not found");
-        case fidExists: return("File ID already exists");
-        case afpAccessDenied: return("Access denied");
-        case afpNoServer: return("Server not responding");
-        case afpUserNotAuth: return("User authentication failed");
-        case afpPwdExpiredErr: return("Password has expired on server");
+        case errFSNotAFolder: return(ERR_NOT_A_DIR);
+        case errFSNotAFile: return(ERR_NOT_A_FILE);
+        case fidNotFound: return(ERR_FILE_ID_NOT_FOUND);
+        case fidExists: return(ERR_FILE_ID_EXISTS);
+        case afpAccessDenied: return(ERR_ACCESS_DENIED);
+        case afpNoServer: return(ERR_SERVER_NO_RESPOND);
+        case afpUserNotAuth: return(ERR_USER_AUTH_FAILED);
+        case afpPwdExpiredErr: return(ERR_PWORD_EXPIRED);
 
         case paramErr:
         case errFSBadFSRef:
@@ -121,29 +121,29 @@ static const char *get_os_error_string(OSErr err)
         case errFSBadItemCount
         case errFSBadSearchParams
         case afpDenyConflict
-            return("(BUG) PhysicsFS gave wrong params to the OS.");
+            return(ERR_PHYSFS_BAD_OS_CALL);
 
-        default: return(ERR_OS_ERROR);
+        default: return(ERR_MACOS_GENERIC);
     } /* switch */
 
     return(NULL);
-} /* get_os_error_string */
+} /* get_macos_error_string */
 
 
-static OSErr oserr(OSErr err)
+static OSErr oserr(OSErr retval)
 {
     char buf[128];
-    const char *errstr = get_os_error_string(err);
-    if (err == ERR_OS_ERROR)
+    const char *errstr = get_macos_error_string(retval);
+    if (errstr == ERR_MACOS_GENERIC)
     {
-        snprintf(buf, "MacOS reported error (%d)", (int) err);
+        snprintf(buf, ERR_MACOS_GENERIC, (int) retval);
         errstr = buf;
     } /* if */
 
     if (errstr != NULL)
-        __PHYSFS_SetError(errstr);
+        __PHYSFS_setError(errstr);
 
-    return(err);
+    return(retval);
 } /* oserr */
 
 

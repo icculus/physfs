@@ -93,7 +93,7 @@ static FileHandle *GRP_openRead(DirHandle *h, const char *name);
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
 {
     "GRP",
-    "Build engine Groupfile format",
+    GRP_ARCHIVE_DESCRIPTION,
     "Ryan C. Gordon <icculus@clutteredmind.org>",
     "http://icculus.org/physfs/",
 };

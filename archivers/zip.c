@@ -147,7 +147,7 @@ static int zip_resolve(void *in, ZIPinfo *info, ZIPentry *entry);
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 {
     "ZIP",
-    "PkZip/WinZip/Info-Zip compatible",
+    ZIP_ARCHIVE_DESCRIPTION,
     "Ryan C. Gordon <icculus@clutteredmind.org>",
     "http://icculus.org/physfs/",
 };
@@ -183,46 +183,33 @@ const DirFunctions __PHYSFS_DirFunctions_ZIP =
 };
 
 
+static const char *zlib_error_string(int rc)
+{
+    switch (rc)
+    {
+        case Z_OK: return(NULL);  /* not an error. */
+        case Z_STREAM_END: return(NULL); /* not an error. */
+        case Z_ERRNO: return(strerror(errno));
+        case Z_NEED_DICT: return(ERR_ZLIB_NEED_DICT);
+        case Z_DATA_ERROR: return(ERR_ZLIB_DATA_ERROR);
+        case Z_MEM_ERROR: return(ERR_ZLIB_MEMORY_ERROR);
+        case Z_BUF_ERROR: return(ERR_ZLIB_BUFFER_ERROR);
+        case Z_VERSION_ERROR: return(ERR_ZLIB_VERSION_ERROR);
+        default: return(ERR_ZLIB_UNKNOWN_ERROR);
+    } /* switch */
+
+    return(NULL);
+} /* zlib_error_string */
+
+
 /*
  * Wrap all zlib calls in this, so the physfs error state is set appropriately.
  */
 static int zlib_err(int rc)
 {
-    const char *err = NULL;
-
-    switch (rc)
-    {
-        case Z_OK:
-        case Z_STREAM_END:
-            break;   /* not errors. */
-
-        case Z_ERRNO:
-            err = strerror(errno);
-            break;
-
-        case Z_NEED_DICT:
-            err = "zlib: need dictionary";
-            break;
-        case Z_DATA_ERROR:
-            err = "zlib: need dictionary";
-            break;
-        case Z_MEM_ERROR:
-            err = "zlib: memory error";
-            break;
-        case Z_BUF_ERROR:
-            err = "zlib: buffer error";
-            break;
-        case Z_VERSION_ERROR:
-            err = "zlib: version error";
-            break;
-        default:
-            err = "unknown zlib error";
-            break;
-    } /* switch */
-
-    if (err != NULL)
-        __PHYSFS_setError(err);
-
+    const char *str = zlib_error_string(rc);
+    if (str != NULL)
+        __PHYSFS_setError(str);
     return(rc);
 } /* zlib_err */
 

@@ -824,7 +824,7 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
         /* Root out archives, and add them to search path... */
     if (archiveExt != NULL)
     {
-        char **rc = PHYSFS_enumerateFiles("");
+        char **rc = PHYSFS_enumerateFiles("/");
         char **i;
         size_t extlen = strlen(archiveExt);
         char *ext;
