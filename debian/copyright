@@ -1,0 +1,13 @@
+This package was debianized by Colin Bayer <vogon@icculus.org> on
+Mon, 29 Jul 2002 04:41:27 -0700.
+
+It was downloaded from http://icculus.org/physfs/downloads/physfs-0.1.7.tar.gz
+
+Upstream Author(s): Ryan Gordon <icculus@icculus.org>
+
+This software is copyright (c) 2001-02 by Ryan Gordon, icculus.org.
+
+You are free to distribute this software under the terms of the GNU Lesser
+General Public License.
+On Debian systems, the complete text of the GNU Lesser General Public License
+can be found in the file `/usr/share/common-licenses/LGPL'.
