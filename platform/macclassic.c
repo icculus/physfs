@@ -73,7 +73,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 
     /* Get the name of the binary's parent directory. */
     memset(&infoPB, '\0', sizeof (CInfoPBRec));
-    infoPB.dirInfo.ioNamePtr = str255;       /* put name in here.         */
+    infoPB.dirInfo.ioNamePtr = str255;        /* put name in here.         */
     infoPB.dirInfo.ioVRefNum = spec.vRefNum;  /* ID of bin's volume.       */ 
     infoPB.dirInfo.ioDrParID = spec.parID;    /* ID of bin's dir.          */
     infoPB.dirInfo.ioFDirIndex = -1;          /* get dir (not file) info.  */
@@ -83,7 +83,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     {
         /* check parent dir of what we last looked at... */
         infoPB.dirInfo.ioDrDirID = infoPB.dirInfo.ioDrParID;
-        if (PBGetCatInfoAsync(&infoPB) != noErr)
+        if (PBGetCatInfoSync(&infoPB) != noErr)
         {
             if (retval != NULL)
                 free(retval);
@@ -163,9 +163,25 @@ int __PHYSFS_platformStricmp(const char *x, const char *y)
 } /* __PHYSFS_platformStricmp */
 
 
+static OSErr fnameToFSSpec(const char *fname, FSSpec *spec)
+{
+    Str255 str255;
+    int len = strlen(fname);
+    if (len > 255)
+        return(bdNamErr);
+
+    /* !!! FIXME: What happens with relative pathnames? */
+
+    str255[0] = strlen(fname);
+    memcpy(&str255[1], fname, str255[0]);
+    return(FSMakeFSSpec(0, 0, str255, spec));
+} /* fnameToFSSpec */
+
+
 int __PHYSFS_platformExists(const char *fname)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, 0);
+    FSSpec spec;
+    return(fnameToFSSpec(fname, &spec) == noErr);
 } /* __PHYSFS_platformExists */
 
 
@@ -177,7 +193,17 @@ int __PHYSFS_platformIsSymLink(const char *fname)
 
 int __PHYSFS_platformIsDirectory(const char *fname)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, 0);
+    FSSpec spec;
+    CInfoPBRec infoPB;
+
+    BAIL_IF_MACRO(fnameToFSSpec(fname, &spec) != noErr, ERR_OS_ERROR, 0);
+    memset(&infoPB, '\0', sizeof (CInfoPBRec));
+    infoPB.dirInfo.ioNamePtr = spec.name;     /* put name in here.       */
+    infoPB.dirInfo.ioVRefNum = spec.vRefNum;  /* ID of file's volume.    */ 
+    infoPB.dirInfo.ioDrParID = spec.parID;    /* ID of bin's dir.        */
+    infoPB.dirInfo.ioFDirIndex = 0;           /* file (not parent) info. */
+    BAIL_IF_MACRO(PBGetCatInfoSync(&infoPB) != noErr, ERR_OS_ERROR, 0);
+    return((infoPB.dirInfo.ioFlAttrib & kioFlAttribDirMask) != 0);
 } /* __PHYSFS_platformIsDirectory */
 
 
@@ -221,7 +247,51 @@ void __PHYSFS_platformTimeslice(void)
 LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
                                                   int omitSymLinks)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, NULL);
+    LinkedStringList *retval = NULL;
+    LinkedStringList *l = NULL;
+    LinkedStringList *prev = NULL;
+    UInt16 i = 0;
+    FSSpec spec;
+    CInfoPBRec infoPB;
+    Str255 str255;
+
+    BAIL_IF_MACRO(fnameToFSSpec(dirname, &spec) != noErr, ERR_OS_ERROR, 0);
+
+    while (1)
+    {
+        memset(&infoPB, '\0', sizeof (CInfoPBRec));
+        str255[0] = 0;
+        infoPB.dirInfo.ioNamePtr = str255;        /* store name in here.     */
+        infoPB.dirInfo.ioVRefNum = spec.vRefNum;  /* ID of file's volume.    */ 
+        infoPB.dirInfo.ioDrParID = spec.parID;    /* ID of bin's dir.        */
+        infoPB.dirInfo.ioFDirIndex = ++i;         /* file (not parent) info. */
+        if (PBGetCatInfoSync(&infoPB) != noErr)
+            break;
+
+        l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
+        if (l == NULL)
+            break;
+
+        l->str = (char *) malloc(str255[0] + 1);
+        if (l->str == NULL)
+        {
+            free(l);
+            break;
+        } /* if */
+
+        memcpy(l->str, &str255[1], str255[0]);
+        l->str[str255[0]] = '\0';
+
+        if (retval == NULL)
+            retval = l;
+        else
+            prev->next = l;
+
+        prev = l;
+        l->next = NULL;
+    } /* while */
+
+    return(retval);
 } /* __PHYSFS_platformEnumerateFiles */
 
 
