@@ -10,6 +10,8 @@
 #  include <config.h>
 #endif
 
+#ifdef WIN32
+
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1082,6 +1084,8 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 
     return(retval);
 } /* __PHYSFS_platformGetLastModTime */
+
+#endif
 
 /* end of win32.c ... */
 

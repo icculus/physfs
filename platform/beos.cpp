@@ -35,7 +35,6 @@
 
 const char *__PHYSFS_platformDirSeparator = "/";
 
-/* !!! FIXME: does strerror() work for non-POSIX api calls? */
 #define get_error_str(x) strerror(x)
 
 
