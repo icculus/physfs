@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+08092002 - Added Quake PAK archiver (qpak.c) by Ed Sinjiashvili. Thanks!
 08012002 - Patched win32.c to compile.
 07302002 - Minor error handling fix (thanks, Alexander!)
 07292002 - Found some memory leaks, thanks to Valgrind (which rules, btw).

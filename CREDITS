@@ -18,24 +18,25 @@ More win32 hacking:
 
 Fixes for missing current working directories,
 PHYSFS_setSaneConfig() improvements,
-other bugfixes,
+other bugfixes:
     David Hedbor
 
-Darwin support,
+Darwin support:
     Patrick Stein
 
 configure fixes,
-RPM specfile,
+RPM specfile:
     Edward Rudd
 
 GetLastModTime API,
-other stuff,
+other stuff:
     John R. Hall
 
-Various support, fixes and suggestions,
+Various support, fixes and suggestions:
     Alexander Pipelka
 
-Russian translation:
+Russian translation,
+QPAK archiver:
     Ed Sinjiashvili
 
 Spanish translation:
