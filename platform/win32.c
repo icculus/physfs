@@ -320,16 +320,138 @@ char *__PHYSFS_platformCurrentDir(void)
     DWORD buflen = 0;
 
     buflen = GetCurrentDirectory(buflen, NULL);
-    retval = (LPTSTR) malloc(buflen);
+    retval = (LPTSTR) malloc(sizeof (TCHAR) * (buflen + 2));
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     GetCurrentDirectory(buflen, retval);
+
+    if (retval[buflen - 2] != '\\')
+        strcat(retval, "\\");
+
     return((char *) retval);
 } /* __PHYSFS_platformCurrentDir */
 
 
+/* this could probably use a cleanup. */
 char *__PHYSFS_platformRealPath(const char *path)
 {
-    /* !!! FIXME: This isn't supported on CygWin! */
-    return(_fullpath(NULL, path, MAX_PATH));
+    char *retval = NULL;
+    char *p = NULL;
+
+    BAIL_IF_MACRO(path == NULL, ERR_INVALID_ARGUMENT, NULL);
+    BAIL_IF_MACRO(*path == '\0', ERR_INVALID_ARGUMENT, NULL);
+
+    retval = (char *) malloc(MAX_PATH);
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+
+        /*
+         * If in \\server\path format, it's already an absolute path.
+         *  We'll need to check for "." and ".." dirs, though, just in case.
+         */
+    if ((path[0] == '\\') && (path[1] == '\\'))
+    {
+        BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+        strcpy(retval, path);
+    } /* if */
+
+    else
+    {
+        char *currentDir = __PHYSFS_platformCurrentDir();
+        if (currentDir == NULL)
+        {
+            free(retval);
+            BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+        } /* if */
+
+        if (path[1] == ':')   /* drive letter specified? */
+        {
+            /*
+             * Apparently, "D:mypath" is the same as "D:\\mypath" if
+             *  D: is not the current drive. However, if D: is the
+             *  current drive, then "D:mypath" is a relative path. Ugh.
+             */
+            if (path[2] == '\\')  /* maybe an absolute path? */
+                strcpy(retval, path);
+            else  /* definitely an absolute path. */
+            {
+                if (path[0] == currentDir[0]) /* current drive; relative. */
+                {
+                    strcpy(retval, currentDir);
+                    strcat(retval, path + 2);
+                } /* if */
+
+                else  /* not current drive; absolute. */
+                {
+                    retval[0] = path[0];
+                    retval[1] = ':';
+                    retval[2] = '\\';
+                    strcpy(retval + 3, path + 2);
+                } /* else */
+            } /* else */
+        } /* if */
+
+        else  /* no drive letter specified. */
+        {
+            if (path[0] == '\\')  /* absolute path. */
+            {
+                retval[0] = currentDir[0];
+                retval[1] = ':';
+                strcpy(retval + 2, path);
+            } /* if */
+            else
+            {
+                strcpy(retval, currentDir);
+                strcat(retval, path);
+            } /* else */
+        } /* else */
+
+        free(currentDir);
+    } /* else */
+
+    /* (whew.) Ok, now take out "." and ".." path entries... */
+
+    p = retval;
+    while ( (p = strstr(p, "\\.")) != NULL)
+    {
+            /* it's a "." entry that doesn't end the string. */
+        if (p[2] == '\\')
+            memmove(p + 1, p + 3, strlen(p + 3) + 1);
+
+            /* it's a "." entry that ends the string. */
+        else if (p[2] == '\0')
+            p[0] = '\0';
+
+            /* it's a ".." entry. */
+        else if (p[2] == '.')
+        {
+            char *prevEntry = p - 1;
+            while ((prevEntry != retval) && (*prevEntry != '\\'))
+                prevEntry--;
+
+            if (prevEntry == retval)  /* make it look like a "." entry. */
+                memmove(p + 1, p + 2, strlen(p + 2) + 1);
+            else
+            {
+                if (p[3] != '\0') /* doesn't end string. */
+                    *prevEntry = '\0';
+                else /* ends string. */
+                    memmove(prevEntry + 1, p + 4, strlen(p + 4) + 1);
+
+                p = prevEntry;
+            } /* else */
+        } /* else if */
+
+        else
+        {
+            p++;  /* look past current char. */
+        } /* else */
+    } /* while */
+
+        /* shrink the retval's memory block if possible... */
+    p = (char *) realloc(retval, strlen(retval) + 1);
+    if (p != NULL)
+        retval = p;
+
+    return(retval);
 } /* __PHYSFS_platformRealPath */
 
 
