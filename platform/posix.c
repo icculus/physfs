@@ -430,7 +430,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
     int fd = *((int *) opaque);
 
     /* !!! FIXME: Use llseek where available. */
-    BAIL_IF_MACRO(lseek(fd, (int) pos, SEEK_SET) != 0, strerror(errno), 0);
+    BAIL_IF_MACRO(lseek(fd, (int) pos, SEEK_SET) == -1, strerror(errno), 0);
 
     return(1);
 } /* __PHYSFS_platformSeek */
