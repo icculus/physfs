@@ -43,6 +43,15 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
+#if 1  /* Make this case insensitive? */
+#define QPAK_strcmp(x, y) __PHYSFS_platformStricmp(x, y)
+#define QPAK_strncmp(x, y, z) __PHYSFS_platformStrnicmp(x, y, z)
+#else
+#define QPAK_strcmp(x, y) strcmp(x, y)
+#define QPAK_strncmp(x, y, z) strncmp(x, y, z)
+#endif
+
+
 typedef struct
 {
     char name[56];
@@ -288,7 +297,7 @@ static int QPAK_isArchive(const char *filename, int forWriting)
 static int qpak_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     QPAKentry *a = (QPAKentry *) _a;
-    return(strcmp(a[one].name, a[two].name));
+    return(QPAK_strcmp(a[one].name, a[two].name));
 } /* qpak_entry_cmp */
 
 
@@ -422,7 +431,7 @@ static PHYSFS_sint32 qpak_find_start_of_dir(QPAKinfo *info, const char *path,
     {
         middle = lo + ((hi - lo) / 2);
         name = info->entries[middle].name;
-        rc = strncmp(path, name, dlen);
+        rc = QPAK_strncmp(path, name, dlen);
         if (rc == 0)
         {
             char ch = name[dlen];
@@ -477,7 +486,7 @@ static LinkedStringList *QPAK_enumerateFiles(DirHandle *h,
         char *ptr;
         PHYSFS_sint32 ln;
         char *e = info->entries[i].name;
-        if ((dlen) && ((strncmp(e, dirname, dlen) != 0) || (e[dlen] != '/')))
+        if ((dlen) && ((QPAK_strncmp(e, dirname, dlen)) || (e[dlen] != '/')))
             break;  /* past end of this dir; we're done. */
 
         add = e + dlen_inc;
@@ -490,7 +499,7 @@ static LinkedStringList *QPAK_enumerateFiles(DirHandle *h,
         while ((++i < max) && (ptr != NULL))
         {
             char *e_new = info->entries[i].name;
-            if ((strncmp(e, e_new, ln) != 0) || (e_new[ln] != '/'))
+            if ((QPAK_strncmp(e, e_new, ln) != 0) || (e_new[ln] != '/'))
                 break;
         } /* while */
     } /* while */
@@ -518,7 +527,7 @@ static QPAKentry *qpak_find_entry(QPAKinfo *info, const char *path, int *isDir)
     {
         middle = lo + ((hi - lo) / 2);
         thispath = a[middle].name;
-        rc = strncmp(path, thispath, pathlen);
+        rc = QPAK_strncmp(path, thispath, pathlen);
 
         if (rc > 0)
             lo = middle + 1;
