@@ -11,7 +11,8 @@
            version to 0.1.1. Added a malloc-failure check in the Unix
            CD-ROM detection code.
 04032002 - PHYSFS_init always makes sure the calling thread initializes its
-           error state.
+           error state. Win32 codebase is updated with mutex implementation
+           (thanks, Greg!).
 04022002 - Mac work continues. Found a bug where we put a double dir
            separator in if we had to resort to the fallback userdir (if
            __PHYSFS_platformGetUserDir() returned NULL to calculateUserDir().

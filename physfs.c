@@ -404,6 +404,7 @@ int PHYSFS_init(const char *argv0)
 
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(baseDir == NULL, NULL, 0);
+
     ptr = __PHYSFS_platformRealPath(baseDir);
     free(baseDir);
     BAIL_IF_MACRO(ptr == NULL, NULL, 0);
