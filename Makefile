@@ -37,7 +37,7 @@ debugging := true
 # Set the archive types you'd like to support.
 #  Note that various archives may need external libraries.
 #-----------------------------------------------------------------------------#
-use_archive_zip := false
+use_archive_zip := true
 use_archive_grp := true
 
 #-----------------------------------------------------------------------------#
@@ -144,8 +144,9 @@ TESTSRCS := test/test_physfs.c
 MAINSRCS := physfs.c platform/unix.c archivers/dir.c
 
 ifeq ($(strip $(use_archive_zip)),true)
-MAINSRCS += archivers/zip.c
+MAINSRCS += archivers/zip.c archivers/unzip.c
 CFLAGS += -DPHYSFS_SUPPORTS_ZIP
+LDFLAGS += -lz
 endif
 
 ifeq ($(strip $(use_archive_grp)),true)
