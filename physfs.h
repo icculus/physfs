@@ -6,7 +6,6 @@
  *
  *   - It's portable.
  *   - It's safe. No file access is permitted outside the specified dirs.
- *   - It can handle byte ordering on alternative processors.
  *   - It's flexible. Archives (.ZIP files) can be used transparently as
  *      directory structures.
  *
@@ -79,32 +78,34 @@
  *
  * The write path is not included in the search path unless you specifically
  *  add it. While you CAN change the write path as many times as you like,
- *  you should probably set it once and stick to that path.
+ *  you should probably set it once and stick to that path. Remember that
+ *  your program will not have permission to write in every directory on
+ *  Unix and NT systems.
  *
  * All files are opened in binary mode; there is no endline conversion for
  *  textfiles. Other than that, PhysicsFS has some convenience functions for
- *  platform-independence. There are functions that give you the current
+ *  platform-independence. There is a function to tell you the current
  *  platform's path separator ("\\" on windows, "/" on Unix, ":" on MacOS),
- *  which is needed only to set up your search/write paths. There are
- *  functions to tell you what CD-ROM drives contain accessible discs, and
- *  functions to recommend good search paths, etc. There are also functions
- *  to read 16 and 32 bit numbers from files and convert them to the native
- *  byte order of your processor.
+ *  which is needed only to set up your search/write paths. There is a
+ *  function to tell you what CD-ROM drives contain accessible discs, and a
+ *  function to recommend a good search path, etc.
  *
  * A recommended order for a search path is the write path, then the base path,
  *  then the cdrom path, then any archives discovered. Quake 3 does something
- *  like this, but moves the archives to the start of the search path. There
- *  is a helper function (PHYSFS_setSanePaths()) that does this for you,
- *  based on a few parameters. Also see the comments on PHYSFS_getBasePath(),
- *  and PHYSFS_getUserPath() for info on what those are and how they can help
- *  you determine an optimal searchpath.
+ *  like this, but moves the archives to the start of the search path. Build
+ *  Engine games, like Duke Nukem 3D and Blood, place the archives last, and
+ *  use the base path for both searching and writing. There is a helper
+ *  function (PHYSFS_setSanePaths()) that puts together a basic configuration
+ *  for you, based on a few parameters. Also see the comments on
+ *  PHYSFS_getBasePath(), and PHYSFS_getUserPath() for info on what those
+ *  are and how they can help you determine an optimal searchpath.
  *
- * While you CAN mix stdio/syscall file access with PHYSFS_* calls in a
- *  program, doing so is not recommended, and you can not use system
+ * While you CAN use stdio/syscall file access in a program that has PHYSFS_*
+ *  calls, doing so is not recommended, and you can not use system
  *  filehandles with PhysicsFS filehandles and vice versa.
  *
  * Note that archives need not be named as such: if you have a ZIP file and
- *  rename it with a .PKG extention, the file will still be recognized as a
+ *  rename it with a .PKG extension, the file will still be recognized as a
  *  ZIP archive by PhysicsFS; the file's contents are used to determine its
  *  type.
  *
@@ -124,11 +125,23 @@ extern "C" {
 #endif
 
 
+typedef struct __PHYSFS_FILE__
+{
+    unsigned int opaque;
+} PHYSFS_file;
+
+typedef struct __PHYSFS_ARCHIVEINFO__
+{
+    const char *extension;
+    const char *description;
+} PHYSFS_ArchiveInfo;
+
+
 /* functions... */
 
 /**
  * Initialize PhysicsFS. This must be called before any other PhysicsFS
- *  function (except PHYSFS_getLastError()).
+ *  function.
  *
  *   @param argv0 the argv[0] string passed to your program's mainline.
  *  @return nonzero on success, zero on error. Specifics of the error can be
@@ -139,7 +152,7 @@ int PHYSFS_init(const char *argv0);
 
 /**
  * Shutdown PhysicsFS. This closes any files opened via PhysicsFS, blanks the
- *  search/write paths, frees memory, and invalidates all your handles.
+ *  search/write paths, frees memory, and invalidates all of your handles.
  *
  * Once deinitialized, PHYSFS_init() can be called again to restart the
  *  subsystem.
@@ -152,10 +165,45 @@ void PHYSFS_deinit(void);
 
 
 /**
+ * Get a list of archive types supported by this implementation of PhysicFS.
+ *  These are the file formats usable for search path entries. This is for
+ *  informational purposes only. Note that the extension listed is merely
+ *  convention: if we list "ZIP", you can open a PkZip-compatible archive
+ *  with an extension of "XYZ", if you like.
+ *
+ * The returned value is an array of strings, with a NULL entry to signify the
+ *  end of the list:
+ *
+ * PHYSFS_ArchiveInfo **i;
+ *
+ * for (i = PHYSFS_supportedArchiveTypes(); *i != NULL; i++)
+ * {
+ *     printf("Supported archive: [%s], which is [%s].\n",
+ *              i->extension, i->description);
+ * }
+ *
+ * The return values are pointers to static internal memory, and should
+ *  be considered READ ONLY, and never freed.
+ *
+ *   @return READ ONLY Null-terminated array of READ ONLY structures.
+ */
+const PHYSFS_ArchiveInfo *PHYSFS_supportedArchiveTypes(void);
+
+
+/**
+ * Certain PhysicsFS functions return lists of information that are
+ *  dynamically allocated. Use this function to free those resources.
+ *
+ *   @param list List of information specified as freeable by this function.
+ */
+void PHYSFS_freeList(void *list);
+
+
+/**
  * Get the last PhysicsFS error message as a null-terminated string.
  *  This will be NULL if there's been no error since the last call to this
- *  function. The pointer returned by this call points to a static
- *  internal buffer, and this call is not thread safe.
+ *  function. The pointer returned by this call points to an
+ *  internal buffer. Each thread has a unique error state associated with it.
  *
  *   @return READ ONLY string of last error message.
  */
@@ -177,10 +225,7 @@ const char *PHYSFS_getPathSeparator(void);
 
 
 /**
- * Get an array of paths to available CD-ROM drives. This return value should
- *  be considered READ ONLY and points to an internal buffer which may change
- *  with each call to this function. This means that this function is NOT
- *  thread safe.
+ * Get an array of paths to available CD-ROM drives.
  *
  * The paths returned are platform-dependent ("D:\" on Win32, "/cdrom" or
  *  whatnot on Unix). Paths are only returned if there is a disc ready and
@@ -195,33 +240,31 @@ const char *PHYSFS_getPathSeparator(void);
  *
  * char **i;
  *
- * // lock thread here, if needed.
- *
  * for (i = PHYSFS_getCdRomPaths(); *i != NULL; i++)
  *     printf("cdrom path [%s] is available.\n", *i);
  *
- * // unlock thread here, if needed.
- *
  * This call may block while drives spin up. Be forewarned.
  *
- *   @return READ ONLY null-term'd array of READ ONLY null-terminated strings.
+ * When you are done with the returned information, you may dispose of the
+ *  resources by calling PHYSFS_freeList() with the returned pointer.
+ *
+ *   @return Null-terminated array of null-terminated strings.
  */
-const char **PHYSFS_getCdRomPaths(void);
+char **PHYSFS_getCdRomPaths(void);
 
 
 /**
  * Helper function.
  *
  * Get the "base path". This is the directory where the application was run
- *  from, which is probably the installation directory.
+ *  from, which is probably the installation directory, and may or may not
+ *  be the process's current working directory.
  *
  * You should probably use the base path in your search path.
  *
- *   @param buffer pointer to buffer to fill with recommended path.
- *   @param bufsize size of buffer pointed to by (buffer).
- *  @return a copy of (buffer), for easy use as another function's parameter.
+ *  @return READ ONLY string of base path in platform-dependent notation.
  */
-char *PHYSFS_getBasePath(char *buffer, int bufferSize);
+const char *PHYSFS_getBasePath(void);
 
 
 /**
@@ -229,28 +272,26 @@ char *PHYSFS_getBasePath(char *buffer, int bufferSize);
  *
  * Get the "user path". This is meant to be a suggestion of where a specific
  *  user of the system can store files. On Unix, this is her home directory.
- *  On systems with no concept of multiple users (MacOS, win95), this will
- *  default to the "base path" returned by PHYSFS_getBasePath().
+ *  On systems with no concept of multiple home directories (MacOS, win95),
+ *  this will default to something like "C:\mybasepath\users\username"
+ *  where "username" will either be the login name, or "default" if the
+ *  platform doesn't support multiple users, either.
  *
  * You should probably use the user path as the basis for your write path, and
  *  also put it near the beginning of your search path.
  *
- *   @param buffer pointer to buffer to fill with recommended path.
- *   @param bufsize size of buffer pointed to by (buffer).
- *  @return a copy of (buffer), for easy use as another function's parameter.
+ *  @return READ ONLY string of user path in platform-dependent notation.
  */
-char *PHYSFS_getUserPath(char *buffer, int bufferSize);
+const char *PHYSFS_getUserPath(void);
 
 
 /**
  * Get the current write path. The default write path is NULL.
  *
- *   @param buffer pointer to buffer to fill with recommended path.
- *   @param bufsize size of buffer pointed to by (buffer).
- *  @return a copy of (buffer), for easy use as another function's parameter,
+ *  @return READ ONLY string of write path in platform-dependent notation,
  *           OR NULL IF NO WRITE PATH IS CURRENTLY SET.
  */
-char *PHYSFS_getWritePath(char *buffer, int bufferSize);
+const char *PHYSFS_getWritePath(char *buffer, int bufferSize);
 
 
 /**
@@ -262,7 +303,7 @@ char *PHYSFS_getWritePath(char *buffer, int bufferSize);
  *  still has files open in it.
  *
  *   @param newPath The new directory to be the root of the write path,
- *                   specified in a platform-dependent manner. Setting to NULL
+ *                   specified in platform-dependent notation. Setting to NULL
  *                   disables the write path, so no files can be opened for
  *                   writing via PhysicsFS.
  *  @return non-zero on success, zero on failure. All attempts to open a file
@@ -306,25 +347,20 @@ int PHYSFS_removeFromSearchPath(const char *oldPath);
 /**
  * Get the current search path. The default search path is an empty list.
  *
- * This return value should be considered READ ONLY and points to an internal
- *  buffer which may change with each call to this function. This means that
- *  this function is NOT thread safe.
- *
  * The returned value is an array of strings, with a NULL entry to signify the
  *  end of the list:
  *
  * char **i;
  *
- * // lock thread here, if needed.
- *
  * for (i = PHYSFS_getSearchPath(); *i != NULL; i++)
  *     printf("[%s] is in the search path.\n", *i);
  *
- * // unlock thread here, if needed.
+ * When you are done with the returned information, you may dispose of the
+ *  resources by calling PHYSFS_freeList() with the returned pointer.
  *
- *   @return READ ONLY null-term'd array of READ ONLY null-terminated strings.
+ *   @return Null-terminated array of null-terminated strings.
  */
-const char **PHYSFS_getSearchPath(void);
+char **PHYSFS_getSearchPath(void);
 
 
 /**
@@ -388,7 +424,9 @@ void PHYSFS_setSanePaths(const char *appName, const char *archiveExt,
  * So if you've got the write path set to "C:\mygame\writepath" and call
  *  PHYSFS_mkdir("downloads/maps") then the directories
  *  "C:\mygame\writepath\downloads" and "C:\mygame\writepath\downloads\maps"
- *  will be created if possible.
+ *  will be created if possible. If the creation of "maps" fails after we
+ *  have successfully created "downloads", then the function leaves the
+ *  created directory behind and reports failure.
  *
  *   @param dirname New path to create.
  *  @return nonzero on success, zero on error. Specifics of the error can be
@@ -401,8 +439,7 @@ int PHYSFS_mkdir(const char *dirName);
  * Delete a file or directory. This is specified in platform-independent
  *  notation in relation to the write path.
  *
- * A directory must be empty before this call can delete it. If you need to
- *  nuke a whole directory tree, use PHYSFS_deltree()...with care.
+ * A directory must be empty before this call can delete it.
  *
  * So if you've got the write path set to "C:\mygame\writepath" and call
  *  PHYSFS_delete("downloads/maps/level1.map") then the file
@@ -419,33 +456,6 @@ int PHYSFS_mkdir(const char *dirName);
  *          gleaned from PHYSFS_getLastError().
  */
 int PHYSFS_delete(const char *filename);
-
-
-/**
- * Delete a directory tree. This is specified in platform-independent
- *  notation in relation to the write path.
- *
- * Be CAREFUL with this function; it will take out EVERYTHING under the
- *  specified directory with extreme prejudice.
- *
- * If you specify a filename that is not a directory, PhysicsFS will attempt
- *  to delete that single file.
- *
- * So if you've got the write path set to "C:\mygame\writepath" and call
- *  PHYSFS_deltree("downloads/maps") then the directory
- *  "C:\mygame\writepath\downloads\maps" and everything in it (including child
- *  directories) is removed from the physical filesystem, if it exists and the
- *  operating system permits the deletion.
- *
- * Note that on Unix systems, deleting a file may be successful, but the
- *  actual file won't be removed until all processes that have an open
- *  filehandle to it (including your program) close their handles.
- *
- *   @param filename root of directory tree to delete.
- *  @return nonzero on success, zero on error. Specifics of the error can be
- *          gleaned from PHYSFS_getLastError().
- */
-int PHYSFS_deltree(const char *filename);
 
 
 /**
@@ -473,18 +483,6 @@ void PHYSFS_permitSymbolicLinks(int allow);
 
 
 /**
- * Determine if a file exists. Just because it exists does NOT mean that you
- *  will have access to read or write it, or that it will continue to exist
- *  after this call (as other processes may delete it on multitasking systems).
- *
- *   @param filename a file in platform-independent notation.
- *   @param inWritePath nonzero to check write path, zero to check search path.
- *  @return nonzero if exists, zero otherwise.
- */
-int PHYSFS_exists(const char *filename, int inWritePath);
-
-
-/**
  * Figure out where in the search path a file resides. The file is specified
  *  in platform-independent notation. The returned filename will be the
  *  element of the search path where the file was found, which may be a
@@ -493,19 +491,52 @@ int PHYSFS_exists(const char *filename, int inWritePath);
  *  when opening a file.
  *
  * So, if you look for "maps/level1.map", and C:\mygame is in your search
- *  path and C:\mygame\maps\level1.map exists, then buffer will be filled in
- *  with "C:\mygame\maps\level1.map" and the function returns nonzero.
+ *  path and C:\mygame\maps\level1.map exists, then "C:\mygame" is returned.
  *
  * If a match is a symbolic link, and you've not explicitly permitted symlinks,
  *  then it will be ignored, and the search for a match will continue.
  *
- *     @param buffer pointer to buffer to fill with path.
- *     @param bufsize size of buffer pointed to by (buffer).
  *     @param filename file to look for.
- *    @return nonzero if file was found, zero otherwise. If found, (buffer)
- *             will be filled in.
+ *    @return READ ONLY string of element of search path containing the
+ *             the file in question. NULL if not found.
  */
-int PHYSFS_getRealPath(const char *filename, char *buffer, int bufSize);
+const char *PHYSFS_getRealPath(const char *filename);
+
+
+
+/**
+ * Get a file listing of a search path's directory. Matching directories are
+ *  interpolated. That is, if "C:\mypath" is in the search path and contains a
+ *  directory "savegames" that contains "x.sav", "y.sav", and "z.sav", and
+ *  there is also a "C:\userpath" in the search path that has a "savegames"
+ *  subdirectory with "w.sav", then the following code:
+ *
+ * ------------------------------------------------
+ * char **rc = PHYSFS_enumerateFiles("savegames");
+ * char **i;
+ *
+ * for (i = rc; *i != NULL; i++)
+ *     printf("We've got [%s].\n", *i);
+ *
+ * PHYSFS_freeList(rc);
+ * ------------------------------------------------
+ *
+ *  ...will print:
+ *
+ * ------------------------------------------------
+ * We've got [x.sav].
+ * We've got [y.sav].
+ * We've got [z.sav].
+ * We've got [w.sav].
+ * ------------------------------------------------
+ *
+ * Don't forget to call PHYSFS_freeList() with the return value from this
+ *  function when you are done with it.
+ *
+ *    @param path directory in platform-independent notation to enumerate.
+ *   @return Null-terminated array of null-terminated strings.
+ */
+char **PHYSFS_enumerateFiles(const char *path);
 
 
 /**
@@ -518,7 +549,7 @@ int PHYSFS_getRealPath(const char *filename, char *buffer, int bufSize);
  *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-void *PHYSFS_openWrite(const char *filename);
+PHYSFS_file *PHYSFS_openWrite(const char *filename);
 
 
 /**
@@ -532,7 +563,7 @@ void *PHYSFS_openWrite(const char *filename);
  *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-void *PHYSFS_openAppend(const char *filename);
+PHYSFS_file *PHYSFS_openAppend(const char *filename);
 
 
 /**
@@ -545,7 +576,7 @@ void *PHYSFS_openAppend(const char *filename);
  *  @return A valid PhysicsFS filehandle on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-void *PHYSFS_openRead(const char *filename);
+PHYSFS_file *PHYSFS_openRead(const char *filename);
 
 
 /**
@@ -560,7 +591,7 @@ void *PHYSFS_openRead(const char *filename);
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_close(void *handle);
+int PHYSFS_close(PHYSFS_file *handle);
 
 
 /**
@@ -571,9 +602,10 @@ int PHYSFS_close(void *handle);
  *   @param objSize size in bytes of objects being read from (handle).
  *   @param objCount number of (objSize) objects to read from (handle).
  *  @return number of objects read. PHYSFS_getLastError() can shed light on
- *           the reason this might be < (objCount).
+ *           the reason this might be < (objCount), as can PHYSFS_eof().
  */
-int PHYSFS_read(void *handle, void *buffer, int objSize, int objCount);
+int PHYSFS_read(PHYSFS_file *handle, void *buffer,
+                unsigned int objSize, unsigned int objCount);
 
 
 /**
@@ -586,7 +618,8 @@ int PHYSFS_read(void *handle, void *buffer, int objSize, int objCount);
  *  @return number of objects read. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount).
  */
-int PHYSFS_write(void *handle, void *buffer, int objSize, int objCount);
+int PHYSFS_write(PHYSFS_file *handle, void *buffer,
+                 unsigned int objSize, unsigned int objCount);
 
 
 /**
@@ -595,7 +628,7 @@ int PHYSFS_write(void *handle, void *buffer, int objSize, int objCount);
  *   @param handle handle returned from PHYSFS_openRead().
  *  @return nonzero if EOF, zero if not.
  */
-int PHYSFS_eof(void *handle);
+int PHYSFS_eof(PHYSFS_file *handle);
 
 
 /**
@@ -605,7 +638,7 @@ int PHYSFS_eof(void *handle);
  *  @return offset in bytes from start of file. -1 if error occurred.
  *           Specifics of the error can be gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_tell(void *handle);
+int PHYSFS_tell(PHYSFS_file *handle);
 
 
 /**
@@ -618,21 +651,7 @@ int PHYSFS_tell(void *handle);
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
  */
-int PHYSFS_seek(void *handle, int pos);
-
-
-/* Byte-order reading. !!!  Need types (Int16, Int32, etc) for these...
-int PHYSFS_readLE16(void *handle, int *buffer);
-int PHYSFS_readLE32(void *handle, int *buffer);
-int PHYSFS_readBE16(void *handle, int *buffer);
-int PHYSFS_readBE32(void *handle, int *buffer);
-int PHYSFS_writeLE16(void *handle, int buffer);
-int PHYSFS_writeLE32(void *handle, int buffer);
-int PHYSFS_writeBE16(void *handle, int buffer);
-int PHYSFS_writeBE32(void *handle, int buffer);
-*/
-
-/* !!! need way to enumerate the contents of a directory. */
+int PHYSFS_seek(PHYSFS_file *handle, int pos);
 
 #ifdef __cplusplus
 }
