@@ -66,7 +66,9 @@
            Minor cleanup in win32.c (changed "for (; condition ;)" into
            "while (condition)" ...)
 03152002 - PHYSFS_setSaneConfig() now handles failure to set the write dir
-           better.
+           better. Patched makefile to link the test program. Changed all the
+           "write" functions to get data from a "const" buffer. Added an
+           "extras" dir, which currently contains PhysFS->SDL_RWops glue code.
 
 --ryan. (icculus@clutteredmind.org)
 
