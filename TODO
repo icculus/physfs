@@ -8,14 +8,12 @@ These are in no particular order. A 1.0 release is reliant on doing most of
   compiles under Cygwin otherwise.
 - Hmm...we can determine the actual CD-ROM drives under Win32, but how do you
   decide that there's no disc in the drive?
-- MacOS (Classic and X) support.
 - Platform-specific functions/macros to handle byte ordering.
 - A PHYSFS_readUint32(), _readSint32(), etc API.
 - Patch the zlib used on win32 to 1.1.4.
 - Switch the CHANGELOG to list newest changes first.
 - Write manpages, preferrably generated from some javadoc-style solution
   so we can make HTML versions etc from the same data.
-- Make internal code respect the new typedefs (PHYSFS_?int??).
 - Byte order API; just something simple like:
     __EXPORT__ PHYSFS_uint16 PHYSFS_swapBE16(PHYSFS_uint16 val);
     __EXPORT__ PHYSFS_uint16 PHYSFS_swapLE16(PHYSFS_uint16 val);
@@ -26,15 +24,12 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - Make win32.c respect the more strict filesystem layout enforced by
   Win2000 and later.
 - Improve ZIP_seek() (archivers/zip.c)
-- entry_is_symlink() and version_does_symlinks() in zip.c have byte-order bugs.
+- Make the zipfile parse symlinks with relative paths. See the function
+  expand_symlink_path() in archivers/zip.c ...
+- Make archivers/unzip.c use the new byte order API for a little more
+  efficiency (it gets 32-bit ints as four 1-byte reads; yuck.)
 - Actually, the zipfile driver could use a lot of tweaking. Please look
   through it.
-- Abstract out the use of stdio. It's not as "std" as I would like, in my
-  experience. Add code to the platform drivers to open, read, write, seek,
-  tell, etc on an abstract data type that is opaque outside the individual
-  platform drivers, so that dir.c has a unified codebase that talks to this
-  internal abstraction layer. This opaque data type can be a FILE * on unix,
-  and a HANDLE on win32, etc...
 - Other archivers: perhaps tar(.gz|.bz2), RPM, etc. These are less
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
