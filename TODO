@@ -6,7 +6,6 @@ These are in no particular order. A 1.0 release is reliant on doing most of
 - Include the Visual Studio.NET project file in CVS directly.
 - Change platform detection so it doesn't need sed?
 - Deal with Unix platforms without POSIX threads (NetBSD, etc).
-- !!! FIXME in zip.c: enumerate /dir works, but enumerate /dir/ is buggy.
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
