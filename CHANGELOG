@@ -4,6 +4,7 @@
 
 07282001 - Initial release.
 08012001 - Added a safety memset in error setting, fixed URLs and email addr.
+08062001 - Added CD-ROM detection code to the unix platform driver.
 
 --ryan. (icculus@clutteredmind.org)
 
