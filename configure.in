@@ -282,14 +282,34 @@ if test x$physfslang = xenglish; then
   AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_ENGLISH, [define desired natural language])
 fi
 
+if test x$physfslang = xgerman; then
+  physfs_valid_lang=yes
+  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_GERMAN, [define desired natural language])
+fi
+
 if test x$physfslang = xfrench; then
   physfs_valid_lang=yes
   AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_FRENCH, [define desired natural language])
 fi
 
-if test x$physfslang = xgerman; then
+if test x$physfslang = xrussian-koi8-r; then
   physfs_valid_lang=yes
-  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_GERMAN, [define desired natural language])
+  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_RUSSIAN_KOI8_R, [define desired natural language])
+fi
+
+if test x$physfslang = xrussian-cp1251; then
+  physfs_valid_lang=yes
+  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_RUSSIAN_CP866, [define desired natural language])
+fi
+
+if test x$physfslang = xrussian-cp866; then
+  physfs_valid_lang=yes
+  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_RUSSIAN_CP866, [define desired natural language])
+fi
+
+if test x$physfslang = xrussian-iso-8859-5; then
+  physfs_valid_lang=yes
+  AC_DEFINE([PHYSFS_LANG], PHYSFS_LANG_RUSSIAN_ISO_8859_5, [define desired natural language])
 fi
 
 dnl Add other language checks here...
@@ -309,6 +329,10 @@ if test x$physfs_valid_lang = xno; then
   AC_MSG_WARN([***   --enable-language=english])
   AC_MSG_WARN([***   --enable-language=german])
   AC_MSG_WARN([***   --enable-language=french])
+  AC_MSG_WARN([***   --enable-language=russian-koi8-r])
+  AC_MSG_WARN([***   --enable-language=russian-cp1251])
+  AC_MSG_WARN([***   --enable-language=russian-cp866])
+  AC_MSG_WARN([***   --enable-language=russian-iso-8859-5])
   AC_MSG_WARN([***])
   AC_MSG_ERROR([*** unsupported language. stop.])
 fi
