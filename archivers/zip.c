@@ -524,7 +524,7 @@ static int ZIP_isArchive(const char *filename, int forWriting)
          *  (a self-extracting executable, etc), so we'll have to do
          *  it the hard way...
          */
-        retval = (zip_find_end_of_central_dir(in, NULL) == -1);
+        retval = (zip_find_end_of_central_dir(in, NULL) != -1);
     } /* if */
 
     __PHYSFS_platformClose(in);
