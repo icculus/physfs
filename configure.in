@@ -71,7 +71,7 @@ if test x$enable_debug = xyes; then
   else
     CFLAGS="-O0"
   fi
-  CFLAGS="$CFLAGS -Werror"
+  CFLAGS="$CFLAGS -Werror -Wall"
   AC_DEFINE(DEBUG)
   AC_DEFINE(DEBUG_CHATTER)
 else
