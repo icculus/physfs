@@ -110,7 +110,8 @@ static ErrMsg *findErrorForCurrentThread(void)
     __PHYSFS_platformGrabMutex(errorLock);
     if (errorMessages != NULL)
     {
-        tid = __PHYSFS_platformGetThreadID();
+        /*!!! I think tid needs to be a 64-bit value??? */
+        tid = (int)__PHYSFS_platformGetThreadID();
 
         for (i = errorMessages; i != NULL; i = i->next)
         {
@@ -143,7 +144,8 @@ void __PHYSFS_setError(const char *str)
             return;   /* uhh...? */
 
         memset((void *) err, '\0', sizeof (ErrMsg));
-        err->tid = __PHYSFS_platformGetThreadID();
+        /*!!! I think tid needs to be a 64-bit value??? */
+        err->tid = (int)__PHYSFS_platformGetThreadID();
 
         __PHYSFS_platformGrabMutex(errorLock);
         err->next = errorMessages;
