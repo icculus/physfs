@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+04192002 - Corrected some win32 info in INSTALL. Changed Makefile to
+           package releases as .tar.gz instead of .tar.bz2.
 04122002 - Some win32 cleanups and fixes across several files. Upped
            version to 0.1.5.
 04082002 - Fixed problem when calling __PHYSFS_setError before PHYSFS_init.

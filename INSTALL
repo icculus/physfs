@@ -25,15 +25,15 @@ Run "make install" to install the library for use on your system.
 
 WIN32:
 Download http://icculus.org/physfs/downloads/physfs-win32-support.zip, and
-unpack in the root of the source directory, preserving directory names. If you
-did it correctly, there should be a directory named "zlibwin32" in the same
-directory as "physfs.h". This archive has Visual C project/workspace files and
+unpack in the root of the source directory, preserving directory names. If
+you did it correctly, there should be a directory named "zlib114" in the
+same directory as "physfs.h". This archive has Visual C project files and
 the code needed for zipfile support in PhysicsFS, since most Windows boxes
 don't have zlib preinstalled.
 
-After that, if building with CygWin, follow the Unix instructions, above. If
-you're using Visual C, point the IDE at physfs.dsw, and build. If you're using
-any other compiler, send me a patch when you get it working.  :)
+After that, if building with CygWin, follow the Unix instructions, above.
+If you're using Visual C, point the IDE at physfs.dsp, and build. If
+you're using any other compiler, send me a patch when you get it working.  :)
 
 If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
 from you; send an email to icculus@clutteredmind.org.
