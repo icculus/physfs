@@ -326,6 +326,38 @@ static int cmd_issymlink(char *args)
 } /* cmd_issymlink */
 
 
+static int cmd_cat(char *args)
+{
+    PHYSFS_file *f = PHYSFS_openRead(args);
+    if (f == NULL)
+        printf("failed to open. Reason: [%s].\n", PHYSFS_getLastError());
+    else
+    {
+        while (1)
+        {
+            char buffer[128];
+            int rc;
+            int i;
+            rc = PHYSFS_read(f, buffer, 1, sizeof (buffer));
+
+            for (i = 0; i < rc; i++)
+                fputc((int) buffer[i], stdout);
+
+            if (rc < sizeof (buffer))
+            {
+                printf("\n\n");
+                if (!PHYSFS_eof(f))
+                    printf("\n (Error condition in reading.)\n\n");
+                PHYSFS_close(f);
+                return(1);
+            } /* if */
+        } /* while */
+    } /* else */
+
+    return(1);
+} /* cmd_cat */
+
+
 /* must have spaces trimmed prior to this call. */
 static int count_args(const char *str)
 {
@@ -381,6 +413,7 @@ static const command_info commands[] =
     { "exists",         cmd_exists,         1, "<fileToCheck>"              },
     { "isdir",          cmd_isdir,          1, "<fileToCheck>"              },
     { "issymlink",      cmd_issymlink,      1, "<fileToCheck>"              },
+    { "cat",            cmd_cat,            1, "<fileToCat>"                },
     { NULL,             NULL,              -1, NULL                         }
 };
 
