@@ -9,7 +9,8 @@
            possible human-readable literal strings (including all those OS/2
            and MacOS error messages) have moved to constants in
            physfs_internal.h...this allows the library to be translated to
-           other spoken languages fairly easily.
+           other spoken languages fairly easily. Added Russian translation
+           by Ed Sinjiashvili.
 07272002 - Patched the OS/2 code to be useful...works pretty well, now. Added
            makeos2.cmd for building (not an ideal solution, but oh well).
            Initialized some variables in zip.c to prevent compiler whining.
