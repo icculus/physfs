@@ -2,6 +2,14 @@
  * CHANGELOG.
  */
 
+06292002 - Fixed incorrect error message when opening a file for read without
+           defining a search path. LOTS of win32 updates and fixes; lots of
+           things that were broken work now, and we are slowly becoming
+           more compatible with legacy win32 systems. Builds on Cygwin again.
+           All platform drivers (except beos.cpp) had a buffer overflow when
+           detecting mounted CD-ROM drives...it only occurs when a drive is
+           detected, and it probably won't result in your box getting rooted,
+           but upgrade soon anyhow.
 06282002 - Reworked build system _AGAIN_.
 06222002 - Alexander Pipelka spotted a bug in the file open routines in
            posix.c; patched.
