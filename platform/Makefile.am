@@ -2,10 +2,13 @@ noinst_LTLIBRARIES = libplatform.la
 
 INCLUDES = -I$(top_srcdir)
 
+X = beos.cpp
+Y = beos.cpp
+
 if BUILD_BEOS_CPP
-  X = beos.cpp
+  Y =
 else
-  Y = beos.cpp
+  X =
 endif
 
 libplatform_la_SOURCES =	\
