@@ -16,10 +16,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include <time.h>
 #include <errno.h>
-
+#include <time.h>
 #include "physfs.h"
 #include "zlib.h"
 

@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <assert.h>
 #include <time.h>
 #include <ctype.h>
 

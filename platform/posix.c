@@ -43,7 +43,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <assert.h>
 
 #ifdef PHYSFS_HAVE_LLSEEK
 #include <linux/unistd.h>

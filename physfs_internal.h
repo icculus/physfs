@@ -16,6 +16,12 @@
 
 #include "physfs.h"
 
+#ifdef HAVE_ASSERT_H
+#include <assert.h>
+#else
+#define assert(x)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
