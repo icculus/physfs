@@ -4,6 +4,8 @@
 
 03162005 - Added missing translation and Portuguese support (thanks, Danny!).
            MPW support and several MacOS Classic fixes (thanks, Chris!).
+           Changed CWProjects from SITX to SIT format, so OS9 users can
+           unpack it.
 03132005 - More mount work, added PHYSFS_getMountPoint() and more cleanups.
            Replaced all the C runtime allocations with PhysFS allocation hooks.
            Added pocketpc.c to EXTRA_DIST. Added allocation hooks to some
