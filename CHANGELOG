@@ -9,7 +9,8 @@
            All platform drivers (except beos.cpp) had a buffer overflow when
            detecting mounted CD-ROM drives...it only occurs when a drive is
            detected, and it probably won't result in your box getting rooted,
-           but upgrade soon anyhow.
+           but upgrade soon anyhow. Readded the .cvsignore files from the old
+           build system.
 06282002 - Reworked build system _AGAIN_.
 06222002 - Alexander Pipelka spotted a bug in the file open routines in
            posix.c; patched.
