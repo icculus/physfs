@@ -76,12 +76,8 @@ int __PHYSFS_platformDeinit(void)
 #ifdef PHYSFS_NO_CDROM_SUPPORT
 
 /* Stub version for platforms without CD-ROM support. */
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-    char **retval = (char **) malloc(sizeof (char *));
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    *retval = NULL;
-    return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
@@ -166,13 +162,11 @@ static int darwinIsMountedDisc(char *bsdName, mach_port_t masterPort)
 } /* darwinIsMountedDisc */
 
 
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
     const char *devPrefix = "/dev/";
     int prefixLen = strlen(devPrefix);
     mach_port_t masterPort = 0;
-    char **retval = (char **) malloc(sizeof (char *));
-    int cd_count = 1;  /* We count the NULL entry. */
     struct statfs *mntbufp;
     int i, mounts;
 
@@ -191,38 +185,17 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 
         dev += prefixLen;
         if (darwinIsMountedDisc(dev, masterPort))
-        {
-            char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
-            if (tmp)
-            {
-                retval = tmp;
-                retval[cd_count - 1] = (char *) malloc(strlen(mnt) + 1);
-                if (retval[cd_count - 1])
-                {
-                    strcpy(retval[cd_count - 1], mnt);
-                    cd_count++;
-                } /* if */
-            } /* if */
-        } /* if */
+            cb(data, mnt);
     } /* for */
-
-    retval[cd_count - 1] = NULL;
-    return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 #elif (defined PHYSFS_HAVE_SYS_UCRED_H)
 
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-    char **retval = (char **) malloc(sizeof (char *));
-    int cd_count = 1;  /* We count the NULL entry. */
-    struct statfs *mntbufp = NULL;
-    int mounts;
     int i;
-
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-
-    mounts = getmntinfo(&mntbufp, MNT_WAIT);
+    struct statfs *mntbufp = NULL;
+    int mounts = getmntinfo(&mntbufp, MNT_WAIT);
 
     for (i = 0; i < mounts; i++)
     {
@@ -236,40 +209,23 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
         /* add other mount types here */
 
         if (add_it)
-        {
-            char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
-            if (tmp)
-            {
-                retval = tmp;
-                retval[cd_count - 1] = (char *)
-                                malloc(strlen(mntbufp[i].f_mntonname) + 1);
-                if (retval[cd_count - 1])
-                {
-                    strcpy(retval[cd_count - 1], mntbufp[i].f_mntonname);
-                    cd_count++;
-                } /* if */
-            } /* if */
-        } /* if */
+            cb(data, mntbufp[i].f_mntonname);
     } /* for */
-
-    retval[cd_count - 1] = NULL;
-    return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 #elif (defined PHYSFS_HAVE_MNTENT_H)
 
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-    char **retval = (char **) malloc(sizeof (char *));
-    int cd_count = 1;  /* We count the NULL entry. */
     FILE *mounts = NULL;
     struct mntent *ent = NULL;
 
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-
-    *retval = NULL;
     mounts = setmntent("/etc/mtab", "r");
-    BAIL_IF_MACRO(mounts == NULL, ERR_IO_ERROR, retval);
+    if (mounts == NULL)
+    {
+        __PHYSFS_setError(ERR_IO_ERROR);
+        return;
+    } /* if */
 
     while ( (ent = getmntent(mounts)) != NULL )
     {
@@ -280,25 +236,11 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
         /* add other mount types here */
 
         if (add_it)
-        {
-            char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
-            if (tmp)
-            {
-                retval = tmp;
-                retval[cd_count-1] = (char *) malloc(strlen(ent->mnt_dir) + 1);
-                if (retval[cd_count - 1])
-                {
-                    strcpy(retval[cd_count - 1], ent->mnt_dir);
-                    cd_count++;
-                } /* if */
-            } /* if */
-        } /* if */
+            cb(data, ent->mnt_dir);
     } /* while */
 
     endmntent(mounts);
 
-    retval[cd_count - 1] = NULL;
-    return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 #endif

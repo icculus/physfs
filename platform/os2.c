@@ -254,20 +254,12 @@ static int is_cdrom_drive(ULONG drive)
 } /* is_cdrom_drive */
 
 
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-    ULONG dummy;
-    ULONG drivemap;
+    ULONG dummy = 0;
+    ULONG drivemap = 0;
     ULONG i, bit;
-    APIRET rc;
-    char **retval;
-    PHYSFS_uint32 cd_count = 1;   /* we count the NULL entry. */
-
-    retval = (char **) malloc(sizeof (char *));
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    *retval = NULL;
-
-    rc = DosQueryCurrentDisk(&dummy, &drivemap);
+    APIRET rc = DosQueryCurrentDisk(&dummy, &drivemap);
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, retval);
 
     for (i = 0, bit = 1; i < 26; i++, bit <<= 1)
@@ -276,27 +268,12 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
         {
             if ((is_cdrom_drive(i)) && (disc_is_inserted(i)))
             {
-                char **tmp = realloc(retval, sizeof (char *) * (cd_count + 1));
-                if (tmp)
-                {
-                    char *str = (char *) malloc(4);
-                    retval = tmp;
-                    retval[cd_count - 1] = str;
-                    if (str)
-                    {
-                        str[0] = ('A' + i);
-                        str[1] = ':';
-                        str[2] = '\\';
-                        str[3] = '\0';
-                        cd_count++;
-                    } /* if */
-                } /* if */
+                char drive[4] = "x:\\";
+                drive[0] = ('A' + i);
+                cb(data, drive);
             } /* if */
         } /* if */
     } /* for */
-
-    retval[cd_count - 1] = NULL;
-    return(retval);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
@@ -417,11 +394,12 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 } /* __PHYSFS_platformCvtToDependent */
 
 
-LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
-                                                  int omitSymLinks)
+void __PHYSFS_platformEnumerateFiles(const char *dirname,
+                                     int omitSymLinks,
+                                     PHYSFS_StringCallback callback,
+                                     void *callbackdata)
 {
     char spec[CCHMAXPATH];
-    LinkedStringList *ret = NULL, *p = NULL;
     FILEFINDBUF3 fb;
     HDIR hdir = HDIR_CREATE;
     ULONG count = 1;
@@ -439,13 +417,12 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     while (count == 1)
     {
         if ((strcmp(fb.achName, ".") != 0) && (strcmp(fb.achName, "..") != 0))
-            ret = __PHYSFS_addToLinkedStringList(ret, &p, fb.achName, -1);
+            callback(callbackdata, fb.achName);
 
         DosFindNext(hdir, &fb, sizeof (fb), &count);
     } /* while */
 
     DosFindClose(hdir);
-    return(ret);
 } /* __PHYSFS_platformEnumerateFiles */
 
 

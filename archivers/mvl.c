@@ -75,9 +75,9 @@ static PHYSFS_sint64 MVL_fileLength(fvoid *opaque);
 static int MVL_fileClose(fvoid *opaque);
 static int MVL_isArchive(const char *filename, int forWriting);
 static void *MVL_openArchive(const char *name, int forWriting);
-static LinkedStringList *MVL_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks);
+static void MVL_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata);
 static int MVL_exists(dvoid *opaque, const char *name);
 static int MVL_isDirectory(dvoid *opaque, const char *name, int *fileExists);
 static int MVL_isSymLink(dvoid *opaque, const char *name, int *fileExists);
@@ -356,23 +356,21 @@ MVL_openArchive_failed:
 } /* MVL_openArchive */
 
 
-static LinkedStringList *MVL_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks)
+static void MVL_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata)
 {
-    MVLinfo *info = ((MVLinfo *) opaque);
-    MVLentry *entry = info->entries;
-    LinkedStringList *retval = NULL, *p = NULL;
-    PHYSFS_uint32 max = info->entryCount;
-    PHYSFS_uint32 i;
-
     /* no directories in MVL files. */
-    BAIL_IF_MACRO(*dirname != '\0', ERR_NOT_A_DIR, NULL);
+    if (*dname != '\0')
+    {
+        MVLinfo *info = ((MVLinfo *) opaque);
+        MVLentry *entry = info->entries;
+        PHYSFS_uint32 max = info->entryCount;
+        PHYSFS_uint32 i;
 
-    for (i = 0; i < max; i++, entry++)
-        retval = __PHYSFS_addToLinkedStringList(retval, &p, entry->name, -1);
-
-    return(retval);
+        for (i = 0; i < max; i++, entry++)
+            cb(callbackdata, entry->name);
+    } /* if */
 } /* MVL_enumerateFiles */
 
 

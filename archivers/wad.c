@@ -91,9 +91,9 @@ static PHYSFS_sint64 WAD_fileLength(fvoid *opaque);
 static int WAD_fileClose(fvoid *opaque);
 static int WAD_isArchive(const char *filename, int forWriting);
 static void *WAD_openArchive(const char *name, int forWriting);
-static LinkedStringList *WAD_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks);
+static void WAD_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata);
 static int WAD_exists(dvoid *opaque, const char *name);
 static int WAD_isDirectory(dvoid *opaque, const char *name, int *fileExists);
 static int WAD_isSymLink(dvoid *opaque, const char *name, int *fileExists);
@@ -386,45 +386,39 @@ WAD_openArchive_failed:
 } /* WAD_openArchive */
 
 
-static LinkedStringList *WAD_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks)
+static void WAD_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata)
 {
     WADinfo *info = ((WADinfo *) opaque);
     WADentry *entry = info->entries;
-    LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_uint32 max = info->entryCount;
     PHYSFS_uint32 i;
+    const char *name;
     char *sep;
 
-    if (dirname[0] == 0)
+    if (*dname == '\0')  /* root directory enumeration? */
     {
         for (i = 0; i < max; i++, entry++)
         {
-            if (strchr(entry->name, '/') == NULL)
-            {
-                retval = __PHYSFS_addToLinkedStringList(retval, &p,
-                                                        entry->name, -1);
-            } /* if */
+            name = entry->name;
+            if (strchr(name, '/') == NULL)
+                cb(callbackdata, name);
         } /* for */
     } /* if */
     else
     {
         for (i = 0; i < max; i++, entry++)
         {
-            sep = strchr(entry->name, '/');
+            name = entry->name;
+            sep = strchr(name, '/');
             if (sep != NULL)
             {
-                if (strncmp(dirname, entry->name, (sep-entry->name)) == 0)
-                {
-                    retval = __PHYSFS_addToLinkedStringList(retval, &p,
-                                                            sep + 1, -1);
-                } /* if */
+                if (strncmp(dname, name, (sep - name)) == 0)
+                    cb(callbackdata, sep + 1);
             } /* if */
         } /* for */
     } /* else */
-    
-    return(retval);
 } /* WAD_enumerateFiles */
 
 

@@ -127,9 +127,9 @@ static PHYSFS_sint64 ZIP_fileLength(fvoid *opaque);
 static int ZIP_fileClose(fvoid *opaque);
 static int ZIP_isArchive(const char *filename, int forWriting);
 static void *ZIP_openArchive(const char *name, int forWriting);
-static LinkedStringList *ZIP_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks);
+static void ZIP_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata);
 static int ZIP_exists(dvoid *opaque, const char *name);
 static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists);
 static int ZIP_isSymLink(dvoid *opaque, const char *name, int *fileExists);
@@ -1235,19 +1235,36 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
 } /* zip_find_start_of_dir */
 
 
-static LinkedStringList *ZIP_enumerateFiles(dvoid *opaque,
-                                            const char *dirname,
-                                            int omitSymLinks)
+/*
+ * Moved to seperate function so we can use alloca then immediately throw
+ *  away the allocated stack space...
+ */
+static void doEnumCallback(PHYSFS_StringCallback cb, void *callbackdata,
+                           const char *str, PHYSFS_sint32 ln)
+{
+    char *newstr = alloca(ln + 1);
+    if (newstr == NULL)
+        return;
+
+    memcpy(newstr, str, ln);
+    newstr[ln] = '\0';
+    cb(callbackdata, newstr);
+} /* doEnumCallback */
+
+
+static void ZIP_enumerateFiles(dvoid *opaque, const char *dname,
+                               int omitSymLinks, PHYSFS_StringCallback cb,
+                               void *callbackdata)
 {
     ZIPinfo *info = ((ZIPinfo *) opaque);
-    LinkedStringList *retval = NULL, *p = NULL;
     PHYSFS_sint32 dlen, dlen_inc, max, i;
 
-    i = zip_find_start_of_dir(info, dirname, 0);
-    BAIL_IF_MACRO(i == -1, ERR_NO_SUCH_FILE, NULL);
+    i = zip_find_start_of_dir(info, dname, 0);
+    if (i == -1)  /* no such directory. */
+        return;
 
-    dlen = strlen(dirname);
-    if ((dlen > 0) && (dirname[dlen - 1] == '/')) /* ignore trailing slash. */
+    dlen = strlen(dname);
+    if ((dlen > 0) && (dname[dlen - 1] == '/')) /* ignore trailing slash. */
         dlen--;
 
     dlen_inc = ((dlen > 0) ? 1 : 0) + dlen;
@@ -1255,7 +1272,7 @@ static LinkedStringList *ZIP_enumerateFiles(dvoid *opaque,
     while (i < max)
     {
         char *e = info->entries[i].name;
-        if ((dlen) && ((strncmp(e, dirname, dlen) != 0) || (e[dlen] != '/')))
+        if ((dlen) && ((strncmp(e, dname, dlen) != 0) || (e[dlen] != '/')))
             break;  /* past end of this dir; we're done. */
 
         if ((omitSymLinks) && (zip_entry_is_symlink(&info->entries[i])))
@@ -1265,7 +1282,7 @@ static LinkedStringList *ZIP_enumerateFiles(dvoid *opaque,
             char *add = e + dlen_inc;
             char *ptr = strchr(add, '/');
             PHYSFS_sint32 ln = (PHYSFS_sint32) ((ptr) ? ptr-add : strlen(add));
-            retval = __PHYSFS_addToLinkedStringList(retval, &p, add, ln);
+            doEnumCallback(cb, callbackdata, add, ln);
             ln += dlen_inc;  /* point past entry to children... */
 
             /* increment counter and skip children of subdirs... */
@@ -1277,8 +1294,6 @@ static LinkedStringList *ZIP_enumerateFiles(dvoid *opaque,
             } /* while */
         } /* else */
     } /* while */
-
-    return(retval);
 } /* ZIP_enumerateFiles */
 
 

@@ -47,20 +47,6 @@ int __PHYSFS_platformDeinit(void)
 } /* __PHYSFS_platformDeinit */
 
 
-
-/* caller needs to malloc() mntpnt, and expect us to free() it. */
-static void addDisc(char *mntpnt, char ***discs, int *disccount)
-{
-    char **tmp = (char **) realloc(*discs, sizeof (char *) * (*disccount + 1));
-    if (tmp)
-    {
-        tmp[*disccount - 1] = mntpnt;
-        *discs = tmp;
-        (*disccount)++;
-    } /* if */
-} /* addDisc */
-
-
 static char *getMountPoint(const char *devname)
 {
     BVolumeRoster mounts;
@@ -101,10 +87,10 @@ static char *getMountPoint(const char *devname)
      * This function is lifted from Simple Directmedia Layer (SDL):
      *  http://www.libsdl.org/
      */
-static void tryDir(const char *dirname, char ***discs, int *disccount)
+static void tryDir(const char *d, PHYSFS_StringCallback callback, void *data)
 {
     BDirectory dir;
-    dir.SetTo(dirname);
+    dir.SetTo(d);
     if (dir.InitCheck() != B_NO_ERROR)
         return;
 
@@ -127,7 +113,7 @@ static void tryDir(const char *dirname, char ***discs, int *disccount)
         if (entry.IsDirectory())
         {
             if (strcmp(e.name, "floppy") != 0)
-                tryDir(name, discs, disccount);
+                tryDir(name, callback, data);
         } /* if */
 
         else
@@ -147,7 +133,10 @@ static void tryDir(const char *dirname, char ***discs, int *disccount)
                         {
                             char *mntpnt = getMountPoint(name);
                             if (mntpnt != NULL)
-                                addDisc(mntpnt, discs, disccount);
+                            {
+                                callback(data, mntpnt);
+                                free(mntpnt);  /* !!! FIXME: lose this malloc! */
+                            } /* if */
                         } /* if */
                     } /* if */
                 } /* if */
@@ -159,14 +148,9 @@ static void tryDir(const char *dirname, char ***discs, int *disccount)
 } /* tryDir */
 
 
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-    char **retval = (char **) malloc(sizeof (char *));
-    int cd_count = 1;  /* We count the NULL entry. */
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    tryDir("/dev/disk", &retval, &cd_count);
-    retval[cd_count - 1] = NULL;
-    return(retval);
+    tryDir("/dev/disk", cb, data);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 

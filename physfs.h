@@ -1874,6 +1874,22 @@ typedef struct
 __EXPORT__ int PHYSFS_setAllocator(PHYSFS_Allocator *allocator);
 
 
+/*
+ * it is not safe to call physfs functions in these callbacks, as they may
+ *  be holding non recursive mutexes.
+ */
+/* !!! FIXME: comment! */
+typedef void (*PHYSFS_StringCallback)(void *data, const char *);
+
+__EXPORT__ void PHYSFS_getCdRomDirsCallback(PHYSFS_StringCallback c, void *d);
+
+__EXPORT__ void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback c, void *d);
+
+__EXPORT__ void PHYSFS_enumerateFilesCallback(const char *dir,
+                                              PHYSFS_StringCallback c,
+                                              void *d);
+
+
 /* Everything above this line is part of the PhysicsFS 2.0 API. */
 
 

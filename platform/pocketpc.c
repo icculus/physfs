@@ -67,52 +67,53 @@ static const char *win32strerror(void)
 
 static char *UnicodeToAsc(const wchar_t *w_str)
 {
-    char *str=NULL;
+    char *str = NULL;
 
-    if(w_str!=NULL)
+    if (w_str != NULL)
     {
-    int len=wcslen(w_str)+1;
-    str=(char *)malloc(len);
+        int len = wcslen(w_str) + 1;
+        str = (char *) malloc(len);
 
-    if(WideCharToMultiByte(CP_ACP,0,w_str,-1,str,len,NULL,NULL)==0)
-    {    //Conversion failed
-        free(str);
+        if (WideCharToMultiByte(CP_ACP,0,w_str,-1,str,len,NULL,NULL) == 0)
+        {    /*Conversion failed */
+            free(str);
+            return(NULL);
+        } /* if */
+        else
+        {    /* Conversion successful */
+            return(str);
+        } /* else */
+    } /* if */
+
+    else
+    {    /* Given NULL string */
         return NULL;
     }
-    else
-    {    //Conversion successful
-        return(str);
-    }
+} /* UnicodeToAsc */
 
-    }
-    else
-    {    //Given NULL string
-    return NULL;
-    }
-}
 
 static wchar_t *AscToUnicode(const char *str)
 {
-    wchar_t *w_str=NULL;
-    if(str!=NULL)
+    wchar_t *w_str = NULL;
+    if (str != NULL)
     {
-    int len=strlen(str)+1;
-    w_str=(wchar_t *)malloc(sizeof(wchar_t)*len);
-    if(MultiByteToWideChar(CP_ACP,0,str,-1,w_str,len)==0)
-    {
-        free(w_str);
-        return NULL;
-    }
+        int len = strlen(str) + 1;
+        w_str = (wchar_t *) malloc(sizeof (wchar_t) * len);
+        if (MultiByteToWideChar(CP_ACP,0,str,-1,w_str,len) == 0)
+        {
+            free(w_str);
+            return(NULL);
+        } /* if */
+        else
+        {
+            return(w_str);
+        } /* else */
+    } /* if */
     else
     {
-        return(w_str);
-    }
-    }
-    else
-    {
-    return NULL;
-    }
-}
+        return(NULL);
+    } /* else */
+} /* AscToUnicode */
 
 
 static char *getExePath()
@@ -177,9 +178,9 @@ int __PHYSFS_platformDeinit(void)
 } /* __PHYSFS_platformDeinit */
 
 
-char **__PHYSFS_platformDetectAvailableCDs(void)
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, NULL);
+    /* no-op on this platform. */
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
@@ -293,12 +294,11 @@ void __PHYSFS_platformTimeslice(void)
 } /* __PHYSFS_platformTimeslice */
 
 
-LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
-                                                  int omitSymLinks)
+void __PHYSFS_platformEnumerateFiles(const char *dirname,
+                                     int omitSymLinks,
+                                     PHYSFS_StringCallback callback,
+                                     void *callbackdata)
 {
-    LinkedStringList *retval = NULL;
-    LinkedStringList *l = NULL;
-    LinkedStringList *prev = NULL;
     HANDLE dir;
     WIN32_FIND_DATA ent;
     char *SearchPath;
@@ -328,43 +328,29 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     free(w_SearchPath);
     free(SearchPath);
 
-    if(dir == INVALID_HANDLE_VALUE)
-    {
-    return NULL;
-    }
+    if (dir == INVALID_HANDLE_VALUE)
+        return;
 
     do
     {
+        const char *str;
+
         if (wcscmp(ent.cFileName, L".") == 0)
             continue;
 
         if (wcscmp(ent.cFileName, L"..") == 0)
             continue;
 
-        l = (LinkedStringList *) malloc(sizeof (LinkedStringList));
-        if (l == NULL)
+        /* !!! FIXME: avoid malloc in UnicodeToAsc? */
+        str = UnicodeToAsc(ent.cFileName);
+        if (str == NULL)
             break;
 
-    l->str=UnicodeToAsc(ent.cFileName);
-
-        if (l->str == NULL)
-        {
-            free(l);
-            break;
-        }
-
-
-        if (retval == NULL)
-            retval = l;
-        else
-            prev->next = l;
-
-        prev = l;
-        l->next = NULL;
+        callback(callbackdata, str);
+        free(str);
     } while (FindNextFile(dir, &ent) != 0);
 
     FindClose(dir);
-    return(retval);
 } /* __PHYSFS_platformEnumerateFiles */
 
 
@@ -381,7 +367,6 @@ char *__PHYSFS_platformRealPath(const char *path)
     strcpy(retval,path);
 
     return(retval);
-
 } /* __PHYSFS_platformRealPath */
 
 
