@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <time.h>
 
 #ifndef DISABLE_NT_SUPPORT
 #include <userenv.h>
@@ -40,6 +41,104 @@ static char *ProfileDirectory = NULL;   /* User profile folder */
 #ifndef INVALID_SET_FILE_POINTER
 #define INVALID_SET_FILE_POINTER 0xFFFFFFFF
 #endif
+
+/* NT specific functions go in here so they don't get compiled when not NT */
+#ifndef DISABLE_NT_SUPPORT
+/*
+ * Uninitialize any NT specific stuff done in doNTInit().
+ *
+ * Return zero if there was a catastrophic failure and non-zero otherwise.
+ */
+static int doNTDeinit(void)
+{
+    if(CloseHandle(AccessTokenHandle) != S_OK)
+    {
+        return 0;
+    }
+
+    free(ProfileDirectory);
+
+    /* It's all good */
+    return 1;
+}
+
+/*
+ * Initialize any NT specific stuff.  This includes any OS based on NT.
+ *
+ * Return zero if there was a catastrophic failure and non-zero otherwise.
+ */
+static int doNTInit(void)
+{
+    DWORD pathsize = 0;
+    char TempProfileDirectory[1];
+
+    /* Create a process access token handle */
+    if(!OpenProcessToken(ProcessHandle, TOKEN_QUERY, &AccessTokenHandle))
+    {
+        /* Access token is required by other win32 functions */
+        return 0;
+    }
+
+    /* Should fail.  Will write the size of the profile path in pathsize*/
+    /*!!! Second parameter can't be NULL or the function fails??? */
+    if(!GetUserProfileDirectory(AccessTokenHandle, TempProfileDirectory, &pathsize))
+    {
+        /* Allocate memory for the profile directory */
+        ProfileDirectory = (char *)malloc(pathsize);
+        BAIL_IF_MACRO(ProfileDirectory == NULL, ERR_OUT_OF_MEMORY, 0);
+        /* Try to get the profile directory */
+        if(!GetUserProfileDirectory(AccessTokenHandle, ProfileDirectory, &pathsize))
+        {
+            free(ProfileDirectory);
+            return 0;
+        }
+    }
+
+    /* Everything initialized okay */
+    return 1;
+}
+#endif
+
+static BOOL MediaInDrive(const char *DriveLetter)
+{
+    UINT OldErrorMode;
+    DWORD DummyValue;
+    BOOL ReturnValue;
+
+    /* Prevent windows warning message to appear when checking media size */
+    OldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    
+    /* If this function succeeds, there's media in the drive */
+    ReturnValue = GetDiskFreeSpace(DriveLetter, &DummyValue, &DummyValue, &DummyValue, &DummyValue);
+
+    /* Revert back to old windows error handler */
+    SetErrorMode(OldErrorMode);
+
+    return ReturnValue;
+}
+
+static time_t FileTimeToTimeT(FILETIME *ft)
+{
+    SYSTEMTIME st_utc;
+    SYSTEMTIME st_localtz;
+    TIME_ZONE_INFORMATION TimeZoneInfo;
+    struct tm tm;
+
+    FileTimeToSystemTime(ft, &st_utc);
+    GetTimeZoneInformation(&TimeZoneInfo);
+    SystemTimeToTzSpecificLocalTime(&TimeZoneInfo, &st_utc, &st_localtz);
+
+    tm.tm_sec = st_localtz.wSecond;
+    tm.tm_min = st_localtz.wMinute;
+    tm.tm_hour = st_localtz.wHour;
+    tm.tm_mday = st_localtz.wDay;
+    tm.tm_mon = st_localtz.wMonth - 1;
+    tm.tm_year = st_localtz.wYear - 1900;
+    tm.tm_wday = st_localtz.wDayOfWeek;
+    tm.tm_yday = -1;
+    tm.tm_isdst = -1;
+    return mktime(&tm);
+}
 
 static const char *win32strerror(void)
 {
@@ -68,11 +167,8 @@ char **__PHYSFS_platformDetectAvailableCDs(void)
 
     for (drive_str[0] = 'A'; drive_str[0] <= 'Z'; drive_str[0]++)
     {
-        if (GetDriveType(drive_str) == DRIVE_CDROM)
+        if (GetDriveType(drive_str) == DRIVE_CDROM && MediaInDrive(drive_str))
         {
-
-            /* !!! FIXME: Make sure there's really a disc in the drive? */
-
             char **tmp = realloc(retval, sizeof (char *) * cd_count + 1);
             if (tmp)
             {
@@ -252,8 +348,16 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname,
     LinkedStringList *prev = NULL;
     HANDLE dir;
     WIN32_FIND_DATA ent;
+    char *SearchPath;
 
-    dir = FindFirstFile(dirname, &ent);
+    /* Allocate a new string for path, "*", and NULL terminator */
+    SearchPath = malloc(strlen(dirname) + 2);
+    /* Copy current dirname */
+    strcpy(SearchPath, dirname);
+    /* Append the "*" to the end of the string */
+    strcat(SearchPath, "*");
+
+    dir = FindFirstFile(SearchPath, &ent);
     BAIL_IF_MACRO(dir == INVALID_HANDLE_VALUE, win32strerror(), NULL);
 
     while (FindNextFile(dir, &ent) != 0)
@@ -830,67 +934,24 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     ReleaseMutex((HANDLE)mutex);
 }
 
-/* NT specific functions go in here so they don't get compiled when not NT */
-#ifndef DISABLE_NT_SUPPORT
-/*
- * Uninitialize any NT specific stuff done in doNTInit().
- *
- * Return zero if there was a catastrophic failure and non-zero otherwise.
- */
-static int doNTDeinit(void)
-{
-    if(CloseHandle(AccessTokenHandle) != S_OK)
-    {
-        return 0;
-    }
-
-    free(ProfileDirectory);
-
-    /* It's all good */
-    return 1;
-}
-
-/*
- * Initialize any NT specific stuff.  This includes any OS based on NT.
- *
- * Return zero if there was a catastrophic failure and non-zero otherwise.
- */
-static int doNTInit(void)
-{
-    DWORD pathsize = 0;
-    char TempProfileDirectory[1];
-
-    /* Create a process access token handle */
-    if(!OpenProcessToken(ProcessHandle, TOKEN_QUERY, &AccessTokenHandle))
-    {
-        /* Access token is required by other win32 functions */
-        return 0;
-    }
-
-    /* Should fail.  Will write the size of the profile path in pathsize*/
-    /*!!! Second parameter can't be NULL or the function fails??? */
-    if(!GetUserProfileDirectory(AccessTokenHandle, TempProfileDirectory, &pathsize))
-    {
-        /* Allocate memory for the profile directory */
-        ProfileDirectory = (char *)malloc(pathsize);
-        BAIL_IF_MACRO(ProfileDirectory == NULL, ERR_OUT_OF_MEMORY, 0);
-        /* Try to get the profile directory */
-        if(!GetUserProfileDirectory(AccessTokenHandle, ProfileDirectory, &pathsize))
-        {
-            free(ProfileDirectory);
-            return 0;
-        }
-    }
-
-    /* Everything initialized okay */
-    return 1;
-}
-#endif
-
-
 PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 {
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, -1);  /* !!! FIXME! */
+    WIN32_FILE_ATTRIBUTE_DATA AttributeData;
+
+    GetFileAttributesEx(fname, GetFileExInfoStandard, &AttributeData);
+    /* 0 return value indicates an error or not supported */
+    if(AttributeData.ftLastWriteTime.dwHighDateTime == 0 &&
+        AttributeData.ftLastWriteTime.dwLowDateTime == 0)
+    {
+        /* Return error */
+        return -1;
+    }
+    else
+    {
+        /* Return UNIX time_t version of last write time */
+        /*return (PHYSFS_sint64)FileTimeToTimeT(&AttributeData.ftLastWriteTime);*/
+        return (PHYSFS_sint64)FileTimeToTimeT(&AttributeData.ftCreationTime);
+    }
 } /* __PHYSFS_platformGetLastModTime */
 
 /* end of win32.c ... */
