@@ -6,6 +6,10 @@
  *  This file written by Ryan C. Gordon.
  */
 
+#if HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #if ((defined __APPLE__) && (defined __MACH__))
 #  if (!defined __DARWIN__)
 #    define __DARWIN__

@@ -28,6 +28,12 @@
  *  This file written by Ryan C. Gordon.
  */
 
+#if HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#if (defined PHYSFS_SUPPORTS_GRP)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,10 +44,6 @@
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
-
-#if (!defined PHYSFS_SUPPORTS_GRP)
-#error PHYSFS_SUPPORTS_GRP must be defined.
-#endif
 
 typedef struct
 {
@@ -437,6 +439,8 @@ static FileHandle *GRP_openRead(DirHandle *h, const char *name)
     retval->dirHandle = h;
     return(retval);
 } /* GRP_openRead */
+
+#endif  /* defined PHYSFS_SUPPORTS_GRP */
 
 /* end of grp.c ... */
 

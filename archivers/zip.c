@@ -6,6 +6,12 @@
  *  This file written by Ryan C. Gordon.
  */
 
+#if HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#if (defined PHYSFS_SUPPORTS_ZIP)
+
 /*
  * !!! FIXME: overall design bugs.
  *
@@ -26,10 +32,6 @@
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
-
-#if (!defined PHYSFS_SUPPORTS_ZIP)
-#error PHYSFS_SUPPORTS_ZIP must be defined.
-#endif
 
 #define MAXZIPENTRYSIZE 256
 
@@ -669,6 +671,8 @@ static void ZIP_dirClose(DirHandle *h)
     free(zi);
     free(h);
 } /* ZIP_dirClose */
+
+#endif  /* defined PHYSFS_SUPPORTS_ZIP */
 
 /* end of zip.c ... */
 

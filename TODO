@@ -4,6 +4,7 @@ These are in no particular order. A 1.0 release is reliant on doing most of
  this stuff. Some might be dupes, some might be done already.
 
 - autoconf support?
+- Include the Visual Studio (6 and .NET) project files in CVS directly.
 - update the Makefile so that Cygwin can generate a DLL. The entire codebase
   compiles under Cygwin otherwise.
 - Hmm...we can determine the actual CD-ROM drives under Win32, but how do you
