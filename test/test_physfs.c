@@ -102,9 +102,17 @@ static int cmd_deinit(char *args)
 
 static int cmd_addarchive(char *args)
 {
-    char *ptr = strchr(args, ' ');
+    char *ptr = strrchr(args, ' ');
     int appending = atoi(ptr + 1);
     *ptr = '\0';
+
+    if (*args == '\"')
+    {
+        args++;
+        *(ptr - 1) = '\0';
+    }
+
+    /*printf("[%s], [%d]\n", args, appending);*/
 
     if (PHYSFS_addToSearchPath(args, appending))
         printf("Successful.\n");
@@ -369,12 +377,15 @@ static int cmd_cat(char *args)
 static int count_args(const char *str)
 {
     int retval = 0;
+    int in_quotes = 0;
 
     if (str != NULL)
     {
         for (; *str != '\0'; str++)
         {
-            if (*str == ' ')
+            if (*str == '\"')
+                in_quotes = !in_quotes;
+            else if ((*str == ' ') && (!in_quotes))
                 retval++;
         } /* for */
         retval++;
