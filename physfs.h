@@ -1230,7 +1230,7 @@ __EXPORT__ int PHYSFS_setBuffer(PHYSFS_file *handle, PHYSFS_uint64 bufsize);
 
 
 /**
- * \fn int PHYSFS_flush(PHYSFS_file *handle, PHYSFS_uint64 bufsize)
+ * \fn int PHYSFS_flush(PHYSFS_file *handle)
  * \brief Flush a buffered PhysicsFS file handle.
  *
  * For buffered files opened for writing, this will put the current contents
