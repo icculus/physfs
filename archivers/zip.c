@@ -42,6 +42,11 @@ static int ZIP_seek(FileHandle *handle, int offset)
 } /* ZIP_seek */
 
 
+static int ZIP_fileLength(FileHandle *handle)
+{
+} /* ZIP_fileLength */
+
+
 static int ZIP_fileClose(FileHandle *handle)
 {
 } /* ZIP_fileClose */
@@ -89,12 +94,13 @@ static void ZIP_dirClose(DirHandle *h)
 
 static const FileFunctions __PHYSFS_FileFunctions_ZIP =
 {
-    ZIP_read,       /* read() method  */
-    NULL,           /* write() method */
-    ZIP_eof,        /* eof() method   */
-    ZIP_tell,       /* tell() method  */
-    ZIP_seek,       /* seek() method  */
-    ZIP_fileClose   /* fileClose() method */
+    ZIP_read,       /* read() method       */
+    NULL,           /* write() method      */
+    ZIP_eof,        /* eof() method        */
+    ZIP_tell,       /* tell() method       */
+    ZIP_seek,       /* seek() method       */
+    ZIP_fileLength, /* fileLength() method */
+    ZIP_fileClose   /* fileClose() method  */
 };
 
 

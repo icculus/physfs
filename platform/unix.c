@@ -328,5 +328,14 @@ LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname)
 } /* __PHYSFS_platformEnumerateFiles */
 
 
+int __PHYSFS_platformFileLength(FILE *handle)
+{
+    struct stat statbuf;
+    errno = 0;
+    BAIL_IF_MACRO(fstat(fileno(handle), &statbuf) == -1, strerror(errno), -1);
+    return(statbuf.st_size);
+} /* __PHYSFS_platformFileLength */
+
+
 /* end of unix.c ... */
 

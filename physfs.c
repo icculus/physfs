@@ -1227,5 +1227,15 @@ int PHYSFS_seek(PHYSFS_file *handle, int pos)
 } /* PHYSFS_seek */
 
 
+int PHYSFS_fileLength(PHYSFS_file *handle)
+{
+    FileHandle *h = (FileHandle *) handle->opaque;
+    assert(h != NULL);
+    assert(h->funcs != NULL);
+    BAIL_IF_MACRO(h->funcs->fileLength == NULL, ERR_NOT_SUPPORTED, 0);
+    return(h->funcs->fileLength(h));
+} /* PHYSFS_filelength */
+
+
 /* end of physfs.c ... */
 

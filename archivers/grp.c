@@ -115,6 +115,13 @@ static int GRP_seek(FileHandle *handle, int offset)
 } /* GRP_seek */
 
 
+static int GRP_fileLength(FileHandle *handle)
+{
+    GRPfileinfo *finfo = (GRPfileinfo *) (handle->opaque);
+    return(finfo->size);
+} /* GRP_fileLength */
+
+
 static int GRP_fileClose(FileHandle *handle)
 {
     free(handle->opaque);
@@ -340,12 +347,13 @@ static void GRP_dirClose(DirHandle *h)
 
 static const FileFunctions __PHYSFS_FileFunctions_GRP =
 {
-    GRP_read,       /* read() method  */
-    NULL,           /* write() method */
-    GRP_eof,        /* eof() method   */
-    GRP_tell,       /* tell() method  */
-    GRP_seek,       /* seek() method  */
-    GRP_fileClose   /* fileClose() method */
+    GRP_read,       /* read() method       */
+    NULL,           /* write() method      */
+    GRP_eof,        /* eof() method        */
+    GRP_tell,       /* tell() method       */
+    GRP_seek,       /* seek() method       */
+    GRP_fileLength, /* fileLength() method */
+    GRP_fileClose   /* fileClose() method  */
 };
 
 

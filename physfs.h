@@ -791,6 +791,20 @@ int PHYSFS_tell(PHYSFS_file *handle);
  */
 int PHYSFS_seek(PHYSFS_file *handle, int pos);
 
+
+/**
+ * Get total length of a file in bytes. Note that if the file size can't
+ *  be determined (since the archive is "streamed" or whatnot) than this
+ *  with report (-1). Also note that if another process/thread is writing
+ *  to this file at the same time, then the information this function
+ *  supplies could be incorrect before you get it. Use with caution, or
+ *  better yet, don't use at all.
+ *
+ *   @param handle handle returned from PHYSFS_open*().
+ *  @return size in bytes of the file. -1 if can't be determined.
+ */
+int PHYSFS_fileLength(PHYSFS_file *handle);
+
 #ifdef __cplusplus
 }
 #endif

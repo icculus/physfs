@@ -70,6 +70,12 @@ static int DIR_seek(FileHandle *handle, int offset)
 } /* DIR_seek */
 
 
+static int DIR_fileLength(FileHandle *handle)
+{
+    return(__PHYSFS_platformFileLength((FILE *) (handle->opaque)));
+} /* DIR_fileLength */
+
+
 static int DIR_fileClose(FileHandle *handle)
 {
     FILE *h = (FILE *) (handle->opaque);
@@ -283,18 +289,20 @@ static const FileFunctions __PHYSFS_FileFunctions_DIR =
     DIR_eof,        /* eof() method       */
     DIR_tell,       /* tell() method      */
     DIR_seek,       /* seek() method      */
-    DIR_fileClose,  /* fileClose() method */
+    DIR_fileLength, /* fileLength() method */
+    DIR_fileClose   /* fileClose() method */
 };
 
 
 static const FileFunctions __PHYSFS_FileFunctions_DIRW =
 {
-    NULL,           /* read() method      */
-    DIR_write,      /* write() method     */
-    DIR_eof,        /* eof() method       */
-    DIR_tell,       /* tell() method      */
-    DIR_seek,       /* seek() method      */
-    DIR_fileClose   /* fileClose() method */
+    NULL,           /* read() method       */
+    DIR_write,      /* write() method      */
+    DIR_eof,        /* eof() method        */
+    DIR_tell,       /* tell() method       */
+    DIR_seek,       /* seek() method       */
+    DIR_fileLength, /* fileLength() method */
+    DIR_fileClose   /* fileClose() method  */
 };
 
 

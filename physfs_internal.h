@@ -83,6 +83,13 @@ typedef struct __PHYSFS_FILEFUNCTIONS__
     int (*seek)(FileHandle *handle, int offset);
 
         /*
+         * Return number of bytes available in the file, or -1 if you
+         *  aren't able to determine.
+         * On failure, call __PHYSFS_setError().
+         */
+    int (*fileLength)(FileHandle *handle);
+
+        /*
          * Close the file, and free the FileHandle structure (including "opaque").
          *  returns non-zero on success, zero if can't close file.
          * On failure, call __PHYSFS_setError().
@@ -400,6 +407,13 @@ void __PHYSFS_platformTimeslice(void);
  *  uses platform-independent notation.
  */
 LinkedStringList *__PHYSFS_platformEnumerateFiles(const char *dirname);
+
+
+/*
+ * Determine the current size of a file, in bytes, from a stdio FILE *.
+ *  Return -1 if you can't do it, and call __PHYSFS_setError().
+ */
+int __PHYSFS_platformFileLength(FILE *handle);
 
 
 #ifdef __cplusplus
