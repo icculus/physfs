@@ -5,17 +5,17 @@
  *  stdio or system i/o calls. The brief benefits:
  *
  *   - It's portable.
- *   - It can handle byte ordering on alternative processors.
  *   - It's safe. No file access is permitted outside the specified dirs.
+ *   - It can handle byte ordering on alternative processors.
  *   - It's flexible. Archives (.ZIP files) can be used transparently as
  *      directory structures.
  *
  * This system is largely inspired by Quake 3's PK3 files and the related
- *  fs_* cvars. If you've ever tinkered with these, then this API will be very
+ *  fs_* cvars. If you've ever tinkered with these, then this API will be
  *  familiar to you.
  *
- * With the PhysicsFS, you have a single writing directory and multiple
- *  "search paths" for reading. You can think of this as a filesystem within a
+ * With PhysicsFS, you have a single writing path and multiple "search paths"
+ *  for reading. You can think of this as a filesystem within a
  *  filesystem. If (on Windows) you were to set the writing directory to
  *  "C:\MyGame\MyWritingDirectory", then no PHYSFS calls could touch anything
  *  above this directory, including the "C:\MyGame" and "C:\" directories.
@@ -35,7 +35,12 @@
  *  specify it like it was on a Unix filesystem: if you want to write to
  *  "C:\MyGame\MyConfigFiles\game.cfg", then you might set the write path to
  *  "C:\MyGame" and then open "MyConfigFiles/game.cfg". This gives an
- *  abstraction across all platforms.
+ *  abstraction across all platforms. Specifying a file in this way is termed
+ *  "platform-independent notation" in this documentation. Specifying a path
+ *  as "C:\mydir\myfile" or "MacOS hard drive:My Directory:My File" is termed
+ *  "platform-dependent notation". The only time you use platform-dependent
+ *  notation is when setting up your write and search paths; after that, all
+ *  file access into those paths are done with platform-independent notation.
  *
  * All files opened for writing are opened in relation to the write path,
  *  which is the root of the writable filesystem. When opening a file for
@@ -55,12 +60,14 @@
  *    C:\mygame\installeddatafiles.zip
  *
  * Then a call to PHYSFS_openread("textfiles/myfile.txt") (note the directory
- *  separator) will check for C:\mygame\textfiles\myfile.txt, then
+ *  separator, lack of drive letter, and lack of dir separator at the start of
+ *  the string; this is platform-independent notation) will check for
+ *  C:\mygame\textfiles\myfile.txt, then
  *  C:\mygame\myuserfiles\textfiles\myfile.txt, then
  *  D:\mygamescdromdatafiles\textfiles\myfile.txt, then, finally, for
  *  textfiles\myfile.txt inside of C:\mygame\installeddatafiles.zip. Remember
  *  that most archive types and platform filesystems store their filenames in
- *  a case-sensitive manner.
+ *  a case-sensitive manner, so you should be careful to specify it correctly.
  *
  * Files opened through PhysicsFS may NOT contain "." or ".." as path
  *  elements. Not only are these meaningless on MacOS, they are a security
@@ -119,11 +126,35 @@ extern "C" {
 
 /* functions... */
 
+/**
+ * Initialize PhysicsFS. This must be called before any other PhysicsFS
+ *  function (except PHYSFS_getLastError()).
+ *
+ *   @param argv0 the argv[0] string passed to your program's mainline.
+ *  @return nonzero on success, zero on error. Specifics of the error can be
+ *          gleaned from PHYSFS_getLastError().
+ */
+int PHYSFS_init(const char *argv0);
+
+
+/**
+ * Shutdown PhysicsFS. This closes any files opened via PhysicsFS, blanks the
+ *  search/write paths, frees memory, and invalidates all your handles.
+ *
+ * Once deinitialized, PHYSFS_init() can be called again to restart the
+ *  subsystem.
+ *
+ *  @return nonzero on success, zero on error. Specifics of the error can be
+ *          gleaned from PHYSFS_getLastError(). If failure, state of PhysFS is
+ *          undefined, and probably badly screwed up.
+ */
+void PHYSFS_deinit(void);
+
 
 /**
  * Get the last PhysicsFS error message as a null-terminated string.
  *  This will be NULL if there's been no error since the last call to this
- *  function. The pointer returned by this call points to a static buffer
+ *  function. The pointer returned by this call points to a static
  *  internal buffer, and this call is not thread safe.
  *
  *   @return READ ONLY string of last error message.
@@ -136,8 +167,9 @@ const char *PHYSFS_getLastError(void);
  *  and ":" on MacOS. It may be more than one character, depending on the
  *  platform, and your code should take that into account. Note that this is
  *  only useful for setting up the search/write paths, since access into those
- *  paths always use '/' to separate directories. This is also handy for
- *  getting platform-independent access when using stdio calls.
+ *  paths always use '/' (platform-independent notation) to separate
+ *  directories. This is also handy for getting platform-independent access
+ *  when using stdio calls.
  *
  *   @return READ ONLY null-terminated string of platform's path separator.
  */
@@ -165,7 +197,7 @@ const char *PHYSFS_getPathSeparator(void);
  *
  * // lock thread here, if needed.
  *
- * for (i = PHYSFS__getCdRomPaths(); *i != NULL; i++)
+ * for (i = PHYSFS_getCdRomPaths(); *i != NULL; i++)
  *     printf("cdrom path [%s] is available.\n", *i);
  *
  * // unlock thread here, if needed.
@@ -256,7 +288,7 @@ int PHYSFS_addToSearchPath(const char *newPath, int appendToPath);
 
 
 /**
- * Remove a directory or archive to the search path.
+ * Remove a directory or archive from the search path.
  *
  * This must be a (case-sensitive) match to a dir or archive already in the
  *  search path, specified in platform-dependent notation.
@@ -307,12 +339,12 @@ const char **PHYSFS_getSearchPath(void);
  *
  *  The search path will be:
  *
- *    - The Write Path
- *    - The Write Path/appName
+ *    - The Write Path (created if it doesn't exist)
+ *    - The Write Path/appName (created if it doesn't exist)
  *    - The Base Path (PHYSFS_getBasePath())
- *    - The Base Path/appName
+ *    - The Base Path/appName (if it exists)
  *    - All found CD-ROM paths (optionally)
- *    - All found CD-ROM paths/appName (optionally)
+ *    - All found CD-ROM paths/appName (optionally, and if they exist)
  *
  * These directories are then searched for files ending with the extension
  *  (archiveExt), which, if they are valid and supported archives, will also
@@ -322,7 +354,7 @@ const char **PHYSFS_getSearchPath(void);
  *  order, regardless of which directories they were found in.
  *
  * All of this can be accomplished from the application, but this just does it
- *  all for you.
+ *  all for you. Feel free to add more to the search path manually, too.
  *
  *    @param appName Program-specific name of your program, to separate it
  *                   from other programs using PhysicsFS.
@@ -333,15 +365,16 @@ const char **PHYSFS_getSearchPath(void);
  *                      archives automatically.
  *
  *    @param includeCdRoms Non-zero to include CD-ROMs in the search path, and
- *                         search them for archives. This may cause a
- *                         significant amount of blocking while discs are
- *                         accessed, and if there are no discs in the drive
- *                         (or even not mounted on Unix systems), then they
- *                         may not be made available anyhow. You may want to
- *                         specify zero and handle the disc setup yourself.
+ *                         (if (archiveExt) != NULL) search them for archives.
+ *                         This may cause a significant amount of blocking
+ *                         while discs are accessed, and if there are no discs
+ *                         in the drive (or even not mounted on Unix systems),
+ *                         then they may not be made available anyhow. You may
+ *                         want to specify zero and handle the disc setup
+ *                         yourself.
  *
  *    @param archivesFirst Non-zero to prepend the archives to the search path.
- *                          Zero to append them.
+ *                          Zero to append them. Ignored if !(archiveExt).
  */
 void PHYSFS_setSanePaths(const char *appName, const char *archiveExt,
                          int includeCdRoms, int archivesFirst);
@@ -377,6 +410,10 @@ int PHYSFS_mkdir(const char *dirName);
  *  physical filesystem, if it exists and the operating system permits the
  *  deletion.
  *
+ * Note that on Unix systems, deleting a file may be successful, but the
+ *  actual file won't be removed until all processes that have an open
+ *  filehandle to it (including your program) close their handles.
+ *
  *   @param filename Filename to delete.
  *  @return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
@@ -399,6 +436,10 @@ int PHYSFS_delete(const char *filename);
  *  "C:\mygame\writepath\downloads\maps" and everything in it (including child
  *  directories) is removed from the physical filesystem, if it exists and the
  *  operating system permits the deletion.
+ *
+ * Note that on Unix systems, deleting a file may be successful, but the
+ *  actual file won't be removed until all processes that have an open
+ *  filehandle to it (including your program) close their handles.
  *
  *   @param filename root of directory tree to delete.
  *  @return nonzero on success, zero on error. Specifics of the error can be
@@ -433,7 +474,8 @@ void PHYSFS_permitSymbolicLinks(int allow);
 
 /**
  * Determine if a file exists. Just because it exists does NOT mean that you
- *  will have access to read or write it.
+ *  will have access to read or write it, or that it will continue to exist
+ *  after this call (as other processes may delete it on multitasking systems).
  *
  *   @param filename a file in platform-independent notation.
  *   @param inWritePath nonzero to check write path, zero to check search path.
@@ -453,6 +495,9 @@ int PHYSFS_exists(const char *filename, int inWritePath);
  * So, if you look for "maps/level1.map", and C:\mygame is in your search
  *  path and C:\mygame\maps\level1.map exists, then buffer will be filled in
  *  with "C:\mygame\maps\level1.map" and the function returns nonzero.
+ *
+ * If a match is a symbolic link, and you've not explicitly permitted symlinks,
+ *  then it will be ignored, and the search for a match will continue.
  *
  *     @param buffer pointer to buffer to fill with path.
  *     @param bufsize size of buffer pointed to by (buffer).
@@ -586,6 +631,8 @@ int PHYSFS_writeLE32(void *handle, int buffer);
 int PHYSFS_writeBE16(void *handle, int buffer);
 int PHYSFS_writeBE32(void *handle, int buffer);
 */
+
+/* !!! need way to enumerate the contents of a directory. */
 
 #ifdef __cplusplus
 }
