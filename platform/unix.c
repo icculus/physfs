@@ -461,6 +461,7 @@ char *__PHYSFS_platformRealPath(const char *path)
 
 int __PHYSFS_platformMkDir(const char *path)
 {
+    int rc;
     errno = 0;
     rc = mkdir(path, S_IRWXU);
     BAIL_IF_MACRO(rc == -1, strerror(errno), 0);
