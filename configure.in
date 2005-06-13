@@ -380,8 +380,19 @@ if test x$target_os = xcygwin; then
 else
   this_is_cygwin=no
 fi
-
 AC_MSG_RESULT([$this_is_cygwin])
+
+AC_MSG_CHECKING([if this is mingw])
+if test x$target_os = xmingw32msvc; then
+  this_is_mingw=yes
+  PHYSFSCFLAGS="$PHYSFSCFLAGS -DWIN32"
+  enable_cdrom=yes
+  enable_pthreads=no
+  have_non_posix_threads=yes
+else
+  this_is_mingw=no
+fi
+AC_MSG_RESULT([$this_is_mingw])
 
 this_is_macosx=no
 if test x$we_have_sed = xyes; then
