@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+07132005 - Updated zlib to 1.2.2.
 06122005 - Added support for mingw to Unix build process (thanks, Matze!).
 03162005 - Added missing translation and Portuguese support (thanks, Danny!).
            MPW support and several MacOS Classic fixes (thanks, Chris!).
