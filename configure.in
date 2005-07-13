@@ -531,7 +531,7 @@ AC_OUTPUT([
 Makefile
 archivers/Makefile
 platform/Makefile
-zlib121/Makefile
+zlib122/Makefile
 test/Makefile
 extras/Makefile
 physfs.spec
