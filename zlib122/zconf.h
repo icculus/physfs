@@ -1,5 +1,5 @@
 /* zconf.h -- configuration of the zlib compression library
- * Copyright (C) 1995-2003 Jean-loup Gailly.
+ * Copyright (C) 1995-2004 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -13,65 +13,46 @@
  * compile with -DZ_PREFIX. The "standard" zlib should be compiled without it.
  */
 #ifdef Z_PREFIX
-#  define deflateInit_  z_deflateInit_
-#  define deflate       z_deflate
-#  define deflateEnd    z_deflateEnd
-#  define inflateInit_  z_inflateInit_
-#  define inflate       z_inflate
-#  define inflateEnd    z_inflateEnd
-#  define deflateInit2_ z_deflateInit2_
-#  define deflateSetDictionary z_deflateSetDictionary
-#  define deflateCopy   z_deflateCopy
-#  define deflateReset  z_deflateReset
-#  define deflatePrime  z_deflatePrime
-#  define deflateParams z_deflateParams
-#  define deflateBound  z_deflateBound
-#  define inflateInit2_ z_inflateInit2_
-#  define inflateSetDictionary z_inflateSetDictionary
-#  define inflateSync   z_inflateSync
-#  define inflateSyncPoint z_inflateSyncPoint
-#  define inflateCopy   z_inflateCopy
-#  define inflateReset  z_inflateReset
-#  define compress      z_compress
-#  define compress2     z_compress2
-#  define compressBound z_compressBound
-#  define uncompress    z_uncompress
-#  define adler32       z_adler32
-#  define crc32         z_crc32
-#  define get_crc_table z_get_crc_table
+#  define deflateInit_          z_deflateInit_
+#  define deflate               z_deflate
+#  define deflateEnd            z_deflateEnd
+#  define inflateInit_          z_inflateInit_
+#  define inflate               z_inflate
+#  define inflateEnd            z_inflateEnd
+#  define deflateInit2_         z_deflateInit2_
+#  define deflateSetDictionary  z_deflateSetDictionary
+#  define deflateCopy           z_deflateCopy
+#  define deflateReset          z_deflateReset
+#  define deflateParams         z_deflateParams
+#  define deflateBound          z_deflateBound
+#  define deflatePrime          z_deflatePrime
+#  define inflateInit2_         z_inflateInit2_
+#  define inflateSetDictionary  z_inflateSetDictionary
+#  define inflateSync           z_inflateSync
+#  define inflateSyncPoint      z_inflateSyncPoint
+#  define inflateCopy           z_inflateCopy
+#  define inflateReset          z_inflateReset
+#  define inflateBack           z_inflateBack
+#  define inflateBackEnd        z_inflateBackEnd
+#  define compress              z_compress
+#  define compress2             z_compress2
+#  define compressBound         z_compressBound
+#  define uncompress            z_uncompress
+#  define adler32               z_adler32
+#  define crc32                 z_crc32
+#  define get_crc_table         z_get_crc_table
+#  define zError                z_zError
 
-#  define Byte          z_Byte
-#  define uInt          z_uInt
-#  define uLong         z_uLong
-#  define Bytef         z_Bytef
-#  define charf         z_charf
-#  define intf          z_intf
-#  define uIntf         z_uIntf
-#  define uLongf        z_uLongf
-#  define voidpf        z_voidpf
-#  define voidp         z_voidp
-
-#  define inflate_table       z_inflate_table
-#  define inflate_copyright   z_inflate_copyright
-#  define inflate_fast        z_inflate_fast
-#  define inflateBackInit_     z_inflateBackInit_
-#  define inflateBack         z_inflateBack
-#  define inflateBackEnd      z_inflateBackEnd
-#  define deflate_copyright   z_deflate_copyright
-#  define zlibVersion         z_zlibVersion
-#  define zlibCompileFlags    z_zlibCompileFlags
-#  define zError              z_zError
-#  define zcalloc             z_zcalloc
-#  define zcfree              z_zcfree
-#  define z_errmsg            z_z_errmsg
-#  define _tr_init            z_tr_init
-#  define _tr_stored_block    z_tr_stored_block
-#  define _tr_flush_block     z_tr_flush_block
-#  define _tr_tally           z_tr_tally
-#  define _length_code        z_length_code
-#  define _dist_code          z_dist_code
-#  define _tr_align           z_tr_align
-
+#  define Byte                  z_Byte
+#  define uInt                  z_uInt
+#  define uLong                 z_uLong
+#  define Bytef                 z_Bytef
+#  define charf                 z_charf
+#  define intf                  z_intf
+#  define uIntf                 z_uIntf
+#  define uLongf                z_uLongf
+#  define voidpf                z_voidpf
+#  define voidp                 z_voidp
 #endif
 
 #if defined(__MSDOS__) && !defined(MSDOS)
@@ -127,9 +108,6 @@
 #if !defined(STDC) && (defined(OS2) || defined(__HOS_AIX__))
 #  define STDC
 #endif
-#if !defined(STDC) && defined(macintosh)
-#  define STDC
-#endif
 
 #if defined(__OS400__) && !defined(STDC)    /* iSeries (formerly AS/400). */
 #  define STDC
@@ -142,7 +120,7 @@
 #endif
 
 /* Some Mac compilers merge all .h files incorrectly: */
-#if defined(__MWERKS__)||defined(applec)||defined(THINK_C)||defined(__SC__)||defined(__MRC__)
+#if defined(__MWERKS__)||defined(applec)||defined(THINK_C)||defined(__SC__)
 #  define NO_DUMMY_DECL
 #endif
 
@@ -306,7 +284,7 @@ typedef uLong FAR uLongf;
 #  ifdef VMS
 #    include <unixio.h>   /* for off_t */
 #  endif
-#  define z_off_t  off_t
+#  define z_off_t off_t
 #endif
 #ifndef SEEK_SET
 #  define SEEK_SET        0       /* Seek from beginning of file.  */
@@ -314,11 +292,11 @@ typedef uLong FAR uLongf;
 #  define SEEK_END        2       /* Set file pointer to EOF plus "offset" */
 #endif
 #ifndef z_off_t
-#  define  z_off_t long
+#  define z_off_t long
 #endif
 
 #if defined(__OS400__)
-#define NO_vsnprintf
+#  define NO_vsnprintf
 #endif
 
 #if defined(__MVS__)

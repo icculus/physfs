@@ -8,7 +8,7 @@ MAKEFILE        = PhysicsFS.make
 
 ObjDir          = :obj:
 Includes        = -i : ¶
-				  -i ":zlib121:"
+				  -i ":zlib122:"
 
 Sym-PPC         = -sym on
 
@@ -29,18 +29,18 @@ SrcFiles        =  ¶
 				  physfs.c ¶
 				  physfs_byteorder.c ¶
 				  :platform:macclassic.c ¶
-				  :zlib121:adler32.c ¶
-				  :zlib121:compress.c ¶
-				  :zlib121:crc32.c ¶
-				  :zlib121:deflate.c ¶
-				  :zlib121:gzio.c ¶
-				  :zlib121:infback.c ¶
-				  :zlib121:inffast.c ¶
-				  :zlib121:inflate.c ¶
-				  :zlib121:inftrees.c ¶
-				  :zlib121:trees.c ¶
-				  :zlib121:uncompr.c ¶
-				  :zlib121:zutil.c
+				  :zlib122:adler32.c ¶
+				  :zlib122:compress.c ¶
+				  :zlib122:crc32.c ¶
+				  :zlib122:deflate.c ¶
+				  :zlib122:gzio.c ¶
+				  :zlib122:infback.c ¶
+				  :zlib122:inffast.c ¶
+				  :zlib122:inflate.c ¶
+				  :zlib122:inftrees.c ¶
+				  :zlib122:trees.c ¶
+				  :zlib122:uncompr.c ¶
+				  :zlib122:zutil.c
 
 
 ### Object Files ###
@@ -116,18 +116,18 @@ PhysicsFS  ÄÄ  {ObjFiles-PPC} {LibFiles-PPC} {¥MondoBuild¥}
 "{ObjDir}physfs.c.x"  Ä  physfs.c
 "{ObjDir}physfs_byteorder.c.x"  Ä  physfs_byteorder.c
 "{ObjDir}macclassic.c.x"  Ä  :platform:macclassic.c
-"{ObjDir}adler32.c.x"  Ä  :zlib121:adler32.c
-"{ObjDir}compress.c.x"  Ä  :zlib121:compress.c
-"{ObjDir}crc32.c.x"  Ä  :zlib121:crc32.c
-"{ObjDir}deflate.c.x"  Ä  :zlib121:deflate.c
-"{ObjDir}gzio.c.x"  Ä  :zlib121:gzio.c
-"{ObjDir}infback.c.x"  Ä  :zlib121:infback.c
-"{ObjDir}inffast.c.x"  Ä  :zlib121:inffast.c
-"{ObjDir}inflate.c.x"  Ä  :zlib121:inflate.c
-"{ObjDir}inftrees.c.x"  Ä  :zlib121:inftrees.c
-"{ObjDir}trees.c.x"  Ä  :zlib121:trees.c
-"{ObjDir}uncompr.c.x"  Ä  :zlib121:uncompr.c
-"{ObjDir}zutil.c.x"  Ä  :zlib121:zutil.c
+"{ObjDir}adler32.c.x"  Ä  :zlib122:adler32.c
+"{ObjDir}compress.c.x"  Ä  :zlib122:compress.c
+"{ObjDir}crc32.c.x"  Ä  :zlib122:crc32.c
+"{ObjDir}deflate.c.x"  Ä  :zlib122:deflate.c
+"{ObjDir}gzio.c.x"  Ä  :zlib122:gzio.c
+"{ObjDir}infback.c.x"  Ä  :zlib122:infback.c
+"{ObjDir}inffast.c.x"  Ä  :zlib122:inffast.c
+"{ObjDir}inflate.c.x"  Ä  :zlib122:inflate.c
+"{ObjDir}inftrees.c.x"  Ä  :zlib122:inftrees.c
+"{ObjDir}trees.c.x"  Ä  :zlib122:trees.c
+"{ObjDir}uncompr.c.x"  Ä  :zlib122:uncompr.c
+"{ObjDir}zutil.c.x"  Ä  :zlib122:zutil.c
 
 
 ### Optional Dependencies ###
