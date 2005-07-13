@@ -1,7 +1,7 @@
 noinst_LTLIBRARIES = libarchivers.la
 
 if BUILD_ZLIB
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/zlib121
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/zlib122
 else
 INCLUDES = -I$(top_srcdir)
 endif

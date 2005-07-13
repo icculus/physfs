@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /G6 /MT /W3 /GX /O2 /I "zlib121" /I "." /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_WAD=1 /D PHYSFS_SUPPORTS_MVL=1 /D Z_PREFIX=1 /YX /FD /c
+# ADD CPP /nologo /G6 /MT /W3 /GX /O2 /I "zlib122" /I "." /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_WAD=1 /D PHYSFS_SUPPORTS_MVL=1 /D Z_PREFIX=1 /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -66,7 +66,7 @@ LIB32=link.exe -lib
 # PROP Target_Dir ""
 MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /G6 /MTd /W3 /Gm /GX /ZI /Od /I "zlib121" /I "." /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_WAD=1 /D PHYSFS_SUPPORTS_MVL=1 /D Z_PREFIX=1 /FR /YX /FD /GZ /c
+# ADD CPP /nologo /G6 /MTd /W3 /Gm /GX /ZI /Od /I "zlib122" /I "." /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D PHYSFS_SUPPORTS_QPAK=1 /D PHYSFS_SUPPORTS_ZIP=1 /D PHYSFS_SUPPORTS_HOG=1 /D PHYSFS_SUPPORTS_GRP=1 /D PHYSFS_SUPPORTS_WAD=1 /D PHYSFS_SUPPORTS_MVL=1 /D Z_PREFIX=1 /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -90,47 +90,47 @@ LIB32=link.exe -lib
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\zlib121\adler32.c
+SOURCE=.\zlib122\adler32.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\compress.c
+SOURCE=.\zlib122\compress.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\crc32.c
+SOURCE=.\zlib122\crc32.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\deflate.c
+SOURCE=.\zlib122\deflate.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\infback.c
+SOURCE=.\zlib122\infback.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\inffast.c
+SOURCE=.\zlib122\inffast.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\inflate.c
+SOURCE=.\zlib122\inflate.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\inftrees.c
+SOURCE=.\zlib122\inftrees.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\trees.c
+SOURCE=.\zlib122\trees.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\uncompr.c
+SOURCE=.\zlib122\uncompr.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib121\zutil.c
+SOURCE=.\zlib122\zutil.c
 # End Source File
 # End Group
 # Begin Source File

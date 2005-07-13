@@ -4,6 +4,8 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+07132005 - Moved to zlib122, and security fix discussed here:
+           http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2005-2096
 06122005 - Added support for mingw to Unix build process (thanks, Matze!).
 03162005 - Readded Spanish translation. Added Brazillian Portguese translation
            and fixed unlocalized string in wad.c (thanks Danny!). Some MacOS
