@@ -260,7 +260,8 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     ULONG drivemap = 0;
     ULONG i, bit;
     APIRET rc = DosQueryCurrentDisk(&dummy, &drivemap);
-    BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, retval);
+    if (os2err(rc) != NO_ERROR)
+        return;
 
     for (i = 0, bit = 1; i < 26; i++, bit <<= 1)
     {
@@ -406,7 +407,12 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     ULONG count = 1;
     APIRET rc;
 
-    BAIL_IF_MACRO(strlen(dirname) > sizeof (spec) - 5, ERR_BAD_FILENAME, NULL);
+    if (strlen(dirname) > sizeof (spec) - 5)
+    {
+        __PHYSFS_setError(ERR_BAD_FILENAME);
+        return;
+    } /* if */
+
     strcpy(spec, dirname);
     strcat(spec, (spec[strlen(spec) - 1] != '\\') ? "\\*.*" : "*.*");
 
@@ -414,7 +420,10 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
                       FILE_DIRECTORY | FILE_ARCHIVED |
                       FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM,
                       &fb, sizeof (fb), &count, FIL_STANDARD);
-    BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, 0);
+
+    if (os2err(rc) != NO_ERROR)
+        return;
+
     while (count == 1)
     {
         if ((strcmp(fb.achName, ".") != 0) && (strcmp(fb.achName, "..") != 0))
