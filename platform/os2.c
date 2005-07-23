@@ -741,6 +741,39 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     DosReleaseMutexSem((HMTX) mutex);
 } /* __PHYSFS_platformReleaseMutex */
 
+
+int __PHYSFS_platformAllocatorInit(void)
+{
+    return(1);  /* always succeeds. */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void __PHYSFS_platformAllocatorDeinit(void)
+{
+    /* no-op */
+} /* __PHYSFS_platformAllocatorInit */
+
+
+void *__PHYSFS_platformAllocatorMalloc(size_t s)
+{
+    #undef malloc
+    return(malloc(s));
+} /* __PHYSFS_platformMalloc */
+
+
+void *__PHYSFS_platformAllocatorRealloc(void *ptr, size_t s)
+{
+    #undef realloc
+    return(realloc(ptr, s));
+} /* __PHYSFS_platformRealloc */
+
+
+void __PHYSFS_platformAllocatorFree(void *ptr)
+{
+    #undef free
+    free(ptr);
+} /* __PHYSFS_platformAllocatorFree */
+
 #endif  /* defined OS2 */
 
 /* end of os2.c ... */
