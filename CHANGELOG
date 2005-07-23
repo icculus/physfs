@@ -6,7 +6,8 @@
            More minor OS/2 tweaks. Updated zlib to 1.2.3, which properly
            includes the security fix. Fixed "make dist" to handle .svn dirs
            and other file changes. Removed "debian" directory. Allow a mount
-           point of NULL to be "/", per the documentation.
+           point of NULL to be "/", per the documentation. Fixed warning in
+           physfs.c.
            Upped version to 1.1.0 ... first release of 1.1 dev branch!
 07212005 - Patched to compile on OS/2 again.
 07132005 - Updated zlib to 1.2.2, and patched it for this security hole:
