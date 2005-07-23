@@ -5,8 +5,8 @@
 07232005 - Fixed bug in zip archiver (thanks, Jörg Walter!).
            More minor OS/2 tweaks. Updated zlib to 1.2.3, which properly
            includes the security fix. Fixed "make dist" to handle .svn dirs
-           and other file changes. Upped version to 1.1.0 ... first release
-           of 1.1 dev branch!
+           and other file changes. Removed "debian" directory.
+           Upped version to 1.1.0 ... first release of 1.1 dev branch!
 07212005 - Patched to compile on OS/2 again.
 07132005 - Updated zlib to 1.2.2, and patched it for this security hole:
            http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2005-2096
