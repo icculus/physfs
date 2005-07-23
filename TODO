@@ -45,6 +45,7 @@ Some might be dupes, some might be done already.
 - Need "getmountpoint" command in test_physfs.c ...
 - Look for calloc() calls that aren't going through the allocation hooks.
 - maybe other stuff.
+- Is -Wall enabled?
 
 // end of TODO ...
 
