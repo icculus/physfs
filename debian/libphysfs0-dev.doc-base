@@ -1,9 +1,0 @@
-Document: libphysfs0-api
-Title: PhysicsFS API Documentation
-Author: Ryan Gordon <icculus@icculus.org>
-Abstract: This document outlines the C API for libphysfs0.
-Section: unknown
-
-Format: HTML
-Index: /usr/share/doc/libphysfs0-dev/html/index.html
-Files: /usr/share/doc/libphysfs0-dev/html/*.html
