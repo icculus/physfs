@@ -898,8 +898,8 @@
 				F8FDCE5D03AEDE1F01A8000A,
 			);
 			isa = PBXGroup;
-			name = zlib122;
-			path = ../zlib122;
+			name = zlib123;
+			path = ../zlib123;
 			refType = 2;
 		};
 		F8FDCE4303AEDE1F01A8000A = {

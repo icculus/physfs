@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /WX /Gm /ZI /Od /I "." /I "zlibwin32" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "Z_PREFIX" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_WAD" /D "PHYSFS_SUPPORTS_ZIP" /D "PHYSFS_SUPPORTS_QPAK" /D "PHYSFS_SUPPORTS_MVL" /D "PHYSFS_SUPPORTS_HOG" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /WX /Zi /Od /I "." /I "zlib122" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "Z_PREFIX" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_WAD" /D "PHYSFS_SUPPORTS_ZIP" /D "PHYSFS_SUPPORTS_QPAK" /D "PHYSFS_SUPPORTS_MVL" /D "PHYSFS_SUPPORTS_HOG" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /WX /Zi /Od /I "." /I "zlib123" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "Z_PREFIX" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_WAD" /D "PHYSFS_SUPPORTS_ZIP" /D "PHYSFS_SUPPORTS_QPAK" /D "PHYSFS_SUPPORTS_MVL" /D "PHYSFS_SUPPORTS_HOG" /FR /YX /FD /GZ /c
 # SUBTRACT CPP /X
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -74,7 +74,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /WX /O2 /I "." /I "zlibwin32" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_WAD" /D "PHYSFS_SUPPORTS_ZIP" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /WX /O2 /I "." /I "zlib122" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_WAD" /D "PHYSFS_SUPPORTS_ZIP" /D "PHYSFS_SUPPORTS_QPAK" /D "PHYSFS_SUPPORTS_HOG" /D "PHYSFS_SUPPORTS_MVL" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /WX /O2 /I "." /I "zlib123" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "PHYSFS_EXPORTS" /D "PHYSFS_SUPPORTS_GRP" /D "PHYSFS_SUPPORTS_WAD" /D "PHYSFS_SUPPORTS_ZIP" /D "PHYSFS_SUPPORTS_QPAK" /D "PHYSFS_SUPPORTS_HOG" /D "PHYSFS_SUPPORTS_MVL" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -97,19 +97,19 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\zlib122\adler32.c
+SOURCE=.\zlib123\adler32.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\compress.c
+SOURCE=.\zlib123\compress.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\crc32.c
+SOURCE=.\zlib123\crc32.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\deflate.c
+SOURCE=.\zlib123\deflate.c
 # End Source File
 # Begin Source File
 
@@ -125,15 +125,15 @@ SOURCE=.\archivers\hog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\inffast.c
+SOURCE=.\zlib123\inffast.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\inflate.c
+SOURCE=.\zlib123\inflate.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\inftrees.c
+SOURCE=.\zlib123\inftrees.c
 # End Source File
 # Begin Source File
 
@@ -153,11 +153,11 @@ SOURCE=.\archivers\qpak.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\trees.c
+SOURCE=.\zlib123\trees.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\uncompr.c
+SOURCE=.\zlib123\uncompr.c
 # End Source File
 # Begin Source File
 
@@ -173,7 +173,7 @@ SOURCE=.\archivers\zip.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\zutil.c
+SOURCE=.\zlib123\zutil.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -181,31 +181,31 @@ SOURCE=.\zlib122\zutil.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\zlib122\deflate.h
+SOURCE=.\zlib123\deflate.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\infblock.h
+SOURCE=.\zlib123\infblock.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\infcodes.h
+SOURCE=.\zlib123\infcodes.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\inffast.h
+SOURCE=.\zlib123\inffast.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\inffixed.h
+SOURCE=.\zlib123\inffixed.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\inftrees.h
+SOURCE=.\zlib123\inftrees.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\infutil.h
+SOURCE=.\zlib123\infutil.h
 # End Source File
 # Begin Source File
 
@@ -217,19 +217,19 @@ SOURCE=.\physfs_internal.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\trees.h
+SOURCE=.\zlib123\trees.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\zconf.h
+SOURCE=.\zlib123\zconf.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\zlib.h
+SOURCE=.\zlib123\zlib.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlib122\zutil.h
+SOURCE=.\zlib123\zutil.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
