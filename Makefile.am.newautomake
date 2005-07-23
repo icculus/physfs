@@ -6,33 +6,33 @@ libphysfsinclude_HEADERS =	\
 
 if BUILD_MACOSX
 
-ZLIB_FILES = zlib122/adler32.c		\
-             zlib122/compress.c		\
-             zlib122/crc32.c		\
-             zlib122/crc32.h		\
-             zlib122/deflate.c		\
-             zlib122/deflate.h		\
-             zlib122/gzio.c		\
-             zlib122/infback.c		\
-             zlib122/inffast.c		\
-             zlib122/inffast.h		\
-             zlib122/inffixed.h		\
-             zlib122/inflate.c		\
-             zlib122/inflate.h		\
-             zlib122/inftrees.c		\
-             zlib122/inftrees.h		\
-             zlib122/trees.c		\
-             zlib122/trees.h		\
-             zlib122/uncompr.c		\
-             zlib122/zconf.h		\
-             zlib122/zlib.h		\
-             zlib122/zutil.c		\
-             zlib122/zutil.h
+ZLIB_FILES = zlib123/adler32.c		\
+             zlib123/compress.c		\
+             zlib123/crc32.c		\
+             zlib123/crc32.h		\
+             zlib123/deflate.c		\
+             zlib123/deflate.h		\
+             zlib123/gzio.c		\
+             zlib123/infback.c		\
+             zlib123/inffast.c		\
+             zlib123/inffast.h		\
+             zlib123/inffixed.h		\
+             zlib123/inflate.c		\
+             zlib123/inflate.h		\
+             zlib123/inftrees.c		\
+             zlib123/inftrees.h		\
+             zlib123/trees.c		\
+             zlib123/trees.h		\
+             zlib123/uncompr.c		\
+             zlib123/zconf.h		\
+             zlib123/zlib.h		\
+             zlib123/zutil.c		\
+             zlib123/zutil.h
 
 
 if BUILD_ZLIB
   ZLIB_SRC = $(ZLIB_FILES)
-  ZLIB_INC = -I$(top_srcdir)/zlib122
+  ZLIB_INC = -I$(top_srcdir)/zlib123
   ZLIB_EXTRADIST =
 else
   ZLIB_SRC =
@@ -105,7 +105,7 @@ EXTRA_DIST =	\
 
 else
 
-SUBDIRS = platform archivers zlib122 . test extras
+SUBDIRS = platform archivers zlib123 . test extras
 
 libphysfs_la_SOURCES =	\
 	physfs.c	\
@@ -113,7 +113,7 @@ libphysfs_la_SOURCES =	\
 	physfs_byteorder.c
 
 if BUILD_ZLIB
-ZLIB_LIB = zlib122/libz.la
+ZLIB_LIB = zlib123/libz.la
 else
 ZLIB_LIB =
 endif
