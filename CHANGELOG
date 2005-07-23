@@ -7,7 +7,7 @@
 07232005 - Fixed bug in zip archiver (thanks, Jörg Walter!). Updated zlib to
            1.2.3, which properly includes the security fix. Fixed "make dist"
            to handle .svn dirs and other file changes. Removed "debian"
-           directory. Upped version to 1.0.1.
+           directory. Fixed warning in physfs.c. Upped version to 1.0.1.
 07132005 - Moved to zlib122, and security fix discussed here:
            http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2005-2096
 06122005 - Added support for mingw to Unix build process (thanks, Matze!).

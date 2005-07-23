@@ -1872,7 +1872,7 @@ int PHYSFS_seek(PHYSFS_file *handle, PHYSFS_uint64 pos)
             ((offset >= 0) && (offset <= h->buffill - h->bufpos)) /* forwards */
             || ((offset < 0) && (-offset <= h->bufpos)) /* backwards */ )
         {
-            h->bufpos += offset;
+            h->bufpos += (PHYSFS_uint32) offset;
             return(1); /* successful seek */
         } /* if */
     } /* if */
