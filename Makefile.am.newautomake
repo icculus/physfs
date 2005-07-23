@@ -135,6 +135,7 @@ EXTRA_DIST =	\
 	Doxyfile \
 	PBProjects \
 	CWProjects.sit \
+	physfsMPW.make \
 	physfs.spec.in \
 	physfs.spec \
 	physfs.dsp \
