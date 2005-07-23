@@ -10,7 +10,7 @@
 #  include <config.h>
 #endif
 
-#if (!defined WIN32)
+#if ((!defined WIN32) && (!defined OS2))
 
 #if (defined __STRICT_ANSI__)
 #define __PHYSFS_DOING_STRICT_ANSI__

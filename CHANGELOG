@@ -3,6 +3,7 @@
  */
 
 07232005 - Fixed bug in zip archiver (thanks, Jörg Walter!).
+           More minor OS/2 tweaks.
 07212005 - Patched to compile on OS/2 again.
 07132005 - Updated zlib to 1.2.2, and patched it for this security hole:
            http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CAN-2005-2096
