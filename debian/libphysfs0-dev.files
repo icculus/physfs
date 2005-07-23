@@ -1,5 +1,0 @@
-usr/include/*
-usr/lib/lib*.a
-usr/lib/lib*.so
-usr/share/doc/libphysfs0-dev/*
-usr/share/man/man3/*
