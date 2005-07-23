@@ -80,7 +80,7 @@ EXTRA_DIST =	\
 	INSTALL \
 	TODO \
 	Doxyfile \
-	CWProjects.sitx \
+	CWProjects.sit \
 	physfs.spec \
 	physfs.dsp \
 	test_physfs.dsp \
@@ -133,7 +133,7 @@ EXTRA_DIST =	\
 	TODO \
 	Doxyfile \
 	PBProjects \
-	CWProjects.sitx \
+	CWProjects.sit \
 	physfs.spec.in \
 	physfs.spec \
 	physfs.dsp \
