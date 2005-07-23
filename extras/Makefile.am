@@ -3,5 +3,11 @@ EXTRA_DIST = \
 	physfsrwops.h  \
 	abs-file.h  \
 	physfshttpd.c \
+    globbing.h \
+    globbing.c \
+    selfextract.c \
+    ignorecase.c \
+    ignorecase.h \
+    PhysFS.NET \
     physfs_rb
 
