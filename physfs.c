@@ -987,7 +987,9 @@ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
     DirHandle *i;
 
     BAIL_IF_MACRO(newDir == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(mountPoint == NULL, ERR_INVALID_ARGUMENT, 0);
+
+    if (mountPoint == NULL)
+        mountPoint = "/";
 
     __PHYSFS_platformGrabMutex(stateLock);
 
