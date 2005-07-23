@@ -33,7 +33,7 @@ EXTRA_DIST =	\
 	TODO \
 	Doxyfile \
 	PBProjects \
-	CWProjects.sitx \
+	CWProjects.sit \
 	physfs.spec.in \
 	physfs.spec \
 	physfs.dsp \
