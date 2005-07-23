@@ -1208,9 +1208,9 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
         if (rc == 0)
         {
             char ch = name[dlen];
-            if (ch < '/') /* make sure this isn't just a substr match. */
+            if ('/' < ch) /* make sure this isn't just a substr match. */
                 rc = -1;
-            else if (ch > '/')
+            else if ('/' > ch)
                 rc = 1;
             else 
             {
