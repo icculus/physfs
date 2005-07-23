@@ -7,8 +7,8 @@ rem  Patches go to icculus@clutteredmind.org ...
 
 set PHYSFSLANG=PHYSFS_LANG_ENGLISH
 set DEBUGFLAGS=-D_NDEBUG -O2 -s
-rem set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib122 -c -D__ST_MT_ERRNO__ -DOS2 -DZ_PREFIX -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DPHYSFS_LANG=%PHYSFSLANG% -DHAVE_ASSERT_H
-set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib122 -c -D__ST_MT_ERRNO__ -DOS2 -DZ_PREFIX -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DHAVE_ASSERT_H
+rem set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib123 -c -D__ST_MT_ERRNO__ -DOS2 -DZ_PREFIX -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DPHYSFS_LANG=%PHYSFSLANG% -DHAVE_ASSERT_H
+set CFLAGS=%DEBUGFLAGS% -Wall -Werror -Zomf -Zmt -Zmtd -I. -Izlib123 -c -D__ST_MT_ERRNO__ -DOS2 -DZ_PREFIX -DPHYSFS_SUPPORTS_ZIP -DPHYSFS_SUPPORTS_GRP -DPHYSFS_SUPPORTS_WAD -DPHYSFS_SUPPORTS_QPAK -DPHYSFS_SUPPORTS_HOG -DPHYSFS_SUPPORTS_MVL -DHAVE_ASSERT_H
 
 rem goto :dolinking
 
@@ -126,18 +126,18 @@ gcc %CFLAGS% -o bin/zip.obj archivers/zip.c
 gcc %CFLAGS% -o bin/qpak.obj archivers/qpak.c
 gcc %CFLAGS% -o bin/hog.obj archivers/hog.c
 gcc %CFLAGS% -o bin/mvl.obj archivers/mvl.c
-gcc %CFLAGS% -o bin/adler32.obj zlib122/adler32.c
-gcc %CFLAGS% -o bin/compress.obj zlib122/compress.c
-gcc %CFLAGS% -o bin/crc32.obj zlib122/crc32.c
-gcc %CFLAGS% -o bin/deflate.obj zlib122/deflate.c
-gcc %CFLAGS% -o bin/gzio.obj zlib122/gzio.c
-gcc %CFLAGS% -o bin/infback.obj zlib122/infback.c
-gcc %CFLAGS% -o bin/inffast.obj zlib122/inffast.c
-gcc %CFLAGS% -o bin/inflate.obj zlib122/inflate.c
-gcc %CFLAGS% -o bin/inftrees.obj zlib122/inftrees.c
-gcc %CFLAGS% -o bin/trees.obj zlib122/trees.c
-gcc %CFLAGS% -o bin/uncompr.obj zlib122/uncompr.c
-gcc %CFLAGS% -o bin/zutil.obj zlib122/zutil.c
+gcc %CFLAGS% -o bin/adler32.obj zlib123/adler32.c
+gcc %CFLAGS% -o bin/compress.obj zlib123/compress.c
+gcc %CFLAGS% -o bin/crc32.obj zlib123/crc32.c
+gcc %CFLAGS% -o bin/deflate.obj zlib123/deflate.c
+gcc %CFLAGS% -o bin/gzio.obj zlib123/gzio.c
+gcc %CFLAGS% -o bin/infback.obj zlib123/infback.c
+gcc %CFLAGS% -o bin/inffast.obj zlib123/inffast.c
+gcc %CFLAGS% -o bin/inflate.obj zlib123/inflate.c
+gcc %CFLAGS% -o bin/inftrees.obj zlib123/inftrees.c
+gcc %CFLAGS% -o bin/trees.obj zlib123/trees.c
+gcc %CFLAGS% -o bin/uncompr.obj zlib123/uncompr.c
+gcc %CFLAGS% -o bin/zutil.obj zlib123/zutil.c
 @echo off
 
 :dolinking
