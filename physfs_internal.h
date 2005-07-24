@@ -18,7 +18,7 @@
 
 #ifdef HAVE_ASSERT_H
 #include <assert.h>
-#else
+#elif (!defined assert)
 #define assert(x)
 #endif
 
