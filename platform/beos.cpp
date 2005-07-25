@@ -72,7 +72,7 @@ static char *getMountPoint(const char *devname)
             BAIL_IF_MACRO(rc < B_OK, strerror(rc), NULL);
             const char *str = path.Path();
             BAIL_IF_MACRO(str == NULL, ERR_OS_ERROR, NULL);  /* ?! */
-            char *retval = (char *) malloc(strlen(str) + 1);
+            char *retval = (char *) allocator.Malloc(strlen(str) + 1);
             BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
             strcpy(retval, str);
             return(retval);
@@ -135,7 +135,7 @@ static void tryDir(const char *d, PHYSFS_StringCallback callback, void *data)
                             if (mntpnt != NULL)
                             {
                                 callback(data, mntpnt);
-                                free(mntpnt);  /* !!! FIXME: lose this malloc! */
+                                allocator.Free(mntpnt);  /* !!! FIXME: lose this malloc! */
                             } /* if */
                         } /* if */
                     } /* if */
@@ -178,7 +178,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     assert(rc == B_OK);
     const char *str = path.Path();
     assert(str != NULL);
-    char *retval = (char *) malloc(strlen(str) + 1);
+    char *retval = (char *) allocator.Malloc(strlen(str) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, str);
     return(retval);
@@ -210,7 +210,7 @@ char *__PHYSFS_platformRealPath(const char *path)
     BPath normalized(str, leaf, true);  /* force normalization of path. */
     const char *resolved_path = normalized.Path();
     BAIL_IF_MACRO(resolved_path == NULL, ERR_NO_SUCH_FILE, NULL);
-    char *retval = (char *) malloc(strlen(resolved_path) + 1);
+    char *retval = (char *) allocator.Malloc(strlen(resolved_path) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, resolved_path);
     return(retval);
@@ -219,14 +219,14 @@ char *__PHYSFS_platformRealPath(const char *path)
 
 void *__PHYSFS_platformCreateMutex(void)
 {
-    sem_id *retval = (sem_id *) malloc(sizeof (sem_id));
+    sem_id *retval = (sem_id *) allocator.Malloc(sizeof (sem_id));
     sem_id rc;
 
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     rc = create_sem(1, "PhysicsFS semaphore");
     if (rc < B_OK)
     {
-        free(retval);
+        allocator.Free(retval);
         BAIL_MACRO(strerror(rc), NULL);
     } // if
 
@@ -238,7 +238,7 @@ void *__PHYSFS_platformCreateMutex(void)
 void __PHYSFS_platformDestroyMutex(void *mutex)
 {
     delete_sem( *((sem_id *) mutex) );
-    free(mutex);
+    allocator.Free(mutex);
 } /* __PHYSFS_platformDestroyMutex */
 
 

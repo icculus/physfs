@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+07242005 - Patched to compile on BeOS.
 07232005 - Fixed bug in zip archiver (thanks, Jörg Walter!).
            More minor OS/2 tweaks. Updated zlib to 1.2.3, which properly
            includes the security fix. Fixed "make dist" to handle .svn dirs
