@@ -1107,7 +1107,7 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
 
     BAIL_IF_MACRO(!initialized, ERR_NOT_INITIALIZED, 0);
 
-        /* set write dir... */
+    /* set write dir... */
     str = (char *) allocator.Malloc(
             strlen(userdir) + (strlen(organization) * 2) +
             (strlen(appName) * 2) + (strlen(dirsep) * 3) + 2);
@@ -1325,12 +1325,14 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
     {
         while (1)
         {
+            int rc = 0;
             end = strchr(start, '/');
-            if (end != NULL)
-                *end = '\0';
 
-            if (h->funcs->isSymLink(h->opaque, fname, &retval))
-                BAIL_MACRO(ERR_SYMLINK_DISALLOWED, 0);   /* insecure. */
+            if (end != NULL) *end = '\0';
+            rc = h->funcs->isSymLink(h->opaque, fname, &retval);
+            if (end != NULL) *end = '/';
+
+            BAIL_IF_MACRO(rc, ERR_SYMLINK_DISALLOWED, 0);   /* insecure. */
 
             /* break out early if path element is missing. */
             if (!retval)
@@ -1348,7 +1350,6 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
             if (end == NULL)
                 break;
 
-            *end = '/';
             start = end + 1;
         } /* while */
     } /* if */

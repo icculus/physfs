@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+08202005 - Fixed bug in verifyPath() that was breaking PHYSFS_setSaneConfig()
+           and other corner cases.
 07242005 - Patched to compile on BeOS.
 07232005 - Fixed bug in zip archiver (thanks, Jörg Walter!).
            More minor OS/2 tweaks. Updated zlib to 1.2.3, which properly
