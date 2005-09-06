@@ -399,8 +399,13 @@ fi
 AC_MSG_RESULT([$this_is_cygwin])
 
 AC_MSG_CHECKING([if this is mingw])
+if test x$target_os = xmingw32; then
+  this_is_mingw=yes
+fi
 if test x$target_os = xmingw32msvc; then
   this_is_mingw=yes
+fi
+if test x$this_is_mingw = xyes; then
   PHYSFSCFLAGS="$PHYSFSCFLAGS -DWIN32"
   enable_cdrom=yes
   enable_pthreads=no
