@@ -25,7 +25,7 @@
 
 #if (defined _MSC_VER)
     #define alloca(x) _alloca(x)
-#elif (defined MINGW)  /* scary...hopefully this is okay. */
+#elif (defined __MINGW32__)  /* scary...hopefully this is okay. */
     #define alloca(x) __builtin_alloca(x) 
 #endif
 
