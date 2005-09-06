@@ -1857,14 +1857,21 @@ __EXPORT__ int PHYSFS_writeUBE64(PHYSFS_File *file, PHYSFS_uint64 val);
  *  Allocators are assumed to be reentrant by the caller; please mutex
  *  accordingly.
  *
+ * Allocations are always discussed in 64-bits, for future expansion...we're
+ *  on the cusp of a 64-bit transition, and we'll probably be allocating 6
+ *  gigabytes like it's nothing sooner or later, and I don't want to change
+ *  this again at that point. If you're on a 32-bit platform and have to
+ *  downcast, it's okay to return NULL if the allocation is greater than
+ *  4 gigabytes, since you'd have to do so anyhow.
+ *
  * \sa PHYSFS_setAllocator
  */
 typedef struct
 {
     int (*Init)(void);
     void (*Deinit)(void);
-    void *(*Malloc)(size_t);
-    void *(*Realloc)(void *, size_t);
+    void *(*Malloc)(PHYSFS_uint64);
+    void *(*Realloc)(void *, PHYSFS_uint64);
     void (*Free)(void *);
 } PHYSFS_Allocator;
 
