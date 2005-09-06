@@ -4,6 +4,7 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+09062005 - Happy September. Minor MingW fixes (but it's still broken, I think).
 07232005 - Fixed bug in zip archiver (thanks, Jörg Walter!). Updated zlib to
            1.2.3, which properly includes the security fix. Fixed "make dist"
            to handle .svn dirs and other file changes. Removed "debian"
