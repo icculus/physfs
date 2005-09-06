@@ -1682,14 +1682,14 @@ void __PHYSFS_platformAllocatorDeinit(void);
  *  This is used for allocation if the user hasn't selected their own
  *  allocator via PHYSFS_setAllocator().
  */
-void *__PHYSFS_platformAllocatorMalloc(size_t s);
+void *__PHYSFS_platformAllocatorMalloc(PHYSFS_uint64 s);
 
 /*
  * Implement realloc. It's safe to just pass through from the C runtime.
  *  This is used for allocation if the user hasn't selected their own
  *  allocator via PHYSFS_setAllocator().
  */
-void *__PHYSFS_platformAllocatorRealloc(void *ptr, size_t s);
+void *__PHYSFS_platformAllocatorRealloc(void *ptr, PHYSFS_uint64 s);
 
 /*
  * Implement free. It's safe to just pass through from the C runtime.

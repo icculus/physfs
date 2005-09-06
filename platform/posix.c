@@ -514,17 +514,23 @@ void __PHYSFS_platformAllocatorDeinit(void)
 } /* __PHYSFS_platformAllocatorInit */
 
 
-void *__PHYSFS_platformAllocatorMalloc(size_t s)
+void *__PHYSFS_platformAllocatorMalloc(PHYSFS_uint64 s)
 {
+    /* make sure s isn't larger than the address space of the platform... */
+    if ( s > (0xFFFFFFFFFFFFFFFF >> (64-(sizeof (size_t) * 8))) )
+        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     #undef malloc
-    return(malloc(s));
+    return(malloc((size_t) s));
 } /* __PHYSFS_platformMalloc */
 
 
-void *__PHYSFS_platformAllocatorRealloc(void *ptr, size_t s)
+void *__PHYSFS_platformAllocatorRealloc(void *ptr, PHYSFS_uint64 s)
 {
+    /* make sure s isn't larger than the address space of the platform... */
+    if ( s > (0xFFFFFFFFFFFFFFFF >> (64-(sizeof (size_t) * 8))) )
+        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     #undef realloc
-    return(realloc(ptr, s));
+    return(realloc(ptr, (size_t) s));
 } /* __PHYSFS_platformRealloc */
 
 
