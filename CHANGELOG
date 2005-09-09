@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+09092005 - Some tweaks to PHYSFS_Allocator.
 09062005 - Happy September. Changed the allocation abstraction to use
            PHYSFS_uint64 instead of size_t, so we don't have to include
            system headers inside physfs.h. Minor MingW fixes (but it's still
