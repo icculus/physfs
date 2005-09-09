@@ -777,7 +777,8 @@ int PHYSFS_init(const char *argv0)
     if (!externalAllocator)
         setDefaultAllocator();
 
-    BAIL_IF_MACRO(!allocator.Init(), NULL, 0);
+    if (allocator.Init != NULL)
+        BAIL_IF_MACRO(!allocator.Init(), NULL, 0);
 
     BAIL_IF_MACRO(!__PHYSFS_platformInit(), NULL, 0);
 
@@ -889,7 +890,8 @@ int PHYSFS_deinit(void)
     __PHYSFS_platformDestroyMutex(errorLock);
     __PHYSFS_platformDestroyMutex(stateLock);
 
-    allocator.Deinit();
+    if (allocator.Deinit != NULL)
+        allocator.Deinit();
 
     errorLock = stateLock = NULL;
     return(1);
@@ -2047,7 +2049,7 @@ int PHYSFS_flush(PHYSFS_File *handle)
 } /* PHYSFS_flush */
 
 
-int PHYSFS_setAllocator(PHYSFS_Allocator *a)
+int PHYSFS_setAllocator(const PHYSFS_Allocator *a)
 {
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
     externalAllocator = (a != NULL);

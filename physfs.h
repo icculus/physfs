@@ -1847,7 +1847,7 @@ __EXPORT__ int PHYSFS_writeUBE64(PHYSFS_File *file, PHYSFS_uint64 val);
 /* Everything above this line is part of the PhysicsFS 1.0 API. */
 
 /**
- * \struct PHYSFS_allocator
+ * \struct PHYSFS_Allocator
  * \brief PhysicsFS allocation function pointers.
  *
  * (This is for limited, hardcore use. If you don't immediately see a need
@@ -1868,16 +1868,16 @@ __EXPORT__ int PHYSFS_writeUBE64(PHYSFS_File *file, PHYSFS_uint64 val);
  */
 typedef struct
 {
-    int (*Init)(void);
-    void (*Deinit)(void);
-    void *(*Malloc)(PHYSFS_uint64);
-    void *(*Realloc)(void *, PHYSFS_uint64);
-    void (*Free)(void *);
+    int (*Init)(void);   /**< Initialize. Can be NULL. Zero on failure. */
+    void (*Deinit)(void);  /**< Deinitialize your allocator. Can be NULL. */
+    void *(*Malloc)(PHYSFS_uint64);  /**< Allocate like malloc(). */
+    void *(*Realloc)(void *, PHYSFS_uint64); /**< Reallocate like realloc(). */
+    void (*Free)(void *); /**< Free memory from Malloc or Realloc. */
 } PHYSFS_Allocator;
 
 
 /**
- * \fn int PHYSFS_setAllocator(PHYSFS_Allocator *allocator)
+ * \fn int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator)
  * \brief Hook your own allocation routines into PhysicsFS.
  *
  * (This is for limited, hardcore use. If you don't immediately see a need
@@ -1903,7 +1903,7 @@ typedef struct
  *   \return zero on failure, non-zero on success. This call only fails
  *           when used between PHYSFS_init() and PHYSFS_deinit() calls.
  */
-__EXPORT__ int PHYSFS_setAllocator(PHYSFS_Allocator *allocator);
+__EXPORT__ int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
 
 
 /**
