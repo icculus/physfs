@@ -2,7 +2,9 @@
  * CHANGELOG.
  */
 
-09092005 - Some tweaks to PHYSFS_Allocator.
+09092005 - Some tweaks to PHYSFS_Allocator. Apparently configure.in doesn't
+           work like I thought for version bumps, so it thinks 1.1.0 isn't
+           binary compatible with 1.0...fixed, I think.
 09062005 - Happy September. Changed the allocation abstraction to use
            PHYSFS_uint64 instead of size_t, so we don't have to include
            system headers inside physfs.h. Minor MingW fixes (but it's still
