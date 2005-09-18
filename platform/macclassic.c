@@ -563,7 +563,8 @@ void __PHYSFS_platformTimeslice(void)
 /* returns int so we can use BAIL*MACRO... */
 static int macClassicEnumerateFiles(const char *dirname,
                                      int omitSymLinks,
-                                     PHYSFS_StringCallback callback,
+                                     PHYSFS_EnumFilesCallback callback,
+                                     const char *origdir,
                                      void *callbackdata)
 {
     UInt16 i;
@@ -618,7 +619,7 @@ static int macClassicEnumerateFiles(const char *dirname,
         size = (size_t) str255[0];  /* (convert to ASCIZ string...) */
         memmove(&str255[0], &str255[1], size);
         str255[size] = '\0';
-        callback(callbackdata, (const char *) str255);
+        callback(callbackdata, origdir, (const char *) str255);
     } /* for */
 
     return(1);
@@ -627,10 +628,12 @@ static int macClassicEnumerateFiles(const char *dirname,
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      int omitSymLinks,
-                                     PHYSFS_StringCallback callback,
+                                     PHYSFS_EnumFilesCallback callback,
+                                     const char *origdir,
                                      void *callbackdata)
 {
-    macClassicEnumerateFiles(dirname, omitSymLinks, callback, callbackdata);
+    macClassicEnumerateFiles(dirname, omitSymLinks, callback,
+                             origdir, callbackdata);
 } /* __PHYSFS_platformEnumerateFiles */
 
 

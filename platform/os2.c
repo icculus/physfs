@@ -398,7 +398,8 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      int omitSymLinks,
-                                     PHYSFS_StringCallback callback,
+                                     PHYSFS_EnumFilesCallback callback,
+                                     const char *origdir,
                                      void *callbackdata)
 {
     char spec[CCHMAXPATH];
@@ -427,7 +428,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     while (count == 1)
     {
         if ((strcmp(fb.achName, ".") != 0) && (strcmp(fb.achName, "..") != 0))
-            callback(callbackdata, fb.achName);
+            callback(callbackdata, origdir, fb.achName);
 
         DosFindNext(hdir, &fb, sizeof (fb), &count);
     } /* while */

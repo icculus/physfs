@@ -322,8 +322,8 @@ WAD_openArchive_failed:
 
 
 static void WAD_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata)
+                               int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                               const char *origdir, void *callbackdata)
 {
     WADinfo *info = ((WADinfo *) opaque);
     WADentry *entry = info->entries;
@@ -338,7 +338,7 @@ static void WAD_enumerateFiles(dvoid *opaque, const char *dname,
         {
             name = entry->name;
             if (strchr(name, '/') == NULL)
-                cb(callbackdata, name);
+                cb(callbackdata, origdir, name);
         } /* for */
     } /* if */
     else

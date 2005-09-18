@@ -291,8 +291,8 @@ MVL_openArchive_failed:
 
 
 static void MVL_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata)
+                               int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                               const char *origdir, void *callbackdata)
 {
     /* no directories in MVL files. */
     if (*dname != '\0')
@@ -303,7 +303,7 @@ static void MVL_enumerateFiles(dvoid *opaque, const char *dname,
         PHYSFS_uint32 i;
 
         for (i = 0; i < max; i++, entry++)
-            cb(callbackdata, entry->name);
+            cb(callbackdata, origdir, entry->name);
     } /* if */
 } /* MVL_enumerateFiles */
 
