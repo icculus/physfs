@@ -46,6 +46,7 @@ Some might be dupes, some might be done already.
 - Look for calloc() calls that aren't going through the allocation hooks.
 - maybe other stuff.
 - Is -Wall enabled?
+- Make mutexes recursive, so callbacks can call into the API.
 
 // end of TODO ...
 
