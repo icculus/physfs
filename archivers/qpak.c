@@ -379,8 +379,8 @@ static PHYSFS_sint32 qpak_find_start_of_dir(QPAKinfo *info, const char *path,
  * Moved to seperate function so we can use alloca then immediately throw
  *  away the allocated stack space...
  */
-static void doEnumCallback(PHYSFS_StringCallback cb, void *callbackdata,
-                           const char *str, PHYSFS_sint32 ln)
+static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
+                           const char *odir, const char *str, PHYSFS_sint32 ln)
 {
     char *newstr = alloca(ln + 1);
     if (newstr == NULL)
@@ -388,13 +388,13 @@ static void doEnumCallback(PHYSFS_StringCallback cb, void *callbackdata,
 
     memcpy(newstr, str, ln);
     newstr[ln] = '\0';
-    cb(callbackdata, newstr);
+    cb(callbackdata, odir, newstr);
 } /* doEnumCallback */
 
 
 static void QPAK_enumerateFiles(dvoid *opaque, const char *dname,
-                                int omitSymLinks, PHYSFS_StringCallback cb,
-                                void *callbackdata)
+                                int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                                const char *origdir, void *callbackdata)
 {
     QPAKinfo *info = ((QPAKinfo *) opaque);
     PHYSFS_sint32 dlen, dlen_inc, max, i;
@@ -421,7 +421,7 @@ static void QPAK_enumerateFiles(dvoid *opaque, const char *dname,
         add = e + dlen_inc;
         ptr = strchr(add, '/');
         ln = (PHYSFS_sint32) ((ptr) ? ptr-add : strlen(add));
-        doEnumCallback(cb, callbackdata, add, ln);
+        doEnumCallback(cb, callbackdata, origdir, add, ln);
         ln += dlen_inc;  /* point past entry to children... */
 
         /* increment counter and skip children of subdirs... */

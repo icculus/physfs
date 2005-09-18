@@ -227,7 +227,8 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      int omitSymLinks,
-                                     PHYSFS_StringCallback callback,
+                                     PHYSFS_EnumFilesCallback callback,
+                                     const char *origdir,
                                      void *callbackdata)
 {
     DIR *dir;
@@ -286,7 +287,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
                 continue;
         } /* if */
 
-        callback(callbackdata, ent->d_name);
+        callback(callbackdata, origdir, ent->d_name);
     } /* while */
 
     if (buf != NULL)

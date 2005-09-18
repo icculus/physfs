@@ -104,13 +104,14 @@ static void *DIR_openArchive(const char *name, int forWriting)
 
 
 static void DIR_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata)
+                               int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                               const char *origdir, void *callbackdata)
 {
     char *d = __PHYSFS_platformCvtToDependent((char *)opaque, dname, NULL);
     if (d != NULL)
     {
-        __PHYSFS_platformEnumerateFiles(d, omitSymLinks, cb, callbackdata);
+        __PHYSFS_platformEnumerateFiles(d, omitSymLinks, cb,
+                                        origdir, callbackdata);
         allocator.Free(d);
     } /* if */
 } /* DIR_enumerateFiles */

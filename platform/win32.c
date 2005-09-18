@@ -440,7 +440,8 @@ void __PHYSFS_platformTimeslice(void)
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      int omitSymLinks,
-                                     PHYSFS_StringCallback callback,
+                                     PHYSFS_EnumFilesCallback callback,
+                                     const char *origdir,
                                      void *callbackdata)
 {
     HANDLE dir;
@@ -478,7 +479,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
         if (strcmp(ent.cFileName, "..") == 0)
             continue;
 
-        callback(callbackdata, ent.cFileName);
+        callback(callbackdata, origdir, ent.cFileName);
     } while (FindNextFile(dir, &ent) != 0);
 
     FindClose(dir);

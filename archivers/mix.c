@@ -288,8 +288,8 @@ MIX_openArchive_failed:
 
 
 static void MIX_enumerateFiles(dvoid *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_StringCallback cb,
-                               void *callbackdata)
+                               int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                               const char *origdir, void *callbackdata)
 {
     /* no directories in MIX files. */
     if (*dirname != '\0')
@@ -302,7 +302,7 @@ static void MIX_enumerateFiles(dvoid *opaque, const char *dname,
         for (i = 0; i < info->header.num_files; i++, entry++)
         {
             sprintf(buffer, "%X", entry->hash);
-            cb(callbackdata, buffer);
+            cb(callbackdata, origdir, buffer);
         } /* for */
     } /* if */
 } /* MIX_enumerateFiles */

@@ -1494,7 +1494,7 @@ static int locateInStringList(const char *str,
 } /* locateInStringList */
 
 
-static void enumFilesCallback(void *data, const char *str)
+static void enumFilesCallback(void *data, const char *origdir, const char *str)
 {
     PHYSFS_uint32 pos;
     void *ptr;
@@ -1546,7 +1546,7 @@ char **PHYSFS_enumerateFiles(const char *path)
 
 
 void PHYSFS_enumerateFilesCallback(const char *_fname,
-                                   PHYSFS_StringCallback callback,
+                                   PHYSFS_EnumFilesCallback callback,
                                    void *data)
 {
     DirHandle *i;
@@ -1570,13 +1570,14 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
             char *end = strchr(ptr, '/');
             assert(end);  /* should always find a terminating '/'. */
             *end = '\0';  /* !!! FIXME: not safe in a callback... */
-            callback(data, ptr);
+            callback(data, _fname, ptr);
             *end = '/';   /* !!! FIXME: not safe in a callback... */
         } /* if */
 
         else if (verifyPath(i, &arcfname, 0))
         {
-            i->funcs->enumerateFiles(i->opaque,arcfname,noSyms,callback,data);
+            i->funcs->enumerateFiles(i->opaque, arcfname, noSyms,
+                                     callback, _fname, data);
         } /* else if */
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);

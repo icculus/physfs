@@ -995,7 +995,8 @@ typedef struct
     void (*enumerateFiles)(dvoid *opaque,
                             const char *dirname,
                             int omitSymLinks,
-                            PHYSFS_StringCallback callback,
+                            PHYSFS_EnumFilesCallback callback,
+                            const char *origdir,
                             void *callbackdata);
 
         /*
@@ -1568,7 +1569,8 @@ void __PHYSFS_platformTimeslice(void);
  */
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      int omitSymLinks,
-                                     PHYSFS_StringCallback callback,
+                                     PHYSFS_EnumFilesCallback callback,
+                                     const char *origdir,
                                      void *callbackdata);
 
 

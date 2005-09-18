@@ -1978,14 +1978,15 @@ __EXPORT__ const char *PHYSFS_getMountPoint(const char *dir);
  *  be holding non recursive mutexes.
  */
 /* !!! FIXME: comment! */
-typedef void (*PHYSFS_StringCallback)(void *data, const char *);
+typedef void (*PHYSFS_StringCallback)(void *, const char *);
+typedef void (*PHYSFS_EnumFilesCallback)(void *, const char *, const char *);
 
 __EXPORT__ void PHYSFS_getCdRomDirsCallback(PHYSFS_StringCallback c, void *d);
 
 __EXPORT__ void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback c, void *d);
 
 __EXPORT__ void PHYSFS_enumerateFilesCallback(const char *dir,
-                                              PHYSFS_StringCallback c,
+                                              PHYSFS_EnumFilesCallback c,
                                               void *d);
 
 
