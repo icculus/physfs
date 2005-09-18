@@ -5,7 +5,9 @@
 09182005 - API BREAKAGE: PHYSFS_enumerateFilesCallback() now passes the
            original directory name back to the app in the callback. This
            API was only in 1.1.0, and wasn't promised to be stable at this
-           point. Please update your apps.
+           point. Please update your apps! Cleaned out a FIXME in file
+           enumeration that would confuse the library under certain
+           circumstances.
 09092005 - Some tweaks to PHYSFS_Allocator. Apparently configure.in doesn't
            work like I thought for version bumps, so it thinks 1.1.0 isn't
            binary compatible with 1.0...fixed, I think.
