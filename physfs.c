@@ -1545,6 +1545,25 @@ char **PHYSFS_enumerateFiles(const char *path)
 } /* PHYSFS_enumerateFiles */
 
 
+/*
+ * Broke out to seperate function so we can use alloca() gratuitously.
+ */
+static void enumerateFromMountPoint(DirHandle *i, const char *arcfname,
+                                    PHYSFS_EnumFilesCallback callback,
+                                    const char *_fname, void *data)
+{
+    size_t len = strlen(arcfname);
+    char *mountPoint = (char *) alloca(strlen(i->mountPoint) + 1);
+    strcpy(mountPoint, i->mountPoint);
+    char *ptr = mountPoint + ((len) ? len + 1 : 0);
+    char *end = strchr(ptr, '/');
+    assert(end);  /* should always find a terminating '/'. */
+    *end = '\0';
+    callback(data, _fname, ptr);
+} /* enumerateFromMountPoint */
+
+
+
 void PHYSFS_enumerateFilesCallback(const char *_fname,
                                    PHYSFS_EnumFilesCallback callback,
                                    void *data)
@@ -1564,15 +1583,7 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
     {
         char *arcfname = fname;
         if (partOfMountPoint(i, arcfname))
-        {
-            size_t len = strlen(arcfname);
-            char *ptr = i->mountPoint + ((len) ? len + 1 : 0);
-            char *end = strchr(ptr, '/');
-            assert(end);  /* should always find a terminating '/'. */
-            *end = '\0';  /* !!! FIXME: not safe in a callback... */
-            callback(data, _fname, ptr);
-            *end = '/';   /* !!! FIXME: not safe in a callback... */
-        } /* if */
+            enumerateFromMountPoint(i, arcfname, callback, _fname, data);
 
         else if (verifyPath(i, &arcfname, 0))
         {
