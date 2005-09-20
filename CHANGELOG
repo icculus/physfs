@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+09192005 - Make unix mutexes recursive above pthread layer...fixes deadlock on
+           MacOS X, for now.
 09182005 - API BREAKAGE: PHYSFS_enumerateFilesCallback() now passes the
            original directory name back to the app in the callback. This
            API was only in 1.1.0, and wasn't promised to be stable at this
