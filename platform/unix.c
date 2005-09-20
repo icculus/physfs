@@ -466,6 +466,13 @@ void __PHYSFS_platformReleaseMutex(void *mutex) {}
 
 #else
 
+typedef struct
+{
+    pthread_mutex_t mutex;
+    pthread_t owner;
+    PHYSFS_uint32 count;
+} PthreadMutex;
+
 /* Just in case; this is a panic value. */
 #if ((!defined SIZEOF_INT) || (SIZEOF_INT <= 0))
 #  define SIZEOF_INT 4
@@ -490,36 +497,61 @@ PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 void *__PHYSFS_platformCreateMutex(void)
 {
     int rc;
-    pthread_mutex_t *m;
-    m = (pthread_mutex_t *) allocator.Malloc(sizeof (pthread_mutex_t));
+    PthreadMutex *m = (PthreadMutex *) allocator.Malloc(sizeof (PthreadMutex));
     BAIL_IF_MACRO(m == NULL, ERR_OUT_OF_MEMORY, NULL);
-    rc = pthread_mutex_init(m, NULL);
+    rc = pthread_mutex_init(&m->mutex, NULL);
     if (rc != 0)
     {
         allocator.Free(m);
         BAIL_MACRO(strerror(rc), NULL);
     } /* if */
 
+    m->count = 0;
+    m->owner = (pthread_t) 0xDEADBEEF;
     return((void *) m);
 } /* __PHYSFS_platformCreateMutex */
 
 
 void __PHYSFS_platformDestroyMutex(void *mutex)
 {
-    pthread_mutex_destroy((pthread_mutex_t *) mutex);
-    allocator.Free(mutex);
+    PthreadMutex *m = (PthreadMutex *) mutex;
+
+    /* Destroying a locked mutex is a bug, but we'll try to be helpful. */
+    if ((m->owner == pthread_self()) && (m->count > 0))
+        pthread_mutex_unlock(&m->mutex);
+
+    pthread_mutex_destroy(&m->mutex);
+    allocator.Free(m);
 } /* __PHYSFS_platformDestroyMutex */
 
 
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
-    return(pthread_mutex_lock((pthread_mutex_t *) mutex) == 0);    
+    PthreadMutex *m = (PthreadMutex *) mutex;
+    pthread_t tid = pthread_self();
+    if (m->owner != tid)
+    {
+        if (pthread_mutex_lock(&m->mutex) != 0)
+            return(0);
+        m->owner = tid;
+    } /* if */
+
+    m->count++;
+    return(1);
 } /* __PHYSFS_platformGrabMutex */
 
 
 void __PHYSFS_platformReleaseMutex(void *mutex)
 {
-    pthread_mutex_unlock((pthread_mutex_t *) mutex);
+    PthreadMutex *m = (PthreadMutex *) mutex;
+    if (m->owner == pthread_self())
+    {
+        if (--m->count == 0)
+        {
+            m->owner = (pthread_t) 0xDEADBEEF;
+            pthread_mutex_unlock(&m->mutex);
+        } /* if */
+    } /* if */
 } /* __PHYSFS_platformReleaseMutex */
 
 #endif /* !PHYSFS_NO_PTHREADS_SUPPORT */
