@@ -350,7 +350,7 @@ static void WAD_enumerateFiles(dvoid *opaque, const char *dname,
             if (sep != NULL)
             {
                 if (strncmp(dname, name, (sep - name)) == 0)
-                    cb(callbackdata, sep + 1);
+                    cb(callbackdata, origdir, sep + 1);
             } /* if */
         } /* for */
     } /* else */
