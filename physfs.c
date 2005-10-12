@@ -1459,37 +1459,30 @@ static int locateInStringList(const char *str,
                               char **list,
                               PHYSFS_uint32 *pos)
 {
-    PHYSFS_uint32 hi = *pos - 1;
+    PHYSFS_uint32 len = *pos;
+    PHYSFS_uint32 half_len;
     PHYSFS_uint32 lo = 0;
-    PHYSFS_uint32 i = hi >> 1;
+    PHYSFS_uint32 middle;
     int cmp;
 
-    assert(*pos != 0);  /* this doesn't work with empty lists! */
-
-    while (hi != lo)
+    while (len > 0)
     {
-        cmp = strcmp(list[i], str);
+        half_len = len >> 1;
+        middle = lo + half_len;
+        cmp = strcmp(list[middle], str);
+
         if (cmp == 0)  /* it's in the list already. */
             return(1);
-        else if (cmp < 0)
-        {
-            hi = i;
-            i = lo + ((hi - lo) >> 1);
-        } /* else if */
+        else if (cmp > 0)
+            len = half_len;
         else
         {
-            lo = i + 1;
-            i = lo + ((1 + hi - lo) >> 1);
+            lo = middle + 1;
+            len -= half_len + 1;
         } /* else */
     } /* while */
 
-    /* hi == lo, check it in case it's the match... */
-    cmp = strcmp(list[lo], str);
-    if (cmp == 0)
-        return(1);
-
-    /* not in the list, set insertion point... */
-    *pos = (cmp < 0) ? lo : lo + 1;
+    *pos = lo;
     return(0);
 } /* locateInStringList */
 
@@ -1506,11 +1499,8 @@ static void enumFilesCallback(void *data, const char *origdir, const char *str)
      *  alphabetically...
      */
     pos = pecd->size;
-    if (pos > 0)
-    {
-        if (locateInStringList(str, pecd->list, &pos))
-            return;  /* already in the list. */
-    } /* if */
+    if (locateInStringList(str, pecd->list, &pos))
+        return;  /* already in the list. */
 
     ptr = allocator.Realloc(pecd->list, (pecd->size + 2) * sizeof (char *));
     newstr = (char *) allocator.Malloc(strlen(str) + 1);

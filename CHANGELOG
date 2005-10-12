@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+10122005 - Fixed locateInStringList() in physfs.c (thanks, Matze!).
 09192005 - Make unix mutexes recursive above pthread layer...fixes deadlock on
            MacOS X, for now.
 09182005 - API BREAKAGE: PHYSFS_enumerateFilesCallback() now passes the
