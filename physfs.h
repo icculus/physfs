@@ -635,9 +635,7 @@ __EXPORT__ const char *PHYSFS_getWriteDir(void);
  * \fn int PHYSFS_setWriteDir(const char *newDir)
  * \brief Tell PhysicsFS where it may write files.
  *
- * Set a new write dir. This will override the previous setting. If the
- *  directory or a parent directory doesn't exist in the physical filesystem,
- *  PhysicsFS will attempt to create them as needed.
+ * Set a new write dir. This will override the previous setting.
  *
  * This call will fail (and fail to change the write dir) if the current
  *  write dir still has files open in it.
