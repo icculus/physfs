@@ -1090,7 +1090,7 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
         } /* if */
         else
         {
-                no_write = 1;
+            no_write = 1;
         } /* else */
 
         if (no_write)
