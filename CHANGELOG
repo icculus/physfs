@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+11282005 - Corrected docs on PHYSFS_setWriteDir().
 10122005 - Fixed locateInStringList() in physfs.c (thanks, Matze!). Patched
            archivers/wad.c to compile.
 09192005 - Make unix mutexes recursive above pthread layer...fixes deadlock on
