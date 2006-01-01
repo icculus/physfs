@@ -1253,6 +1253,23 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 #define GOTO_MACRO_MUTEX(e, m, g) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; }
 #define GOTO_IF_MACRO_MUTEX(c, e, m, g) if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; }
 
+#ifdef __GNUC__
+#define LONGLONGLITERAL(x) x##LL
+#else
+#define LONGLONGLITERAL(x) x
+#endif
+
+/*
+ * Check if a ui64 will fit in the platform's address space.
+ *  The initial sizeof check will optimize this macro out entirely on
+ *  64-bit (and larger?!) platforms, and the other condition will
+ *  return zero or non-zero if the variable will fit in the platform's
+ *  size_t, suitable to pass to malloc. This is kinda messy, but effective.
+ */
+#define __PHYSFS_ui64FitsAddressSpace(s) ( \
+    (sizeof (PHYSFS_uint64) > sizeof (size_t)) && \
+    ((s) > (LONGLONGLITERAL(0xFFFFFFFFFFFFFFFF) >> (64-(sizeof(size_t)*8)))) \
+)
 
 /*
  * The current allocator. Not valid before PHYSFS_init is called!
