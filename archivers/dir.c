@@ -52,7 +52,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 {
     "",
     DIR_ARCHIVE_DESCRIPTION,
-    "Ryan C. Gordon <icculus@clutteredmind.org>",
+    "Ryan C. Gordon <icculus@icculus.org>",
     "http://icculus.org/physfs/",
 };
 

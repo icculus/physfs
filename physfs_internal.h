@@ -28,7 +28,7 @@ extern "C" {
 
 
 /* The LANG section. */
-/*  please send questions/translations to Ryan: icculus@clutteredmind.org. */
+/*  please send questions/translations to Ryan: icculus@icculus.org. */
 
 #if (!defined PHYSFS_LANG)
 #  define PHYSFS_LANG PHYSFS_LANG_ENGLISH

@@ -4,7 +4,7 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
-01012006 - Added physfs.rc (thanks, Dennis!).
+01012006 - Added physfs.rc (thanks, Dennis!). Changed my email address.
 11282005 - Whitespace fix, and corrected docs on PHYSFS_setWriteDir().
 09062005 - Happy September. Minor MingW fixes (but it's still broken, I think).
 07232005 - Fixed bug in zip archiver (thanks, Jörg Walter!). Updated zlib to
@@ -433,7 +433,7 @@
 08012001 - Added a safety memset in error setting, fixed URLs and email addr.
 07282001 - Initial release.
 
---ryan. (icculus@clutteredmind.org)
+--ryan. (icculus@icculus.org)
 
 /* end of CHANGELOG ... */
 

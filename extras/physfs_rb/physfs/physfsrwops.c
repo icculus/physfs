@@ -16,7 +16,7 @@
  *
  * SDL falls under the LGPL, too. You can get SDL at http://www.libsdl.org/
  *
- *  This file was written by Ryan C. Gordon. (icculus@clutteredmind.org).
+ *  This file was written by Ryan C. Gordon. (icculus@icculus.org).
  */
 
 #include <stdio.h>  /* used for SEEK_SET, SEEK_CUR, SEEK_END ... */
