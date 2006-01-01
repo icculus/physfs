@@ -4,7 +4,8 @@
 
 01012006 - Cleaned up overflow checks in platform memory allocators (thanks to
            Nicolas Lebedenco for pointing out the original issue with
-           long long literals). Added physfs.rc (thanks, Dennis!).
+           long long literals). Added physfs.rc (thanks, Dennis!). Changed my
+           email address.
 11282005 - Corrected docs on PHYSFS_setWriteDir().
 10122005 - Fixed locateInStringList() in physfs.c (thanks, Matze!). Patched
            archivers/wad.c to compile.
@@ -496,7 +497,7 @@
 08012001 - Added a safety memset in error setting, fixed URLs and email addr.
 07282001 - Initial release.
 
---ryan. (icculus@clutteredmind.org)
+--ryan. (icculus@icculus.org)
 
 /* end of CHANGELOG ... */
 

@@ -29,7 +29,7 @@
  * Unless otherwise stated, the rest of PhysicsFS falls under the zlib license.
  *  Please see LICENSE in the root of the source tree.
  *
- *  This file was written by Ryan C. Gordon. (icculus@clutteredmind.org).
+ *  This file was written by Ryan C. Gordon. (icculus@icculus.org).
  */
 
 #include <stdio.h>
