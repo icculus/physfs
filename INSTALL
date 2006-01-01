@@ -31,7 +31,7 @@ remove all traces of the library from the system paths.
 
 Primary Unix development is done with GNU/Linux, but PhysicsFS is known to
 work out of the box with several flavors of Unix. It it doesn't work, patches
-to get it running can be sent to icculus@clutteredmind.org.
+to get it running can be sent to icculus@icculus.org.
 
 
 BeOS:
@@ -76,7 +76,7 @@ No one's tried building this for a WinCE (PocketPC) platform, but it may or
 may not work. Patches are welcome.
 
 If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
-from you; send an email to icculus@clutteredmind.org.
+from you; send an email to icculus@icculus.org.
 
 MACOS 8/9:
 Double-click on "CWProjects.sit" in the root of the source tree. This will
@@ -91,7 +91,7 @@ it works by building the "test_physfs.mcp" project file, which will create
 DLLs you built previously.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
-the Mac, I'd like to hear from you; send an email to icculus@clutteredmind.org.
+the Mac, I'd like to hear from you; send an email to icculus@icculus.org.
 
 
 
@@ -103,7 +103,7 @@ based on the GNU toolchain. Fire up a terminal and run "cc"...if this reports
 Follow the Unix directions, above (configure, make, make install).
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
-MacOS X, I'd like to hear from you; send an email to icculus@clutteredmind.org.
+MacOS X, I'd like to hear from you; send an email to icculus@icculus.org.
 
 
 OS/2:
@@ -117,7 +117,7 @@ doesn't come with one). If someone wants to hack some REXX to make this a bit
 more picky about recompiling, I'll accept the patch.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
-OS/2, I'd like to hear from you; send an email to icculus@clutteredmind.org.
+OS/2, I'd like to hear from you; send an email to icculus@icculus.org.
 
 
 OTHER PLATFORMS:
@@ -129,5 +129,5 @@ platforms. To implement a new platform or archiver, please read the
 heavily-commented physfs_internal.h and look in the platform/ and archiver/
 directories for examples.
 
---ryan. (icculus@clutteredmind.org)
+--ryan. (icculus@icculus.org)
 

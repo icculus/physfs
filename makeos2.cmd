@@ -3,7 +3,7 @@ rem this is a simple batch file to build PhysicsFS on OS/2. You need to have
 rem  the EMX development tools installed for this to work.
 rem
 rem This script (and, indeed, our OS/2 support) could use some tweaking.
-rem  Patches go to icculus@clutteredmind.org ...
+rem  Patches go to icculus@icculus.org ...
 
 set PHYSFSLANG=PHYSFS_LANG_ENGLISH
 set DEBUGFLAGS=-D_NDEBUG -O2 -s

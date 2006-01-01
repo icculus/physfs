@@ -435,7 +435,7 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
 {
     "GRP",
     GRP_ARCHIVE_DESCRIPTION,
-    "Ryan C. Gordon <icculus@clutteredmind.org>",
+    "Ryan C. Gordon <icculus@icculus.org>",
     "http://icculus.org/physfs/",
 };
 
