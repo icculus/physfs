@@ -5,7 +5,7 @@
 01012006 - Cleaned up overflow checks in platform memory allocators (thanks to
            Nicolas Lebedenco for pointing out the original issue with
            long long literals). Added physfs.rc (thanks, Dennis!). Changed my
-           email address.
+           email address. Removed acconfig.h.
 11282005 - Corrected docs on PHYSFS_setWriteDir().
 10122005 - Fixed locateInStringList() in physfs.c (thanks, Matze!). Patched
            archivers/wad.c to compile.
