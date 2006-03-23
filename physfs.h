@@ -166,7 +166,7 @@ extern "C" {
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 #if (defined _MSC_VER)
 #define __EXPORT__ __declspec(dllexport)
-#elif (defined __GNUC__)
+#elif (__GNUC__ >= 3)
 #define __EXPORT__ __attribute__((visibility("default")))
 #else
 #define __EXPORT__
