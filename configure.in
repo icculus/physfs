@@ -68,16 +68,37 @@ AC_ARG_ENABLE(debug,
                 , enable_debug=no)
 if test x$enable_debug = xyes; then
   if test x$ac_cv_prog_cc_g = xyes; then
-    PHYSFSCFLAGS="-g -O0"
+    PHYSFSCFLAGS="$PHYSFSCFLAGS -g -O0"
   else
-    PHYSFSCFLAGS="-O0"
+    PHYSFSCFLAGS="$PHYSFSCFLAGS -O0"
   fi
   PHYSFSCFLAGS="$PHYSFSCFLAGS -Werror -Wall"
   AC_DEFINE([DEBUG], 1, [define if debug build is enabled])
   AC_DEFINE([DEBUG_CHATTER], 1, [define if debug chatter is enabled])
 else
-  PHYSFSCFLAGS="-O2"
+  PHYSFSCFLAGS="$PHYSFSCFLAGS -O2"
   AC_DEFINE([NDEBUG], 1, [define if debug build is disabled])
+fi
+
+dnl ---------------------------------------------------------------------
+dnl Have GCC's -fvisibility option?
+dnl ---------------------------------------------------------------------
+AC_MSG_CHECKING(for GCC -fvisibility=hidden option)
+have_gcc_fvisibility=no
+visibility_CFLAGS="-fvisibility=hidden"
+save_CFLAGS="$CFLAGS"
+CFLAGS="$save_CFLAGS $visibility_CFLAGS"
+AC_TRY_COMPILE([
+int placeholder = 1;
+],[
+],[
+have_gcc_fvisibility=yes
+])
+AC_MSG_RESULT($have_gcc_fvisibility)
+CFLAGS="$save_CFLAGS"
+
+if test x$have_gcc_fvisibility = xyes; then
+    PHYSFSCFLAGS="$PHYSFSCFLAGS $visibility_CFLAGS"
 fi
 
 
