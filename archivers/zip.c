@@ -154,12 +154,12 @@ static const char *zlib_error_string(int rc)
 #ifndef _WIN32_WCE
         case Z_ERRNO: return(strerror(errno));
 #endif
-        case Z_NEED_DICT: return(ERR_ZLIB_NEED_DICT);
-        case Z_DATA_ERROR: return(ERR_ZLIB_DATA_ERROR);
-        case Z_MEM_ERROR: return(ERR_ZLIB_MEMORY_ERROR);
-        case Z_BUF_ERROR: return(ERR_ZLIB_BUFFER_ERROR);
-        case Z_VERSION_ERROR: return(ERR_ZLIB_VERSION_ERROR);
-        default: return(ERR_ZLIB_UNKNOWN_ERROR);
+        case Z_NEED_DICT: return(ERR_NEED_DICT);
+        case Z_DATA_ERROR: return(ERR_DATA_ERROR);
+        case Z_MEM_ERROR: return(ERR_MEMORY_ERROR);
+        case Z_BUF_ERROR: return(ERR_BUFFER_ERROR);
+        case Z_VERSION_ERROR: return(ERR_VERSION_ERROR);
+        default: return(ERR_UNKNOWN_ERROR);
     } /* switch */
 
     return(NULL);

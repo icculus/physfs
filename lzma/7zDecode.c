@@ -1,7 +1,7 @@
 /* 7zDecode.c */
 
 #include "7zDecode.h"
-#include "LzmaStateDecode.h" // NOTE : Modified to use LzmaStateDecode(.c,.h) instead of LzmaDecode(.c,.h) and hardcoded _SZ_ONE_DIRECTORY behaviour
+#include "LzmaStateDecode.h" /* NOTE : Modified to use LzmaStateDecode(.c,.h) instead of LzmaDecode(.c,.h) and hardcoded _SZ_ONE_DIRECTORY behaviour */
 
 CMethodID k_Copy = { { 0x0 }, 1 };
 CMethodID k_LZMA = { { 0x3, 0x1, 0x1 }, 3 };
@@ -131,7 +131,7 @@ SZ_RESULT SzDecode(const CFileSize *packSizes, const CFolder *folder,
         inBuffer, (size_t)inSize, &inProcessed,
         #endif
         outBuffer, (size_t)outSize, &outSizeProcessedLoc,
-	1); // NOTE : Added by Dennis Schridde to make SzDecode be compatible with LzmaStateDecode(.c,.h)
+	1); /* NOTE : Added by Dennis Schridde to make SzDecode be compatible with LzmaStateDecode(.c,.h) */
     *outSizeProcessed = (size_t)outSizeProcessedLoc;
     allocMain->Free(state.Probs);
     #ifdef _LZMA_OUT_READ

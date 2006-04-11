@@ -38,7 +38,7 @@
 #endif
 #endif
 
-// NOTE : Hardcoded _LZMA_SYSTEM_SIZE_T behaviour by Dennis Schridde
+/* NOTE : Hardcoded _LZMA_SYSTEM_SIZE_T behaviour by Dennis Schridde */
 #include <stddef.h>
 
 #ifdef _LZMA_PROB32
