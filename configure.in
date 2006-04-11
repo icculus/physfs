@@ -139,6 +139,18 @@ if test x$enable_zip = xyes; then
 fi
 
 
+require_lzma="no"
+ 
+dnl Check for lzma archiver inclusion...
+AC_ARG_ENABLE(lzma,
+[  --enable-lzma               enable lzma support [default=yes]],
+                , enable_lzma=yes)
+if test x$enable_lzma = xyes; then
+  AC_DEFINE([PHYSFS_SUPPORTS_LZMA], 1, [define if lzma support is enabled])
+  require_lzma="yes"
+fi
+
+
 dnl Check for grp archiver inclusion...
 AC_ARG_ENABLE(grp,
 [  --enable-grp               enable Build Engine GRP support [default=yes]],
@@ -564,6 +576,7 @@ LDFLAGS="$LDFLAGS $PHYSFSLDFLAGS -no-undefined"
 
 dnl Add Makefile conditionals
 AM_CONDITIONAL(BUILD_ZLIB, test x$enable_internal_zlib = xyes)
+AM_CONDITIONAL(BUILD_LZMA, test x$enable_lzma = xyes)
 AM_CONDITIONAL(BUILD_TEST_PHYSFS, test x$enable_testprog = xyes)
 AM_CONDITIONAL(BUILD_MACOSX, test x$this_is_macosx = xyes)
 AM_CONDITIONAL(BUILD_BEOS, test x$this_is_beos = xyes)
@@ -575,6 +588,7 @@ Makefile
 archivers/Makefile
 platform/Makefile
 zlib123/Makefile
+lzma/Makefile
 test/Makefile
 extras/Makefile
 physfs.spec

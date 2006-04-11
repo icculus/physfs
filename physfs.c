@@ -61,6 +61,11 @@ extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_ZIP;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_ZIP;
 #endif
 
+#if (defined PHYSFS_SUPPORTS_LZMA)
+extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_LZMA;
+extern const PHYSFS_Archiver       __PHYSFS_Archiver_LZMA;
+#endif
+
 #if (defined PHYSFS_SUPPORTS_GRP)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_GRP;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_GRP;
@@ -100,6 +105,10 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
     &__PHYSFS_ArchiveInfo_ZIP,
 #endif
 
+#if (defined PHYSFS_SUPPORTS_LZMA)
+    &__PHYSFS_ArchiveInfo_LZMA,
+#endif
+
 #if (defined PHYSFS_SUPPORTS_GRP)
     &__PHYSFS_ArchiveInfo_GRP,
 #endif
@@ -131,6 +140,10 @@ static const PHYSFS_Archiver *archivers[] =
 {
 #if (defined PHYSFS_SUPPORTS_ZIP)
     &__PHYSFS_Archiver_ZIP,
+#endif
+
+#if (defined PHYSFS_SUPPORTS_LZMA)
+    &__PHYSFS_Archiver_LZMA,
 #endif
 
 #if (defined PHYSFS_SUPPORTS_GRP)
@@ -629,7 +642,7 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
 
     for (i = openList; i != NULL; i = i->next)
         BAIL_IF_MACRO(i->dirHandle == dh, ERR_FILES_STILL_OPEN, 0);
-    
+
     dh->funcs->dirClose(dh->opaque);
     allocator.Free(dh->dirName);
     allocator.Free(dh->mountPoint);
@@ -1904,7 +1917,7 @@ static PHYSFS_sint64 doBufferedWrite(PHYSFS_File *handle, const void *buffer,
                                      PHYSFS_uint32 objCount)
 {
     FileHandle *fh = (FileHandle *) handle;
-    
+
     /* whole thing fits in the buffer? */
     if (fh->buffill + (objSize * objCount) < fh->bufsize)
     {
