@@ -543,7 +543,7 @@ static fvoid *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
     if ((folder->NumPackStreams != 1) || (folder->NumCoders != 1))
     {
         LZMA_fileClose(entry);
-        BAIL_MACRO(ERR_LZMA_NOTIMPL, NULL);
+        BAIL_MACRO(ERR_NOT_IMPLEMENTED, NULL);
     } /* if */
 
     if (lzma_err(LzmaDecodeProperties(&entry->state.Properties, coder->Properties.Items, coder->Properties.Capacity)) != LZMA_RESULT_OK)
