@@ -105,7 +105,7 @@ EXTRA_DIST =	\
 
 else
 
-SUBDIRS = platform archivers zlib123 . test extras
+SUBDIRS = platform archivers zlib123 lzma . test extras
 
 libphysfs_la_SOURCES =	\
 	physfs.c	\
@@ -118,13 +118,20 @@ else
 ZLIB_LIB =
 endif
 
+if BUILD_LZMA
+LZMA_LIB = lzma/liblzma.la
+else
+LZMA_LIB =
+endif
+
 libphysfs_la_LDFLAGS = 		\
 	-release $(LT_RELEASE)	\
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 libphysfs_la_LIBADD =	\
 	archivers/libarchivers.la	\
 	platform/libplatform.la	\
-	$(ZLIB_LIB)
+	$(ZLIB_LIB) \
+	$(LZMA_LIB)
 
 EXTRA_DIST =	\
 	CREDITS \
