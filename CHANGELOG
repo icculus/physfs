@@ -4,6 +4,7 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+09232006 - Fixed typo in doxygen comment.
 03232006 - Added -fvisibility for gcc4 (http://gcc.gnu.org/wiki/Visibility)
 01012006 - Added physfs.rc (thanks, Dennis!). Changed my email address.
 11282005 - Whitespace fix, and corrected docs on PHYSFS_setWriteDir().
