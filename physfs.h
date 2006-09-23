@@ -324,7 +324,7 @@ typedef struct
  *  revision).
  *
  * \sa PHYSFS_VERSION
- * \sa PHYFS_getLinkedVersion
+ * \sa PHYSFS_getLinkedVersion
  */
 typedef struct
 {
