@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+09272006 - Reworked 7zip archiver (thanks, Dennis!).
 09232006 - Fixed typo in doxygen comment.
 04112006 - Added LZMA archiver...7zip support (thanks, Dennis!).
 03232006 - Added -fvisibility for gcc4 (http://gcc.gnu.org/wiki/Visibility)

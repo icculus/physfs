@@ -1,7 +1,11 @@
 /* 7zDecode.c */
 
 #include "7zDecode.h"
-#include "LzmaStateDecode.h" /* NOTE : Modified to use LzmaStateDecode(.c,.h) instead of LzmaDecode(.c,.h) and hardcoded _SZ_ONE_DIRECTORY behaviour */
+#ifdef _SZ_ONE_DIRECTORY
+#include "LzmaDecode.h"
+#else
+#include "../../Compress/LZMA_C/LzmaDecode.h"
+#endif
 
 CMethodID k_Copy = { { 0x0 }, 1 };
 CMethodID k_LZMA = { { 0x3, 0x1, 0x1 }, 3 };
@@ -15,14 +19,14 @@ typedef struct _CLzmaInCallbackImp
   size_t Size;
 } CLzmaInCallbackImp;
 
-int LzmaReadImp(void *object, const unsigned char **buffer, size_t *size)
+int LzmaReadImp(void *object, const unsigned char **buffer, SizeT *size)
 {
   CLzmaInCallbackImp *cb = (CLzmaInCallbackImp *)object;
   size_t processedSize;
   SZ_RESULT res;
   *size = 0;
   res = cb->InStream->Read((void *)cb->InStream, (void **)buffer, cb->Size, &processedSize);
-  *size = (size_t)processedSize;
+  *size = (SizeT)processedSize;
   if (processedSize > cb->Size)
     return (int)SZE_FAIL;
   cb->Size -= processedSize;
@@ -64,7 +68,7 @@ SZ_RESULT SzDecode(const CFileSize *packSizes, const CFolder *folder,
     for (i = 0; i < inSize;)
     {
       size_t j;
-      Byte *inBuffer;
+      void *inBuffer;
       size_t bufferSize;
       RINOK(inStream->Read((void *)inStream,  (void **)&inBuffer, inSize - i, &bufferSize));
       if (bufferSize == 0)
@@ -73,7 +77,7 @@ SZ_RESULT SzDecode(const CFileSize *packSizes, const CFolder *folder,
         return SZE_FAIL;
       *outSizeProcessed += bufferSize;
       for (j = 0; j < bufferSize && i < inSize; j++, i++)
-        outBuffer[i] = inBuffer[j];
+        outBuffer[i] = ((Byte*)inBuffer)[j];
     }
     #else
     for (i = 0; i < inSize; i++)
@@ -88,12 +92,12 @@ SZ_RESULT SzDecode(const CFileSize *packSizes, const CFolder *folder,
     #ifdef _LZMA_IN_CB
     CLzmaInCallbackImp lzmaCallback;
     #else
-    size_t inProcessed;
+    SizeT inProcessed;
     #endif
 
     CLzmaDecoderState state;  /* it's about 24-80 bytes structure, if int is 32-bit */
     int result;
-    size_t outSizeProcessedLoc;
+    SizeT outSizeProcessedLoc;
 
     #ifdef _LZMA_IN_CB
     lzmaCallback.Size = inSize;
@@ -128,10 +132,9 @@ SZ_RESULT SzDecode(const CFileSize *packSizes, const CFolder *folder,
         #ifdef _LZMA_IN_CB
         &lzmaCallback.InCallback,
         #else
-        inBuffer, (size_t)inSize, &inProcessed,
+        inBuffer, (SizeT)inSize, &inProcessed,
         #endif
-        outBuffer, (size_t)outSize, &outSizeProcessedLoc,
-	1); /* NOTE : Added by Dennis Schridde to make SzDecode be compatible with LzmaStateDecode(.c,.h) */
+        outBuffer, (SizeT)outSize, &outSizeProcessedLoc);
     *outSizeProcessed = (size_t)outSizeProcessedLoc;
     allocMain->Free(state.Probs);
     #ifdef _LZMA_OUT_READ

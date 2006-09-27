@@ -18,4 +18,3 @@ void *SzAllocTemp(size_t size);
 void SzFreeTemp(void *address);
 
 #endif
-
