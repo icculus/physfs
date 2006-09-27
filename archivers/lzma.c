@@ -3,7 +3,7 @@
  *
  * Please see the file LICENSE in the source's root directory.
  *
- *  This file written by Dennis Schridde, with some peeking at "7zMain.c"
+ *  This file is written by Dennis Schridde, with some peeking at "7zMain.c"
  *   by Igor Pavlov.
  */
 
@@ -384,7 +384,7 @@ static int LZMA_isArchive(const char *filename, int forWriting)
 
 static void *LZMA_openArchive(const char *name, int forWriting)
 {
-    LZMAarchive *archive;
+    LZMAarchive *archive = NULL;
     ISzAlloc allocImp;
     ISzAlloc allocTempImp;
 
@@ -528,14 +528,15 @@ static int LZMA_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 static fvoid *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
+    LZMAentry *entry = NULL;
     PHYSFS_uint32 index = 0;
-    LZMAentry *entry;
 
     *fileExists = lzma_find_entry(archive, name, &index);
     BAIL_IF_MACRO(!*fileExists, ERR_NO_SUCH_FILE, NULL);
 
     entry = (LZMAentry *) allocator.Malloc(sizeof (LZMAentry));
     BAIL_IF_MACRO(entry == NULL, ERR_OUT_OF_MEMORY, NULL);
+
     entry->index = index;
     entry->archive = archive;
     entry->file = archive->db.Database.Files + entry->index;

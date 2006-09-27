@@ -1,3 +1,11 @@
+(These are the licensing details for this directory, taken from lzma.txt in
+ the original source distribution. The basic gist is you can do what you want
+ with this code, including sell it in a closed-source app...changes to LZMA
+ itself must be released as source code, which in the case of PhysicsFS, you
+ can just point people to our source code repository unless you make further
+ changes yourself.  --ryan.)
+
+
 LZMA SDK 4.43
 -------------
 
