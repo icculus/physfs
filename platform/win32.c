@@ -60,7 +60,7 @@ static char *userDir = NULL;
 /*
  * Users without the platform SDK don't have this defined.  The original docs
  *  for SetFilePointer() just said to compare with 0xFFFFFFFF, so this should
- *  work as desired
+ *  work as desired.
  */
 #define PHYSFS_INVALID_SET_FILE_POINTER  0xFFFFFFFF
 
