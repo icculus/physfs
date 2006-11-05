@@ -194,6 +194,9 @@
 				RelativePath=".\physfs_byteorder.c">
 			</File>
 			<File
+				RelativePath=".\physfs_unicode.c">
+			</File>
+			<File
 				RelativePath="archivers\qpak.c">
 			</File>
 			<File

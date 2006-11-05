@@ -149,6 +149,10 @@ SOURCE=.\physfs_byteorder.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\physfs_unicode.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\archivers\qpak.c
 # End Source File
 # Begin Source File
