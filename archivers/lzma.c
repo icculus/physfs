@@ -51,16 +51,29 @@ typedef struct _CFileInStream
     void *File;
 } CFileInStream;
 
-/* Set by LZMA_openArchive, except blockXXX which is handled by LZMA_read() */
+/*
+ * In LZMA the archive is splited in blocks, those are called folders
+ * Set by LZMA_read()
+*/
+typedef struct _LZMAfolder
+{
+    PHYSFS_uint8 *cache; /* Cached folder */
+    PHYSFS_uint32 size; /* Size of folder */
+    PHYSFS_uint32 index; /* Index of folder in archive */
+    PHYSFS_uint32 references; /* Number of files using this block */
+} LZMAfolder;
+
+/*
+ * Set by LZMA_openArchive(), except folder which gets it's values
+ *  in LZMA_read()
+ */
 typedef struct _LZMAarchive
 {
     struct _LZMAentry *firstEntry; /* Used for cleanup on shutdown */
     struct _LZMAentry *lastEntry;
+    LZMAfolder *folder; /* Array of folders */
     CArchiveDatabaseEx db; /* For 7z: Database */
     CFileInStream stream; /* For 7z: Input file incl. read and seek callbacks */
-    unsigned char *block; /* Currently cached block */
-    size_t blockSize; /* Size of current block */
-    PHYSFS_uint32 blockIndex; /* Index of current block */
 } LZMAarchive;
 
 /* Set by LZMA_openRead(), except offset which is set by LZMA_read() */
@@ -70,8 +83,9 @@ typedef struct _LZMAentry
     struct _LZMAentry *previous;
     LZMAarchive *archive; /* Link to corresponding archive */
     CFileItem *file; /* For 7z: File info, eg. name, size */
-    PHYSFS_uint32 index; /* Index inside the archive */
-    size_t offset; /* Offset inside archive block */
+    PHYSFS_uint32 fileIndex; /* Index of file in archive */
+    PHYSFS_uint32 folderIndex; /* Index of folder in archive */
+    size_t offset; /* Offset in folder */
     PHYSFS_uint32 position; /* Current "virtual" position in file */
 } LZMAentry;
 
@@ -273,23 +287,30 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuffer,
     allocTempImp.Alloc = SzAllocPhysicsFS;
     allocTempImp.Free = SzFreePhysicsFS;
 
-    if (lzma_err(SzExtract(
-        &entry->archive->stream.InStream, /* compressed data */
-        &entry->archive->db,
-        entry->index,
-        &entry->archive->blockIndex, /* Index of currently cached block, may be changed by SzExtract */
-        &entry->archive->block, /* Cache of current decompressed block, may be allocated/freed by SzExtract */
-        &entry->archive->blockSize, /* Size of current cache, may be changed by SzExtract */
-        &entry->offset, /* Offset of this file inside the cache block, set by SzExtract */
-        &fileSize, /* Size of this file */
-        &allocImp,
-        &allocTempImp
-            )) != SZ_OK)
-        return -1;
+    /* Only decompress the folder if it is not allready cached */
+    if (entry->archive->folder[entry->folderIndex].cache == NULL)
+        if (lzma_err(SzExtract(
+            &entry->archive->stream.InStream, /* compressed data */
+            &entry->archive->db,
+            entry->fileIndex,
+            /* Index of cached folder, will be changed by SzExtract */
+            &entry->archive->folder[entry->folderIndex].index,
+            /* Cache for decompressed folder, allocated/freed by SzExtract */
+            &entry->archive->folder[entry->folderIndex].cache,
+            /* Size of cache, will be changed by SzExtract */
+            &entry->archive->folder[entry->folderIndex].size,
+            /* Offset of this file inside the cache, set by SzExtract */
+            &entry->offset,
+            &fileSize, /* Size of this file */
+            &allocImp,
+            &allocTempImp
+                )) != SZ_OK)
+            return -1;
 
     /* Copy wanted bytes over from cache to outBuffer */
     strncpy(outBuffer,
-            (void*)(entry->archive->block + entry->offset + entry->position),
+            (void*) (entry->archive->folder[entry->folderIndex].cache +
+                     entry->offset + entry->position),
             wantedSize);
     entry->position += wantedSize;
     return objCount;
@@ -352,6 +373,13 @@ static int LZMA_fileClose(fvoid *opaque)
     if (entry->next != NULL)
         entry->next->previous = entry->previous;
 
+    entry->archive->folder[entry->folderIndex].references--;
+    if (entry->archive->folder[entry->folderIndex].references == 0)
+    {
+        allocator.Free(entry->archive->folder[entry->folderIndex].cache);
+        entry->archive->folder[entry->folderIndex].cache = NULL;
+    }
+
     allocator.Free(entry);
     entry = NULL;
 
@@ -384,17 +412,17 @@ static int LZMA_isArchive(const char *filename, int forWriting)
 
 static void *LZMA_openArchive(const char *name, int forWriting)
 {
+    PHYSFS_uint64 len;
     LZMAarchive *archive = NULL;
     ISzAlloc allocImp;
     ISzAlloc allocTempImp;
 
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, NULL);
-    BAIL_IF_MACRO(!LZMA_isArchive(name, forWriting), ERR_UNSUPPORTED_ARCHIVE, 0);
+    BAIL_IF_MACRO(!LZMA_isArchive(name,forWriting), ERR_UNSUPPORTED_ARCHIVE, 0);
 
     archive = (LZMAarchive *) allocator.Malloc(sizeof (LZMAarchive));
     BAIL_IF_MACRO(archive == NULL, ERR_OUT_OF_MEMORY, NULL);
 
-    archive->block = NULL;
     archive->firstEntry = NULL;
     archive->lastEntry = NULL;
 
@@ -423,6 +451,16 @@ static void *LZMA_openArchive(const char *name, int forWriting)
         allocator.Free(archive);
         return NULL;
     } /* if */
+
+    len = archive->db.Database.NumFolders * sizeof (LZMAfolder);
+    archive->folder = (LZMAfolder *) allocator.Malloc(len);
+    BAIL_IF_MACRO(archive->folder == NULL, ERR_OUT_OF_MEMORY, NULL);
+
+    /*
+     * Init with 0 so we know when a folder is already cached
+     * Values will be set by LZMA_read()
+     */
+    memset(archive->folder, 0, len);
 
     return(archive);
 } /* LZMA_openArchive */
@@ -529,19 +567,26 @@ static fvoid *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
     LZMAentry *entry = NULL;
-    PHYSFS_uint32 index = 0;
+    PHYSFS_uint32 fileIndex = 0;
+    PHYSFS_uint32 folderIndex = 0;
 
-    *fileExists = lzma_find_entry(archive, name, &index);
+    *fileExists = lzma_find_entry(archive, name, &fileIndex);
     BAIL_IF_MACRO(!*fileExists, ERR_NO_SUCH_FILE, NULL);
+
+    folderIndex = archive->db.FileIndexToFolderIndexMap[fileIndex];
+    BAIL_IF_MACRO(folderIndex == (PHYSFS_uint32)-1, ERR_UNKNOWN_ERROR, NULL);
 
     entry = (LZMAentry *) allocator.Malloc(sizeof (LZMAentry));
     BAIL_IF_MACRO(entry == NULL, ERR_OUT_OF_MEMORY, NULL);
 
-    entry->index = index;
+    entry->fileIndex = fileIndex;
+    entry->folderIndex = folderIndex;
     entry->archive = archive;
-    entry->file = archive->db.Database.Files + entry->index;
+    entry->file = archive->db.Database.Files + entry->fileIndex;
     entry->offset = 0; /* Offset will be set by LZMA_read() */
     entry->position = 0;
+
+    archive->folder[folderIndex].references++;
 
     entry->next = NULL;
     entry->previous = entry->archive->lastEntry;
@@ -584,7 +629,7 @@ static void LZMA_dirClose(dvoid *opaque)
     __PHYSFS_platformClose(archive->stream.File);
 
     /* Free the cache which might have been allocated by LZMA_read() */
-    allocator.Free(archive->block);
+    allocator.Free(archive->folder);
     allocator.Free(archive);
 } /* LZMA_dirClose */
 
