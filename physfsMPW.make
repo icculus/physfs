@@ -27,6 +27,7 @@ SrcFiles        =  ¶
 				  :archivers:wad.c ¶
 				  :archivers:zip.c ¶
 				  physfs.c ¶
+				  physfs_unicode.c ¶
 				  physfs_byteorder.c ¶
 				  :platform:macclassic.c ¶
 				  :zlib123:adler32.c ¶
@@ -56,6 +57,7 @@ ObjFiles-PPC    =  ¶
 				  "{ObjDir}zip.c.x" ¶
 				  "{ObjDir}physfs.c.x" ¶
 				  "{ObjDir}physfs_byteorder.c.x" ¶
+				  "{ObjDir}physfs_unicode.c.x" ¶
 				  "{ObjDir}macclassic.c.x" ¶
 				  "{ObjDir}adler32.c.x" ¶
 				  "{ObjDir}compress.c.x" ¶
@@ -115,6 +117,7 @@ PhysicsFS  ÄÄ  {ObjFiles-PPC} {LibFiles-PPC} {¥MondoBuild¥}
 "{ObjDir}zip.c.x"  Ä  :archivers:zip.c
 "{ObjDir}physfs.c.x"  Ä  physfs.c
 "{ObjDir}physfs_byteorder.c.x"  Ä  physfs_byteorder.c
+"{ObjDir}physfs_unicode.c.x"  Ä  physfs_unicode.c
 "{ObjDir}macclassic.c.x"  Ä  :platform:macclassic.c
 "{ObjDir}adler32.c.x"  Ä  :zlib123:adler32.c
 "{ObjDir}compress.c.x"  Ä  :zlib123:compress.c

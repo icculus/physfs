@@ -110,6 +110,11 @@ rem goto :dolinking
 @echo  "PHYSFS_getCdRomDirsCallback" >> bin\physfs.def
 @echo  "PHYSFS_getSearchPathCallback" >> bin\physfs.def
 @echo  "PHYSFS_enumerateFilesCallback" >> bin\physfs.def
+@echo  "PHYSFS_utf8toucs2" >> bin\physfs.def
+@echo  "PHYSFS_utf8fromucs2" >> bin\physfs.def
+@echo  "PHYSFS_utf8toucs4" >> bin\physfs.def
+@echo  "PHYSFS_utf8fromucs4" >> bin\physfs.def
+@echo  "PHYSFS_utf8fromlatin1" >> bin\physfs.def
 
 @echo Building export library...
 emximp -o bin/physfs.lib bin/physfs.def
@@ -118,6 +123,7 @@ emximp -o bin/physfs.lib bin/physfs.def
 @echo on
 gcc %CFLAGS% -o bin/physfs.obj physfs.c
 gcc %CFLAGS% -o bin/physfs_byteorder.obj physfs_byteorder.c
+gcc %CFLAGS% -o bin/physfs_unicode.obj physfs_unicode.c
 gcc %CFLAGS% -o bin/os2.obj platform/os2.c
 gcc %CFLAGS% -o bin/dir.obj archivers/dir.c
 gcc %CFLAGS% -o bin/grp.obj archivers/grp.c

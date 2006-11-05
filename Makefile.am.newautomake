@@ -110,6 +110,7 @@ SUBDIRS = platform archivers zlib123 lzma . test extras
 libphysfs_la_SOURCES =	\
 	physfs.c	\
 	physfs_internal.h	\
+	physfs_unicode.c	\
 	physfs_byteorder.c
 
 if BUILD_ZLIB

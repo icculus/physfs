@@ -2,7 +2,7 @@
  * CHANGELOG.
  */
 
-11052006 - More 7zip archiver work (thanks, Dennis!).
+11052006 - More 7zip archiver work (thanks, Dennis!). Initial Unicode work.
 09272006 - Reworked 7zip archiver (thanks, Dennis!).
 09232006 - Fixed typo in doxygen comment.
 04112006 - Added LZMA archiver...7zip support (thanks, Dennis!).
