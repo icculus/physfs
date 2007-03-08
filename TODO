@@ -3,6 +3,33 @@ Stuff that needs to be done and wishlist:
 These are in no particular order.
 Some might be dupes, some might be done already.
 
+UNICODE:
+- BeOS: uses UTF-8 internally in the OS, so that's already done.
+- PocketPC: uses UCS-2 internally in the OS, and we're currently converting to
+            and from ASCII. Need to change this out.
+- Windows: Can use Unicode, but might only allow "codepages" ... Use
+           GetProcAddress() to find Unicode entry points on WinNT-based
+           systems, otherwise try to use a sane codepage.
+- Mac Classic: apparently supports _something_, but I might just write it off
+               as a loss.
+- OS/2: Codepages. No full Unicode in the filesystem, but we can probably make
+        a conversion effort.
+- Linux: uses UTF-8 internally, so that's already done.
+- Mac OS X: uses UTF-8 in the Unix layer, and is smart enough to convert
+            internally when needed.
+- DIR: just pass UTF-8 strings through to platform layer.
+- GRP: No Unicode (only 12 bytes for filename, 8.3 format). Legacy format.
+- HOG: No Unicode (only 12 bytes for filename, 8.3 format). Legacy format.
+- LZMA: Uses UTF-8 internally, so we're good to go.
+- MIX: only stores filename HASHES...this driver is going away.
+- MVL: No Unicode (only 12 bytes for filename, 8.3 format). Legacy format.
+- QPAK: Only has 56 bytes for a path, but we can just treat these as
+        UTF-8 and be done with it.
+- WAD: No Unicode (only 8 bytes for filename). Legacy format.
+- ZIP: Uses UTF-8 internally, so it's good to go.
+
+Stuff:
+- Rename win32.c to windows.c ... it should work on Win64.
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
