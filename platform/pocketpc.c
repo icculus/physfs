@@ -69,26 +69,21 @@ static char *UnicodeToAsc(const wchar_t *w_str)
 {
     char *str = NULL;
 
-    if (w_str != NULL)
+    if (w_str == NULL)
+        return NULL;
+    else
     {
         int len = wcslen(w_str) + 1;
         str = (char *) allocator.Malloc(len);
 
-        if (WideCharToMultiByte(CP_ACP,0,w_str,-1,str,len,NULL,NULL) == 0)
-        {    /*Conversion failed */
+        if (WideCharToMultiByte(CP_ACP,0,w_str,-1,str,len,NULL,NULL) != 0)
+            return(str);
+        else /* Conversion failed */
+        {
             allocator.Free(str);
             return(NULL);
-        } /* if */
-        else
-        {    /* Conversion successful */
-            return(str);
         } /* else */
-    } /* if */
-
-    else
-    {    /* Given NULL string */
-        return NULL;
-    }
+    } /* else */
 } /* UnicodeToAsc */
 
 
@@ -127,20 +122,20 @@ static char *getExePath()
 
     retval[0] = _T('\0');
     buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
-    if (buflen <= 0) {
+    if (buflen <= 0)
         __PHYSFS_setError(win32strerror());
-    } else {
-        retval[buflen] = '\0';  /* does API always null-terminate this? */
-    ptr = retval+buflen;
-    while( ptr != retval )
+    else
     {
-        if( *ptr != _T('\\') ) {
-        *ptr-- = _T('\0');
-        } else {
-        break;
-        }
-    }
-    success = 1;
+        retval[buflen] = '\0';  /* does API always null-terminate this? */
+        ptr = retval+buflen;
+        while( ptr != retval )
+        {
+            if( *ptr != _T('\\') )
+                *ptr-- = _T('\0');
+            else
+                break;
+        } /* while */
+        success = 1;
     } /* else */
 
     if (!success)
@@ -156,12 +151,11 @@ static char *getExePath()
 
     charretval = UnicodeToAsc(retval);
     allocator.Free(retval);
-    if(charretval == NULL) {
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    }
-    
+    BAIL_IF_MACRO((!charretval) && (!retval), ERR_OUT_OF_MEMORY, NULL);
+
     return(charretval);   /* w00t. */
 } /* getExePath */
+
 
 int __PHYSFS_platformInit(void)
 {
@@ -229,9 +223,9 @@ int __PHYSFS_platformExists(const char *fname)
     
     if(w_fname!=NULL)
     {
-    retval=(GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
-    allocator.Free(w_fname);
-    }
+        retval=(GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
+        allocator.Free(w_fname);
+    } /* if */
 
     return(retval);
 } /* __PHYSFS_platformExists */
@@ -251,9 +245,9 @@ int __PHYSFS_platformIsDirectory(const char *fname)
 
     if(w_fname!=NULL)
     {
-    retval=((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
-    allocator.Free(w_fname);
-    }
+        retval=((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
+        allocator.Free(w_fname);
+    } /* if */
 
     return(retval);
 } /* __PHYSFS_platformIsDirectory */
@@ -372,20 +366,16 @@ char *__PHYSFS_platformRealPath(const char *path)
 int __PHYSFS_platformMkDir(const char *path)
 {
     wchar_t *w_path = AscToUnicode(path);
-    if(w_path!=NULL)
-    {
-    DWORD rc = CreateDirectory(w_path, NULL);
-    allocator.Free(w_path);
-    if(rc==0)
-    {
+    if(w_path == NULL)
         return(0);
-    }
-    return(1);
-    }
     else
     {
-    return(0);
-    }
+        DWORD rc = CreateDirectory(w_path, NULL);
+        allocator.Free(w_path);
+        if(rc==0)
+            return(0);
+        return(1);
+    } /* else */
 } /* __PHYSFS_platformMkDir */
 
 
@@ -402,7 +392,7 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 
     if(fileHandle==INVALID_HANDLE_VALUE)
     {
-    return NULL;
+        return NULL;
     }
 
     BAIL_IF_MACRO(fileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
@@ -410,8 +400,8 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
     retval = (winCEfile *) allocator.Malloc(sizeof (winCEfile));
     if (retval == NULL)
     {
-    CloseHandle(fileHandle);
-    BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+        CloseHandle(fileHandle);
+        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
     retval->readonly = rdonly;
