@@ -209,7 +209,7 @@
 				RelativePath=".\archivers\wad.c">
 			</File>
 			<File
-				RelativePath=".\platform\win32.c">
+				RelativePath=".\platform\windows.c">
 			</File>
 			<File
 				RelativePath=".\archivers\zip.c">

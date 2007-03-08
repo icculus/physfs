@@ -1147,5 +1147,5 @@ void __PHYSFS_platformAllocatorFree(void *ptr)
 
 #endif
 
-/* end of win32.c ... */
+/* end of windows.c ... */
 

@@ -169,7 +169,7 @@ SOURCE=.\archivers\wad.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\platform\win32.c
+SOURCE=.\platform\windows.c
 # End Source File
 # Begin Source File
 
