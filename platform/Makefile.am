@@ -9,7 +9,7 @@ libplatform_la_SOURCES =	\
 else
 libplatform_la_SOURCES =	\
 	unix.c                  \
-	win32.c                 \
+	windows.c                 \
 	posix.c                 \
 	os2.c
 endif
@@ -18,7 +18,7 @@ endif
 EXTRA_DIST =      \
 	skeleton.c    \
 	macclassic.c  \
-	win32.c       \
+	windows.c       \
 	pocketpc.c    \
 	unix.c        \
 	os2.c         \

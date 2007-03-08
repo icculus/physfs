@@ -29,7 +29,6 @@ UNICODE:
 - ZIP: Uses UTF-8 internally, so it's good to go.
 
 Stuff:
-- Rename win32.c to windows.c ... it should work on Win64.
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
