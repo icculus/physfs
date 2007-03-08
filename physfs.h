@@ -162,13 +162,14 @@
  *  should convert them to UTF-8 before handing them to PhysicsFS with
  *  PHYSFS_utf8fromucs2(). If you're using Unix or Mac OS X, your wchar_t
  *  strings are four bytes per character ("UCS-4 encoding"). Use
- *  PHYSFS_utf8fromucs2(). Mac OS X can gie you UTF-8 directly from a CFString,
- *  and many Unixes generally give you C strings in UTF-8 format everywhere.
- *  If you have a single-byte high ASCII charset, like so-many European
- *  "codepages" you may be out of luck. We'll convert from "Latin1" to UTF-8
- *  only, and never back to Latin1. If you're above ASCII 127, all bets are
- *  off: move to Unicode or use your platform's facilities. Passing a C string
- *  with high-ASCII data that isn't UTF-8 encoded will NOT do what you expect!
+ *  PHYSFS_utf8fromucs4(). Mac OS X can give you UTF-8 directly from a
+ *  CFString, and many Unixes generally give you C strings in UTF-8 format
+ *  everywhere. If you have a single-byte high ASCII charset, like so-many
+ *  European "codepages" you may be out of luck. We'll convert from "Latin1"
+ *  to UTF-8 only, and never back to Latin1. If you're above ASCII 127, all
+ *  bets are off: move to Unicode or use your platform's facilities. Passing a
+ *  C string with high-ASCII data that isn't UTF-8 encoded will NOT do what
+ *  you expect!
  *
  * Naturally, there's also PHYSFS_utf8toucs2() and PHYSFS_utf8toucs4() to get
  *  data back into a format you like. Behind the scenes, PhysicsFS will use

@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+03082007 - Fixed a comment in physfs.h.
 11052006 - More 7zip archiver work (thanks, Dennis!). Initial Unicode work.
            Minor BeOS realpath tweak.
 09272006 - Reworked 7zip archiver (thanks, Dennis!).
