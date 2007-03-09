@@ -55,13 +55,13 @@ typedef struct __PHYSFS_ERRMSGTYPE__
 
 
 /* The various i/o drivers... */
-
+/* !!! FIXME: consolidate these into one struct? */
 #if (defined PHYSFS_SUPPORTS_ZIP)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_ZIP;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_ZIP;
 #endif
 
-#if (defined PHYSFS_SUPPORTS_LZMA)
+#if (defined PHYSFS_SUPPORTS_7Z)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_LZMA;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_LZMA;
 #endif
@@ -105,7 +105,7 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
     &__PHYSFS_ArchiveInfo_ZIP,
 #endif
 
-#if (defined PHYSFS_SUPPORTS_LZMA)
+#if (defined PHYSFS_SUPPORTS_7Z)
     &__PHYSFS_ArchiveInfo_LZMA,
 #endif
 
@@ -142,7 +142,7 @@ static const PHYSFS_Archiver *archivers[] =
     &__PHYSFS_Archiver_ZIP,
 #endif
 
-#if (defined PHYSFS_SUPPORTS_LZMA)
+#if (defined PHYSFS_SUPPORTS_7Z)
     &__PHYSFS_Archiver_LZMA,
 #endif
 
