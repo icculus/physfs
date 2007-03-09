@@ -11,7 +11,7 @@
 #  include <config.h>
 #endif
 
-#if (defined PHYSFS_SUPPORTS_LZMA)
+#if (defined PHYSFS_SUPPORTS_7Z)
 
 #include <stdlib.h>
 #include <string.h>
@@ -680,7 +680,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
     LZMA_fileClose           /* fileClose() method      */
 };
 
-#endif  /* defined PHYSFS_SUPPORTS_LZMA */
+#endif  /* defined PHYSFS_SUPPORTS_7Z */
 
 /* end of lzma.c ... */
 
