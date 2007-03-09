@@ -4,9 +4,6 @@ These are in no particular order.
 Some might be dupes, some might be done already.
 
 UNICODE:
-- BeOS: uses UTF-8 internally in the OS, so that's already done.
-- PocketPC: uses UCS-2 internally in the OS, and we're currently converting to
-            and from ASCII. Need to change this out.
 - Windows: Can use Unicode, but might only allow "codepages" ... Use
            GetProcAddress() to find Unicode entry points on WinNT-based
            systems, otherwise try to use a sane codepage.
@@ -14,19 +11,8 @@ UNICODE:
                as a loss.
 - OS/2: Codepages. No full Unicode in the filesystem, but we can probably make
         a conversion effort.
-- Linux: uses UTF-8 internally, so that's already done.
-- Mac OS X: uses UTF-8 in the Unix layer, and is smart enough to convert
-            internally when needed.
-- DIR: just pass UTF-8 strings through to platform layer.
-- GRP: No Unicode (only 12 bytes for filename, 8.3 format). Legacy format.
-- HOG: No Unicode (only 12 bytes for filename, 8.3 format). Legacy format.
-- LZMA: Uses UTF-8 internally, so we're good to go.
-- MIX: only stores filename HASHES...this driver is going away.
-- MVL: No Unicode (only 12 bytes for filename, 8.3 format). Legacy format.
-- QPAK: Only has 56 bytes for a path, but we can just treat these as
-        UTF-8 and be done with it.
-- WAD: No Unicode (only 8 bytes for filename). Legacy format.
-- ZIP: Uses UTF-8 internally, so it's good to go.
+- Everywhere: Move stricmp() out of platform layer and make it grok UTF-8.
+
 
 Stuff:
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
@@ -66,7 +52,6 @@ Stuff:
 - MIX grabs all archives that no other archivers claim.
 - MIX enumerates files as hash values.
 - Should file enumeration return an error or set error state?
-- Ryanify pocketpc.c ...
 - Update internal zlib?
 - Need "getmountpoint" command in test_physfs.c ...
 - Look for calloc() calls that aren't going through the allocation hooks.
@@ -74,6 +59,7 @@ Stuff:
 - Is -Wall enabled?
 - Make mutexes recursive, so callbacks can call into the API.
 - Archivers need abstracted i/o to read from memory or files (archives in archives?)
+- Move to CMake.
 
 // end of TODO ...
 
