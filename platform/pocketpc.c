@@ -64,51 +64,15 @@ static const char *win32strerror(void)
     return((const char *) msgbuf);
 } /* win32strerror */
 
-
-static char *UnicodeToAsc(const wchar_t *w_str)
-{
-    char *str = NULL;
-
-    if (w_str == NULL)
-        return NULL;
-    else
-    {
-        int len = wcslen(w_str) + 1;
-        str = (char *) allocator.Malloc(len);
-
-        if (WideCharToMultiByte(CP_ACP,0,w_str,-1,str,len,NULL,NULL) != 0)
-            return(str);
-        else /* Conversion failed */
-        {
-            allocator.Free(str);
-            return(NULL);
-        } /* else */
-    } /* else */
-} /* UnicodeToAsc */
-
-
-static wchar_t *AscToUnicode(const char *str)
-{
-    wchar_t *w_str = NULL;
-    if (str != NULL)
-    {
-        int len = strlen(str) + 1;
-        w_str = (wchar_t *) allocator.Malloc(sizeof (wchar_t) * len);
-        if (MultiByteToWideChar(CP_ACP,0,str,-1,w_str,len) == 0)
-        {
-            allocator.Free(w_str);
-            return(NULL);
-        } /* if */
-        else
-        {
-            return(w_str);
-        } /* else */
-    } /* if */
-    else
-    {
-        return(NULL);
-    } /* else */
-} /* AscToUnicode */
+#define UTF8_TO_UNICODE_STACK_MACRO(w_assignto, str) { \
+    if (str == NULL) \
+        w_assignto = NULL; \
+    else { \
+        const PHYSFS_uint64 len = (PHYSFS_uint64) ((strlen(str) * 4) + 1); \
+        w_assignto = (char *) alloca(len); \
+        PHYSFS_uc2fromutf8(str, (PHYSFS_uint16 *) w_assignto, len); \
+    } \
+} \
 
 
 static char *getExePath()
@@ -121,6 +85,7 @@ static char *getExePath()
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     retval[0] = _T('\0');
+    /* !!! FIXME: don't preallocate here? */
     buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
     if (buflen <= 0)
         __PHYSFS_setError(win32strerror());
@@ -144,15 +109,11 @@ static char *getExePath()
         return(NULL);  /* physfs error message will be set, above. */
     } /* if */
 
-    /* free up the bytes we didn't actually use. */
-    ptr = (TCHAR *) allocator.Realloc(retval, sizeof(TCHAR)*_tcslen(retval)+1);
-    if (ptr != NULL)
-        retval = ptr;
-
-    charretval = UnicodeToAsc(retval);
+    buflen = (buflen * 4) + 1;
+    charretval = (char *) allocator.Malloc(buflen);
+    if (charretval != NULL)
+        PHYSFS_utf8fromucs2((const PHYSFS_uint16 *) retval, charretval, buflen);
     allocator.Free(retval);
-    BAIL_IF_MACRO((!charretval) && (!retval), ERR_OUT_OF_MEMORY, NULL);
-
     return(charretval);   /* w00t. */
 } /* getExePath */
 
@@ -217,15 +178,12 @@ int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 len)
 
 int __PHYSFS_platformExists(const char *fname)
 {
-    int retval=0;
+    int retval = 0;
+    wchar_t *w_fname = NULL;
 
-    wchar_t *w_fname=AscToUnicode(fname);
-    
-    if(w_fname!=NULL)
-    {
-        retval=(GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
-        allocator.Free(w_fname);
-    } /* if */
+    UTF8_TO_UNICODE_STACK_MACRO(w_fname, fname);
+    if (w_fname != NULL)
+        retval = (GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
 
     return(retval);
 } /* __PHYSFS_platformExists */
@@ -239,15 +197,12 @@ int __PHYSFS_platformIsSymLink(const char *fname)
 
 int __PHYSFS_platformIsDirectory(const char *fname)
 {
-    int retval=0;
+    int retval = 0;
+    wchar_t *w_fname = NULL;
 
-    wchar_t *w_fname=AscToUnicode(fname);
-
-    if(w_fname!=NULL)
-    {
-        retval=((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
-        allocator.Free(w_fname);
-    } /* if */
+    UTF8_TO_UNICODE_STACK_MACRO(w_fname, fname);
+    if (w_fname != NULL)
+        retval = ((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
 
     return(retval);
 } /* __PHYSFS_platformIsDirectory */
@@ -288,6 +243,16 @@ void __PHYSFS_platformTimeslice(void)
 } /* __PHYSFS_platformTimeslice */
 
 
+static int doEnumCallback(const wchar_t *w_fname)
+{
+    const PHYSFS_uint64 len = (PHYSFS_uint64) ((wcslen(w_fname) * 4) + 1);
+    char *str = (char *) alloca(len);
+    PHYSFS_utf8fromucs2((const PHYSFS_uint16 *) w_fname, str, len);
+    callback(callbackdata, origdir, str);
+    return 1;
+} /* doEnumCallback */
+
+
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      int omitSymLinks,
                                      PHYSFS_EnumFilesCallback callback,
@@ -317,18 +282,15 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     /* Append the "*" to the end of the string */
     strcat(SearchPath, "*");
 
-    w_SearchPath=AscToUnicode(SearchPath);
-
+    UTF8_TO_UNICODE_STACK_MACRO(w_SearchPath, SearchPath);
     dir = FindFirstFile(w_SearchPath, &ent);
-    allocator.Free(w_SearchPath);
-    allocator.Free(SearchPath);
 
     if (dir == INVALID_HANDLE_VALUE)
         return;
 
     do
     {
-        const char *str;
+        const char *str = NULL;
 
         if (wcscmp(ent.cFileName, L".") == 0)
             continue;
@@ -336,13 +298,8 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
         if (wcscmp(ent.cFileName, L"..") == 0)
             continue;
 
-        /* !!! FIXME: avoid malloc in UnicodeToAsc? */
-        str = UnicodeToAsc(ent.cFileName);
-        if (str == NULL)
+        if (!doEnumCallback(ent.cFileName))
             break;
-
-        callback(callbackdata, origdir, str);
-        allocator.Free(str);
     } while (FindNextFile(dir, &ent) != 0);
 
     FindClose(dir);
@@ -365,17 +322,9 @@ char *__PHYSFS_platformRealPath(const char *path)
 
 int __PHYSFS_platformMkDir(const char *path)
 {
-    wchar_t *w_path = AscToUnicode(path);
-    if(w_path == NULL)
-        return(0);
-    else
-    {
-        DWORD rc = CreateDirectory(w_path, NULL);
-        allocator.Free(w_path);
-        if(rc==0)
-            return(0);
-        return(1);
-    } /* else */
+    wchar_t *w_path = NULL;
+    UTF8_TO_UNICODE_STACK_MACRO(w_path, path);
+    return ( (w_path != NULL) && (CreateDirectory(w_path, NULL)) );
 } /* __PHYSFS_platformMkDir */
 
 
@@ -383,17 +332,12 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 {
     HANDLE fileHandle;
     winCEfile *retval;
-    wchar_t *w_fname=AscToUnicode(fname);
+    wchar_t *w_fname = NULL;
+
+    UTF8_TO_UNICODE_STACK_MACRO(w_fname, fname);
 
     fileHandle = CreateFile(w_fname, mode, FILE_SHARE_READ, NULL,
                             creation, FILE_ATTRIBUTE_NORMAL, NULL);
-
-    allocator.Free(w_fname);
-
-    if(fileHandle==INVALID_HANDLE_VALUE)
-    {
-        return NULL;
-    }
 
     BAIL_IF_MACRO(fileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
 
@@ -600,19 +544,18 @@ int __PHYSFS_platformClose(void *opaque)
 
 int __PHYSFS_platformDelete(const char *path)
 {
-    wchar_t *w_path=AscToUnicode(path);
+    wchar_t *w_path = NULL;
+    UTF8_TO_UNICODE_STACK_MACRO(w_path, path);
 
     /* If filename is a folder */
     if (GetFileAttributes(w_path) == FILE_ATTRIBUTE_DIRECTORY)
     {
-    int retval=!RemoveDirectory(w_path);
-    allocator.Free(w_path);
+        int retval = !RemoveDirectory(w_path);
         BAIL_IF_MACRO(retval, win32strerror(), 0);
     } /* if */
     else
     {
-    int retval=!DeleteFile(w_path);
-    allocator.Free(w_path);
+        int retval = !DeleteFile(w_path);
         BAIL_IF_MACRO(retval, win32strerror(), 0);
     } /* else */
 
