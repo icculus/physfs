@@ -54,49 +54,24 @@ typedef struct __PHYSFS_ERRMSGTYPE__
 } ErrMsg;
 
 
-/* The various i/o drivers... */
-/* !!! FIXME: consolidate these into one struct? */
-#if (defined PHYSFS_SUPPORTS_ZIP)
+/* The various i/o drivers...some of these may not be compiled in. */
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_ZIP;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_ZIP;
-#endif
-
-#if (defined PHYSFS_SUPPORTS_7Z)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_LZMA;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_LZMA;
-#endif
-
-#if (defined PHYSFS_SUPPORTS_GRP)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_GRP;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_GRP;
-#endif
-
-#if (defined PHYSFS_SUPPORTS_QPAK)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_QPAK;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_QPAK;
-#endif
-
-#if (defined PHYSFS_SUPPORTS_HOG)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_HOG;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_HOG;
-#endif
-
-#if (defined PHYSFS_SUPPORTS_MVL)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_MVL;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_MVL;
-#endif
-
-#if (defined PHYSFS_SUPPORTS_WAD)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_WAD;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_WAD;
-#endif
-
-#if (defined PHYSFS_SUPPORTS_MIX)
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_MIX;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_MIX;
-#endif
-
-extern const PHYSFS_Archiver  __PHYSFS_Archiver_DIR;
+extern const PHYSFS_Archiver       __PHYSFS_Archiver_DIR;
 
 
 static const PHYSFS_ArchiveInfo *supported_types[] =
@@ -104,35 +79,27 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
 #if (defined PHYSFS_SUPPORTS_ZIP)
     &__PHYSFS_ArchiveInfo_ZIP,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_7Z)
     &__PHYSFS_ArchiveInfo_LZMA,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_GRP)
     &__PHYSFS_ArchiveInfo_GRP,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_QPAK)
     &__PHYSFS_ArchiveInfo_QPAK,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_HOG)
     &__PHYSFS_ArchiveInfo_HOG,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_MVL)
     &__PHYSFS_ArchiveInfo_MVL,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_WAD)
     &__PHYSFS_ArchiveInfo_WAD,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_MIX)
     &__PHYSFS_ArchiveInfo_MIX,
 #endif
-
     NULL
 };
 
@@ -141,35 +108,27 @@ static const PHYSFS_Archiver *archivers[] =
 #if (defined PHYSFS_SUPPORTS_ZIP)
     &__PHYSFS_Archiver_ZIP,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_7Z)
     &__PHYSFS_Archiver_LZMA,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_GRP)
     &__PHYSFS_Archiver_GRP,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_QPAK)
     &__PHYSFS_Archiver_QPAK,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_HOG)
     &__PHYSFS_Archiver_HOG,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_MVL)
     &__PHYSFS_Archiver_MVL,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_WAD)
     &__PHYSFS_Archiver_WAD,
 #endif
-
 #if (defined PHYSFS_SUPPORTS_MIX)
     &__PHYSFS_Archiver_MIX,
 #endif
-
     &__PHYSFS_Archiver_DIR,
     NULL
 };
