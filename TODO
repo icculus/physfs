@@ -59,7 +59,6 @@ Stuff:
 - Is -Wall enabled?
 - Make mutexes recursive, so callbacks can call into the API.
 - Archivers need abstracted i/o to read from memory or files (archives in archives?)
-- Move to CMake.
 
 // end of TODO ...
 

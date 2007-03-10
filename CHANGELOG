@@ -6,7 +6,7 @@
            Cleaned up whitespace/formatting in pocketpc.c. Updated PocketPC
            code to expect UTF-8 strings from the higher level. Changed
            PHYSFS_SUPPORTS_LZMA to PHYSFS_SUPPORTS_7Z. Killed some #ifdefs
-           in physfs.c.
+           in physfs.c. Moved to CMake...so long, autotools!
 11052006 - More 7zip archiver work (thanks, Dennis!). Initial Unicode work.
            Minor BeOS realpath tweak.
 09272006 - Reworked 7zip archiver (thanks, Dennis!).

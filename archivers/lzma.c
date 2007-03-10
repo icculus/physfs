@@ -21,20 +21,24 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-
+#ifndef _LZMA_IN_CB
 #define _LZMA_IN_CB
 /* Use callback for input data */
+#endif
 
 /* #define _LZMA_OUT_READ */
 /* Use read function for output data */
 
+#ifndef _LZMA_PROB32
 #define _LZMA_PROB32
 /* It can increase speed on some 32-bit CPUs,
    but memory usage will be doubled in that case */
+#endif
 
+#ifndef _LZMA_SYSTEM_SIZE_T
 #define _LZMA_SYSTEM_SIZE_T
 /* Use system's size_t. You can use it to enable 64-bit sizes supporting */
-
+#endif
 
 #include "7zIn.h"
 #include "7zCrc.h"
