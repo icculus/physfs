@@ -289,7 +289,9 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuffer,
 
     /* Only decompress the folder if it is not allready cached */
     if (entry->archive->folder[entry->folderIndex].cache == NULL)
-        if (lzma_err(SzExtract(
+    {
+        size_t tmpsize = entry->archive->folder[entry->folderIndex].size;
+        int rc = lzma_err(SzExtract(
             &entry->archive->stream.InStream, /* compressed data */
             &entry->archive->db,
             entry->fileIndex,
@@ -298,14 +300,17 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuffer,
             /* Cache for decompressed folder, allocated/freed by SzExtract */
             &entry->archive->folder[entry->folderIndex].cache,
             /* Size of cache, will be changed by SzExtract */
-            &entry->archive->folder[entry->folderIndex].size,
+            &tmpsize,
             /* Offset of this file inside the cache, set by SzExtract */
             &entry->offset,
             &fileSize, /* Size of this file */
             &allocImp,
-            &allocTempImp
-                )) != SZ_OK)
+            &allocTempImp));
+
+        entry->archive->folder[entry->folderIndex].size = tmpsize;
+        if (rc != SZ_OK)
             return -1;
+    } /* if */
 
     /* Copy wanted bytes over from cache to outBuffer */
     strncpy(outBuffer,
