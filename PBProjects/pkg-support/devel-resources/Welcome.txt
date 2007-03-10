@@ -1,3 +1,0 @@
-This package installs the developer version of the physfs library and associated files. 
-
-The physfs Framework is installed into ~/Library/Frameworks. 
