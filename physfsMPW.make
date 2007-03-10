@@ -21,7 +21,6 @@ SrcFiles        =  ¶
 				  :archivers:dir.c ¶
 				  :archivers:grp.c ¶
 				  :archivers:hog.c ¶
-				  :archivers:mix.c ¶
 				  :archivers:mvl.c ¶
 				  :archivers:qpak.c ¶
 				  :archivers:wad.c ¶
@@ -50,7 +49,6 @@ ObjFiles-PPC    =  ¶
 				  "{ObjDir}dir.c.x" ¶
 				  "{ObjDir}grp.c.x" ¶
 				  "{ObjDir}hog.c.x" ¶
-				  "{ObjDir}mix.c.x" ¶
 				  "{ObjDir}mvl.c.x" ¶
 				  "{ObjDir}qpak.c.x" ¶
 				  "{ObjDir}wad.c.x" ¶
@@ -110,7 +108,6 @@ PhysicsFS  ÄÄ  {ObjFiles-PPC} {LibFiles-PPC} {¥MondoBuild¥}
 "{ObjDir}dir.c.x"  Ä  :archivers:dir.c
 "{ObjDir}grp.c.x"  Ä  :archivers:grp.c
 "{ObjDir}hog.c.x"  Ä  :archivers:hog.c
-"{ObjDir}mix.c.x"  Ä  :archivers:mix.c
 "{ObjDir}mvl.c.x"  Ä  :archivers:mvl.c
 "{ObjDir}qpak.c.x"  Ä  :archivers:qpak.c
 "{ObjDir}wad.c.x"  Ä  :archivers:wad.c
