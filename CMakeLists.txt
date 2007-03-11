@@ -24,13 +24,15 @@ INCLUDE_DIRECTORIES(.)
 #INCLUDE_DIRECTORIES(platform)
 #INCLUDE_DIRECTORIES(archivers)
 
-# Fallback to older Mac OS X on PowerPC to support a wider range of systems...
 IF(MACOSX)
-    ADD_DEFINITIONS(-fno-common)
+    # Fallback to older OS X on PowerPC to support wider range of systems...
     IF(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
         ADD_DEFINITIONS(-DMAC_OS_X_VERSION_MIN_REQUIRED=1020)
         SET(OTHER_LDFLAGS ${OTHER_LDFLAGS} " -mmacosx-version-min=10.2")
     ENDIF(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
+
+    # Need these everywhere...
+    ADD_DEFINITIONS(-fno-common)
     SET(OTHER_LDFLAGS ${OTHER_LDFLAGS} " -framework Carbon -framework IOKit")
 ENDIF(MACOSX)
 
