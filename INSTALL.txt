@@ -9,126 +9,144 @@ ALL PLATFORMS:
 
 Please understand your rights and mine: read the text file LICENSE.txt in the
  root of the source tree. If you can't abide by it, delete this source tree
- now.
+ now. The license is extremely liberal, even to closed-source, commercial
+ applications.
 
 If you've got Doxygen (http://www.doxygen.org/) installed, you can run it
  without any command line arguments in the root of the source tree to generate
- the API reference. This is optional. You can browse the API docs online
- here:  http://icculus.org/physfs/docs/
+ the API reference (or build the "docs" target from your build system). This
+ is optional. You can browse the API docs online here:
+
+    http://icculus.org/physfs/docs/
+
 
 
 
 UNIX:
-(If you got this code from CVS, run "./bootstrap" first.)
 
-Run ./configure --help and see what features can be optionally enabled or
-disabled. "./configure" does its best to pick optimal defaults for your
-platform.
+You will need CMake (http://www.cmake.org/) 2.4 or later installed.
 
-Run "make".
+Run "cmake ." in the root of the source directory to generate Makefiles.
+ You can then run "ccmake ." and customize the build, but the defaults are
+ probably okay. You can have CMake generate KDevelop project files if you
+ prefer these.
+
+Run "make". PhysicsFS will now build.
+
 As root, run "make install".
-If you get sick of the library, run "make uninstall" as root and it will
-remove all traces of the library from the system paths.
+ If you get sick of the library, run "xargs rm < install_manifest.txt" as root
+ and it will remove all traces of the library from the system paths.
 
 Primary Unix development is done with GNU/Linux, but PhysicsFS is known to
-work out of the box with several flavors of Unix. It it doesn't work, patches
-to get it running can be sent to icculus@icculus.org.
+ work out of the box with several flavors of Unix. It it doesn't work, patches
+ to get it running can be sent to icculus@icculus.org.
+
 
 
 BeOS:
-Use the "Unix" instructions, above.
+
+Use the "Unix" instructions, above. The CMake port to BeOS is fairly new at
+ the time of this writing, but it works. You can get it from bebits.com ...
 
 
-AtheOS/Syllable:
-Use the "Unix" instructions, above.
 
+Windows:
 
-WIN32:
 If building with CygWin, mingw32 or something else that uses the GNU
-toolchain, follow the Unix instructions, above.
+ toolchain, follow the Unix instructions, above.
 
-If you're using Visual C++ 6, point it at "physfs.dsp" in the root of the
-source tree, and build. This will produce a "physfs.dll" and "physfs.lib"
-(shared library and import lib, respectively) in either a "Debug" or
-"Release" directory, depending on what configuration you chose to build.
-After building the lib, you can make sure it works by building the
-"test_physfs.dsp" project file, which will create "test_physfs.exe" in
-"Debug" or "Release". This EXE is linked against the DLL you built
-previously.
+If you want to use Visual Studio, nmake, or the Platform SDK, you will need
+ CMake (http://www.cmake.org/) 2.4 or later installed. Point CMake at the
+ CMakeLists.txt file in the root of the source directory and it will generate
+ project files for you.
 
-If you're using Visual C++ 6 and want to generate a static LIB file, point
-it at "physfs_static.dsp" in the root of the source tree and build.  This
-will produce a "physfs_static.lib" in either a "physfs_static_debug"
-or a "physfs_static_release" directory, depending on what configuration
-you chose to build.  NOTE: "test_physfs.dsp" does not work with the
-statically linked build.
+PhysicsFS will only link directly against system libraries that have existed
+ since Windows 95 and Windows NT 3.51. If there's a newer API we want to use,
+ we try to dynamically load it at runtime and fallback to a reasonable
+ behaviour when we can't find it...this is used for Unicode support and
+ locating user-specific directories, etc.
 
-Visual Studio.NET users should do the same thing, but use the "physfs.vcproj"
-and "test_physfs.vcproj" project files instead.
-
-NOTE: to change build options such as which drivers are loaded (ZIP, QPAK,
-etc.) modify the appropriate manifest constants under the Project Settings.
-By default the LIB version supports all drivers, but the DLL build does
-not support MVL or HOG file formats.
-
-If you're using another compiler, send me a patch when you get it working.  :)
-
-No one's tried building this for a WinCE (PocketPC) platform, but it may or
-may not work. Patches are welcome.
+PhysicsFS has not been tested on 64-bit Windows, but probably works. There is
+ no 16-bit Windows support at all. Reports of success and problems can go to
+ Ryan at icculus@icculus.org ...
 
 If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
-from you; send an email to icculus@icculus.org.
+from you; send an email to icculus@icculus.org ...
 
-MACOS 8/9:
+
+
+PocketPC/WindowsCE:
+
+Code exists for PocketPC support, and there are shipping titles that used
+ PhysicsFS 1.0 on PocketPC...but it isn't tested in 2.0, and is probably
+ broken with the new build system. Please send patches.
+
+
+
+MAC OS 8/9:
+
 Double-click on "CWProjects.sit" in the root of the source tree. This will
-unpack into a folder called "Mac Classic Support", which has CodeWarrior 6
-project files.
+ unpack into a folder called "Mac Classic Support", which has CodeWarrior 6
+ project files.
 
 Point CodeWarrior at "physfs.mcp" in that new folder, and build. This will
-produce a "PhysicsFS" or "PhysicsFS Debug" shared library, depending on what
-configuration you chose to build. After building the lib, you can make sure
-it works by building the "test_physfs.mcp" project file, which will create
-"test_physfs" or "test_physfs Debug". These binaries are linked against the
-DLLs you built previously.
+ produce a "PhysicsFS" or "PhysicsFS Debug" shared library, depending on what
+ configuration you chose to build. After building the lib, you can make sure
+ it works by building the "test_physfs.mcp" project file, which will create
+ "test_physfs" or "test_physfs Debug". These binaries are linked against the
+ DLLs you built previously.
+
+PhysicsFS builds for classic Mac OS do not require CarbonLib...they use
+ OS 8 (8.5?) APIs exclusively.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
-the Mac, I'd like to hear from you; send an email to icculus@icculus.org.
+ the Mac, I'd like to hear from you; send an email to icculus@icculus.org.
 
 
 
-MACOS X:
-You (currently) need to use the freeware Apple Developer Tools, which are
-based on the GNU toolchain. Fire up a terminal and run "cc"...if this reports
-"no input files" then you've got the tools installed.
 
-Follow the Unix directions, above (configure, make, make install).
+MAC OS X:
+
+You will need CMake (http://www.cmake.org/) 2.4 or later installed.
+
+You can either generate a Unix makefile with CMake, or generate an Xcode
+ project, whichever makes you more comfortable.
+
+PowerPC and Intel Macs should both be supported.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
-MacOS X, I'd like to hear from you; send an email to icculus@icculus.org.
+ Mac OS X, I'd like to hear from you; send an email to icculus@icculus.org.
+
 
 
 OS/2:
+
 You need EMX installed. I tried this on a stock Warp 4 install, no fixpaks.
-I used the latest EMX and patches (which are several years old now). You need
-to install link386.exe (Selective Install, "link object modules" option). Once
-EMX is installed correctly, unpack the source to PhysicsFS and run the script
-file "makeos2.cmd". I know this isn't ideal, but I wanted to have this build
-without users having to hunt down a "make" program (While several exist, EMX
-doesn't come with one). If someone wants to hack some REXX to make this a bit
-more picky about recompiling, I'll accept the patch.
+ I used the latest EMX and patches (which are several years old now). You need
+ to install link386.exe (Selective Install, "link object modules" option). Once
+ EMX is installed correctly, unpack the source to PhysicsFS and run the script
+ file "makeos2.cmd". I know this isn't ideal, but I wanted to have this build
+ without users having to hunt down a "make" program (While several exist, EMX
+ doesn't come with one). If someone wants to hack some REXX to make this a bit
+ more picky about recompiling, I'll accept the patch.
+
+Modernizing this for post-EMX systems or OpenWatcom may be good solutions, too.
+ Send patches. And port CMake.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
-OS/2, I'd like to hear from you; send an email to icculus@icculus.org.
+ OS/2, I'd like to hear from you; send an email to icculus@icculus.org.
+
 
 
 OTHER PLATFORMS:
-Many Unix-like platforms might "just work" with the GNU autoconf tools. Some
-of these platforms are known to have worked at one time, but have not been
-heavily tested, if tested at all. PhysicsFS is, as far as we know, 64-bit and
-byteorder clean, and is known to compile on several compilers across many
-platforms. To implement a new platform or archiver, please read the
-heavily-commented physfs_internal.h and look in the platform/ and archiver/
-directories for examples.
+
+Many Unix-like platforms might "just work" with CMake. Some of these platforms
+ are known to have worked at one time, but have not been heavily tested, if
+ tested at all. PhysicsFS is, as far as we know, 64-bit and byteorder clean,
+ and is known to compile on several compilers across many platforms. To
+ implement a new platform or archiver, please read the heavily-commented
+ physfs_internal.h and look in the platform/ and archiver/ directories for
+ examples.
 
 --ryan. (icculus@icculus.org)
 
