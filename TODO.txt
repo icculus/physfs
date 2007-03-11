@@ -58,5 +58,5 @@ Stuff:
 - Make mutexes recursive, so callbacks can call into the API.
 - Archivers need abstracted i/o to read from memory or files (archives in archives?)
 
-// end of TODO ...
+// end of TODO.txt ...
 
