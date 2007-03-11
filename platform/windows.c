@@ -6,7 +6,10 @@
  *  This file written by Ryan C. Gordon, and made sane by Gregory S. Read.
  */
 
-#ifdef WIN32
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_platforms.h"
+
+#ifdef PHYSFS_PLATFORM_WINDOWS
 
 #include <windows.h>
 #include <stdio.h>
@@ -16,7 +19,6 @@
 #include <ctype.h>
 #include <time.h>
 
-#define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
 #if (defined _MSC_VER)
@@ -1141,7 +1143,8 @@ void __PHYSFS_platformAllocatorFree(void *ptr)
     free(ptr);
 } /* __PHYSFS_platformAllocatorFree */
 
-#endif
+#endif  /* PHYSFS_PLATFORM_WINDOWS */
 
 /* end of windows.c ... */
+
 

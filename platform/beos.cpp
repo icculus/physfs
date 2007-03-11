@@ -6,7 +6,10 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#ifdef __BEOS__
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_platforms.h"
+
+#ifdef PHYSFS_PLATFORM_BEOS
 
 #include <be/kernel/OS.h>
 #include <be/app/Roster.h>
@@ -24,7 +27,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
 
@@ -244,7 +246,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     release_sem(*((sem_id *) mutex));
 } /* __PHYSFS_platformReleaseMutex */
 
-#endif
+#endif  /* PHYSFS_PLATFORM_BEOS */
 
 /* end of beos.cpp ... */
 

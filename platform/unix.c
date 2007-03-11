@@ -6,8 +6,10 @@
  *  This file written by Ryan C. Gordon.
  */
 
-/* BeOS uses beos.cpp and posix.c ... Cygwin and such use windows.c ... */
-#if ((!defined __BEOS__) && (!defined WIN32))
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_platforms.h"
+
+#ifdef PHYSFS_PLATFORM_UNIX
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,16 +25,13 @@
 #include <errno.h>
 #include <sys/mount.h>
 
-#ifndef PHYSFS_DARWIN
-#  if defined(__MACH__) && defined(__APPLE__)
-#    define PHYSFS_DARWIN 1
-#    include <CoreFoundation/CoreFoundation.h>
-#    include <CoreServices/CoreServices.h>
-#    include <IOKit/IOKitLib.h>
-#    include <IOKit/storage/IOMedia.h>
-#    include <IOKit/storage/IOCDMedia.h>
-#    include <IOKit/storage/IODVDMedia.h>
-#  endif
+#ifdef PHYSFS_PLATFORM_MACOSX
+#  include <CoreFoundation/CoreFoundation.h>
+#  include <CoreServices/CoreServices.h>
+#  include <IOKit/IOKitLib.h>
+#  include <IOKit/storage/IOMedia.h>
+#  include <IOKit/storage/IOCDMedia.h>
+#  include <IOKit/storage/IODVDMedia.h>
 #endif
 
 #if (!defined PHYSFS_NO_PTHREADS_SUPPORT)
@@ -50,7 +49,6 @@
 #include <mntent.h>
 #endif
 
-#define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
 /* Seems to get defined in some system header... */
@@ -81,7 +79,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
-#elif (defined PHYSFS_DARWIN)  /* "Big Nasty." */
+#elif (defined PHYSFS_PLATFORM_MACOSX)  /* "Big Nasty." */
 /*
  * Code based on sample from Apple Developer Connection:
  *  http://developer.apple.com/samplecode/Sample_Code/Devices_and_Hardware/Disks/VolumeToBSDNode/VolumeToBSDNode.c.htm
@@ -332,7 +330,7 @@ void __PHYSFS_platformTimeslice(void)
 } /* __PHYSFS_platformTimeslice */
 
 
-#if PHYSFS_DARWIN
+#if PHYSFS_PLATFORM_MACOSX
 /* 
  * This function is only for OSX. The problem is that Apple's applications
  * can actually be directory structures with the actual executable nested
@@ -552,8 +550,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 
 #endif /* !PHYSFS_NO_PTHREADS_SUPPORT */
 
-
-#endif /* !defined __BEOS__ && !defined WIN32 */
+#endif /* PHYSFS_PLATFORM_UNIX */
 
 /* end of unix.c ... */
 

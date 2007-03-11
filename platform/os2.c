@@ -6,7 +6,10 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#if (defined OS2)
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_platforms.h"
+
+#ifdef PHYSFS_PLATFORM_OS2
 
 #define INCL_DOSSEMAPHORES
 #define INCL_DOSDATETIME
@@ -26,7 +29,6 @@
 #include <time.h>
 #include <ctype.h>
 
-#define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
 const char *__PHYSFS_platformDirSeparator = "\\";
@@ -773,7 +775,7 @@ void __PHYSFS_platformAllocatorFree(void *ptr)
     free(ptr);
 } /* __PHYSFS_platformAllocatorFree */
 
-#endif  /* defined OS2 */
+#endif  /* PHYSFS_PLATFORM_OS2 */
 
 /* end of os2.c ... */
 

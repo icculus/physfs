@@ -6,7 +6,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
 PROJECT(PhysicsFS)
-SET(PHYSFS_VERSION 1.1.2)
+SET(PHYSFS_VERSION 1.1.1)
 SET(PHYSFS_SOVERSION 1)
 
 # I hate that they define "WIN32" ... we're about to move to Win64...I hope!
@@ -88,23 +88,46 @@ SET(LZMA_SRCS
     lzma/LzmaStateDecode.c
 )
 
+IF(BEOS)
+    # We add this explicitly, since we don't want CMake to think this
+    #  is a C++ project unless we're on BeOS.
+    SET(PHYSFS_BEOS_SRCS platform/beos.cpp)
+ENDIF(BEOS)
+
+# Almost everything is "compiled" here, but things that don't apply to the
+#  build are #ifdef'd out. This is to make it easy to embed PhysicsFS into
+#  another project or bring up a new build system: just compile all the source
+#  code and #define the things you want.
 SET(PHYSFS_SRCS
     physfs.c
     physfs_byteorder.c
     physfs_unicode.c
+    platform/macclassic.c
+    platform/os2.c
+    platform/pocketpc.c
+    platform/posix.c
+    platform/unix.c
+    platform/windows.c
     archivers/dir.c
+    archivers/grp.c
+    archivers/hog.c
+    archivers/lzma.c
+    archivers/mvl.c
+    archivers/qpak.c
+    archivers/wad.c
+    archivers/zip.c
+    ${PHYSFS_BEOS_SRCS}
 )
 
 
 # platform layers ...
 
 IF(UNIX)
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} platform/posix.c)
     IF(BEOS)
-        SET(PHYSFS_SRCS ${PHYSFS_SRCS} platform/beos.cpp)
         SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
+        SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
+        SET(HAVE_PTHREAD_H TRUE)
     ELSE(BEOS)
-        SET(PHYSFS_SRCS ${PHYSFS_SRCS} platform/unix.c)
         # !!! FIXME
         #  AC_DEFINE([PHYSFS_HAVE_LLSEEK], 1, [define if we have llseek])
         CHECK_INCLUDE_FILE(sys/ucred.h HAVE_UCRED_H)
@@ -118,21 +141,19 @@ IF(UNIX)
             ADD_DEFINITIONS(-DPHYSFS_HAVE_MNTENT_H=1)
             SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
         ENDIF(HAVE_MNTENT_H)
-    ENDIF(BEOS)
 
-    CHECK_INCLUDE_FILE(pthread.h HAVE_PTHREAD_H)
-    IF(HAVE_PTHREAD_H)
-        SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-    ELSE(HAVE_PTHREAD_H)
-        ADD_DEFINITIONS(-DPHYSFS_NO_PTHREADS_SUPPORT=1)
-    ENDIF(HAVE_PTHREAD_H)
+        CHECK_INCLUDE_FILE(pthread.h HAVE_PTHREAD_H)
+        IF(HAVE_PTHREAD_H)
+            SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
+        ELSE(HAVE_PTHREAD_H)
+            ADD_DEFINITIONS(-DPHYSFS_NO_PTHREADS_SUPPORT=1)
+        ENDIF(HAVE_PTHREAD_H)
+    ENDIF(BEOS)
 ENDIF(UNIX)
 
 IF(WINDOWS)
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} platform/windows.c)
     SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
     SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-    # !!! FIXME: platform/pocketpc.c ... ?
 ENDIF(WINDOWS)
 
 IF(NOT PHYSFS_HAVE_CDROM_SUPPORT)
@@ -158,12 +179,18 @@ ELSE(PHYSFS_HAVE_THREAD_SUPPORT)
     MESSAGE(WARNING " ***")
 ENDIF(PHYSFS_HAVE_THREAD_SUPPORT)
 
+CHECK_INCLUDE_FILE(assert.h HAVE_ASSERT_H)
+IF(HAVE_ASSERT_H)
+    ADD_DEFINITIONS(-DHAVE_ASSERT_H=1)
+ENDIF(HAVE_ASSERT_H)
+
+
+
 # Archivers ...
 
 OPTION(PHYSFS_ARCHIVE_ZIP "Enable ZIP support" TRUE)
 IF(PHYSFS_ARCHIVE_ZIP)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_ZIP=1)
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} archivers/zip.c)
     SET(PHYSFS_NEED_ZLIB TRUE)
 ENDIF(PHYSFS_ARCHIVE_ZIP)
 
@@ -171,7 +198,7 @@ OPTION(PHYSFS_ARCHIVE_7Z "Enable 7zip support" TRUE)
 IF(PHYSFS_ARCHIVE_7Z)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_7Z=1)
     # !!! FIXME: rename to 7z.c?
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} ${LZMA_SRCS} archivers/lzma.c)
+    SET(PHYSFS_SRCS ${PHYSFS_SRCS} ${LZMA_SRCS})
     INCLUDE_DIRECTORIES(lzma)
     ADD_DEFINITIONS(-D_LZMA_IN_CB=1)
     ADD_DEFINITIONS(-D_LZMA_PROB32=1)
@@ -182,31 +209,26 @@ ENDIF(PHYSFS_ARCHIVE_7Z)
 OPTION(PHYSFS_ARCHIVE_GRP "Enable Build Engine GRP support" TRUE)
 IF(PHYSFS_ARCHIVE_GRP)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_GRP=1)
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} archivers/grp.c)
 ENDIF(PHYSFS_ARCHIVE_GRP)
 
 OPTION(PHYSFS_ARCHIVE_WAD "Enable Doom WAD support" TRUE)
 IF(PHYSFS_ARCHIVE_WAD)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_WAD=1)
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} archivers/wad.c)
 ENDIF(PHYSFS_ARCHIVE_WAD)
 
 OPTION(PHYSFS_ARCHIVE_HOG "Enable Descent I/II HOG support" TRUE)
 IF(PHYSFS_ARCHIVE_HOG)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_HOG=1)
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} archivers/hog.c)
 ENDIF(PHYSFS_ARCHIVE_HOG)
 
 OPTION(PHYSFS_ARCHIVE_MVL "Enable Descent I/II MVL support" TRUE)
 IF(PHYSFS_ARCHIVE_MVL)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_MVL=1)
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} archivers/mvl.c)
 ENDIF(PHYSFS_ARCHIVE_MVL)
 
 OPTION(PHYSFS_ARCHIVE_QPAK "Enable Quake I/II QPAK support" TRUE)
 IF(PHYSFS_ARCHIVE_QPAK)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_QPAK=1)
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} archivers/qpak.c)
 ENDIF(PHYSFS_ARCHIVE_QPAK)
 
 
