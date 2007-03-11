@@ -96,6 +96,8 @@ Point CodeWarrior at "physfs.mcp" in that new folder, and build. This will
  "test_physfs" or "test_physfs Debug". These binaries are linked against the
  DLLs you built previously.
 
+There is also an MPW project file included, if you don't have CodeWarrior.
+
 PhysicsFS builds for classic Mac OS do not require CarbonLib...they use
  OS 8 (8.5?) APIs exclusively.
 
