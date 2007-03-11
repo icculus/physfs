@@ -1,5 +1,5 @@
 /*
- * Win32 support routines for PhysicsFS.
+ * Windows support routines for PhysicsFS.
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *
