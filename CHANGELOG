@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+03112007 - Removed zlib_license_change.txt ... it's in Subversion and the 1.0
+           branch for history's sake.
 03082007 - Fixed a comment in physfs.h. Renamed win32.c to windows.c.
            Cleaned up whitespace/formatting in pocketpc.c. Updated PocketPC
            code to expect UTF-8 strings from the higher level. Changed
