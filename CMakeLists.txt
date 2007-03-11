@@ -26,10 +26,12 @@ INCLUDE_DIRECTORIES(.)
 
 # Fallback to older Mac OS X on PowerPC to support a wider range of systems...
 IF(MACOSX)
+    ADD_DEFINITIONS(-fno-common)
     IF(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
-        ADD_DEFINITIONS(-DMAC_OS_X_VERSION_MIN_REQUIRED=1020 -fno-common)
-        SET(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-mmacosx-version-min=10.2 -framework Carbon -framework IOKit")
+        ADD_DEFINITIONS(-DMAC_OS_X_VERSION_MIN_REQUIRED=1020)
+        SET(OTHER_LDFLAGS ${OTHER_LDFLAGS} " -mmacosx-version-min=10.2")
     ENDIF(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
+    SET(OTHER_LDFLAGS ${OTHER_LDFLAGS} " -framework Carbon -framework IOKit")
 ENDIF(MACOSX)
 
 # Add some gcc-specific command lines.
