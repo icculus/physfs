@@ -6,6 +6,11 @@
  *  This file written by Ryan C. Gordon.
  */
 
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_platforms.h"
+
+#ifdef PHYSFS_PLATFORM_MACCLASSIC
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,15 +36,6 @@
  */
 
 
-/*
- * Please note that I haven't tried this code with CarbonLib or under
- *  Mac OS X at all. The code in unix.c is known to work with Darwin,
- *  and you may or may not be better off using that, especially since
- *  mutexes are no-ops in this file. Patches welcome.
- */
-#ifdef __PHYSFS_CARBONIZED__  /* this is currently not defined anywhere. */
-#include <Carbon.h>
-#else
 #include <OSUtils.h>
 #include <Processes.h>
 #include <Files.h>
@@ -49,11 +45,8 @@
 #include <Events.h>
 #include <DriverGestalt.h>
 #include <Aliases.h>
-#endif
 
-#define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
-
 
 const char *__PHYSFS_platformDirSeparator = ":";
 
@@ -959,6 +952,8 @@ void __PHYSFS_platformAllocatorFree(void *ptr)
     #undef free
     free(ptr);
 } /* __PHYSFS_platformAllocatorFree */
+
+#endif  /* PHYSFS_PLATFORM_MACCLASSIC */
 
 /* end of macclassic.c ... */
 

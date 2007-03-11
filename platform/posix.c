@@ -6,7 +6,10 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#if ((!defined WIN32) && (!defined OS2))
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_platforms.h"
+
+#ifdef PHYSFS_PLATFORM_POSIX
 
 #if (defined __STRICT_ANSI__)
 #define __PHYSFS_DOING_STRICT_ANSI__
@@ -44,7 +47,6 @@
 #include <linux/unistd.h>
 #endif
 
-#define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
 
@@ -533,7 +535,7 @@ void __PHYSFS_platformAllocatorFree(void *ptr)
     free(ptr);
 } /* __PHYSFS_platformAllocatorFree */
 
-#endif /* !defined WIN32 */
+#endif  /* PHYSFS_PLATFORM_POSIX */
 
 /* end of posix.c ... */
 

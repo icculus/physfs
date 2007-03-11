@@ -6,12 +6,14 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#define __PHYSICSFS_INTERNAL__
-#include "physfs_internal.h"
-
-
 #error DO NOT COMPILE THIS. IT IS JUST A SKELETON EXAMPLE FILE.
 
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_platforms.h"
+
+#ifdef PHYSFS_PLATFORM_SKELETON
+
+#include "physfs_internal.h"
 
 const char *__PHYSFS_platformDirSeparator = ":";
 
@@ -264,6 +266,9 @@ void __PHYSFS_platformAllocatorFree(void *ptr)
     #undef free
     free(ptr);
 } /* __PHYSFS_platformAllocatorFree */
+
+#endif  /* PHYSFS_PLATFORM_SKELETON */
+
 
 /* end of skeleton.c ... */
 

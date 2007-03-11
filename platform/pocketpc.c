@@ -6,10 +6,14 @@
  *  This file written by Ryan C. Gordon.
  */
 
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_platforms.h"
+
+#ifdef PHYSFS_PLATFORM_POCKETPC
+
 #include <stdio.h>
 #include <windows.h>
 
-#define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
 #define INVALID_FILE_ATTRIBUTES  0xFFFFFFFF
@@ -623,6 +627,8 @@ void __PHYSFS_platformAllocatorFree(void *ptr)
     #undef free
     free(ptr);
 } /* __PHYSFS_platformAllocatorFree */
+
+#endif  /* PHYSFS_PLATFORM_POCKETPC */
 
 /* end of pocketpc.c ... */
 

@@ -6,6 +6,13 @@
            branch for history's sake. Added shared and static build options
            to CMakeLists.txt, and the expected "make install" target.
            Renamed some FILENAME files to FILENAME.txt, removed physfs.rc.
+           Now compiles everything whether we need it or not, removing whole
+           files with #ifdefs...this will make it easier to "embed" this
+           library in other projects or use a different build system: just
+           push everything through the compiler with preprocessor defines for
+           the parts you want/need...platform modules are determined
+           automatically without the build system needing to intervene, so you
+           just have to #define the archivers, etc that you want.
 03082007 - Fixed a comment in physfs.h. Renamed win32.c to windows.c.
            Cleaned up whitespace/formatting in pocketpc.c. Updated PocketPC
            code to expect UTF-8 strings from the higher level. Changed
