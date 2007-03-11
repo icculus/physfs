@@ -98,5 +98,5 @@ Windows .rc file:
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 
-/* end of CREDITS ... */
+/* end of CREDITS.txt ... */
 

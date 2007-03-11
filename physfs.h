@@ -203,7 +203,7 @@
  * Please see the file LICENSE.txt in the source's root directory for licensing
  *  and redistribution rights.
  *
- * Please see the file CREDITS in the source's root directory for a more or
+ * Please see the file CREDITS.txt in the source's root directory for a more or
  *  less complete list of who's responsible for this.
  *
  *  \author Ryan C. Gordon.
