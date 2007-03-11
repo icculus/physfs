@@ -3,7 +3,7 @@
  *
  * Documentation is in physfs.h. It's verbose, honest.  :)
  *
- * Please see the file LICENSE in the source's root directory.
+ * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Ryan C. Gordon.
  */

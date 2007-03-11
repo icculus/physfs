@@ -23,7 +23,7 @@
  *
  * (That info is from http://www.descent2.com/ddn/specs/hog/)
  *
- * Please see the file LICENSE in the source's root directory.
+ * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Bradley Bell.
  *  Based on grp.c by Ryan C. Gordon.
