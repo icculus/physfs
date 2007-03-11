@@ -6,10 +6,6 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
