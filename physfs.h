@@ -149,8 +149,11 @@
  *
  * String policy for PhysicsFS 2.0 and later:
  *
- * PhysicsFS 1.0 deals with null-terminated ASCII strings. All high ASCII
- *  chars resulted in undefined behaviour, and there was no Unicode support.
+ * PhysicsFS 1.0 could only deal with null-terminated ASCII strings. All high
+ *  ASCII chars resulted in undefined behaviour, and there was no Unicode
+ *  support at all. PhysicsFS 2.0 supports Unicode without breaking binary
+ *  compatibility with the 1.0 API by using UTF-8 encoding of all strings
+ *  passed in and out of the library.
  *
  * All strings passed through PhysicsFS are in null-terminated UTF-8 format.
  *  This means that if all you care about is English (ASCII characters <= 127)
@@ -177,6 +180,22 @@
  *
  * PhysicsFS offers basic encoding conversion support, but not a whole string
  *  library. Get your stuff into whatever format you can work with.
+ *
+ * Some platforms and archivers don't offer full Unicode support behind the
+ *  scenes. For example, OS/2 only offers "codepages" and the filesystem
+ *  itself doesn't support multibyte encodings. We make an earnest effort to
+ *  convert to/from the current locale here, but all bets are off if
+ *  you want to hand an arbitrary Japanese character through to these systems.
+ *  Modern OSes (Mac OS X, Linux, Windows, PocketPC, etc) should all be fine.
+ *  Many game-specific archivers are seriously unprepared for Unicode (the
+ *  Descent HOG/MVL and Build Engine GRP archivers, for example, only offer a
+ *  DOS 8.3 filename, for example). Nothing can be done for these, but they
+ *  tend to be legacy formats for existing content that was all ASCII (and
+ *  thus, valid UTF-8) anyhow. Other formats, like .ZIP, don't explicitly
+ *  offer Unicode support, but unofficially expect filenames to be UTF-8
+ *  encoded, and thus Just Work. Most everything does the right thing without
+ *  bothering you, but it's good to be aware of these nuances in case they
+ *  don't.
  *
  *
  * Other stuff:
