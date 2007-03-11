@@ -1,5 +1,5 @@
 /*
- * Skeleton platform-dependent support routines for PhysicsFS.
+ * PocketPC support routines for PhysicsFS.
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *

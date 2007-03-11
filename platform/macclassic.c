@@ -1,5 +1,5 @@
 /*
- * MacOS Classic support routines for PhysicsFS.
+ * Mac OS classic support routines for PhysicsFS.
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *
@@ -13,14 +13,14 @@
 
 /*
  * Most of the API calls in here are, according to ADC, available since
- *  MacOS 8.1. I don't think I used any MacOS 9 or CarbonLib-specific
+ *  Mac OS 8.1. I don't think I used any Mac OS 9 or CarbonLib-specific
  *  functions. There might be one or two 8.5 calls, and perhaps when the
- *  ADC docs say "Available in MacOS 8.1" they really mean "this works
+ *  ADC docs say "Available in Mac OS 8.1" they really mean "this works
  *  with System 6, but we don't want to hear about it at this point."
  *
- * IsAliasFile() showed up in MacOS 8.5. You can duplicate this code with
+ * IsAliasFile() showed up in Mac OS 8.5. You can duplicate this code with
  *  PBGetCatInfoSync(), which is an older API, if you hope the bits in the
- *  catalog info never change (which they won't for, say, MacOS 8.1).
+ *  catalog info never change (which they won't for, say, Mac OS 8.1).
  *  See Apple Technote FL-30:
  *    http://developer.apple.com/technotes/fl/fl_30.html
  *
@@ -33,7 +33,7 @@
 
 /*
  * Please note that I haven't tried this code with CarbonLib or under
- *  MacOS X at all. The code in unix.c is known to work with Darwin,
+ *  Mac OS X at all. The code in unix.c is known to work with Darwin,
  *  and you may or may not be better off using that, especially since
  *  mutexes are no-ops in this file. Patches welcome.
  */
@@ -636,7 +636,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 char *__PHYSFS_platformCurrentDir(void)
 {
     /*
-     * I don't think MacOS has a concept of "current directory", beyond
+     * I don't think Mac OS has a concept of "current directory", beyond
      *  what is grafted on by a given standard C library implementation,
      *  so just return the base dir.
      * We don't use this for anything crucial at the moment anyhow.
@@ -876,25 +876,25 @@ int __PHYSFS_platformDelete(const char *path)
 
 void *__PHYSFS_platformCreateMutex(void)
 {
-    return((void *) 0x0001);  /* no mutexes on MacOS Classic. */
+    return((void *) 0x0001);  /* no mutexes on Mac OS classic. */
 } /* __PHYSFS_platformCreateMutex */
 
 
 void __PHYSFS_platformDestroyMutex(void *mutex)
 {
-    /* no mutexes on MacOS Classic. */
+    /* no mutexes on Mac OS classic. */
 } /* __PHYSFS_platformDestroyMutex */
 
 
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
-    return(1);  /* no mutexes on MacOS Classic. */
+    return(1);  /* no mutexes on Mac OS classic. */
 } /* __PHYSFS_platformGrabMutex */
 
 
 void __PHYSFS_platformReleaseMutex(void *mutex)
 {
-    /* no mutexes on MacOS Classic. */
+    /* no mutexes on Mac OS classic. */
 } /* __PHYSFS_platformReleaseMutex */
 
 
@@ -917,7 +917,7 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
     modDate = ((infoPB.dirInfo.ioFlAttrib & kioFlAttribDirMask) != 0) ?
                    infoPB.dirInfo.ioDrMdDat : infoPB.hFileInfo.ioFlMdDat;
 
-    /* epoch is different on MacOS. They use Jan 1, 1904, apparently. */
+    /* epoch is different on Mac OS. They use Jan 1, 1904, apparently. */
     /*  subtract seconds between those epochs, counting leap years.   */
     modDate -= 2082844800;
 
