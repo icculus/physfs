@@ -6,10 +6,6 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #ifdef __BEOS__
 
 #include <be/kernel/OS.h>

@@ -6,10 +6,6 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 /* BeOS uses beos.cpp and posix.c ... Cygwin and such use windows.c ... */
 #if ((!defined __BEOS__) && (!defined WIN32))
 

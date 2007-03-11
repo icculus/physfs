@@ -6,10 +6,6 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #if ((!defined WIN32) && (!defined OS2))
 
 #if (defined __STRICT_ANSI__)

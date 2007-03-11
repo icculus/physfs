@@ -7,10 +7,6 @@
  *   by Gilles Vollant.
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #if (defined PHYSFS_SUPPORTS_ZIP)
 
 #include <stdio.h>

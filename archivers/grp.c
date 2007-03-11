@@ -24,10 +24,6 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #if (defined PHYSFS_SUPPORTS_GRP)
 
 #include <stdio.h>
