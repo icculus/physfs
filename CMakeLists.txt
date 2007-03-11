@@ -1,7 +1,7 @@
 # PhysicsFS; a portable, flexible file i/o abstraction.
 # Copyright (C) 2007  Ryan C. Gordon.
 #
-# Please see the file LICENSE in the source's root directory.
+# Please see the file LICENSE.txt in the source's root directory.
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 

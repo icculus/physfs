@@ -1,7 +1,7 @@
 /*
  * LZMA support routines for PhysicsFS.
  *
- * Please see the file LICENSE in the source's root directory.
+ * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file is written by Dennis Schridde, with some peeking at "7zMain.c"
  *   by Igor Pavlov.

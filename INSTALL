@@ -7,8 +7,9 @@ Building is (ahem) very easy.
 
 ALL PLATFORMS:
 
-Please understand your rights and mine: read the text file LICENSE in the root
-of the source tree. If you can't abide by it, delete this source tree now.
+Please understand your rights and mine: read the text file LICENSE.txt in the
+ root of the source tree. If you can't abide by it, delete this source tree
+ now.
 
 If you've got Doxygen (http://www.doxygen.org/) installed, you can run it
  without any command line arguments in the root of the source tree to generate

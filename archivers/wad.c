@@ -36,7 +36,7 @@
  * I don't think it's really that important though.
  *
  *
- * Please see the file LICENSE in the source's root directory.
+ * Please see the file LICENSE.txt in the source's root directory.
  *
  * This file written by Travis Wells, based on the GRP archiver by
  *  Ryan C. Gordon.

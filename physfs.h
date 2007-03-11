@@ -200,7 +200,7 @@
  *
  * Other stuff:
  *
- * Please see the file LICENSE in the source's root directory for licensing
+ * Please see the file LICENSE.txt in the source's root directory for licensing
  *  and redistribution rights.
  *
  * Please see the file CREDITS in the source's root directory for a more or

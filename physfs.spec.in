@@ -67,7 +67,7 @@ make DESTDIR=${RPM_BUILD_ROOT} install
 
 %files
 %defattr(-,root,root)
-%doc CHANGELOG CREDITS INSTALL LICENSE TODO zlib_license_change.txt
+%doc CHANGELOG CREDITS INSTALL LICENSE.txt TODO zlib_license_change.txt
 %{_bindir}/test_physfs
 %{_libdir}/*so.*
 

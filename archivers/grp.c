@@ -19,7 +19,7 @@
  *
  * (That info is from http://www.advsys.net/ken/build.htm ...)
  *
- * Please see the file LICENSE in the source's root directory.
+ * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Ryan C. Gordon.
  */
