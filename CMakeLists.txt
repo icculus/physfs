@@ -42,7 +42,12 @@ ENDIF(MACOSX)
 # Add some gcc-specific command lines.
 IF(CMAKE_COMPILER_IS_GNUCC)
     # Always build with debug symbols...you can strip it later.
-    ADD_DEFINITIONS(-g -pipe -Wall -Werror -fsigned-char)
+    ADD_DEFINITIONS(-g -pipe -Werror -fsigned-char)
+
+    # Stupid BeOS generates warnings in the system headers.
+    IF(NOT BEOS)
+        ADD_DEFINITIONS(-Wall)
+    ENDIF(NOT BEOS)
 
     CHECK_C_SOURCE_COMPILES("
         #if ((defined(__GNUC__)) && (__GNUC__ >= 4))
@@ -92,6 +97,7 @@ IF(BEOS)
     # We add this explicitly, since we don't want CMake to think this
     #  is a C++ project unless we're on BeOS.
     SET(PHYSFS_BEOS_SRCS platform/beos.cpp)
+    SET(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} be root)
 ENDIF(BEOS)
 
 # Almost everything is "compiled" here, but things that don't apply to the
