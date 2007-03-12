@@ -1,15 +1,4 @@
-Initial API interface and implementation,
-Unix support,
-Win32 support,
-BeOS support,
-POSIX support,
-MacOS support,
-OS/2 support,
-GRP archiver,
-DIR archiver,
-ZIP archiver,
-QPAK archiver,
-MacOS Classic support:
+Maintainer and general codemonkey:
     Ryan C. Gordon
 
 Tons of win32 help:
@@ -58,14 +47,14 @@ German translation:
     Michael Renner
 
 Apple Project Builder support,
-MacOS X improvements:
+Mac OS X improvements:
     Eric Wing
 
 HOG archiver,
-MVL archiver,
+MVL archiver:
     Bradley Bell
 
-MIX archiver,
+MIX archiver:
     Sebastian Steinhauer
 
 Bug fixes:
@@ -91,9 +80,12 @@ General bug fixes:
 Bug fixes:
     Jörg Walter
 
-Windows .rc file:
-7zip/lzma archiver,
+Windows .rc file,
+7zip/lzma archiver:
     Dennis Schridde
+
+OS/2 updates:
+    Dave Yeo
 
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...

@@ -87,7 +87,8 @@ MAC OS 8/9:
 
 Double-click on "CWProjects.sit" in the root of the source tree. This will
  unpack into a folder called "Mac Classic Support", which has CodeWarrior 6
- project files.
+ project files. Newer CodeWarrior releases should be able to read these project
+ files, too.
 
 Point CodeWarrior at "physfs.mcp" in that new folder, and build. This will
  produce a "PhysicsFS" or "PhysicsFS Debug" shared library, depending on what
@@ -96,10 +97,11 @@ Point CodeWarrior at "physfs.mcp" in that new folder, and build. This will
  "test_physfs" or "test_physfs Debug". These binaries are linked against the
  DLLs you built previously.
 
-There is also an MPW project file included, if you don't have CodeWarrior.
+There is also an MPW project file included, if you don't have CodeWarrior. It
+ is untested.
 
 PhysicsFS builds for classic Mac OS do not require CarbonLib...they use
- OS 8 (8.5?) APIs exclusively.
+ OS 9 APIs exclusively.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
  the Mac, I'd like to hear from you; send an email to icculus@icculus.org.
@@ -123,17 +125,16 @@ If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
 
 OS/2:
 
-You need EMX installed. I tried this on a stock Warp 4 install, no fixpaks.
- I used the latest EMX and patches (which are several years old now). You need
- to install link386.exe (Selective Install, "link object modules" option). Once
- EMX is installed correctly, unpack the source to PhysicsFS and run the script
+You need Innotek GCC and libc installed (or kLIBC). I tried this on a stock
+ Warp 4 install, no fixpaks. You need to install link386.exe (Selective
+ Install, "link object modules" option). Once libc and GCC are installed
+ correctly, unpack the source to PhysicsFS and run the script
  file "makeos2.cmd". I know this isn't ideal, but I wanted to have this build
  without users having to hunt down a "make" program (While several exist, EMX
  doesn't come with one). If someone wants to hack some REXX to make this a bit
  more picky about recompiling, I'll accept the patch.
 
-Modernizing this for post-EMX systems or OpenWatcom may be good solutions, too.
- Send patches. And port CMake.
+Someone please port CMake to OS/2.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
  OS/2, I'd like to hear from you; send an email to icculus@icculus.org.
