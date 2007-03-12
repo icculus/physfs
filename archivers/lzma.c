@@ -265,6 +265,10 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuffer,
     PHYSFS_sint64 wantedSize = objSize*objCount;
     PHYSFS_sint64 remainingSize = entry->file->Size - entry->position;
 
+    size_t fileSize;
+    ISzAlloc allocImp;
+    ISzAlloc allocTempImp;
+
     BAIL_IF_MACRO(wantedSize == 0, NULL, 0); /* quick rejection. */
     BAIL_IF_MACRO(remainingSize == 0, ERR_PAST_EOF, 0);
 
@@ -275,10 +279,6 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuffer,
         BAIL_IF_MACRO(objCount == 0, ERR_PAST_EOF, 0); /* quick rejection. */
         __PHYSFS_setError(ERR_PAST_EOF); /* this is always true here. */
     } /* if */
-
-    size_t fileSize;
-    ISzAlloc allocImp;
-    ISzAlloc allocTempImp;
 
     /* Prepare callbacks for 7z */
     allocImp.Alloc = SzAllocPhysicsFS;

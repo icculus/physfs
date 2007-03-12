@@ -1503,10 +1503,12 @@ static void enumerateFromMountPoint(DirHandle *i, const char *arcfname,
                                     const char *_fname, void *data)
 {
     size_t len = strlen(arcfname);
+    char *ptr = NULL;
+    char *end = NULL;
     char *mountPoint = (char *) alloca(strlen(i->mountPoint) + 1);
     strcpy(mountPoint, i->mountPoint);
-    char *ptr = mountPoint + ((len) ? len + 1 : 0);
-    char *end = strchr(ptr, '/');
+    ptr = mountPoint + ((len) ? len + 1 : 0);
+    end = strchr(ptr, '/');
     assert(end);  /* should always find a terminating '/'. */
     *end = '\0';
     callback(data, _fname, ptr);
