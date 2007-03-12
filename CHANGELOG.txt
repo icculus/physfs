@@ -13,6 +13,7 @@
            the parts you want/need...platform modules are determined
            automatically without the build system needing to intervene, so you
            just have to #define the archivers, etc that you want.
+           Updated makeos2.cmd for newer Innotek toolchain (thanks, Dave!)
 03082007 - Fixed a comment in physfs.h. Renamed win32.c to windows.c.
            Cleaned up whitespace/formatting in pocketpc.c. Updated PocketPC
            code to expect UTF-8 strings from the higher level. Changed
