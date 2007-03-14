@@ -330,7 +330,7 @@ void __PHYSFS_platformTimeslice(void)
 } /* __PHYSFS_platformTimeslice */
 
 
-#if PHYSFS_PLATFORM_MACOSX
+#ifdef PHYSFS_PLATFORM_MACOSX
 /* 
  * This function is only for OSX. The problem is that Apple's applications
  * can actually be directory structures with the actual executable nested
@@ -442,7 +442,7 @@ char *__PHYSFS_platformRealPath(const char *path)
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, resolved_path);
 
-#if defined(__MACH__) && defined(__APPLE__)
+#ifdef PHYSFS_PLATFORM_MACOSX
     stripAppleBundle(retval);
 #endif /* defined __MACH__ && defined __APPLE__ */
     
