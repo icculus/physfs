@@ -428,7 +428,7 @@ static void stripAppleBundle(char *path)
     allocator.Free(tempbuf);
     return;
 }
-#endif /* defined __MACH__ && defined __APPLE__ */
+#endif
 
 
 char *__PHYSFS_platformRealPath(const char *path)
@@ -444,7 +444,7 @@ char *__PHYSFS_platformRealPath(const char *path)
 
 #ifdef PHYSFS_PLATFORM_MACOSX
     stripAppleBundle(retval);
-#endif /* defined __MACH__ && defined __APPLE__ */
+#endif
     
     return(retval);
 } /* __PHYSFS_platformRealPath */
