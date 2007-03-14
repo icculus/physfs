@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+03142007 - Dropped classic Mac OS support. It's just too hard to find a working
+           Mac OS 9 install and reasonable development tools, so it's not
+           worth it. If you still target OS 8 or 9, please use PhysicsFS 1.0.
 03112007 - Removed zlib_license_change.txt ... it's in Subversion and the 1.0
            branch for history's sake. Added shared and static build options
            to CMakeLists.txt, and the expected "make install" target.

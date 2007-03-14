@@ -85,27 +85,14 @@ Code exists for PocketPC support, and there are shipping titles that used
 
 MAC OS 8/9:
 
-Double-click on "CWProjects.sit" in the root of the source tree. This will
- unpack into a folder called "Mac Classic Support", which has CodeWarrior 6
- project files. Newer CodeWarrior releases should be able to read these project
- files, too.
-
-Point CodeWarrior at "physfs.mcp" in that new folder, and build. This will
- produce a "PhysicsFS" or "PhysicsFS Debug" shared library, depending on what
- configuration you chose to build. After building the lib, you can make sure
- it works by building the "test_physfs.mcp" project file, which will create
- "test_physfs" or "test_physfs Debug". These binaries are linked against the
- DLLs you built previously.
-
-There is also an MPW project file included, if you don't have CodeWarrior. It
- is untested.
-
-PhysicsFS builds for classic Mac OS do not require CarbonLib...they use
- OS 9 APIs exclusively.
-
-If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
- the Mac, I'd like to hear from you; send an email to icculus@icculus.org.
-
+Classic Mac OS support has been dropped in PhysicsFS 2.0. Apple hasn't updated
+ pre-OSX versions in almost a decade at this point, none of the hardware
+ they've shipped will boot it for almost as many years, and finding
+ developer tools for it is becoming almost impossible. As the switch to Intel
+ hardware has removed the "Classic" emulation environment, it was time to
+ remove support from PhysicsFS. That being said, the PhysicsFS 1.0 branch can
+ still target back to Mac OS 8.5, so you can use that if you need support for
+ this legacy OS. We still very much support Mac OS X, though: see below.
 
 
 
