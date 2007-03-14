@@ -124,15 +124,16 @@ static OSErr oserr(OSErr retval)
 {
     char buf[sizeof (ERR_MACOS_GENERIC) + 32];
     const char *errstr = get_macos_error_string(retval);
-    if (strcmp(errstr, ERR_MACOS_GENERIC) == 0)
-    {
-        sprintf(buf, ERR_MACOS_GENERIC, (int) retval);
-        errstr = buf;
-    } /* if */
-
     if (errstr != NULL)
-        __PHYSFS_setError(errstr);
+    {
+        if (strcmp(errstr, ERR_MACOS_GENERIC) == 0)
+        {
+            sprintf(buf, ERR_MACOS_GENERIC, (int) retval);
+            errstr = buf;
+        } /* if */
 
+        __PHYSFS_setError(errstr);
+    } /* if */
     return(retval);
 } /* oserr */
 
