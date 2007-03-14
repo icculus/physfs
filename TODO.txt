@@ -7,8 +7,6 @@ UNICODE:
 - Windows: Can use Unicode, but might only allow "codepages" ... Use
            GetProcAddress() to find Unicode entry points on WinNT-based
            systems, otherwise try to use a sane codepage.
-- Mac Classic: apparently supports _something_, but I might just write it off
-               as a loss.
 - OS/2: Codepages. No full Unicode in the filesystem, but we can probably make
         a conversion effort.
 - Everywhere: Move stricmp() out of platform layer and make it grok UTF-8.
