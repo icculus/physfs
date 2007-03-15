@@ -18,18 +18,13 @@ Stuff:
   an installer/updater.
 - Stack allocate in stripAppleBundle() (platform/unix.c) instead of calloc().
 - Reduce malloc() pressure all over the place. We fragment memory like mad.
-- macclassic.c :
-  "/* (Hmm. Default behaviour is broken in the base library.  :)  )  */"
 - profile string list interpolation.
 - We have two different ways to find dir entries in zip.c.
 - Do symlinks in zip archiver work when they point to dirs?
 - Enable more warnings?
 - Use __cdecl in physfs.h?
 - Look for FIXMEs (many marked with "!!!" in comments).
-- Cygwin should use unix/posix and not win32 platform code.
-- Expose the archiver registration mechanism to the outside world.
 - Find some way to relax or remove the security model for external tools.
-- mmap() in posix.c
 - OSX shouldn't use ~/.app for userdir.
 - fscanf and fprintf support in extras dir.
 - Why do we call it openArchive and dirClose?
@@ -46,7 +41,7 @@ Stuff:
 - Should file enumeration return an error or set error state?
 - Need "getmountpoint" command in test_physfs.c ...
 - Look for calloc() calls that aren't going through the allocation hooks.
-- maybe other stuff.
+- Write up a simple HOWTO on embedding physicsfs in another project.
 - Make mutexes recursive, so callbacks can call into the API.
 - Archivers need abstracted i/o to read from memory or files (archives in archives?)
 - Probably other stuff. Requests and recommendations are welcome.
