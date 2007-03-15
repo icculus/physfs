@@ -108,7 +108,6 @@ SET(PHYSFS_SRCS
     physfs.c
     physfs_byteorder.c
     physfs_unicode.c
-    platform/macclassic.c
     platform/os2.c
     platform/pocketpc.c
     platform/posix.c
