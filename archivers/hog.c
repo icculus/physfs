@@ -229,7 +229,7 @@ static int HOG_isArchive(const char *filename, int forWriting)
 static int hog_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     HOGentry *a = (HOGentry *) _a;
-    return(__PHYSFS_platformStricmp(a[one].name, a[two].name));
+    return(__PHYSFS_stricmpASCII(a[one].name, a[two].name));
 } /* hog_entry_cmp */
 
 
@@ -367,7 +367,7 @@ static HOGentry *hog_find_entry(HOGinfo *info, const char *name)
     while (lo <= hi)
     {
         middle = lo + ((hi - lo) / 2);
-        rc = __PHYSFS_platformStricmp(name, a[middle].name);
+        rc = __PHYSFS_stricmpASCII(name, a[middle].name);
         if (rc == 0)  /* found it! */
             return(&a[middle]);
         else if (rc > 0)

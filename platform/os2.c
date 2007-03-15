@@ -145,7 +145,7 @@ static void cvt_path_to_correct_case(char *buf)
         {
             while (count == 1)  /* while still entries to enumerate... */
             {
-                if (__PHYSFS_platformStricmp(fb.achName, fname) == 0)
+                if (__PHYSFS_stricmpASCII(fb.achName, fname) == 0)
                 {
                     strcpy(fname, fb.achName);
                     break;  /* there it is. Overwrite and stop searching. */
@@ -295,50 +295,6 @@ char *__PHYSFS_platformGetUserDir(void)
 {
     return(__PHYSFS_platformCalcBaseDir(NULL));
 } /* __PHYSFS_platformGetUserDir */
-
-
-int __PHYSFS_platformStricmp(const char *x, const char *y)
-{
-    int ux, uy;
-
-    do
-    {
-        ux = toupper((int) *x);
-        uy = toupper((int) *y);
-        if (ux > uy)
-            return(1);
-        else if (ux < uy)
-            return(-1);
-        x++;
-        y++;
-    } while ((ux) && (uy));
-
-    return(0);
-} /* __PHYSFS_platformStricmp */
-
-
-int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 len)
-{
-    int ux, uy;
-
-    if (!len)
-        return(0);
-
-    do
-    {
-        ux = toupper((int) *x);
-        uy = toupper((int) *y);
-        if (ux > uy)
-            return(1);
-        else if (ux < uy)
-            return(-1);
-        x++;
-        y++;
-        len--;
-    } while ((ux) && (uy) && (len));
-
-    return(0);
-} /* __PHYSFS_platformStrnicmp */
 
 
 int __PHYSFS_platformExists(const char *fname)

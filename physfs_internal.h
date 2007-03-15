@@ -16,6 +16,8 @@
 
 #include "physfs.h"
 
+#include <stdlib.h>  /* make sure NULL is defined... */
+
 #ifdef HAVE_ASSERT_H
 #include <assert.h>
 #elif (!defined assert)
@@ -1264,6 +1266,8 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 #define GOTO_MACRO_MUTEX(e, m, g) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; }
 #define GOTO_IF_MACRO_MUTEX(c, e, m, g) if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; }
 
+#define __PHYSFS_ARRAYLEN(x) ( (sizeof (x)) / (sizeof (x[0])) )
+
 #ifdef __GNUC__
 #define LONGLONGLITERAL(x) x##LL
 #else
@@ -1281,6 +1285,39 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
     (sizeof (PHYSFS_uint64) > sizeof (size_t)) && \
     ((s) > (LONGLONGLITERAL(0xFFFFFFFFFFFFFFFF) >> (64-(sizeof(size_t)*8)))) \
 )
+
+/*
+ * This is a strcasecmp() or stricmp() replacement that expects both strings
+ *  to be in UTF-8 encoding. It will do "case folding" to decide if the
+ *  Unicode codepoints in the strings match.
+ *
+ * It will report which string is "greater than" the other, but be aware that
+ *  this doesn't necessarily mean anything: 'a' may be "less than" 'b', but
+ *  a random Kanji codepoint has no meaningful alphabetically relationship to
+ *  a Greek Lambda, but being able to assign a reliable "value" makes sorting
+ *  algorithms possible, if not entirely sane. Most cases should treat the
+ *  return value as "equal" or "not equal".
+ */
+int __PHYSFS_utf8strcasecmp(const char *s1, const char *s2);
+
+/*
+ * This works like __PHYSFS_utf8strcasecmp(), but takes a character (NOT BYTE
+ *  COUNT) argument, like strcasencmp().
+ */
+int __PHYSFS_utf8strnicmp(const char *s1, const char *s2, PHYSFS_uint32 l);
+
+/*
+ * stricmp() that guarantees to only work with low ASCII. The C runtime
+ *  stricmp() might try to apply a locale/codepage/etc, which we don't want.
+ */
+int __PHYSFS_stricmpASCII(const char *s1, const char *s2);
+
+/*
+ * strnicmp() that guarantees to only work with low ASCII. The C runtime
+ *  strnicmp() might try to apply a locale/codepage/etc, which we don't want.
+ */
+int __PHYSFS_strnicmpASCII(const char *s1, const char *s2, PHYSFS_uint32 l);
+
 
 /*
  * The current allocator. Not valid before PHYSFS_init is called!
@@ -1515,16 +1552,6 @@ char *__PHYSFS_platformGetUserDir(void);
  *  number.
  */
 PHYSFS_uint64 __PHYSFS_platformGetThreadID(void);
-
-/*
- * This is a pass-through to whatever stricmp() is called on your platform.
- */
-int __PHYSFS_platformStricmp(const char *str1, const char *str2);
-
-/*
- * This is a pass-through to whatever strnicmp() is called on your platform.
- */
-int __PHYSFS_platformStrnicmp(const char *s1, const char *s2, PHYSFS_uint32 l);
 
 /*
  * Return non-zero if filename (in platform-dependent notation) exists.
