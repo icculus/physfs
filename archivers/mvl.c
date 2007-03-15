@@ -324,7 +324,7 @@ static MVLentry *mvl_find_entry(MVLinfo *info, const char *name)
     while (lo <= hi)
     {
         middle = lo + ((hi - lo) / 2);
-        rc = __PHYSFS_platformStricmp(name, a[middle].name);
+        rc = __PHYSFS_stricmpASCII(name, a[middle].name);
         if (rc == 0)  /* found it! */
             return(&a[middle]);
         else if (rc > 0)

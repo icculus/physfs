@@ -122,7 +122,7 @@ static char *getExePath(const char *argv0)
         retval[buflen] = '\0';  /* does API always null-terminate this? */
 
             /* make sure the string was not truncated. */
-        if (__PHYSFS_platformStricmp(&retval[buflen - 4], ".exe") != 0)
+        if (__PHYSFS_stricmpASCII(&retval[buflen - 4], ".exe") != 0)
             __PHYSFS_setError(ERR_GETMODFN_TRUNC);
         else
         {
@@ -322,59 +322,6 @@ PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 {
     return((PHYSFS_uint64) GetCurrentThreadId());
 } /* __PHYSFS_platformGetThreadID */
-
-
-/* ...make this Cygwin AND Visual C friendly... */
-int __PHYSFS_platformStricmp(const char *x, const char *y)
-{
-#if (defined _MSC_VER)
-    return(stricmp(x, y));
-#else
-    int ux, uy;
-
-    do
-    {
-        ux = toupper((int) *x);
-        uy = toupper((int) *y);
-        if (ux > uy)
-            return(1);
-        else if (ux < uy)
-            return(-1);
-        x++;
-        y++;
-    } while ((ux) && (uy));
-
-    return(0);
-#endif
-} /* __PHYSFS_platformStricmp */
-
-
-int __PHYSFS_platformStrnicmp(const char *x, const char *y, PHYSFS_uint32 len)
-{
-#if (defined _MSC_VER)
-    return(strnicmp(x, y, (int) len));
-#else
-    int ux, uy;
-
-    if (!len)
-        return(0);
-
-    do
-    {
-        ux = toupper((int) *x);
-        uy = toupper((int) *y);
-        if (ux > uy)
-            return(1);
-        else if (ux < uy)
-            return(-1);
-        x++;
-        y++;
-        len--;
-    } while ((ux) && (uy) && (len));
-
-    return(0);
-#endif
-} /* __PHYSFS_platformStricmp */
 
 
 int __PHYSFS_platformExists(const char *fname)

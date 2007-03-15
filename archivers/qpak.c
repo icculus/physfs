@@ -40,8 +40,8 @@
 #include "physfs_internal.h"
 
 #if 1  /* Make this case insensitive? */
-#define QPAK_strcmp(x, y) __PHYSFS_platformStricmp(x, y)
-#define QPAK_strncmp(x, y, z) __PHYSFS_platformStrnicmp(x, y, z)
+#define QPAK_strcmp(x, y) __PHYSFS_stricmpASCII(x, y)
+#define QPAK_strncmp(x, y, z) __PHYSFS_strnicmpASCII(x, y, z)
 #else
 #define QPAK_strcmp(x, y) strcmp(x, y)
 #define QPAK_strncmp(x, y, z) strncmp(x, y, z)

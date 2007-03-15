@@ -9,7 +9,6 @@ UNICODE:
            systems, otherwise try to use a sane codepage.
 - OS/2: Codepages. No full Unicode in the filesystem, but we can probably make
         a conversion effort.
-- Everywhere: Move stricmp() out of platform layer and make it grok UTF-8.
 
 
 Stuff:

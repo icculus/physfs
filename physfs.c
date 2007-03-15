@@ -426,14 +426,14 @@ static DirHandle *openDirectory(const char *d, int forWriting)
         /* Look for archivers with matching file extensions first... */
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
         {
-            if (__PHYSFS_platformStricmp(ext, (*i)->info->extension) == 0)
+            if (__PHYSFS_stricmpASCII(ext, (*i)->info->extension) == 0)
                 retval = tryOpenDir(*i, d, forWriting);
         } /* for */
 
         /* failing an exact file extension match, try all the others... */
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
         {
-            if (__PHYSFS_platformStricmp(ext, (*i)->info->extension) != 0)
+            if (__PHYSFS_stricmpASCII(ext, (*i)->info->extension) != 0)
                 retval = tryOpenDir(*i, d, forWriting);
         } /* for */
     } /* if */
@@ -1133,7 +1133,7 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
             if ((l > extlen) && ((*i)[l - extlen - 1] == '.'))
             {
                 ext = (*i) + (l - extlen);
-                if (__PHYSFS_platformStricmp(ext, archiveExt) == 0)
+                if (__PHYSFS_stricmpASCII(ext, archiveExt) == 0)
                 {
                     const char *d = PHYSFS_getRealDir(*i);
                     size_t allocsize = strlen(d) + strlen(dirsep) + l + 1;

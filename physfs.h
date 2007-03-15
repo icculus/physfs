@@ -2061,7 +2061,7 @@ __EXPORT__ void PHYSFS_enumerateFilesCallback(const char *dir,
  *   \param dst Buffer to store converted UTF-8 string.
  *   \param len Size, in bytes, of destination buffer.
  */
-__EXPORT__ void PHYSFS_utf8fromucs4(const PHYSFS_uint32 *src, char *dst,
+__EXPORT__ void PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst,
                                     PHYSFS_uint64 len);
 
 /**
@@ -2083,7 +2083,7 @@ __EXPORT__ void PHYSFS_utf8fromucs4(const PHYSFS_uint32 *src, char *dst,
  *   \param dst Buffer to store converted UCS-4 string.
  *   \param len Size, in bytes, of destination buffer.
  */
-__EXPORT__ void PHYSFS_utf8toucs4(const char *src, PHYSFS_uint32 *dst,
+__EXPORT__ void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst,
                                   PHYSFS_uint64 len);
 
 /**
@@ -2109,7 +2109,7 @@ __EXPORT__ void PHYSFS_utf8toucs4(const char *src, PHYSFS_uint32 *dst,
  *   \param dst Buffer to store converted UTF-8 string.
  *   \param len Size, in bytes, of destination buffer.
  */
-__EXPORT__ void PHYSFS_utf8fromucs2(const PHYSFS_uint16 *src, char *dst,
+__EXPORT__ void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst,
                                     PHYSFS_uint64 len);
 
 /**
@@ -2135,11 +2135,11 @@ __EXPORT__ void PHYSFS_utf8fromucs2(const PHYSFS_uint16 *src, char *dst,
  *   \param dst Buffer to store converted UCS-2 string.
  *   \param len Size, in bytes, of destination buffer.
  */
-__EXPORT__ void PHYSFS_utf8toucs2(const char *src, PHYSFS_uint16 *dst,
+__EXPORT__ void PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst,
                                   PHYSFS_uint64 len);
 
 /**
- * \fn void PHYSFS_utf8fromlatin1(const char *src, char *dst, PHYSFS_uint64 len)
+ * \fn void PHYSFS_utf8FromLatin1(const char *src, char *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-8 string to a Latin1 string.
  *
  * Latin1 strings are 8-bits per character: a popular "high ASCII"
@@ -2162,7 +2162,7 @@ __EXPORT__ void PHYSFS_utf8toucs2(const char *src, PHYSFS_uint16 *dst,
  *   \param dst Buffer to store converted UTF-8 string.
  *   \param len Size, in bytes, of destination buffer.
  */
-__EXPORT__ void PHYSFS_utf8fromlatin1(const char *src, char *dst,
+__EXPORT__ void PHYSFS_utf8FromLatin1(const char *src, char *dst,
                                   PHYSFS_uint64 len);
 
 /* Everything above this line is part of the PhysicsFS 2.0 API. */
