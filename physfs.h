@@ -339,7 +339,19 @@ typedef struct
     void *opaque;  /**< That's all you get. Don't touch. */
 } PHYSFS_File;
 
-typedef PHYSFS_File PHYSFS_file;  /* for backwards compatibility with 1.0 */
+
+/**
+ * \def PHYSFS_file
+ * \brief 1.0 API compatibility define.
+ *
+ * PHYSFS_file is identical to PHYSFS_File. This #define is here for backwards
+ *  compatibility with the 1.0 API, which had an inconsistent capitalization
+ *  convention in this case. New code should use PHYSFS_File, as this #define
+ *  may go away someday.
+ *
+ * \sa PHYSFS_File
+ */
+#define PHYSFS_file PHYSFS_File
 
 
 /**
