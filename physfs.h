@@ -162,9 +162,9 @@
  *  offers. If you are on Windows and build with Unicode support, your TCHAR
  *  strings are two bytes per character (this is called "UCS-2 encoding"). You
  *  should convert them to UTF-8 before handing them to PhysicsFS with
- *  PHYSFS_utf8fromucs2(). If you're using Unix or Mac OS X, your wchar_t
+ *  PHYSFS_utf8FromUcs2(). If you're using Unix or Mac OS X, your wchar_t
  *  strings are four bytes per character ("UCS-4 encoding"). Use
- *  PHYSFS_utf8fromucs4(). Mac OS X can give you UTF-8 directly from a
+ *  PHYSFS_utf8FromUcs4(). Mac OS X can give you UTF-8 directly from a
  *  CFString, and many Unixes generally give you C strings in UTF-8 format
  *  everywhere. If you have a single-byte high ASCII charset, like so-many
  *  European "codepages" you may be out of luck. We'll convert from "Latin1"
@@ -173,7 +173,7 @@
  *  C string with high-ASCII data that isn't UTF-8 encoded will NOT do what
  *  you expect!
  *
- * Naturally, there's also PHYSFS_utf8toucs2() and PHYSFS_utf8toucs4() to get
+ * Naturally, there's also PHYSFS_utf8ToUcs2() and PHYSFS_utf8ToUcs4() to get
  *  data back into a format you like. Behind the scenes, PhysicsFS will use
  *  Unicode where possible: the UTF-8 strings on Windows will be converted
  *  and used with the multibyte Windows APIs, for example.
@@ -2055,7 +2055,7 @@ __EXPORT__ void PHYSFS_enumerateFilesCallback(const char *dir,
                                               void *d);
 
 /**
- * \fn void PHYSFS_utf8fromucs4(const PHYSFS_uint32 *src, char *dst, PHYSFS_uint64 len)
+ * \fn void PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst, PHYSFS_uint64 len)
  * \brief Convert a UCS-4 string to a UTF-8 string.
  *
  * UCS-4 strings are 32-bits per character: \c wchar_t on Unix.
@@ -2077,7 +2077,7 @@ __EXPORT__ void PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst,
                                     PHYSFS_uint64 len);
 
 /**
- * \fn void PHYSFS_utf8toucs4(const char *src, PHYSFS_uint32 *dst, PHYSFS_uint64 len)
+ * \fn void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-8 string to a UCS-4 string.
  *
  * UCS-4 strings are 32-bits per character: \c wchar_t on Unix.
@@ -2099,7 +2099,7 @@ __EXPORT__ void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst,
                                   PHYSFS_uint64 len);
 
 /**
- * \fn void PHYSFS_utf8fromucs2(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len)
+ * \fn void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len)
  * \brief Convert a UCS-2 string to a UTF-8 string.
  *
  * UCS-2 strings are 16-bits per character: \c TCHAR on Windows, when building
@@ -2125,7 +2125,7 @@ __EXPORT__ void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst,
                                     PHYSFS_uint64 len);
 
 /**
- * \fn PHYSFS_utf8toucs2(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len)
+ * \fn PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-8 string to a UCS-2 string.
  *
  * UCS-2 strings are 16-bits per character: \c TCHAR on Windows, when building
