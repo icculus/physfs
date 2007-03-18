@@ -11,27 +11,7 @@
 
 #ifdef PHYSFS_PLATFORM_POSIX
 
-#if (defined __STRICT_ANSI__)
-#define __PHYSFS_DOING_STRICT_ANSI__
-#endif
-
-/*
- * We cheat a little: I want the symlink version of stat() (lstat), and
- *  GCC/Linux will not declare it if compiled with the -ansi flag.
- *  If you are really lacking symlink support on your platform,
- *  you should #define __PHYSFS_NO_SYMLINKS__ before compiling this
- *  file. That will open a security hole, though, if you really DO have
- *  symlinks on your platform; it renders PHYSFS_permitSymbolicLinks(0)
- *  useless, since every symlink will be reported as a regular file/dir.
- */
-#if (defined __PHYSFS_DOING_STRICT_ANSI__)
-#undef __STRICT_ANSI__
-#endif
 #include <stdio.h>
-#if (defined __PHYSFS_DOING_STRICT_ANSI__)
-#define __STRICT_ANSI__
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -120,29 +100,19 @@ char *__PHYSFS_platformGetUserDir(void)
 } /* __PHYSFS_platformGetUserDir */
 
 
-#if (defined __PHYSFS_NO_SYMLINKS__)
-#define doStat stat
-#else
-#define doStat lstat
-#endif
-
 int __PHYSFS_platformExists(const char *fname)
 {
     struct stat statbuf;
-    BAIL_IF_MACRO(doStat(fname, &statbuf) == -1, strerror(errno), 0);
+    BAIL_IF_MACRO(lstat(fname, &statbuf) == -1, strerror(errno), 0);
     return(1);
 } /* __PHYSFS_platformExists */
 
 
 int __PHYSFS_platformIsSymLink(const char *fname)
 {
-#if (defined __PHYSFS_NO_SYMLINKS__)
-    return(0);
-#else
     struct stat statbuf;
     BAIL_IF_MACRO(lstat(fname, &statbuf) == -1, strerror(errno), 0);
     return( (S_ISLNK(statbuf.st_mode)) ? 1 : 0 );
-#endif
 } /* __PHYSFS_platformIsSymlink */
 
 
