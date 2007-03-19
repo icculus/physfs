@@ -86,7 +86,7 @@ typedef struct _LZMAentry
     PHYSFS_uint32 fileIndex; /* Index of file in archive */
     PHYSFS_uint32 folderIndex; /* Index of folder in archive */
     size_t offset; /* Offset in folder */
-    PHYSFS_uint32 position; /* Current "virtual" position in file */
+    PHYSFS_uint64 position; /* Current "virtual" position in file */
 } LZMAentry;
 
 
@@ -116,13 +116,13 @@ SZ_RESULT SzFileReadImp(void *object, void **buffer, size_t maxReqSize,
                         size_t *processedSize)
 {
     CFileInStream *s = (CFileInStream *)object;
-    size_t processedSizeLoc;
+    PHYSFS_sint64 processedSizeLoc;
     if (maxReqSize > kBufferSize)
         maxReqSize = kBufferSize;
     processedSizeLoc = __PHYSFS_platformRead(s->File, g_Buffer, 1, maxReqSize);
     *buffer = g_Buffer;
-    if (processedSize != 0)
-        *processedSize = processedSizeLoc;
+    if (processedSize != NULL)
+        *processedSize = (size_t) processedSizeLoc;
     return SZ_OK;
 } /* SzFileReadImp */
 
@@ -313,10 +313,11 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuffer,
     } /* if */
 
     /* Copy wanted bytes over from cache to outBuffer */
-    strncpy(outBuffer,
+/* !!! FIXME: strncpy for non-string data? */
+	strncpy(outBuffer,
             (void*) (entry->archive->folder[entry->folderIndex].cache +
                      entry->offset + entry->position),
-            wantedSize);
+            (size_t) wantedSize);
     entry->position += wantedSize;
     return objCount;
 } /* LZMA_read */
@@ -465,7 +466,7 @@ static void *LZMA_openArchive(const char *name, int forWriting)
      * Init with 0 so we know when a folder is already cached
      * Values will be set by LZMA_read()
      */
-    memset(archive->folder, 0, len);
+    memset(archive->folder, 0, (size_t) len);
 
     return(archive);
 } /* LZMA_openArchive */
