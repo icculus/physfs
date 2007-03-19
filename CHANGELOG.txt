@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+03192007 - Fixed two switched strings in CMakeLists.txt
 03162007 - Changed PHYSFS_file from a typedef to a #define (in case it would
            cause an aggressive compiler to think you're passing the wrong type
            to a function) and added Doxygen comments to explain it.
