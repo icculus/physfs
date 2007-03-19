@@ -62,6 +62,11 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     ENDIF(PHYSFS_IS_GCC4)
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
+IF(MSVC)
+    # VS.NET 8.0 got really really anal about strcpy, etc, which even if we
+    #  cleaned up our code, zlib, etc still use...so disable the warning.
+    ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS=1)
+ENDIF(MSVC)
 
 # Basic chunks of source code ...
 

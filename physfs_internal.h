@@ -24,6 +24,11 @@
 #define assert(x)
 #endif
 
+/* !!! FIXME: remove this when revamping stack allocation code... */
+#ifdef _MSC_VER
+#include <malloc.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,7 +37,7 @@ extern "C" {
 #define malloc(x) Do not use malloc() directly.
 #define realloc(x, y) Do not use realloc() directly.
 #define free(x) Do not use free() directly.
-
+/* !!! FIXME: add alloca check here. */
 
 /* The LANG section. */
 /*  please send questions/translations to Ryan: icculus@icculus.org. */

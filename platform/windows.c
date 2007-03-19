@@ -21,10 +21,12 @@
 
 #include "physfs_internal.h"
 
-#if (defined _MSC_VER)
-    #define alloca(x) _alloca(x)
-#elif (defined __MINGW32__)  /* scary...hopefully this is okay. */
-    #define alloca(x) __builtin_alloca(x) 
+#if (!defined alloca)
+    #if ((defined _MSC_VER)
+        #define alloca(x) _alloca(x)
+    #elif (defined __MINGW32__)  /* scary...hopefully this is okay. */
+        #define alloca(x) __builtin_alloca(x) 
+    #endif
 #endif
 
 #define LOWORDER_UINT64(pos) (PHYSFS_uint32) \

@@ -188,8 +188,9 @@ SZ_RESULT SafeReadDirect(ISzInStream *inStream, Byte *data, size_t size)
     size -= processedSize;
     do
     {
-      *data++ = *(Byte*)inBuffer++;
-    }
+      *(data++) = *((Byte*)inBuffer);
+      inBuffer = ((Byte*) inBuffer) + 1;
+	}
     while (--processedSize != 0);
   }
   #else
