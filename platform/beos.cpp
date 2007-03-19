@@ -208,6 +208,7 @@ char *__PHYSFS_platformRealPath(const char *path)
 } /* __PHYSFS_platformRealPath */
 
 
+/* !!! FIXME: semaphores are not mutexes... */
 void *__PHYSFS_platformCreateMutex(void)
 {
     sem_id *retval = (sem_id *) allocator.Malloc(sizeof (sem_id));
