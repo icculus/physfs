@@ -3,7 +3,12 @@
  */
 
 03192007 - Fixed two switched strings in CMakeLists.txt ... patch to compile
-           with latest Windows Platform SDK.
+           with latest Windows Platform SDK. Explicitly check for NULL in
+           PHYSFS_init() when we can't go on without a real string here.
+           Removed ANSI-C workaround for missing lstat() nonsense in posix.c
+           (POSIX != ANSI, time to give up here). Try to use /proc/self/exe
+           to find the base dir on Unix, so we can do without argv[0] on
+           systems with a Linux-like /proc filesystem.
 03162007 - Changed PHYSFS_file from a typedef to a #define (in case it would
            cause an aggressive compiler to think you're passing the wrong type
            to a function) and added Doxygen comments to explain it.
