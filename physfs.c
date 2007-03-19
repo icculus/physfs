@@ -662,6 +662,9 @@ static char *calculateBaseDir(const char *argv0)
     if (retval != NULL)
         return(retval);
 
+    /* we need argv0 to be sane to go on. */
+    BAIL_IF_MACRO(argv0 == NULL, ERR_INVALID_ARGUMENT, NULL);
+
     /*
      * Determine if there's a path on argv0. If there is, that's the base dir.
      */
@@ -683,6 +686,8 @@ static char *calculateBaseDir(const char *argv0)
         retval[size] = '\0';
         return(retval);
     } /* if */
+
+    /* !!! FIXME: should probably just fail here instead of being heroic. */
 
     /*
      * Last ditch effort: it's the current working directory. (*shrug*)
