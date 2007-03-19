@@ -307,18 +307,45 @@ static char *findBinaryInPath(const char *bin, char *envr)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    /* If there isn't a path on argv0, then look through the $PATH for it. */
+    const char *PROC_SELF_EXE = "/proc/self/exe";
+    char *retval = NULL;
+    char *envr = NULL;
+    struct stat stbuf;
 
-    char *retval;
-    char *envr;
+    /* fast path: default behaviour can handle this. */
+    if ( (argv0 != NULL) && (strchr(argv0, '/') != NULL) )
+        return(NULL);  /* higher level will parse out real path from argv0. */
 
-    if (strchr(argv0, '/') != NULL)   /* default behaviour can handle this. */
-        return(NULL);
+    /*
+     * Try to avoid using argv0 unless forced to. If there's a Linux-like
+     *  /proc filesystem, you can get the full path to the current process from
+     *  the /proc/self/exe symlink.
+     */
+    if ((lstat(PROC_SELF_EXE, &stbuf) != -1) && (S_ISLNK(stbuf.st_mode)))
+    {
+        const size_t len = stbuf.st_size;
+        char *buf = (char *) allocator.Malloc(len+1);
+        if (buf != NULL)  /* if NULL, maybe you'll get lucky later. */
+        {
+            if (readlink(PROC_SELF_EXE, buf, len) != len)
+                allocator.Free(buf);
+            else
+            {
+                buf[len] = '\0';  /* readlink doesn't null-terminate. */
+                retval = buf;  /* we're good to go. */
+            } /* else */
+        } /* if */
+    } /* if */
 
-    envr = __PHYSFS_platformCopyEnvironmentVariable("PATH");
-    BAIL_IF_MACRO(!envr, NULL, NULL);
-    retval = findBinaryInPath(argv0, envr);
-    allocator.Free(envr);
+    if ((retval == NULL) && (argv0 != NULL))
+    {
+        /* If there's no dirsep on argv0, then look through $PATH for it. */
+        envr = __PHYSFS_platformCopyEnvironmentVariable("PATH");
+        BAIL_IF_MACRO(!envr, NULL, NULL);
+        retval = findBinaryInPath(argv0, envr);
+        allocator.Free(envr);
+    } /* if */
+
     return(retval);
 } /* __PHYSFS_platformCalcBaseDir */
 
@@ -442,6 +469,7 @@ char *__PHYSFS_platformRealPath(const char *path)
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, resolved_path);
 
+/* !!! FIXME: this shouldn't be here. */
 #ifdef PHYSFS_PLATFORM_MACOSX
     stripAppleBundle(retval);
 #endif
