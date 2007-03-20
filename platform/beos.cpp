@@ -240,6 +240,12 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     release_sem(*((sem_id *) mutex));
 } /* __PHYSFS_platformReleaseMutex */
 
+
+int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
+{
+    return(0);  /* just use malloc() and friends. */
+} /* __PHYSFS_platformSetDefaultAllocator */
+
 #endif  /* PHYSFS_PLATFORM_BEOS */
 
 /* end of beos.cpp ... */

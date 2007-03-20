@@ -1719,39 +1719,18 @@ int __PHYSFS_platformGrabMutex(void *mutex);
 void __PHYSFS_platformReleaseMutex(void *mutex);
 
 /*
- * Called during PHYSFS_init() to initialize the allocator, if the user
+ * Called at the start of PHYSFS_init() to prepare the allocator, if the user
  *  hasn't selected their own allocator via PHYSFS_setAllocator().
- *  Return zero on initialization error (which will make PHYSFS_init() fail,
- *  too), non-zero on success.
+ *  If the platform has a custom allocator, it should fill in the fields of
+ *  (a) with the proper function pointers and return non-zero.
+ * If the platform just wants to use malloc()/free()/etc, return zero
+ *  immediately and the higher level will handle it. The Init and Deinit
+ *  fields of (a) are optional...set them to NULL if you don't need them.
+ *  Everything else must be implemented. All rules follow those for
+ *  PHYSFS_setAllocator(). If Init isn't NULL, it will be called shortly
+ *  after this function returns non-zero.
  */
-int __PHYSFS_platformAllocatorInit(void);
-
-/*
- * Called during PHYSFS_deinit() to deinitialize the allocator, if the user
- *  hasn't selected their own allocator via PHYSFS_setAllocator().
- */
-void __PHYSFS_platformAllocatorDeinit(void);
-
-/*
- * Implement malloc. It's safe to just pass through from the C runtime.
- *  This is used for allocation if the user hasn't selected their own
- *  allocator via PHYSFS_setAllocator().
- */
-void *__PHYSFS_platformAllocatorMalloc(PHYSFS_uint64 s);
-
-/*
- * Implement realloc. It's safe to just pass through from the C runtime.
- *  This is used for allocation if the user hasn't selected their own
- *  allocator via PHYSFS_setAllocator().
- */
-void *__PHYSFS_platformAllocatorRealloc(void *ptr, PHYSFS_uint64 s);
-
-/*
- * Implement free. It's safe to just pass through from the C runtime.
- *  This is used for deallocation if the user hasn't selected their own
- *  allocator via PHYSFS_setAllocator().
- */
-void __PHYSFS_platformAllocatorFree(void *ptr);
+int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a);
 
 #ifdef __cplusplus
 }

@@ -576,39 +576,10 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 
 
 /* !!! FIXME: Don't use C runtime for allocators? */
-int __PHYSFS_platformAllocatorInit(void)
+int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
-    return(1);  /* always succeeds. */
-} /* __PHYSFS_platformAllocatorInit */
-
-
-void __PHYSFS_platformAllocatorDeinit(void)
-{
-    /* no-op */
-} /* __PHYSFS_platformAllocatorInit */
-
-
-void *__PHYSFS_platformAllocatorMalloc(PHYSFS_uint64 s)
-{
-    BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
-    #undef malloc
-    return(malloc((size_t) s));
-} /* __PHYSFS_platformMalloc */
-
-
-void *__PHYSFS_platformAllocatorRealloc(void *ptr, PHYSFS_uint64 s)
-{
-    BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
-    #undef realloc
-    return(realloc(ptr, (size_t) s));
-} /* __PHYSFS_platformRealloc */
-
-
-void __PHYSFS_platformAllocatorFree(void *ptr)
-{
-    #undef free
-    free(ptr);
-} /* __PHYSFS_platformAllocatorFree */
+    return(0);  /* just use malloc() and friends. */
+} /* __PHYSFS_platformSetDefaultAllocator */
 
 #endif  /* PHYSFS_PLATFORM_POCKETPC */
 
