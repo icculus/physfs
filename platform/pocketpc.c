@@ -225,12 +225,6 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 } /* __PHYSFS_platformCvtToDependent */
 
 
-void __PHYSFS_platformTimeslice(void)
-{
-    Sleep(10);
-} /* __PHYSFS_platformTimeslice */
-
-
 static int doEnumCallback(const wchar_t *w_fname)
 {
     const PHYSFS_uint64 len = (PHYSFS_uint64) ((wcslen(w_fname) * 4) + 1);

@@ -189,13 +189,6 @@ PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 } /* __PHYSFS_platformGetThreadID */
 
 
-/* Much like my college days, try to sleep for 10 milliseconds at a time... */
-void __PHYSFS_platformTimeslice(void)
-{
-    snooze(10000);  /* put thread to sleep for 10 milliseconds. */
-} /* __PHYSFS_platformTimeslice */
-
-
 char *__PHYSFS_platformRealPath(const char *path)
 {
     BPath normalized(path, NULL, true);  /* force normalization of path. */

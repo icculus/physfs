@@ -350,13 +350,6 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 } /* __PHYSFS_platformCalcBaseDir */
 
 
-/* Much like my college days, try to sleep for 10 milliseconds at a time... */
-void __PHYSFS_platformTimeslice(void)
-{
-    usleep( 10 * 1000 );           /* don't care if it fails. */
-} /* __PHYSFS_platformTimeslice */
-
-
 #ifdef PHYSFS_PLATFORM_MACOSX
 /* 
  * This function is only for OSX. The problem is that Apple's applications

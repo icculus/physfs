@@ -378,13 +378,6 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 } /* __PHYSFS_platformCvtToDependent */
 
 
-/* Much like my college days, try to sleep for 10 milliseconds at a time... */
-void __PHYSFS_platformTimeslice(void)
-{
-    Sleep(10);
-} /* __PHYSFS_platformTimeslice */
-
-
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      int omitSymLinks,
                                      PHYSFS_EnumFilesCallback callback,

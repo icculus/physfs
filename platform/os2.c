@@ -649,13 +649,6 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 } /* __PHYSFS_platformGetLastModTime */
 
 
-/* Much like my college days, try to sleep for 10 milliseconds at a time... */
-void __PHYSFS_platformTimeslice(void)
-{
-    DosSleep(10);
-} /* __PHYSFS_platformTimeslice(void) */
-
-
 PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
 {
     PTIB ptib;

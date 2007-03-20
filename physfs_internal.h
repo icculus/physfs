@@ -1613,13 +1613,6 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 
 
 /*
- * Make the current thread give up a timeslice. This is called in a loop
- *  while waiting for various external forces to get back to us.
- */
-void __PHYSFS_platformTimeslice(void);
-
-
-/*
  * Enumerate a directory of files. This follows the rules for the
  *  PHYSFS_Archiver->enumerateFiles() method (see above), except that the
  *  (dirName) that is passed to this function is converted to
