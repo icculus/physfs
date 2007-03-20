@@ -471,6 +471,12 @@ char *__PHYSFS_platformRealPath(const char *path)
 } /* __PHYSFS_platformRealPath */
 
 
+int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
+{
+    return(0);  /* just use malloc() and friends. */
+} /* __PHYSFS_platformSetDefaultAllocator */
+
+
 #if (defined PHYSFS_NO_PTHREADS_SUPPORT)
 
 PHYSFS_uint64 __PHYSFS_platformGetThreadID(void) { return(0x0001); }

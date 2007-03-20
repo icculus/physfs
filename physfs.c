@@ -2029,14 +2029,40 @@ int PHYSFS_setAllocator(const PHYSFS_Allocator *a)
 } /* PHYSFS_setAllocator */
 
 
+static void *mallocAllocatorMalloc(PHYSFS_uint64 s)
+{
+    BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
+    #undef malloc
+    return(malloc((size_t) s));
+} /* mallocAllocatorMalloc */
+
+
+static void *mallocAllocatorRealloc(void *ptr, PHYSFS_uint64 s)
+{
+    BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
+    #undef realloc
+    return(realloc(ptr, (size_t) s));
+} /* mallocAllocatorRealloc */
+
+
+static void mallocAllocatorFree(void *ptr)
+{
+    #undef free
+    free(ptr);
+} /* mallocAllocatorFree */
+
+
 static void setDefaultAllocator(void)
 {
     assert(!externalAllocator);
-    allocator.Init = __PHYSFS_platformAllocatorInit;
-    allocator.Deinit = __PHYSFS_platformAllocatorDeinit;
-    allocator.Malloc = __PHYSFS_platformAllocatorMalloc;
-    allocator.Realloc = __PHYSFS_platformAllocatorRealloc;
-    allocator.Free = __PHYSFS_platformAllocatorFree;
+    if (!__PHYSFS_platformSetDefaultAllocator(&allocator))
+    {
+        allocator.Init = NULL;
+        allocator.Deinit = NULL;
+        allocator.Malloc = mallocAllocatorMalloc;
+        allocator.Realloc = mallocAllocatorRealloc;
+        allocator.Free = mallocAllocatorFree;
+    } /* if */
 } /* setDefaultAllocator */
 
 /* end of physfs.c ... */
