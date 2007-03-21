@@ -2,6 +2,17 @@
  * CHANGELOG.
  */
 
+03202007 - Removed platform/skeleton.c (it was out of date), added
+           platform/macosx.c (To further Macify the code and get the #ifdefs
+           out of unix.c), and refactored the platform layer to try and
+           make the unix/posix/macosx/beos sources try to find a split that
+           works. Moved the platform allocators to physfs.c, since all but
+           Mac OS X were using malloc()...there's now an interface for the
+           platform to supply a custom allocator if they don't want the malloc
+           version. Removed __PHYSFS_platformTimeslice(), as it's no longer
+           being used. Replaced manual management of pthread mutexes with
+           PTHREAD_MUTEX_RECURSIVE attribute...let's see what platforms
+           throw up on that. Handled documentation comment FIXME in physfs.h.
 03192007 - Fixed two switched strings in CMakeLists.txt ... patch to compile
            with latest Windows Platform SDK. Explicitly check for NULL in
            PHYSFS_init() when we can't go on without a real string here.
