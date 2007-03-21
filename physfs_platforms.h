@@ -23,7 +23,6 @@
 #  define PHYSFS_PLATFORM_OS2
 #elif ((defined __MACH__) && (defined __APPLE__))
 #  define PHYSFS_PLATFORM_MACOSX
-#  define PHYSFS_PLATFORM_UNIX
 #  define PHYSFS_PLATFORM_POSIX
 #elif defined(macintosh)
 #  error Classic Mac OS support was dropped from PhysicsFS 2.0. Move to OS X.
