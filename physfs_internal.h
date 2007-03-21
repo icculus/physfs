@@ -1274,9 +1274,11 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 #define __PHYSFS_ARRAYLEN(x) ( (sizeof (x)) / (sizeof (x[0])) )
 
 #ifdef __GNUC__
-#define LONGLONGLITERAL(x) x##LL
+#define __PHYSFS_SI64(x) x##LL
+#define __PHYSFS_UI64(x) x##ULL
 #else
-#define LONGLONGLITERAL(x) x
+#define __PHYSFS_SI64(x) x
+#define __PHYSFS_UI64(x) x
 #endif
 
 /*
@@ -1288,7 +1290,7 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
  */
 #define __PHYSFS_ui64FitsAddressSpace(s) ( \
     (sizeof (PHYSFS_uint64) > sizeof (size_t)) && \
-    ((s) > (LONGLONGLITERAL(0xFFFFFFFFFFFFFFFF) >> (64-(sizeof(size_t)*8)))) \
+    ((s) > (__PHYSFS_UI64(0xFFFFFFFFFFFFFFFF) >> (64-(sizeof(size_t)*8)))) \
 )
 
 /*

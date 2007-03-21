@@ -1,7 +1,7 @@
 /*
  * CHANGELOG.
  */
-
+03212007 - Replaced LONGLONGLITERAL with __PHYSFS_UI64/__PHYSFS_SI64 ...
 03202007 - Removed platform/skeleton.c (it was out of date), added
            platform/macosx.c (To further Macify the code and get the #ifdefs
            out of unix.c), and refactored the platform layer to try and
