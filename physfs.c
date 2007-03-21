@@ -651,35 +651,38 @@ static int appendDirSep(char **dir)
 
 static char *calculateBaseDir(const char *argv0)
 {
-    const char *dirsep = PHYSFS_getDirSeparator();
-    char *retval;
-    char *ptr;
+    char *retval = NULL;
+    const char *dirsep = NULL;
+    char *ptr = NULL;
 
-    /*
-     * See if the platform driver wants to handle this for us...
-     */
+    /* Give the platform layer first shot at this. */
     retval = __PHYSFS_platformCalcBaseDir(argv0);
     if (retval != NULL)
         return(retval);
 
-    /* we need argv0 to be sane to go on. */
-    BAIL_IF_MACRO(argv0 == NULL, ERR_INVALID_ARGUMENT, NULL);
+    /* We need argv0 to go on. */
+    BAIL_IF_MACRO(argv0 == NULL, ERR_ARGV0_IS_NULL, NULL);
 
-    /*
-     * Determine if there's a path on argv0. If there is, that's the base dir.
-     */
-    ptr = strstr(argv0, dirsep);
+    dirsep = PHYSFS_getDirSeparator();
+    if (strlen(dirsep) == 1)  /* fast path. */
+        ptr = strrchr(argv0, *dirsep);
+    else
+    {
+        ptr = strstr(argv0, dirsep);
+        if (ptr != NULL)
+        {
+            char *p = ptr;
+            while (p != NULL)
+            {
+                ptr = p;
+                p = strstr(p + 1, dirsep);
+            } /* while */
+        } /* if */
+    } /* else */
+
     if (ptr != NULL)
     {
-        char *p = ptr;
-        size_t size;
-        while (p != NULL)
-        {
-            ptr = p;
-            p = strstr(p + 1, dirsep);
-        } /* while */
-
-        size = (size_t) (ptr - argv0);
+        size_t size = (size_t) (ptr - argv0);
         retval = (char *) allocator.Malloc(size + 1);
         BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
         memcpy(retval, argv0, size);
@@ -687,23 +690,9 @@ static char *calculateBaseDir(const char *argv0)
         return(retval);
     } /* if */
 
-    /* !!! FIXME: should probably just fail here instead of being heroic. */
-
-    /*
-     * Last ditch effort: it's the current working directory. (*shrug*)
-     */
-    retval = __PHYSFS_platformCurrentDir();
-    if (retval != NULL)
-        return(retval);
-
-    /*
-     * Ok, current directory doesn't exist, use the root directory.
-     * Not a good alternative, but it only happens if the current
-     * directory was deleted from under the program.
-     */
-    retval = (char *) allocator.Malloc(strlen(dirsep) + 1);
-    strcpy(retval, dirsep);
-    return(retval);
+    /* argv0 wasn't helpful. */
+    BAIL_MACRO(ERR_INVALID_ARGUMENT, NULL);
+    return(NULL);
 } /* calculateBaseDir */
 
 
@@ -752,6 +741,7 @@ int PHYSFS_init(const char *argv0)
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(baseDir == NULL, NULL, 0);
 
+    /* !!! FIXME: only call this if we got this from argv0 (unreliable). */
     ptr = __PHYSFS_platformRealPath(baseDir);
     allocator.Free(baseDir);
     BAIL_IF_MACRO(ptr == NULL, NULL, 0);
