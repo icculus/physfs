@@ -1273,9 +1273,12 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 
 #define __PHYSFS_ARRAYLEN(x) ( (sizeof (x)) / (sizeof (x[0])) )
 
-#ifdef __GNUC__
+#if (defined __GNUC__)
 #define __PHYSFS_SI64(x) x##LL
 #define __PHYSFS_UI64(x) x##ULL
+#elif (defined _MSC_VER)
+#define __PHYSFS_SI64(x) x##i64
+#define __PHYSFS_UI64(x) x##ui64
 #else
 #define __PHYSFS_SI64(x) x
 #define __PHYSFS_UI64(x) x
