@@ -30,6 +30,9 @@
 #include "physfs_internal.h"
 
 
+const char *__PHYSFS_platformDirSeparator = "/";
+
+
 char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
 {
     const char *envr = getenv(varname);
@@ -222,43 +225,6 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 
     closedir(dir);
 } /* __PHYSFS_platformEnumerateFiles */
-
-
-char *__PHYSFS_platformCurrentDir(void)
-{
-    int allocSize = 0;
-    char *retval = NULL;
-    char *ptr;
-
-    do
-    {
-        allocSize += 100;
-        ptr = (char *) allocator.Realloc(retval, allocSize);
-        if (ptr == NULL)
-        {
-            if (retval != NULL)
-                allocator.Free(retval);
-            BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
-        } /* if */
-
-        retval = ptr;
-        ptr = getcwd(retval, allocSize);
-    } while (ptr == NULL && errno == ERANGE);
-
-    if (ptr == NULL && errno)
-    {
-            /*
-             * getcwd() failed for some reason, for example current
-             * directory not existing.
-             */
-        if (retval != NULL)
-            allocator.Free(retval);
-        BAIL_MACRO(ERR_NO_SUCH_FILE, NULL);
-    } /* if */
-
-    return(retval);
-} /* __PHYSFS_platformCurrentDir */
-
 
 
 int __PHYSFS_platformMkDir(const char *path)

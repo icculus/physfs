@@ -30,9 +30,6 @@
 #include "physfs_internal.h"
 
 
-const char *__PHYSFS_platformDirSeparator = "/";
-
-
 int __PHYSFS_platformInit(void)
 {
     return(1);  /* always succeed. */
@@ -158,7 +155,7 @@ static team_id getTeamID(void)
     thread_id tid = find_thread(NULL);
     get_thread_info(tid, &info);
     return(info.team);
-} /* getMyTeamID */
+} /* getTeamID */
 
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
@@ -199,6 +196,12 @@ char *__PHYSFS_platformRealPath(const char *path)
     strcpy(retval, resolved_path);
     return(retval);
 } /* __PHYSFS_platformRealPath */
+
+
+char *__PHYSFS_platformCurrentDir(void)
+{
+    return(__PHYSFS_platformRealPath("."));  /* let BPath sort it out. */
+} /* __PHYSFS_platformCurrentDir */
 
 
 /* !!! FIXME: semaphores are not mutexes... */

@@ -117,6 +117,7 @@ SET(PHYSFS_SRCS
     platform/pocketpc.c
     platform/posix.c
     platform/unix.c
+    platform/macosx.c
     platform/windows.c
     archivers/dir.c
     archivers/grp.c
