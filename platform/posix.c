@@ -186,8 +186,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     dir = opendir(dirname);
     if (dir == NULL)
     {
-        if (buf != NULL)
-            allocator.Free(buf);
+        allocator.Free(buf);
         return;
     } /* if */
 
@@ -220,9 +219,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
         callback(callbackdata, origdir, ent->d_name);
     } /* while */
 
-    if (buf != NULL)
-        allocator.Free(buf);
-
+    allocator.Free(buf);
     closedir(dir);
 } /* __PHYSFS_platformEnumerateFiles */
 

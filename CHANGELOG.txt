@@ -1,6 +1,18 @@
 /*
  * CHANGELOG.
  */
+
+03222007 - Replaced some Malloc and all the alloca() calls with
+           __PHYSFS_smallAlloc(), which will stack allocate small (128 or
+           less bytes) blocks and Malloc the rest...naturally these now have
+           to be paired with __PHYSFS_smallFree() calls, so you can't be as
+           lazy as a basic alloca() would let you be. The benefit is both less
+           malloc pressure for those temporary allocations and better stack
+           overflow safety (so if some jerk tries to push a 78 megabyte string
+           through the library as a filename, we won't try to strcpy it to
+           the stack). Hopefully some internal interfaces can now get
+           refactored to stop generating heap pointers and let the caller use
+           smallAlloc to further reduce malloc pressure.
 03212007 - Replaced LONGLONGLITERAL with __PHYSFS_UI64/__PHYSFS_SI64 ...
 03202007 - Removed platform/skeleton.c (it was out of date), added
            platform/macosx.c (To further Macify the code and get the #ifdefs

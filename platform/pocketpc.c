@@ -64,12 +64,14 @@ static const char *win32strerror(void)
     return((const char *) msgbuf);
 } /* win32strerror */
 
+
+/* !!! FIXME: need to check all of these for NULLs. */
 #define UTF8_TO_UNICODE_STACK_MACRO(w_assignto, str) { \
     if (str == NULL) \
         w_assignto = NULL; \
     else { \
         const PHYSFS_uint64 len = (PHYSFS_uint64) ((strlen(str) * 4) + 1); \
-        w_assignto = (char *) alloca(len); \
+        w_assignto = (char *) __PHYSFS_smallAlloc(len); \
         PHYSFS_uc2fromutf8(str, (PHYSFS_uint16 *) w_assignto, len); \
     } \
 } \
@@ -86,6 +88,7 @@ static char *getExePath()
 
     retval[0] = _T('\0');
     /* !!! FIXME: don't preallocate here? */
+    /* !!! FIXME: use smallAlloc? */
     buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
     if (buflen <= 0)
         __PHYSFS_setError(win32strerror());
@@ -172,6 +175,7 @@ int __PHYSFS_platformExists(const char *fname)
     UTF8_TO_UNICODE_STACK_MACRO(w_fname, fname);
     if (w_fname != NULL)
         retval = (GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
+    __PHYSFS_smallFree(w_fname);
 
     return(retval);
 } /* __PHYSFS_platformExists */
@@ -191,6 +195,7 @@ int __PHYSFS_platformIsDirectory(const char *fname)
     UTF8_TO_UNICODE_STACK_MACRO(w_fname, fname);
     if (w_fname != NULL)
         retval = ((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
+    __PHYSFS_smallFree(w_fname);
 
     return(retval);
 } /* __PHYSFS_platformIsDirectory */
@@ -228,9 +233,10 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 static int doEnumCallback(const wchar_t *w_fname)
 {
     const PHYSFS_uint64 len = (PHYSFS_uint64) ((wcslen(w_fname) * 4) + 1);
-    char *str = (char *) alloca(len);
+    char *str = (char *) __PHYSFS_smallAlloc(len);
     PHYSFS_utf8fromucs2((const PHYSFS_uint16 *) w_fname, str, len);
     callback(callbackdata, origdir, str);
+    __PHYSFS_smallFree(str);
     return 1;
 } /* doEnumCallback */
 
@@ -248,7 +254,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     size_t len = strlen(dirname);
 
     /* Allocate a new string for path, maybe '\\', "*", and NULL terminator */
-    SearchPath = (char *) alloca(len + 3);
+    SearchPath = (char *) __PHYSFS_smallAlloc(len + 3);
     BAIL_IF_MACRO(SearchPath == NULL, ERR_OUT_OF_MEMORY, NULL);    
 
     /* Copy current dirname */
@@ -265,7 +271,9 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     strcat(SearchPath, "*");
 
     UTF8_TO_UNICODE_STACK_MACRO(w_SearchPath, SearchPath);
+    __PHYSFS_smallFree(SearchPath);
     dir = FindFirstFile(w_SearchPath, &ent);
+    __PHYSFS_smallFree(w_SearchPath);
 
     if (dir == INVALID_HANDLE_VALUE)
         return;
@@ -304,9 +312,15 @@ char *__PHYSFS_platformRealPath(const char *path)
 
 int __PHYSFS_platformMkDir(const char *path)
 {
+    int retval = 0;
     wchar_t *w_path = NULL;
     UTF8_TO_UNICODE_STACK_MACRO(w_path, path);
-    return ( (w_path != NULL) && (CreateDirectory(w_path, NULL)) );
+    if (w_path != NULL)
+    {
+        retval = CreateDirectory(w_path, NULL);
+        __PHYSFS_smallFree(w_fname);
+    } /* if */
+    return(retval);
 } /* __PHYSFS_platformMkDir */
 
 
@@ -317,9 +331,9 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
     wchar_t *w_fname = NULL;
 
     UTF8_TO_UNICODE_STACK_MACRO(w_fname, fname);
-
     fileHandle = CreateFile(w_fname, mode, FILE_SHARE_READ, NULL,
                             creation, FILE_ATTRIBUTE_NORMAL, NULL);
+    __PHYSFS_smallFree(w_fname);
 
     BAIL_IF_MACRO(fileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
 
@@ -533,11 +547,13 @@ int __PHYSFS_platformDelete(const char *path)
     if (GetFileAttributes(w_path) == FILE_ATTRIBUTE_DIRECTORY)
     {
         int retval = !RemoveDirectory(w_path);
+        __PHYSFS_smallFree(w_path);
         BAIL_IF_MACRO(retval, win32strerror(), 0);
     } /* if */
     else
     {
         int retval = !DeleteFile(w_path);
+        __PHYSFS_smallFree(w_path);
         BAIL_IF_MACRO(retval, win32strerror(), 0);
     } /* else */
 
