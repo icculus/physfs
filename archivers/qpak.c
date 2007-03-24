@@ -378,13 +378,14 @@ static PHYSFS_sint32 qpak_find_start_of_dir(QPAKinfo *info, const char *path,
 static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
                            const char *odir, const char *str, PHYSFS_sint32 ln)
 {
-    char *newstr = alloca(ln + 1);
+    char *newstr = __PHYSFS_smallAlloc(ln + 1);
     if (newstr == NULL)
         return;
 
     memcpy(newstr, str, ln);
     newstr[ln] = '\0';
     cb(callbackdata, odir, newstr);
+    __PHYSFS_smallFree(newstr);
 } /* doEnumCallback */
 
 

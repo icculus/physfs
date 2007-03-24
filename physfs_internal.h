@@ -33,6 +33,38 @@
 extern "C" {
 #endif
 
+/*
+ * Interface for small allocations. If you need a little scratch space for
+ *  a throwaway buffer or string, use this. It will make small allocations
+ *  on the stack if possible, and use allocator.Malloc() if they are too
+ *  large. This helps reduce malloc pressure.
+ * There are some rules, though:
+ * NEVER return a pointer from this, as stack-allocated buffers go away
+ *  when your function returns.
+ * NEVER allocate in a loop, as stack-allocated pointers will pile up. Call
+ *  a function that uses smallAlloc from your loop, so the allocation can
+ *  free each time.
+ * NEVER call smallAlloc with any complex expression (it's a macro that WILL
+ *  have side effects...it references the argument multiple times). Use a
+ *  variable or a literal.
+ * NEVER free a pointer from this with anything but smallFree. It will not
+ *  be a valid pointer to the allocator, regardless of where the memory came
+ *  from.
+ * NEVER realloc a pointer from this.
+ * NEVER forget to use smallFree: it may not be a pointer from the stack.
+ * NEVER forget to check for NULL...allocation can fail here, of course!
+ */
+#define __PHYSFS_SMALLALLOCTHRESHOLD 128
+void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len);
+
+#define __PHYSFS_smallAlloc(bytes) ( \
+    __PHYSFS_initSmallAlloc(((bytes < __PHYSFS_SMALLALLOCTHRESHOLD) ? \
+                             alloca(bytes+1) : NULL), bytes) \
+)
+
+void __PHYSFS_smallFree(void *ptr);
+
+
 /* Use the allocation hooks. */
 #define malloc(x) Do not use malloc() directly.
 #define realloc(x, y) Do not use realloc() directly.

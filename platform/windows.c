@@ -21,14 +21,6 @@
 
 #include "physfs_internal.h"
 
-#if (!defined alloca)
-    #if ((defined _MSC_VER)
-        #define alloca(x) _alloca(x)
-    #elif (defined __MINGW32__)  /* scary...hopefully this is okay. */
-        #define alloca(x) __builtin_alloca(x) 
-    #endif
-#endif
-
 #define LOWORDER_UINT64(pos) (PHYSFS_uint32) \
     (pos & 0x00000000FFFFFFFF)
 #define HIGHORDER_UINT64(pos) (PHYSFS_uint32) \
@@ -116,6 +108,8 @@ static char *getExePath(const char *argv0)
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     retval[0] = '\0';
+    /* !!! FIXME: don't preallocate here? */
+    /* !!! FIXME: use smallAlloc? */
     buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
     if (buflen <= 0)
         __PHYSFS_setError(win32strerror());
@@ -390,7 +384,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     char *SearchPath;
 
     /* Allocate a new string for path, maybe '\\', "*", and NULL terminator */
-    SearchPath = (char *) alloca(len + 3);
+    SearchPath = (char *) __PHYSFS_smallAlloc(len + 3);
     if (SearchPath == NULL)
         return;
 
@@ -408,6 +402,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     strcat(SearchPath, "*");
 
     dir = FindFirstFile(SearchPath, &ent);
+    __PHYSFS_smallFree(SearchPath);
     if (dir == INVALID_HANDLE_VALUE)
         return;
 

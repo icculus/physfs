@@ -682,15 +682,15 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
     else  /* symlink target path is compressed... */
     {
         z_stream stream;
-        PHYSFS_uint32 compsize = entry->compressed_size;
-        PHYSFS_uint8 *compressed = (PHYSFS_uint8 *) allocator.Malloc(compsize);
+        PHYSFS_uint32 complen = entry->compressed_size;
+        PHYSFS_uint8 *compressed = (PHYSFS_uint8*) __PHYSFS_smallAlloc(complen);
         if (compressed != NULL)
         {
-            if (__PHYSFS_platformRead(in, compressed, compsize, 1) == 1)
+            if (__PHYSFS_platformRead(in, compressed, complen, 1) == 1)
             {
                 initializeZStream(&stream);
                 stream.next_in = compressed;
-                stream.avail_in = compsize;
+                stream.avail_in = complen;
                 stream.next_out = (unsigned char *) path;
                 stream.avail_out = size;
                 if (zlib_err(inflateInit2(&stream, -MAX_WBITS)) == Z_OK)
@@ -702,7 +702,7 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
                     rc = ((rc == Z_OK) || (rc == Z_STREAM_END));
                 } /* if */
             } /* if */
-            allocator.Free(compressed);
+            __PHYSFS_smallFree(compressed);
         } /* if */
     } /* else */
 
@@ -1177,13 +1177,14 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
 static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
                            const char *odir, const char *str, PHYSFS_sint32 ln)
 {
-    char *newstr = alloca(ln + 1);
+    char *newstr = __PHYSFS_smallAlloc(ln + 1);
     if (newstr == NULL)
         return;
 
     memcpy(newstr, str, ln);
     newstr[ln] = '\0';
     cb(callbackdata, odir, newstr);
+    __PHYSFS_smallFree(newstr);
 } /* doEnumCallback */
 
 
