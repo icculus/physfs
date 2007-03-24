@@ -903,6 +903,11 @@ int __PHYSFS_platformDelete(const char *path)
 } /* __PHYSFS_platformDelete */
 
 
+/*
+ * !!! FIXME: why aren't we using Critical Sections instead of Mutexes?
+ * !!! FIXME:  mutexes on Windows are for cross-process sync. CritSects are
+ * !!! FIXME:  mutexes for threads in a single process and are faster.
+ */
 void *__PHYSFS_platformCreateMutex(void)
 {
     return((void *) CreateMutex(NULL, FALSE, NULL));
