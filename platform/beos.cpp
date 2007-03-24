@@ -20,6 +20,7 @@
 #include <be/storage/Path.h>
 #include <be/kernel/fs_info.h>
 #include <be/device/scsi.h>
+#include <be/support/Locker.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -204,43 +205,27 @@ char *__PHYSFS_platformCurrentDir(void)
 } /* __PHYSFS_platformCurrentDir */
 
 
-/* !!! FIXME: semaphores are not mutexes... */
 void *__PHYSFS_platformCreateMutex(void)
 {
-    sem_id *retval = (sem_id *) allocator.Malloc(sizeof (sem_id));
-    sem_id rc;
-
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    rc = create_sem(1, "PhysicsFS semaphore");
-    if (rc < B_OK)
-    {
-        allocator.Free(retval);
-        BAIL_MACRO(strerror(rc), NULL);
-    } // if
-
-    *retval = rc;
-    return(retval);
+    return(new BLocker("PhysicsFS lock", true));
 } /* __PHYSFS_platformCreateMutex */
 
 
 void __PHYSFS_platformDestroyMutex(void *mutex)
 {
-    delete_sem( *((sem_id *) mutex) );
-    allocator.Free(mutex);
+    delete ((BLocker *) mutex);
 } /* __PHYSFS_platformDestroyMutex */
 
 
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
-    status_t rc = acquire_sem(*((sem_id *) mutex));
-    BAIL_IF_MACRO(rc < B_OK, strerror(rc), 0);
-    return(1);
+    return ((BLocker *) mutex)->Lock() ? 1 : 0;
 } /* __PHYSFS_platformGrabMutex */
 
 
 void __PHYSFS_platformReleaseMutex(void *mutex)
 {
-    release_sem(*((sem_id *) mutex));
+    ((BLocker *) mutex)->Unlock();
 } /* __PHYSFS_platformReleaseMutex */
 
 
