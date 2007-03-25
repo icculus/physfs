@@ -172,71 +172,72 @@ static const char *win32strerror(void)
 } /* win32strerror */
 
 
-static char *getExePath(const char *argv0)
+static char *getExePath(void)
 {
-    DWORD buflen;
+    DWORD buflen = 64;
     int success = 0;
-    char *ptr = NULL;
-    char *retval = (char *) allocator.Malloc(sizeof (TCHAR) * (MAX_PATH + 1));
+    LPWSTR modpath = NULL;
+    char *retval = NULL;
 
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-
-    retval[0] = '\0';
-    /* !!! FIXME: don't preallocate here? */
-    /* !!! FIXME: use smallAlloc? */
-    /* !!! FIXME: unicode version. */
-    buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
-    if (buflen <= 0)
-        __PHYSFS_setError(win32strerror());
-    else
+    while (1)
     {
-        retval[buflen] = '\0';  /* does API always null-terminate this? */
+        DWORD rc;
+        void *ptr;
 
-            /* make sure the string was not truncated. */
-        if (__PHYSFS_stricmpASCII(&retval[buflen - 4], ".exe") != 0)
-            __PHYSFS_setError(ERR_GETMODFN_TRUNC);
+        if ( !(ptr = allocator.Realloc(modpath, buflen*sizeof(WCHAR))) )
+        {
+            allocator.Free(modpath);
+            BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+        } /* if */
+        modpath = (LPWSTR) ptr;
+
+        rc = pGetModuleFileNameW(NULL, modpath, buflen);
+        if (rc == 0)
+        {
+            allocator.Free(modpath);
+            BAIL_MACRO(win32strerror(), NULL);
+        } /* if */
+
+        if (rc < buflen)
+        {
+            buflen = rc;
+            break;
+        } /* if */
+
+        buflen *= 2;
+    } /* while */
+
+    if (buflen > 0)  /* just in case... */
+    {
+        WCHAR *ptr = (modpath + buflen) - 1;
+        while (ptr != modpath)
+        {
+            if (*ptr == '\\')
+                break;
+            ptr--;
+        } /* while */
+
+        if ((ptr == modpath) && (*ptr != '\\'))
+            __PHYSFS_setError(ERR_GETMODFN_NO_DIR);
         else
         {
-            ptr = strrchr(retval, '\\');
-            if (ptr == NULL)
-                __PHYSFS_setError(ERR_GETMODFN_NO_DIR);
+            *(ptr + 1) = '\0';  /* chop off filename. */
+            retval = (char *) allocator.Malloc(buflen * 6);
+            if (retval == NULL)
+                __PHYSFS_setError(ERR_OUT_OF_MEMORY);
             else
-            {
-                *(ptr + 1) = '\0';  /* chop off filename. */
-                success = 1;
-            } /* else */
+                PHYSFS_utf8FromUcs2((const PHYSFS_uint16 *) modpath, retval, buflen * 6);
         } /* else */
     } /* else */
-
-    /* if any part of the previous approach failed, try SearchPath()... */
-
-    if (!success)
-    {
-        if (argv0 == NULL)   /* !!! FIXME: default behaviour does this. */
-            __PHYSFS_setError(ERR_ARGV0_IS_NULL);
-        else
-        {
-            /* !!! FIXME: unicode version. */
-            buflen = SearchPath(NULL, argv0, NULL, MAX_PATH+1, retval, &ptr);
-            if (buflen == 0)
-                __PHYSFS_setError(win32strerror());
-            else if (buflen > MAX_PATH)
-                __PHYSFS_setError(ERR_SEARCHPATH_TRUNC);
-            else
-                success = 1;
-        } /* else */
-    } /* if */
-
-    if (!success)
-    {
-        allocator.Free(retval);
-        return(NULL);  /* physfs error message will be set, above. */
-    } /* if */
+    allocator.Free(modpath);
 
     /* free up the bytes we didn't actually use. */
-    ptr = (char *) allocator.Realloc(retval, strlen(retval) + 1);
-    if (ptr != NULL)
-        retval = ptr;
+    if (retval != NULL)
+    {
+        void *ptr = allocator.Realloc(retval, strlen(retval) + 1);
+        if (ptr != NULL)
+            retval = (char *) ptr;
+    } /* if */
 
     return(retval);   /* w00t. */
 } /* getExePath */
@@ -305,7 +306,7 @@ static int determineUserDir(void)
     if (userDir == NULL)  /* couldn't get profile for some reason. */
     {
         /* Might just be a non-NT system; resort to the basedir. */
-        userDir = getExePath(NULL);
+        userDir = getExePath();
         BAIL_IF_MACRO(userDir == NULL, NULL, 0); /* STILL failed?! */
     } /* if */
 
@@ -352,7 +353,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     if ((argv0 != NULL) && (strchr(argv0, '\\') != NULL))
         return(NULL); /* default behaviour can handle this. */
 
-    return(getExePath(argv0));
+    return(getExePath());
 } /* __PHYSFS_platformCalcBaseDir */
 
 
