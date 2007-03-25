@@ -26,32 +26,6 @@
 #define HIGHORDER_UINT64(pos) (PHYSFS_uint32) \
     (((pos & 0xFFFFFFFF00000000) >> 32) & 0x00000000FFFFFFFF)
 
-
-/* !!! FIXME: unicode version. */
-/* GetUserProfileDirectory() is only available on >= NT4 (no 9x/ME systems!) */
-typedef BOOL (STDMETHODCALLTYPE FAR * LPFNGETUSERPROFILEDIR) (
-      HANDLE hToken,
-      LPTSTR lpProfileDir,
-      LPDWORD lpcchSize);
-
-/* !!! FIXME: unicode version. */
-/* GetFileAttributesEx() is only available on >= Win98 or WinNT4 ... */
-typedef BOOL (STDMETHODCALLTYPE FAR * LPFNGETFILEATTRIBUTESEX) (
-      LPCTSTR lpFileName,
-      GET_FILEEX_INFO_LEVELS fInfoLevelId,
-      LPVOID lpFileInformation);
-
-typedef struct
-{
-    HANDLE handle;
-    int readonly;
-} win32file;
-
-const char *__PHYSFS_platformDirSeparator = "\\";
-static LPFNGETFILEATTRIBUTESEX pGetFileAttributesEx = NULL;
-static HANDLE libKernel32 = NULL;
-static char *userDir = NULL;
-
 /*
  * Users without the platform SDK don't have this defined.  The original docs
  *  for SetFilePointer() just said to compare with 0xFFFFFFFF, so this should
@@ -62,6 +36,100 @@ static char *userDir = NULL;
 /* just in case... */
 #define PHYSFS_INVALID_FILE_ATTRIBUTES   0xFFFFFFFF
 
+#define UTF8_TO_UNICODE_STACK_MACRO(w_assignto, str) { \
+    if (str == NULL) \
+        w_assignto = NULL; \
+    else { \
+        const PHYSFS_uint64 len = (PHYSFS_uint64) ((strlen(str) * 4) + 1); \
+        w_assignto = (char *) __PHYSFS_smallAlloc(len); \
+        PHYSFS_uc2fromutf8(str, (PHYSFS_uint16 *) w_assignto, len); \
+    } \
+} \
+
+typedef struct
+{
+    HANDLE handle;
+    int readonly;
+} win32file;
+
+const char *__PHYSFS_platformDirSeparator = "\\";
+
+
+/* pointers for APIs that may not exist on some Windows versions... */
+static HANDLE libKernel32 = NULL;
+static HANDLE libUserEnv = NULL;
+static HANDLE libAdvApi32 = NULL;
+static DWORD (WINAPI *pGetModuleFileNameA)(HMODULE, LPCH, DWORD);
+static DWORD (WINAPI *pGetModuleFileNameW)(HMODULE, LPWCH, DWORD);
+static BOOL (WINAPI *pGetUserProfileDirectoryW)(HANDLE, LPWSTR, LPDWORD);
+static BOOL (WINAPI *pGetUserNameW)(LPWSTR, LPDWORD);
+static DWORD (WINAPI *pGetFileAttributesW)(LPCWSTR);
+static HANDLE (WINAPI *pFindFirstFileW)(LPCWSTR, LPWIN32_FIND_DATAW);
+static BOOL (WINAPI *pFindNextFileW)(HANDLE, LPWIN32_FIND_DATAW);
+static DWORD (WINAPI *pGetCurrentDirectoryW)(DWORD, LPWSTR);
+static BOOL (WINAPI *pDeleteFileW)(LPCWSTR);
+static BOOL (WINAPI *pRemoveDirectoryW)(LPCWSTR);
+static BOOL (WINAPI *pCreateDirectoryW)(LPCWSTR, LPSECURITY_ATTRIBUTES);
+static BOOL (WINAPI *pGetFileAttributesExA)
+    (LPCSTR, GET_FILEEX_INFO_LEVELS, LPVOID);
+static BOOL (WINAPI *pGetFileAttributesExW)
+    (LPCWSTR, GET_FILEEX_INFO_LEVELS, LPVOID);
+static DWORD (WINAPI *pFormatMessageW)
+    (DWORD, LPCVOID, DWORD, DWORD, LPWSTR, DWORD, va_list *);
+static DWORD (WINAPI *pSearchPathW)
+    (LPCWSTR, LPCWSTR, LPCWSTR, DWORD, LPWSTR, LPWSTR *);
+static HANDLE (WINAPI *pCreateFileW)
+    (LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
+
+static char *userDir = NULL;
+
+
+/* A blatant abuse of pointer casting... */
+static void symLookup(HMODULE dll, void **addr, const char *sym)
+{
+    *addr = GetProcAddress(dll, sym);
+} /* symLookup */
+
+
+static int findApiSymbols(void)
+{
+    HMODULE dll = NULL;
+
+    #define LOOKUP(x) { symLookup(dll, (void **) &p##x, #x); }
+
+    dll = libUserEnv = LoadLibrary("userenv.dll");
+    if (dll != NULL)
+        LOOKUP(GetUserProfileDirectoryW);
+
+    /* !!! FIXME: what do they call advapi32.dll on Win64? */
+    dll = libAdvApi32 = LoadLibrary("advapi32.dll");
+    if (dll != NULL)
+        LOOKUP(GetUserNameW);
+
+    /* !!! FIXME: what do they call kernel32.dll on Win64? */
+    dll = libKernel32 = LoadLibrary("kernel32.dll");
+    if (dll != NULL)
+    {
+        LOOKUP(GetModuleFileNameA);
+        LOOKUP(GetModuleFileNameW);
+        LOOKUP(FormatMessageW);
+        LOOKUP(FindFirstFileW);
+        LOOKUP(FindNextFileW);
+        LOOKUP(GetFileAttributesW);
+        LOOKUP(GetFileAttributesExA);
+        LOOKUP(GetFileAttributesExW);
+        LOOKUP(GetCurrentDirectoryW);
+        LOOKUP(CreateDirectoryW);
+        LOOKUP(RemoveDirectoryW);
+        LOOKUP(CreateFileW);
+        LOOKUP(DeleteFileW);
+        LOOKUP(SearchPathW);
+    } /* if */
+
+    #undef LOOKUP
+
+    return(1);
+} /* findApiSymbols */
 
 
 /*
@@ -175,7 +243,7 @@ static char *getExePath(const char *argv0)
 
 
 /*
- * Try to make use of GetUserProfileDirectory(), which isn't available on
+ * Try to make use of GetUserProfileDirectoryW(), which isn't available on
  *  some common variants of Win32. If we can't use this, we just punt and
  *  use the physfs base dir for the user dir, too.
  *
@@ -186,64 +254,52 @@ static char *getExePath(const char *argv0)
  */
 static int determineUserDir(void)
 {
-    DWORD psize = 0;
-    char dummy[1];
-    BOOL rc = 0;
-    HANDLE processHandle;            /* Current process handle */
-    HANDLE accessToken = NULL;       /* Security handle to process */
-    LPFNGETUSERPROFILEDIR GetUserProfileDirectory;
-    HMODULE lib;
-
-    assert(userDir == NULL);
+    if (userDir != NULL)
+        return(1);  /* already good to go. */
 
     /*
-     * GetUserProfileDirectory() is only available on NT 4.0 and later.
+     * GetUserProfileDirectoryW() is only available on NT 4.0 and later.
      *  This means Win95/98/ME (and CE?) users have to do without, so for
      *  them, we'll default to the base directory when we can't get the
-     *  function pointer.
+     *  function pointer. Since this is originally an NT API, we don't
+	 *  offer a non-Unicode fallback.
      */
-
-    lib = LoadLibrary("userenv.dll");
-    if (lib)
+    if (pGetUserProfileDirectoryW != NULL)
     {
-        /* !!! FIXME: unicode version. */
-        GetUserProfileDirectory = (LPFNGETUSERPROFILEDIR)
-                              GetProcAddress(lib, "GetUserProfileDirectoryA");
-        if (GetUserProfileDirectory)
+        HANDLE accessToken = NULL;       /* Security handle to process */
+        HANDLE processHandle = GetCurrentProcess();
+        if (OpenProcessToken(processHandle, TOKEN_QUERY, &accessToken))
         {
-            processHandle = GetCurrentProcess();
-            if (OpenProcessToken(processHandle, TOKEN_QUERY, &accessToken))
+            DWORD psize = 0;
+            WCHAR dummy = 0;
+            LPWSTR wstr = NULL;
+            BOOL rc = 0;
+
+            /*
+             * Should fail. Will write the size of the profile path in
+             *  psize. Also note that the second parameter can't be
+             *  NULL or the function fails.
+             */	
+    		rc = pGetUserProfileDirectoryW(accessToken, &dummy, &psize);
+            assert(!rc);  /* !!! FIXME: handle this gracefully. */
+
+            /* Allocate memory for the profile directory */
+            wstr = (LPWSTR) __PHYSFS_smallAlloc(psize * sizeof (WCHAR));
+            if (wstr != NULL)
             {
-                /*
-                 * Should fail. Will write the size of the profile path in
-                 *  psize. Also note that the second parameter can't be
-                 *  NULL or the function fails.
-                 */
-                /* !!! FIXME: unicode version. */
-                rc = GetUserProfileDirectory(accessToken, dummy, &psize);
-                assert(!rc);  /* success?! */
-
-                /* Allocate memory for the profile directory */
-                userDir = (char *) allocator.Malloc(psize);
-                if (userDir != NULL)
+                if (pGetUserProfileDirectoryW(accessToken, wstr, &psize))
                 {
-                    /* !!! FIXME: unicode version. */
-                    if (GetUserProfileDirectory(accessToken, userDir, &psize))
-                    {
-                        /* !!! FIXME: convert to UTF-8. */
-                    } /* if */
-                    else
-                    {
-                        allocator.Free(userDir);
-                        userDir = NULL;
-                    } /* else */
-                } /* else */
-            } /* if */
-
-            CloseHandle(accessToken);
+                    const PHYSFS_uint64 buflen = psize * 6;
+                    userDir = (char *) allocator.Malloc(buflen);
+                    if (userDir != NULL)  
+                        PHYSFS_utf8FromUcs2((const PHYSFS_uint16 *) wstr, userDir, buflen);
+                    /* !!! FIXME: shrink allocation... */
+                } /* if */
+                __PHYSFS_smallFree(wstr);
+            } /* else */
         } /* if */
 
-        FreeLibrary(lib);
+        CloseHandle(accessToken);
     } /* if */
 
     if (userDir == NULL)  /* couldn't get profile for some reason. */
@@ -251,7 +307,6 @@ static int determineUserDir(void)
         /* Might just be a non-NT system; resort to the basedir. */
         userDir = getExePath(NULL);
         BAIL_IF_MACRO(userDir == NULL, NULL, 0); /* STILL failed?! */
-        /* !!! FIXME: convert to UTF-8. */
     } /* if */
 
     return(1);  /* We made it: hit the showers. */
@@ -445,6 +500,8 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
             continue;
 
         callback(callbackdata, origdir, ent.cFileName);
+
+        /* !!! FIXME: unicode version. */
     } while (FindNextFile(dir, &ent) != 0);
 
     FindClose(dir);
@@ -622,71 +679,30 @@ static int getOSInfo(void)
 } /* getOSInfo */
 
 
-/*
- * Some things we want/need are in external DLLs that may or may not be
- *  available, based on the operating system, etc. This function loads those
- *  libraries and hunts down the needed pointers.
- *
- * Libraries that are one-shot deals, or better loaded as needed, are loaded
- *  elsewhere (see determineUserDir()).
- *
- * Returns zero if a needed library couldn't load, non-zero if we have enough
- *  to go on (which means some useful but non-crucial libraries may _NOT_ be
- *  loaded; check the related module-scope variables).
- */
-static int loadLibraries(void)
-{
-    /* If this get unwieldy, make it table driven. */
-
-    int allNeededLibrariesLoaded = 1;  /* flip to zero as needed. */
-
-    libKernel32 = LoadLibrary("kernel32.dll");
-    if (libKernel32)
-    {
-        pGetFileAttributesEx = (LPFNGETFILEATTRIBUTESEX)
-                          GetProcAddress(libKernel32, "GetFileAttributesExA");
-    } /* if */
-
-    /* add other DLLs here... */
-
-
-    /* see if there's any reason to keep kernel32.dll around... */
-    if (libKernel32)
-    {
-        if ((pGetFileAttributesEx == NULL) /* && (somethingElse == NULL) */ )
-        {
-            FreeLibrary(libKernel32);
-            libKernel32 = NULL;
-        } /* if */
-    } /* if */
-
-    return(allNeededLibrariesLoaded);
-} /* loadLibraries */
-
-
 int __PHYSFS_platformInit(void)
 {
+    BAIL_IF_MACRO(!findApiSymbols(), NULL, 0);
     BAIL_IF_MACRO(!getOSInfo(), NULL, 0);
-    BAIL_IF_MACRO(!loadLibraries(), NULL, 0);
     BAIL_IF_MACRO(!determineUserDir(), NULL, 0);
-
     return(1);  /* It's all good */
 } /* __PHYSFS_platformInit */
 
 
 int __PHYSFS_platformDeinit(void)
 {
-    if (userDir != NULL)
-    {
-        allocator.Free(userDir);
-        userDir = NULL;
-    } /* if */
+    HANDLE *libs[] = { &libKernel32, &libUserEnv, &libAdvApi32, NULL };
+    int i;
 
-    if (libKernel32)
+    allocator.Free(userDir);
+    userDir = NULL;
+
+    for (i = 0; libs[i] != NULL; i++)
     {
-        FreeLibrary(libKernel32);
-        libKernel32 = NULL;
-    } /* if */
+        const HANDLE lib = *(libs[i]);
+        if (lib)
+            FreeLibrary(lib);
+        *(libs[i]) = NULL;
+    } /* for */
 
     return(1); /* It's all good */
 } /* __PHYSFS_platformDeinit */
@@ -1054,10 +1070,10 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
     memset(&attrData, '\0', sizeof (attrData));
 
     /* GetFileAttributesEx didn't show up until Win98 and NT4. */
-    if (pGetFileAttributesEx != NULL)
+    if (pGetFileAttributesExA != NULL)
     {
         /* !!! FIXME: unicode version. */
-        if (pGetFileAttributesEx(fname, GetFileExInfoStandard, &attrData))
+        if (pGetFileAttributesExA(fname, GetFileExInfoStandard, &attrData))
         {
             /* 0 return value indicates an error or not supported */
             if ( (attrData.ftLastWriteTime.dwHighDateTime != 0) ||
