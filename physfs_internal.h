@@ -58,8 +58,8 @@ extern "C" {
 void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len);
 
 #define __PHYSFS_smallAlloc(bytes) ( \
-    __PHYSFS_initSmallAlloc(((bytes < __PHYSFS_SMALLALLOCTHRESHOLD) ? \
-                             alloca(bytes+1) : NULL), bytes) \
+    __PHYSFS_initSmallAlloc((((bytes) < __PHYSFS_SMALLALLOCTHRESHOLD) ? \
+                             alloca((size_t)((bytes)+1)) : NULL), (bytes)) \
 )
 
 void __PHYSFS_smallFree(void *ptr);
