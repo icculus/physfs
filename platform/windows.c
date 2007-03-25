@@ -26,12 +26,15 @@
 #define HIGHORDER_UINT64(pos) (PHYSFS_uint32) \
     (((pos & 0xFFFFFFFF00000000) >> 32) & 0x00000000FFFFFFFF)
 
+
+/* !!! FIXME: unicode version. */
 /* GetUserProfileDirectory() is only available on >= NT4 (no 9x/ME systems!) */
 typedef BOOL (STDMETHODCALLTYPE FAR * LPFNGETUSERPROFILEDIR) (
       HANDLE hToken,
       LPTSTR lpProfileDir,
       LPDWORD lpcchSize);
 
+/* !!! FIXME: unicode version. */
 /* GetFileAttributesEx() is only available on >= Win98 or WinNT4 ... */
 typedef BOOL (STDMETHODCALLTYPE FAR * LPFNGETFILEATTRIBUTESEX) (
       LPCTSTR lpFileName,
@@ -73,6 +76,7 @@ static const char *win32strerror(void)
     static TCHAR msgbuf[255];
     TCHAR *ptr = msgbuf;
 
+    /* !!! FIXME: unicode version. */
     FormatMessage(
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -84,7 +88,7 @@ static const char *win32strerror(void)
         NULL 
     );
 
-        /* chop off newlines. */
+    /* chop off newlines. */
     for (ptr = msgbuf; *ptr; ptr++)
     {
         if ((*ptr == '\n') || (*ptr == '\r'))
@@ -93,6 +97,8 @@ static const char *win32strerror(void)
             break;
         } /* if */
     } /* for */
+
+    /* !!! FIXME: convert to UTF-8. */
 
     return((const char *) msgbuf);
 } /* win32strerror */
@@ -110,6 +116,7 @@ static char *getExePath(const char *argv0)
     retval[0] = '\0';
     /* !!! FIXME: don't preallocate here? */
     /* !!! FIXME: use smallAlloc? */
+    /* !!! FIXME: unicode version. */
     buflen = GetModuleFileName(NULL, retval, MAX_PATH + 1);
     if (buflen <= 0)
         __PHYSFS_setError(win32strerror());
@@ -137,10 +144,11 @@ static char *getExePath(const char *argv0)
 
     if (!success)
     {
-        if (argv0 == NULL)
+        if (argv0 == NULL)   /* !!! FIXME: default behaviour does this. */
             __PHYSFS_setError(ERR_ARGV0_IS_NULL);
         else
         {
+            /* !!! FIXME: unicode version. */
             buflen = SearchPath(NULL, argv0, NULL, MAX_PATH+1, retval, &ptr);
             if (buflen == 0)
                 __PHYSFS_setError(win32strerror());
@@ -198,7 +206,7 @@ static int determineUserDir(void)
     lib = LoadLibrary("userenv.dll");
     if (lib)
     {
-        /* !!! FIXME: Handle Unicode? */
+        /* !!! FIXME: unicode version. */
         GetUserProfileDirectory = (LPFNGETUSERPROFILEDIR)
                               GetProcAddress(lib, "GetUserProfileDirectoryA");
         if (GetUserProfileDirectory)
@@ -211,6 +219,7 @@ static int determineUserDir(void)
                  *  psize. Also note that the second parameter can't be
                  *  NULL or the function fails.
                  */
+                /* !!! FIXME: unicode version. */
                 rc = GetUserProfileDirectory(accessToken, dummy, &psize);
                 assert(!rc);  /* success?! */
 
@@ -218,11 +227,16 @@ static int determineUserDir(void)
                 userDir = (char *) allocator.Malloc(psize);
                 if (userDir != NULL)
                 {
-                    if (!GetUserProfileDirectory(accessToken, userDir, &psize))
+                    /* !!! FIXME: unicode version. */
+                    if (GetUserProfileDirectory(accessToken, userDir, &psize))
+                    {
+                        /* !!! FIXME: convert to UTF-8. */
+                    } /* if */
+                    else
                     {
                         allocator.Free(userDir);
                         userDir = NULL;
-                    } /* if */
+                    } /* else */
                 } /* else */
             } /* if */
 
@@ -237,6 +251,7 @@ static int determineUserDir(void)
         /* Might just be a non-NT system; resort to the basedir. */
         userDir = getExePath(NULL);
         BAIL_IF_MACRO(userDir == NULL, NULL, 0); /* STILL failed?! */
+        /* !!! FIXME: convert to UTF-8. */
     } /* if */
 
     return(1);  /* We made it: hit the showers. */
@@ -264,6 +279,8 @@ static BOOL mediaInDrive(const char *drive)
 
 void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
+    /* !!! FIXME: Can CD drives be non-drive letter paths? */
+    /* !!! FIXME:  (so can they be Unicode paths?) */
     char drive_str[4] = "x:\\";
     char ch;
     for (ch = 'A'; ch <= 'Z'; ch++)
@@ -289,16 +306,23 @@ char *__PHYSFS_platformGetUserName(void)
     DWORD bufsize = 0;
     LPTSTR retval = NULL;
 
+    /* !!! FIXME: unicode version. */
     if (GetUserName(NULL, &bufsize) == 0)  /* This SHOULD fail. */
     {
         retval = (LPTSTR) allocator.Malloc(bufsize);
         BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+        /* !!! FIXME: unicode version. */
         if (GetUserName(retval, &bufsize) == 0)  /* ?! */
         {
             __PHYSFS_setError(win32strerror());
             allocator.Free(retval);
             retval = NULL;
         } /* if */
+    } /* if */
+
+    if (retval != NULL)
+    {
+        /* !!! FIXME: convert to UTF-8. */
     } /* if */
 
     return((char *) retval);
@@ -324,6 +348,7 @@ int __PHYSFS_platformExists(const char *fname)
 {
     BAIL_IF_MACRO
     (
+        /* !!! FIXME: unicode version. */
         GetFileAttributes(fname) == PHYSFS_INVALID_FILE_ATTRIBUTES,
         win32strerror(), 0
     );
@@ -333,12 +358,14 @@ int __PHYSFS_platformExists(const char *fname)
 
 int __PHYSFS_platformIsSymLink(const char *fname)
 {
+    /* !!! FIXME: Vista has symlinks. Recheck this. */
     return(0);  /* no symlinks on win32. */
 } /* __PHYSFS_platformIsSymlink */
 
 
 int __PHYSFS_platformIsDirectory(const char *fname)
 {
+    /* !!! FIXME: unicode version. */
     return((GetFileAttributes(fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
 } /* __PHYSFS_platformIsDirectory */
 
@@ -401,6 +428,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     /* Append the "*" to the end of the string */
     strcat(SearchPath, "*");
 
+    /* !!! FIXME: unicode version. */
     dir = FindFirstFile(SearchPath, &ent);
     __PHYSFS_smallFree(SearchPath);
     if (dir == INVALID_HANDLE_VALUE)
@@ -408,9 +436,11 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 
     do
     {
+        /* !!! FIXME: unicode version. */
         if (strcmp(ent.cFileName, ".") == 0)
             continue;
 
+        /* !!! FIXME: unicode version. */
         if (strcmp(ent.cFileName, "..") == 0)
             continue;
 
@@ -426,9 +456,11 @@ char *__PHYSFS_platformCurrentDir(void)
     LPTSTR retval;
     DWORD buflen = 0;
 
+    /* !!! FIXME: unicode version. */
     buflen = GetCurrentDirectory(buflen, NULL);
     retval = (LPTSTR) allocator.Malloc(sizeof (TCHAR) * (buflen + 2));
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    /* !!! FIXME: unicode version. */
     GetCurrentDirectory(buflen, retval);
 
     if (retval[buflen - 2] != '\\')
@@ -441,6 +473,7 @@ char *__PHYSFS_platformCurrentDir(void)
 /* this could probably use a cleanup. */
 char *__PHYSFS_platformRealPath(const char *path)
 {
+    /* this function should be UTF-8 clean. */
     char *retval = NULL;
     char *p = NULL;
 
@@ -516,15 +549,15 @@ char *__PHYSFS_platformRealPath(const char *path)
     p = retval;
     while ( (p = strstr(p, "\\.")) != NULL)
     {
-            /* it's a "." entry that doesn't end the string. */
+        /* it's a "." entry that doesn't end the string. */
         if (p[2] == '\\')
             memmove(p + 1, p + 3, strlen(p + 3) + 1);
 
-            /* it's a "." entry that ends the string. */
+        /* it's a "." entry that ends the string. */
         else if (p[2] == '\0')
             p[0] = '\0';
 
-            /* it's a ".." entry. */
+        /* it's a ".." entry. */
         else if (p[2] == '.')
         {
             char *prevEntry = p - 1;
@@ -550,7 +583,7 @@ char *__PHYSFS_platformRealPath(const char *path)
         } /* else */
     } /* while */
 
-        /* shrink the retval's memory block if possible... */
+    /* shrink the retval's memory block if possible... */
     p = (char *) allocator.Realloc(retval, strlen(retval) + 1);
     if (p != NULL)
         retval = p;
@@ -561,6 +594,7 @@ char *__PHYSFS_platformRealPath(const char *path)
 
 int __PHYSFS_platformMkDir(const char *path)
 {
+    /* !!! FIXME: unicode version. */
     DWORD rc = CreateDirectory(path, NULL);
     BAIL_IF_MACRO(rc == 0, win32strerror(), 0);
     return(1);
@@ -663,6 +697,7 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
     HANDLE fileHandle;
     win32file *retval;
 
+    /* !!! FIXME: unicode version. */
     fileHandle = CreateFile(fname, mode, FILE_SHARE_READ, NULL,
                             creation, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -892,10 +927,12 @@ int __PHYSFS_platformDelete(const char *path)
     /* If filename is a folder */
     if (GetFileAttributes(path) == FILE_ATTRIBUTE_DIRECTORY)
     {
+        /* !!! FIXME: unicode version. */
         BAIL_IF_MACRO(!RemoveDirectory(path), win32strerror(), 0);
     } /* if */
     else
     {
+        /* !!! FIXME: unicode version. */
         BAIL_IF_MACRO(!DeleteFile(path), win32strerror(), 0);
     } /* else */
 
@@ -1019,6 +1056,7 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
     /* GetFileAttributesEx didn't show up until Win98 and NT4. */
     if (pGetFileAttributesEx != NULL)
     {
+        /* !!! FIXME: unicode version. */
         if (pGetFileAttributesEx(fname, GetFileExInfoStandard, &attrData))
         {
             /* 0 return value indicates an error or not supported */
