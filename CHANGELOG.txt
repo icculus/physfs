@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+03252007 - Improved dynamic loader and initial Unicode work in windows.c ...
 03242007 - Replaced BeOS semaphores with BLockers for the mutex implementation.
            It's much simpler, it has "benaphores" built in behind the scenes
            for faster performance, and it's recursive...also, we were
