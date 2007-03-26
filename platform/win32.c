@@ -97,7 +97,7 @@ static const char *win32strerror(void)
     {
         if ((*ptr == '\n') || (*ptr == '\r'))
         {
-            *ptr = ' ';
+            *ptr = '\0';
             break;
         } /* if */
     } /* for */
