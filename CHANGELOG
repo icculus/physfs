@@ -4,6 +4,8 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+03262007 - Fixed minor cosmetic issue in Windows error messages where it would
+           leave whitespace and newlines at the end of the string.
 09232006 - Fixed typo in doxygen comment.
 03232006 - Added -fvisibility for gcc4 (http://gcc.gnu.org/wiki/Visibility)
 01012006 - Added physfs.rc (thanks, Dennis!). Changed my email address.
