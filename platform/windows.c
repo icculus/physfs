@@ -264,10 +264,8 @@ static int findApiSymbols(void)
     HMODULE dll = NULL;
 
     #define LOOKUP_NOFALLBACK(x) { symLookup(dll, (void **) &p##x, #x); }
-//    #define LOOKUP(x) { \
-//        if (!symLookup(dll, (void **) &p##x, #x)) \
-
     #define LOOKUP(x) { \
+        if (!symLookup(dll, (void **) &p##x, #x)) \
             p##x = fallback##x; \
     }
 
@@ -285,11 +283,11 @@ static int findApiSymbols(void)
     if (dll != NULL)
     {
         LOOKUP_NOFALLBACK(GetFileAttributesExA);
-//        LOOKUP_NOFALLBACK(GetFileAttributesExW);
+        LOOKUP_NOFALLBACK(GetFileAttributesExW);
         LOOKUP(GetModuleFileNameW);
         LOOKUP(FormatMessageW);
-//        LOOKUP_NOFALLBACK(FindFirstFileW);
-//        LOOKUP_NOFALLBACK(FindNextFileW);
+        LOOKUP_NOFALLBACK(FindFirstFileW);
+        LOOKUP_NOFALLBACK(FindNextFileW);
         LOOKUP(GetFileAttributesW);
         LOOKUP(GetCurrentDirectoryW);
         LOOKUP(CreateDirectoryW);
