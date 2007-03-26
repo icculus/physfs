@@ -104,7 +104,9 @@ typedef struct
     int readonly;
 } WinApiFile;
 
+
 static char *userDir = NULL;
+static int osHasUnicode = 0;
 
 
 /* pointers for APIs that may not exist on some Windows versions... */
@@ -263,37 +265,46 @@ static int findApiSymbols(void)
 {
     HMODULE dll = NULL;
 
-    #define LOOKUP_NOFALLBACK(x) { symLookup(dll, (void **) &p##x, #x); }
-    #define LOOKUP(x) { \
-        if (!symLookup(dll, (void **) &p##x, #x)) \
+    #define LOOKUP_NOFALLBACK(x, reallyLook) { \
+        if (reallyLook) \
+            symLookup(dll, (void **) &p##x, #x); \
+        else \
+            p##x = NULL; \
+    }
+
+    #define LOOKUP(x, reallyLook) { \
+        if ((!reallyLook) || (!symLookup(dll, (void **) &p##x, #x))) \
             p##x = fallback##x; \
     }
 
+    /* Apparently Win9x HAS the Unicode entry points, they just don't WORK. */
+    /*  ...so don't look them up unless we're on NT+. (see osHasUnicode.) */
+
     dll = libUserEnv = LoadLibraryA("userenv.dll");
     if (dll != NULL)
-        LOOKUP_NOFALLBACK(GetUserProfileDirectoryW);
+        LOOKUP_NOFALLBACK(GetUserProfileDirectoryW, osHasUnicode);
 
     /* !!! FIXME: what do they call advapi32.dll on Win64? */
     dll = libAdvApi32 = LoadLibraryA("advapi32.dll");
     if (dll != NULL)
-        LOOKUP(GetUserNameW);
+        LOOKUP(GetUserNameW, osHasUnicode);
 
     /* !!! FIXME: what do they call kernel32.dll on Win64? */
     dll = libKernel32 = LoadLibraryA("kernel32.dll");
     if (dll != NULL)
     {
-        LOOKUP_NOFALLBACK(GetFileAttributesExA);
-        LOOKUP_NOFALLBACK(GetFileAttributesExW);
-        LOOKUP(GetModuleFileNameW);
-        LOOKUP(FormatMessageW);
-        LOOKUP_NOFALLBACK(FindFirstFileW);
-        LOOKUP_NOFALLBACK(FindNextFileW);
-        LOOKUP(GetFileAttributesW);
-        LOOKUP(GetCurrentDirectoryW);
-        LOOKUP(CreateDirectoryW);
-        LOOKUP(RemoveDirectoryW);
-        LOOKUP(CreateFileW);
-        LOOKUP(DeleteFileW);
+        LOOKUP_NOFALLBACK(GetFileAttributesExA, 1);
+        LOOKUP_NOFALLBACK(GetFileAttributesExW, osHasUnicode);
+        LOOKUP_NOFALLBACK(FindFirstFileW, osHasUnicode);
+        LOOKUP_NOFALLBACK(FindNextFileW, osHasUnicode);
+        LOOKUP(GetModuleFileNameW, osHasUnicode);
+        LOOKUP(FormatMessageW, osHasUnicode);
+        LOOKUP(GetFileAttributesW, osHasUnicode);
+        LOOKUP(GetCurrentDirectoryW, osHasUnicode);
+        LOOKUP(CreateDirectoryW, osHasUnicode);
+        LOOKUP(RemoveDirectoryW, osHasUnicode);
+        LOOKUP(CreateFileW, osHasUnicode);
+        LOOKUP(DeleteFileW, osHasUnicode);
     } /* if */
 
     #undef LOOKUP_NOFALLBACK
@@ -873,8 +884,24 @@ int __PHYSFS_platformMkDir(const char *path)
 } /* __PHYSFS_platformMkDir */
 
 
+ /*
+  * Get OS info and save the important parts.
+  *
+  * Returns non-zero if successful, otherwise it returns zero on failure.
+  */
+ static int getOSInfo(void)
+ {
+     OSVERSIONINFO osVerInfo;     /* Information about the OS */
+     osVerInfo.dwOSVersionInfoSize = sizeof(osVerInfo);
+     BAIL_IF_MACRO(!GetVersionEx(&osVerInfo), winApiStrError(), 0);
+     osHasUnicode = (osVerInfo.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS);
+     return(1);
+ } /* getOSInfo */
+
+
 int __PHYSFS_platformInit(void)
 {
+    BAIL_IF_MACRO(!getOSInfo(), NULL, 0);
     BAIL_IF_MACRO(!findApiSymbols(), NULL, 0);
     BAIL_IF_MACRO(!determineUserDir(), NULL, 0);
     return(1);  /* It's all good */
