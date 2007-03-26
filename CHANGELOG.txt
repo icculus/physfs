@@ -2,6 +2,15 @@
  * CHANGELOG.
  */
 
+03262007 - Tons of Unicode work in windows.c ... should now use UCS-2 on
+           NT/XP/Vista/etc versions of the OS, and fallback to "ANSI" versions
+           for 95/98/ME, tapdancing around the system codepage if it has to.
+           Since the Unicode entry points are dynamically loaded, it won't
+           have issues with missing symbols on Win9x, nor does it need to be
+           built separately with #define UNICODE (although it will work the
+           same with or without this define, as it doesn't use TCHARs or
+           the non-[WA] versions of APIs. Other minor Windows cleanups and
+           corrections.
 03252007 - Improved dynamic loader and initial Unicode work in windows.c ...
 03242007 - Replaced BeOS semaphores with BLockers for the mutex implementation.
            It's much simpler, it has "benaphores" built in behind the scenes
