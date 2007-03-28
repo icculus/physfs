@@ -334,7 +334,7 @@ static void HOG_enumerateFiles(dvoid *opaque, const char *dname,
                                const char *origdir, void *callbackdata)
 {
     /* no directories in HOG files. */
-    if (*dname != '\0')
+    if (*dname == '\0')
     {
         HOGinfo *info = (HOGinfo *) opaque;
         HOGentry *entry = info->entries;

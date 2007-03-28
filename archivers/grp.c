@@ -295,7 +295,7 @@ static void GRP_enumerateFiles(dvoid *opaque, const char *dname,
                                const char *origdir, void *callbackdata)
 {
     /* no directories in GRP files. */
-    if (*dname != '\0')
+    if (*dname == '\0')
     {
         GRPinfo *info = (GRPinfo *) opaque;
         GRPentry *entry = info->entries;

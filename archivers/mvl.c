@@ -291,7 +291,7 @@ static void MVL_enumerateFiles(dvoid *opaque, const char *dname,
                                const char *origdir, void *callbackdata)
 {
     /* no directories in MVL files. */
-    if (*dname != '\0')
+    if (*dname == '\0')
     {
         MVLinfo *info = ((MVLinfo *) opaque);
         MVLentry *entry = info->entries;
