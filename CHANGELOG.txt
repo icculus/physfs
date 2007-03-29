@@ -4,7 +4,9 @@
 
 03282007 - Logic bug in MVL/HOG/GRP archivers: only enumerated files when
            looking in a directory other than the root, instead of enumerating
-           only for the root (thanks, Chris!).
+           only for the root (thanks, Chris!). Minor fix for compilers that
+           don't like the BAIL_* macros with an empty argument
+           (thanks, Chris!)
 03262007 - Tons of Unicode work in windows.c ... should now use UCS-2 on
            NT/XP/Vista/etc versions of the OS, and fallback to "ANSI" versions
            for 95/98/ME, tapdancing around the system codepage if it has to.
