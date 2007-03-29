@@ -70,7 +70,8 @@ Spanish translation:
     Pedro J. Pérez
 
 MacOS Classic fixes,
-MPW support:
+MPW support,
+bug fixes:
     Chris Taylor
 
 Mingw support,

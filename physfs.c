@@ -1567,12 +1567,12 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
     size_t len;
     char *fname;
 
-    BAIL_IF_MACRO(_fname == NULL, ERR_INVALID_ARGUMENT, /*0*/);
-    BAIL_IF_MACRO(callback == NULL, ERR_INVALID_ARGUMENT, /*0*/);
+    BAIL_IF_MACRO(_fname == NULL, ERR_INVALID_ARGUMENT, ) /*0*/;
+    BAIL_IF_MACRO(callback == NULL, ERR_INVALID_ARGUMENT, ) /*0*/;
 
     len = strlen(_fname) + 1;
     fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MACRO(fname == NULL, ERR_OUT_OF_MEMORY, /*0*/);
+    BAIL_IF_MACRO(fname == NULL, ERR_OUT_OF_MEMORY, ) /*0*/;
 
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
