@@ -108,12 +108,13 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
     &__PHYSFS_ArchiveInfo_WAD,
 #endif
 
-
     NULL
 };
 
 static const DirFunctions *dirFunctions[] =
 {
+    &__PHYSFS_DirFunctions_DIR,
+
 #if (defined PHYSFS_SUPPORTS_ZIP)
     &__PHYSFS_DirFunctions_ZIP,
 #endif
@@ -138,7 +139,6 @@ static const DirFunctions *dirFunctions[] =
     &__PHYSFS_DirFunctions_WAD,
 #endif
 
-    &__PHYSFS_DirFunctions_DIR,
     NULL
 };
 
