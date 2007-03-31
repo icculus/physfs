@@ -2159,7 +2159,7 @@ __EXPORT__ void PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst,
  *
  * To ensure that the destination buffer is large enough for the conversion,
  *  please allocate a buffer that is double the size of the source buffer.
- *  UTF-8 expands latin1 codepoints over 127 from to 2 bytes, so the string
+ *  UTF-8 expands latin1 codepoints over 127 from 1 to 2 bytes, so the string
  *  may grow in some cases.
  *
  * Strings that don't fit in the destination buffer will be truncated, but
