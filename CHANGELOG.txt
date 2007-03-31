@@ -5,7 +5,8 @@
 03312007 - Added a quick'n'dirty unpack utility to the extras directory. Moved
            DIR archiver to start of the list, so we don't have to have every
            other archiver fail to open a directory as a file before mounting
-           it. Fixed typos in makeos2.cmd and the Doxygen comments.
+           it. Fixed typos in makeos2.cmd and the Doxygen comments. Added
+           symlink support to windows.c for use on Vista-based systems.
 03282007 - Logic bug in MVL/HOG/GRP archivers: only enumerated files when
            looking in a directory other than the root, instead of enumerating
            only for the root (thanks, Chris!). Minor fix for compilers that

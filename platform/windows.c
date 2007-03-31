@@ -578,10 +578,43 @@ int __PHYSFS_platformExists(const char *fname)
 } /* __PHYSFS_platformExists */
 
 
+static int isSymlinkAttrs(DWORD attr, DWORD tag)
+{
+    return ( (attr & FILE_ATTRIBUTE_REPARSE_POINT) &&
+             ((tag & IO_REPARSE_TAG_SYMLINK) == IO_REPARSE_TAG_SYMLINK) );
+} /* isSymlinkAttrs */
+
+
 int __PHYSFS_platformIsSymLink(const char *fname)
 {
-    /* !!! FIXME: Vista has symlinks. Recheck this. */
-    return(0);  /* no symlinks on win32. */
+    /* !!! FIXME:
+     * Windows Vista can have NTFS symlinks. Can older Windows releases have
+     *  them when talking to a network file server? What happens when you
+     *  mount a NTFS partition on XP that was plugged into a Vista install
+     *  that made a symlink?
+     */
+
+    int retval = 0;
+    LPWSTR wpath;
+    HANDLE dir;
+    WIN32_FIND_DATAW entw;
+
+    /* no unicode entry points? Probably no symlinks. */
+    BAIL_IF_MACRO(pFindFirstFileW == NULL, NULL, 0);
+
+    UTF8_TO_UNICODE_STACK_MACRO(wpath, fname);
+    BAIL_IF_MACRO(wpath == NULL, ERR_OUT_OF_MEMORY, 0);
+
+    /* !!! FIXME: filter wildcard chars? */
+    dir = pFindFirstFileW(wpath, &entw);
+    if (dir != INVALID_HANDLE_VALUE)
+    {
+        retval = isSymlinkAttrs(entw.dwFileAttributes, entw.dwReserved0);
+        FindClose(dir);
+    } /* if */
+
+    __PHYSFS_smallFree(wpath);
+    return(retval);
 } /* __PHYSFS_platformIsSymlink */
 
 
@@ -686,13 +719,17 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     {
         do
         {
+            const DWORD attrs = entw.dwFileAttributes;
+            const DWORD tag = entw.dwReserved0;
             const WCHAR *fn = entw.cFileName;
             if ((fn[0] == '.') && (fn[1] == '\0'))
                 continue;
             if ((fn[0] == '.') && (fn[1] == '.') && (fn[2] == '\0'))
                 continue;
+            if ((omitSymLinks) && (isSymlinkAttrs(attr, tag)))
+                continue;
 
-            utf8 = unicodeToUtf8Heap(entw.cFileName);
+            utf8 = unicodeToUtf8Heap(fn);
             if (utf8 != NULL)
             {
                 callback(callbackdata, origdir, utf8);
@@ -705,13 +742,17 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     {
         do
         {
+            const DWORD attrs = ent.dwFileAttributes;
+            const DWORD tag = ent.dwReserved0;
             const char *fn = ent.cFileName;
             if ((fn[0] == '.') && (fn[1] == '\0'))
                 continue;
             if ((fn[0] == '.') && (fn[1] == '.') && (fn[2] == '\0'))
                 continue;
+            if ((omitSymLinks) && (isSymlinkAttrs(attr, tag)))
+                continue;
 
-            utf8 = codepageToUtf8Heap(ent.cFileName);
+            utf8 = codepageToUtf8Heap(fn);
             if (utf8 != NULL)
             {
                 callback(callbackdata, origdir, utf8);
