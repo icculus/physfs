@@ -112,11 +112,11 @@ rem goto :dolinking
 @echo "_PHYSFS_getCdRomDirsCallback" >> bin\physfs.def
 @echo "_PHYSFS_getSearchPathCallback" >> bin\physfs.def
 @echo "_PHYSFS_enumerateFilesCallback" >> bin\physfs.def
-@echo "_PHYSFS_utf8toucs2" >> bin\physfs.def
-@echo "_PHYSFS_utf8fromucs2" >> bin\physfs.def
-@echo "_PHYSFS_utf8toucs4" >> bin\physfs.def
-@echo "_PHYSFS_utf8fromucs4" >> bin\physfs.def
-@echo "_PHYSFS_utf8fromlatin1" >> bin\physfs.def
+@echo "_PHYSFS_utf8ToUcs2" >> bin\physfs.def
+@echo "_PHYSFS_utf8FromUcs2" >> bin\physfs.def
+@echo "_PHYSFS_utf8ToUcs4" >> bin\physfs.def
+@echo "_PHYSFS_utf8FromUcs4" >> bin\physfs.def
+@echo "_PHYSFS_utf8FromLatin1" >> bin\physfs.def
 
 @echo Building export library...
 emximp -o bin/physfs.lib bin/physfs.def
