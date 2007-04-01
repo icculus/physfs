@@ -1173,6 +1173,12 @@ void PHYSFS_permitSymbolicLinks(int allow)
 } /* PHYSFS_permitSymbolicLinks */
 
 
+int PHYSFS_symbolicLinksPermitted(void)
+{
+    return(allowSymLinks);
+} /* PHYSFS_symbolicLinksPermitted */
+
+
 /* string manipulation in C makes my ass itch. */
 char *__PHYSFS_convertToDependent(const char *prepend,
                                   const char *dirName,

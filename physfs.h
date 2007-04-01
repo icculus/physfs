@@ -622,6 +622,8 @@ __EXPORT__ const char *PHYSFS_getDirSeparator(void);
  *  you've called PHYSFS_init(), and is disabled by default.
  *
  *   \param allow nonzero to permit symlinks, zero to deny linking.
+ *
+ * \sa PHYSFS_symbolicLinksPermitted
  */
 __EXPORT__ void PHYSFS_permitSymbolicLinks(int allow);
 
@@ -1928,6 +1930,21 @@ __EXPORT__ int PHYSFS_writeUBE64(PHYSFS_File *file, PHYSFS_uint64 val);
  * \sa PHYSFS_deinit
  */
 __EXPORT__ int PHYSFS_isInit(void);
+
+
+/**
+ * \fn int PHYSFS_symbolicLinksPermitted(void)
+ * \brief Determine if the symbolic links are permitted.
+ *
+ * This reports the setting from the last call to PHYSFS_permitSymbolicLinks().
+ *  If PHYSFS_permitSymbolicLinks() hasn't been called since the library was
+ *  last initialized, symbolic links are implicitly disabled.
+ *
+ *  \return non-zero if symlinks are permitted, zero if not.
+ *
+ * \sa PHYSFS_permitSymbolicLinks
+ */
+__EXPORT__ int PHYSFS_symbolicLinksPermitted(void);
 
 
 /**
