@@ -478,6 +478,7 @@ __EXPORT__ void PHYSFS_getLinkedVersion(PHYSFS_Version *ver);
  *          gleaned from PHYSFS_getLastError().
  *
  * \sa PHYSFS_deinit
+ * \sa PHYSFS_isInit
  */
 __EXPORT__ int PHYSFS_init(const char *argv0);
 
@@ -505,6 +506,7 @@ __EXPORT__ int PHYSFS_init(const char *argv0);
  *          undefined, and probably badly screwed up.
  *
  * \sa PHYSFS_init
+ * \sa PHYSFS_isInit
  */
 __EXPORT__ int PHYSFS_deinit(void);
 
@@ -1910,6 +1912,23 @@ __EXPORT__ int PHYSFS_writeUBE64(PHYSFS_File *file, PHYSFS_uint64 val);
 
 
 /* Everything above this line is part of the PhysicsFS 1.0 API. */
+
+/**
+ * \fn int PHYSFS_isInit(void)
+ * \brief Determine if the PhysicsFS library is initialized.
+ *
+ * Once PHYSFS_init() returns successfully, this will return non-zero.
+ *  Before a successful PHYSFS_init() and after PHYSFS_deinit() returns
+ *  successfully, this will return zero. This function is safe to call at
+ *  any time.
+ *
+ *  \return non-zero if library is initialized, zero if library is not.
+ *
+ * \sa PHYSFS_init
+ * \sa PHYSFS_deinit
+ */
+__EXPORT__ int PHYSFS_isInit(void);
+
 
 /**
  * \struct PHYSFS_Allocator

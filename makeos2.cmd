@@ -36,6 +36,7 @@ rem goto :dolinking
 @echo "_PHYSFS_getLinkedVersion" >> bin\physfs.def
 @echo "_PHYSFS_init" >> bin\physfs.def
 @echo "_PHYSFS_deinit" >> bin\physfs.def
+@echo "_PHYSFS_isInit" >> bin\physfs.def
 @echo "_PHYSFS_supportedArchiveTypes" >> bin\physfs.def
 @echo "_PHYSFS_freeList" >> bin\physfs.def
 @echo "_PHYSFS_getLastError" >> bin\physfs.def
