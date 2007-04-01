@@ -856,6 +856,12 @@ int PHYSFS_deinit(void)
 } /* PHYSFS_deinit */
 
 
+int PHYSFS_isInit(void)
+{
+    return(initialized);
+} /* PHYSFS_isInit */
+
+
 const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void)
 {
     return(supported_types);
