@@ -42,6 +42,7 @@ rem goto :dolinking
 @echo "_PHYSFS_getLastError" >> bin\physfs.def
 @echo "_PHYSFS_getDirSeparator" >> bin\physfs.def
 @echo "_PHYSFS_permitSymbolicLinks" >> bin\physfs.def
+@echo "_PHYSFS_symbolicLinksPermitted" >> bin\physfs.def
 @echo "_PHYSFS_getCdRomDirs" >> bin\physfs.def
 @echo "_PHYSFS_getBaseDir" >> bin\physfs.def
 @echo "_PHYSFS_getUserDir" >> bin\physfs.def

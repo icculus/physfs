@@ -2,7 +2,7 @@
  * CHANGELOG.
  */
 
-04012007 - Added PHYSFS_isInit() function.
+04012007 - Added PHYSFS_isInit() and PHYSFS_symbolicLinksPermitted() functions.
 03312007 - Added a quick'n'dirty unpack utility to the extras directory. Moved
            DIR archiver to start of the list, so we don't have to have every
            other archiver fail to open a directory as a file before mounting
