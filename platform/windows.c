@@ -41,6 +41,10 @@
 /* just in case... */
 #define PHYSFS_INVALID_FILE_ATTRIBUTES   0xFFFFFFFF
 
+/* Not defined before the Vista SDK. */
+#define PHYSFS_IO_REPARSE_TAG_SYMLINK    0xA000000C
+
+
 #define UTF8_TO_UNICODE_STACK_MACRO(w_assignto, str) { \
     if (str == NULL) \
         w_assignto = NULL; \
@@ -578,10 +582,10 @@ int __PHYSFS_platformExists(const char *fname)
 } /* __PHYSFS_platformExists */
 
 
-static int isSymlinkAttrs(DWORD attr, DWORD tag)
+static int isSymlinkAttrs(const DWORD attr, const DWORD tag)
 {
-    return ( (attr & FILE_ATTRIBUTE_REPARSE_POINT) &&
-             ((tag & IO_REPARSE_TAG_SYMLINK) == IO_REPARSE_TAG_SYMLINK) );
+    return ( (attr & FILE_ATTRIBUTE_REPARSE_POINT) && 
+             (tag == PHYSFS_IO_REPARSE_TAG_SYMLINK) );
 } /* isSymlinkAttrs */
 
 
@@ -719,7 +723,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     {
         do
         {
-            const DWORD attrs = entw.dwFileAttributes;
+            const DWORD attr = entw.dwFileAttributes;
             const DWORD tag = entw.dwReserved0;
             const WCHAR *fn = entw.cFileName;
             if ((fn[0] == '.') && (fn[1] == '\0'))
@@ -742,7 +746,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     {
         do
         {
-            const DWORD attrs = ent.dwFileAttributes;
+            const DWORD attr = ent.dwFileAttributes;
             const DWORD tag = ent.dwReserved0;
             const char *fn = ent.cFileName;
             if ((fn[0] == '.') && (fn[1] == '\0'))
