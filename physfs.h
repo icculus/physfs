@@ -639,7 +639,12 @@ __EXPORT__ void PHYSFS_permitSymbolicLinks(int allow);
  *  E: has a disc in it, then that's all you get. If the user inserts a disc
  *  in D: and you call this function again, you get both drives. If, on a
  *  Unix box, the user unmounts a disc and remounts it elsewhere, the next
- *  call to this function will reflect that change. Fun.
+ *  call to this function will reflect that change.
+ *
+ * This function refers to "CD-ROM" media, but it really means "inserted disc
+ *  media," such as DVD-ROM, HD-DVD, CDRW, and Blu-Ray discs. It looks for
+ *  filesystems, and as such won't report an audio CD, unless there's a
+ *  mounted filesystem track on it.
  *
  * The returned value is an array of strings, with a NULL entry to signify the
  *  end of the list:
@@ -2009,7 +2014,7 @@ __EXPORT__ int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
 
 
 /**
- * \fn int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath);
+ * \fn int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
  * \brief Add an archive or directory to the search path.
  *
  * If this is a duplicate, the entry is not added again, even though the
@@ -2051,7 +2056,7 @@ __EXPORT__ int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
 __EXPORT__ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath);
 
 /**
- * \fn int PHYSFS_getMountPoint(const char *dir);
+ * \fn int PHYSFS_getMountPoint(const char *dir)
  * \brief Determine a mounted archive's mountpoint.
  *
  * You give this function the name of an archive or dir you successfully
@@ -2075,14 +2080,176 @@ __EXPORT__ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appe
 __EXPORT__ const char *PHYSFS_getMountPoint(const char *dir);
 
 
-/* !!! FIXME: comment! */
-typedef void (*PHYSFS_StringCallback)(void *, const char *);
-typedef void (*PHYSFS_EnumFilesCallback)(void *, const char *, const char *);
+/**
+ * \typedef PHYSFS_StringCallback
+ * \brief Function signature for callbacks that report strings.
+ *
+ * These are used to report a list of strings to an original caller, one
+ *  string per callback. All strings are UTF-8 encoded. Functions should not
+ *  try to modify or free the string's memory.
+ *
+ * These callbacks are used, starting in PhysicsFS 1.1, as an alternative to
+ *  functions that would return lists that need to be cleaned up with
+ *  PHYSFS_freeList(). The callback means that the library doesn't need to
+ *  allocate an entire list and all the strings up front.
+ *
+ * Be aware that promises data ordering in the list versions are not
+ *  necessarily so in the callback versions. Check the documentation on
+ *  specific APIs, but strings may not be sorted as you expect.
+ *
+ *    \param data User-defined data pointer, passed through from the API
+ *                that eventually called the callback.
+ *    \param str The string data about which the callback is meant to inform.
+ *
+ * \sa PHYSFS_getCdRomDirsCallback
+ * \sa PHYSFS_getSearchPathCallback
+ */
+typedef void (*PHYSFS_StringCallback)(void *data, const char *str);
 
+
+/**
+ * \typedef PHYSFS_EnumFilesCallback
+ * \brief Function signature for callbacks that enumerate files.
+ *
+ * These are used to report a list of directory entries to an original caller,
+ *  one file/dir/symlink per callback. All strings are UTF-8 encoded.
+ *  Functions should not try to modify or free any string's memory.
+ *
+ * These callbacks are used, starting in PhysicsFS 1.1, as an alternative to
+ *  functions that would return lists that need to be cleaned up with
+ *  PHYSFS_freeList(). The callback means that the library doesn't need to
+ *  allocate an entire list and all the strings up front.
+ *
+ * Be aware that promises data ordering in the list versions are not
+ *  necessarily so in the callback versions. Check the documentation on
+ *  specific APIs, but strings may not be sorted as you expect.
+ *
+ *    \param data User-defined data pointer, passed through from the API
+ *                that eventually called the callback.
+ *    \param origdir A string containing the full path, in platform-independent
+ *                   notation, of the directory containing this file. In most
+ *                   cases, this is the directory on which you requested
+ *                   enumeration, passed in the callback for your convenience.
+ *    \param fname The filename that is being enumerated. It may not be in
+ *                 alphabetical order compared to other callbacks that have
+ *                 fired, and it will not contain the full path. You can
+ *                 recreate the fullpath with $origdir/$fname ... The file
+ *                 can be a subdirectory, a file, a symlink, etc.
+ *
+ * \sa PHYSFS_enumerateFilesCallback
+ */
+typedef void (*PHYSFS_EnumFilesCallback)(void *data, const char *origdir,
+                                         const char *fname);
+
+
+/**
+ * \fn void PHYSFS_getCdRomDirsCallback(PHYSFS_StringCallback c, void *d)
+ * \brief Enumerate CD-ROM directories, using an application-defined callback.
+ *
+ * Internally, PHYSFS_getCdRomDirs() just calls this function and then builds
+ *  a list before returning to the application, so functionality is identical
+ *  except for how the information is represented to the application.
+ *
+ * Unlike PHYSFS_getCdRomDirs(), this function does not return an array.
+ *  Rather, it calls a function specified by the application once per
+ *  detected disc:
+ *
+ * \code
+ *
+ * static void foundDisc(void *data, const char *cddir)
+ * {
+ *     printf("cdrom dir [%s] is available.\n", cddir);
+ * }
+ *
+ * // ...
+ * PHYSFS_getCdRomDirsCallback(foundDisc, NULL);
+ * \endcode
+ *
+ * This call may block while drives spin up. Be forewarned.
+ *
+ *    \param c Callback function to notify about detected drives.
+ *    \param d Application-defined data passed to callback. Can be NULL.
+ *
+ * \sa PHYSFS_StringCallback
+ * \sa PHYSFS_getCdRomDirs
+ */
 __EXPORT__ void PHYSFS_getCdRomDirsCallback(PHYSFS_StringCallback c, void *d);
 
+
+/**
+ * \fn void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback c, void *d)
+ * \brief Enumerate the search path, using an application-defined callback.
+ *
+ * Internally, PHYSFS_getSearchPath() just calls this function and then builds
+ *  a list before returning to the application, so functionality is identical
+ *  except for how the information is represented to the application.
+ *
+ * Unlike PHYSFS_getSearchPath(), this function does not return an array.
+ *  Rather, it calls a function specified by the application once per
+ *  element of the search path:
+ *
+ * \code
+ *
+ * static void printSearchPath(void *data, const char *pathItem)
+ * {
+ *     printf("[%s] is in the search path.\n", pathItem);
+ * }
+ *
+ * // ...
+ * PHYSFS_getSearchPathCallback(printSearchPath, NULL);
+ * \endcode
+ *
+ * Elements of the search path are reported in order search priority, so the
+ *  first archive/dir that would be examined when looking for a file is the
+ *  first element passed through the callback.
+ *
+ *    \param c Callback function to notify about search path elements.
+ *    \param d Application-defined data passed to callback. Can be NULL.
+ *
+ * \sa PHYSFS_StringCallback
+ * \sa PHYSFS_getSearchPath
+ */
 __EXPORT__ void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback c, void *d);
 
+
+/**
+ * \fn void PHYSFS_enumerateFilesCallback(const char *dir, PHYSFS_EnumFilesCallback c, void *d)
+ * \brief Get a file listing of a search path's directory, using an application-defined callback.
+ *
+ * Internally, PHYSFS_enumerateFiles() just calls this function and then builds
+ *  a list before returning to the application, so functionality is identical
+ *  except for how the information is represented to the application.
+ *
+ * Unlike PHYSFS_enumerateFiles(), this function does not return an array.
+ *  Rather, it calls a function specified by the application once per
+ *  element of the search path:
+ *
+ * \code
+ *
+ * static void printDir(void *data, const char *origdir, const char *fname)
+ * {
+ *     printf(" * We've got [%s] in [%s].\n", fname, origdir);
+ * }
+ *
+ * // ...
+ * PHYSFS_enumerateFilesCallback("/some/path", printDir, NULL);
+ * \endcode
+ *
+ * Items sent to the callback are not guaranteed to be in any order whatsoever.
+ *  There is no sorting done at this level, and if you need that, you should
+ *  probably use PHYSFS_enumerateFiles() instead, which guarantees
+ *  alphabetical sorting. This form reports whatever is discovered in each
+ *  archive before moving on to the next. Even within one archive, we can't
+ *  guarantee what order it will discover data. <em>Any sorting you find in
+ *  these callbacks is just pure luck. Do not rely on it.</em>
+ *
+ *    \param dir Directory, in platform-independent notation, to enumerate.
+ *    \param c Callback function to notify about search path elements.
+ *    \param d Application-defined data passed to callback. Can be NULL.
+ *
+ * \sa PHYSFS_EnumFilesCallback
+ * \sa PHYSFS_enumerateFiles
+ */
 __EXPORT__ void PHYSFS_enumerateFilesCallback(const char *dir,
                                               PHYSFS_EnumFilesCallback c,
                                               void *d);
