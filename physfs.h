@@ -628,6 +628,7 @@ __EXPORT__ const char *PHYSFS_getDirSeparator(void);
 __EXPORT__ void PHYSFS_permitSymbolicLinks(int allow);
 
 
+/* !!! FIXME: const this? */
 /**
  * \fn char **PHYSFS_getCdRomDirs(void)
  * \brief Get an array of paths to available CD-ROM drives.
