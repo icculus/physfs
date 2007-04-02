@@ -2,7 +2,8 @@
  * CHANGELOG.
  */
 
-04022007 - Added wxWidgets-based test program (incomplete).
+04022007 - Added wxWidgets-based test program (incomplete). Filled in and
+           corrected some Doxygen comments.
 04012007 - Added PHYSFS_isInit() and PHYSFS_symbolicLinksPermitted() functions.
 03312007 - Added a quick'n'dirty unpack utility to the extras directory. Moved
            DIR archiver to start of the list, so we don't have to have every
