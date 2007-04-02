@@ -2075,10 +2075,6 @@ __EXPORT__ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appe
 __EXPORT__ const char *PHYSFS_getMountPoint(const char *dir);
 
 
-/*
- * it is not safe to call physfs functions in these callbacks, as they may
- *  be holding non recursive mutexes.
- */
 /* !!! FIXME: comment! */
 typedef void (*PHYSFS_StringCallback)(void *, const char *);
 typedef void (*PHYSFS_EnumFilesCallback)(void *, const char *, const char *);
