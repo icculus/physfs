@@ -4,9 +4,6 @@ These are in no particular order.
 Some might be dupes, some might be done already.
 
 UNICODE:
-- Windows: Can use Unicode, but might only allow "codepages" ... Use
-           GetProcAddress() to find Unicode entry points on WinNT-based
-           systems, otherwise try to use a sane codepage.
 - OS/2: Codepages. No full Unicode in the filesystem, but we can probably make
         a conversion effort.
 
