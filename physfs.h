@@ -499,7 +499,7 @@ __EXPORT__ const char *PHYSFS_getLastError(void);
  * \fn const char *PHYSFS_getDirSeparator(void)
  * \brief Get platform-dependent dir separator string.
  *
- * This returns "\\\\" on win32, "/" on Unix, and ":" on MacOS. It may be more
+ * This returns "\\" on win32, "/" on Unix, and ":" on MacOS. It may be more
  *  than one character, depending on the platform, and your code should take
  *  that into account. Note that this is only useful for setting up the
  *  search/write paths, since access into those dirs always use '/'
