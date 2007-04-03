@@ -27,11 +27,15 @@ echo "Packing PhysicsFS $VERSION source tarball..."
 echo " + Setting up scratch dir..."
 rm -rf $TMPCPDIR
 mkdir $TMPCPDIR
+mkdir $CPDIR
 
 echo " + Making copy of source tree in scratch dir..."
 cp -R . $CPDIR/
 echo " + Deleting cruft..."
-pushd $CPDIR >/dev/null && rm -rf `svn propget svn:ignore .` && popd >/dev/null
+pushd $CPDIR >/dev/null
+rm -rf `svn propget svn:ignore .`
+rm -rf `svn status |grep '?' |sed -s 's/\?//'`
+popd >/dev/null
 rm -rf `find $CPDIR -type d -name '.svn'`
 echo " + Deleting Subversion metadata..."
 rm -rf `find $CPDIR -type d -name '.svn'`
