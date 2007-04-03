@@ -46,7 +46,8 @@ Primary Unix development is done with GNU/Linux, but PhysicsFS is known to
 BeOS:
 
 Use the "Unix" instructions, above. The CMake port to BeOS is fairly new at
- the time of this writing, but it works. You can get it from bebits.com ...
+ the time of this writing, but it works. You can get a build of CMake from
+ bebits.com or build it yourself from source from cmake.org.
 
 
 
@@ -57,8 +58,15 @@ If building with CygWin, mingw32 or something else that uses the GNU
 
 If you want to use Visual Studio, nmake, or the Platform SDK, you will need
  CMake (http://www.cmake.org/) 2.4 or later installed. Point CMake at the
- CMakeLists.txt file in the root of the source directory and it will generate
- project files for you.
+ CMakeLists.txt file in the root of the source directory and hit the
+ "Configure" button. After telling it what type of compiler you are targeting
+ (Borland, Visual Studio, etc), CMake will process for while and then give you
+ a list of options you can change (what archivers you want to support, etc).
+ If you aren't sure, the defaults are probably fine. Hit the "Configure"
+ button again, then "OK" once configuration has completed with options that
+ match your liking. Now project files for your favorite programming
+ environment will be generated for you in the directory you specified.
+ Go there and use them to build PhysicsFS.
 
 PhysicsFS will only link directly against system libraries that have existed
  since Windows 95 and Windows NT 3.51. If there's a newer API we want to use,
@@ -114,14 +122,13 @@ OS/2:
 
 You need Innotek GCC and libc installed (or kLIBC). I tried this on a stock
  Warp 4 install, no fixpaks. You need to install link386.exe (Selective
- Install, "link object modules" option). Once libc and GCC are installed
+ Install, "link object modules" option). Once klibc and GCC are installed
  correctly, unpack the source to PhysicsFS and run the script
  file "makeos2.cmd". I know this isn't ideal, but I wanted to have this build
- without users having to hunt down a "make" program (While several exist, EMX
- doesn't come with one). If someone wants to hack some REXX to make this a bit
- more picky about recompiling, I'll accept the patch.
+ without users having to hunt down a "make" program.
 
-Someone please port CMake to OS/2.
+Someone please port CMake to OS/2. Ideally I'd like to be able to target
+ Innotek GCC and OpenWatcom with CMake.
 
 If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
  OS/2, I'd like to hear from you; send an email to icculus@icculus.org.
