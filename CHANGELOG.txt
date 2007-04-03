@@ -2,8 +2,9 @@
  * CHANGELOG.
  */
 
-04032007 - Reverted Unix recursive mutex code. There were some portability
-           issues I didn't anticipate.
+04032007 - Added a "make dist" target for packing up source code releases.
+           Reverted Unix recursive mutex code. There were some portability
+           issues I didn't anticipate. Upped version to 1.1.1!
 04022007 - Added wxWidgets-based test program (incomplete). Filled in and
            corrected some Doxygen comments.
 04012007 - Added PHYSFS_isInit() and PHYSFS_symbolicLinksPermitted() functions.
