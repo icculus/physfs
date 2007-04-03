@@ -348,6 +348,9 @@ ELSE(DOXYGEN_FOUND)
     MESSAGE(STATUS "Doxygen not found. You won't be able to build documentation.")
 ENDIF(DOXYGEN_FOUND)
 
+IF(UNIX)
+    ADD_CUSTOM_TARGET(dist ./extras/makedist.sh ${PHYSFS_VERSION} COMMENT "Building source tarball")
+ENDIF(UNIX)
 
 MACRO(MESSAGE_BOOL_OPTION _NAME _VALUE)
     IF(${_VALUE})
