@@ -836,7 +836,7 @@ static int zip_version_does_symlinks(PHYSFS_uint32 version)
 } /* zip_version_does_symlinks */
 
 
-static int zip_entry_is_symlink(ZIPentry *entry)
+static int zip_entry_is_symlink(const ZIPentry *entry)
 {
     return((entry->resolved == ZIP_UNRESOLVED_SYMLINK) ||
            (entry->resolved == ZIP_BROKEN_SYMLINK) ||
@@ -1293,7 +1293,7 @@ static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 static int ZIP_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 {
     int isDir;
-    ZIPentry *entry = zip_find_entry((ZIPinfo *) opaque, name, &isDir);
+    const ZIPentry *entry = zip_find_entry((ZIPinfo *) opaque, name, &isDir);
     *fileExists = ((isDir) || (entry != NULL));
     BAIL_IF_MACRO(entry == NULL, NULL, 0);
     return(zip_entry_is_symlink(entry));
