@@ -2,6 +2,8 @@
  * CHANGELOG.
  */
 
+05052007 - Fixed zip archiver: could do bogus seek if a small, non-zip file
+           got put through isArchive().
 04292007 - Minor const correctness tweak in zip archiver.
 04032007 - Added a "make dist" target for packing up source code releases.
            Reverted Unix recursive mutex code. There were some portability
