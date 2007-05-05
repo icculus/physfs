@@ -4,6 +4,8 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+05052007 - Fixed zip archiver: could do bogus seek if a small, non-zip file
+           got put through isArchive().
 04022007 - Fixed Doxygen comment.
 03312007 - Moved DIR archiver to start of the list, so we don't have to have
            every other archiver fail to open a directory as a file before
