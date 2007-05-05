@@ -489,6 +489,8 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
             break;
 
         filepos -= (maxread - 4);
+        if (filepos < 0)
+            filepos = 0;
     } /* while */
 
     BAIL_IF_MACRO(!found, ERR_NOT_AN_ARCHIVE, -1);
