@@ -498,8 +498,9 @@ __EXPORT__ int PHYSFS_init(const char *argv0);
  *  handle a specific failure.
  *
  * Once successfully deinitialized, PHYSFS_init() can be called again to
- *  restart the subsystem. All defaults API states are restored at this
- *  point.
+ *  restart the subsystem. All default API states are restored at this
+ *  point, with the exception of any custom allocator you might have
+ *  specified, which survives between initializations.
  *
  *  \return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError(). If failure, state of PhysFS is
