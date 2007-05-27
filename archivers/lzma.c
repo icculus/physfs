@@ -313,9 +313,8 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuffer,
     } /* if */
 
     /* Copy wanted bytes over from cache to outBuffer */
-/* !!! FIXME: strncpy for non-string data? */
-	strncpy(outBuffer,
-            (void*) (entry->archive->folder[entry->folderIndex].cache +
+	memcpy(outBuffer,
+            (entry->archive->folder[entry->folderIndex].cache +
                      entry->offset + entry->position),
             (size_t) wantedSize);
     entry->position += wantedSize;
