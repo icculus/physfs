@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+05272007 - FIXME removal: Replaced a strncpy() with a memcpy().
 05112007 - Minor documentation correction.
 05052007 - Fixed zip archiver: could do bogus seek if a small, non-zip file
            got put through isArchive().
