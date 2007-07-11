@@ -1797,6 +1797,8 @@ PHYSFS_sint64 PHYSFS_read(PHYSFS_file *handle, void *buffer,
     FileHandle *h = (FileHandle *) handle->opaque;
 
     BAIL_IF_MACRO(!h->forReading, ERR_FILE_ALREADY_OPEN_W, -1);
+    BAIL_IF_MACRO(objSize == 0, NULL, 0);
+    BAIL_IF_MACRO(objCount == 0, NULL, 0);
     if (h->buffer != NULL)
         return(doBufferedRead(handle, buffer, objSize, objCount));
 
@@ -1830,6 +1832,8 @@ PHYSFS_sint64 PHYSFS_write(PHYSFS_file *handle, const void *buffer,
     FileHandle *h = (FileHandle *) handle->opaque;
 
     BAIL_IF_MACRO(h->forReading, ERR_FILE_ALREADY_OPEN_R, -1);
+    BAIL_IF_MACRO(objSize == 0, NULL, 0);
+    BAIL_IF_MACRO(objCount == 0, NULL, 0);
     if (h->buffer != NULL)
         return(doBufferedWrite(handle, buffer, objSize, objCount));
 
