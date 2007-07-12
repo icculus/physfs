@@ -25,12 +25,8 @@
 #endif
 
 /* !!! FIXME: remove this when revamping stack allocation code... */
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
-#endif
-
-#ifdef __MINGW32__
-#include <alloca.h>
 #endif
 
 #ifdef __cplusplus
