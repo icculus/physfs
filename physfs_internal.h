@@ -22,8 +22,8 @@
 #define assert(x)
 #endif
 
-#ifdef __MINGW32__
-#include <alloca.h>
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#include <malloc.h>
 #endif
 
 #ifdef __cplusplus
