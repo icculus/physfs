@@ -22,6 +22,10 @@
 #define assert(x)
 #endif
 
+#ifdef __MINGW32__
+#include <alloca.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
