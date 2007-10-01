@@ -29,10 +29,8 @@
     #define alloca(x) __builtin_alloca(x) 
 #endif
 
-#define LOWORDER_UINT64(pos) (PHYSFS_uint32) \
-    (pos & 0x00000000FFFFFFFF)
-#define HIGHORDER_UINT64(pos) (PHYSFS_uint32) \
-    (((pos & 0xFFFFFFFF00000000) >> 32) & 0x00000000FFFFFFFF)
+#define LOWORDER_UINT64(pos) ((PHYSFS_uint32) (pos & 0xFFFFFFFF))
+#define HIGHORDER_UINT64(pos) ((PHYSFS_uint32) ((pos >> 32) & 0xFFFFFFFF))
 
 /* GetUserProfileDirectory() is only available on >= NT4 (no 9x/ME systems!) */
 typedef BOOL (STDMETHODCALLTYPE FAR * LPFNGETUSERPROFILEDIR) (
