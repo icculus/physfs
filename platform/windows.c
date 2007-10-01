@@ -360,7 +360,6 @@ static const char *winApiStrError(void)
 static char *getExePath(void)
 {
     DWORD buflen = 64;
-    int success = 0;
     LPWSTR modpath = NULL;
     char *retval = NULL;
 
@@ -797,6 +796,8 @@ char *__PHYSFS_platformCurrentDir(void)
 /* this could probably use a cleanup. */
 char *__PHYSFS_platformRealPath(const char *path)
 {
+    /* !!! FIXME: this should return NULL if (path) doesn't exist? */
+    /* !!! FIXME: Need to handle symlinks in Vista... */
     /* !!! FIXME: try GetFullPathName() instead? */
     /* this function should be UTF-8 clean. */
     char *retval = NULL;
@@ -934,14 +935,14 @@ int __PHYSFS_platformMkDir(const char *path)
   *
   * Returns non-zero if successful, otherwise it returns zero on failure.
   */
- static int getOSInfo(void)
- {
-     OSVERSIONINFO osVerInfo;     /* Information about the OS */
-     osVerInfo.dwOSVersionInfoSize = sizeof(osVerInfo);
-     BAIL_IF_MACRO(!GetVersionEx(&osVerInfo), winApiStrError(), 0);
-     osHasUnicode = (osVerInfo.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS);
-     return(1);
- } /* getOSInfo */
+static int getOSInfo(void)
+{
+    OSVERSIONINFO osVerInfo;     /* Information about the OS */
+    osVerInfo.dwOSVersionInfoSize = sizeof(osVerInfo);
+    BAIL_IF_MACRO(!GetVersionEx(&osVerInfo), winApiStrError(), 0);
+    osHasUnicode = (osVerInfo.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS);
+    return(1);
+} /* getOSInfo */
 
 
 int __PHYSFS_platformInit(void)
