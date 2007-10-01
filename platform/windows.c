@@ -26,10 +26,8 @@
 
 #include "physfs_internal.h"
 
-#define LOWORDER_UINT64(pos) (PHYSFS_uint32) \
-    (pos & 0x00000000FFFFFFFF)
-#define HIGHORDER_UINT64(pos) (PHYSFS_uint32) \
-    (((pos & 0xFFFFFFFF00000000) >> 32) & 0x00000000FFFFFFFF)
+#define LOWORDER_UINT64(pos) ((PHYSFS_uint32) (pos & 0xFFFFFFFF))
+#define HIGHORDER_UINT64(pos) ((PHYSFS_uint32) ((pos >> 32) & 0xFFFFFFFF))
 
 /*
  * Users without the platform SDK don't have this defined.  The original docs
