@@ -1208,7 +1208,7 @@ int __PHYSFS_platformClose(void *opaque)
 static int doPlatformDelete(LPWSTR wpath)
 {
     /* If filename is a folder */
-    if (pGetFileAttributesW(wpath) == FILE_ATTRIBUTE_DIRECTORY)
+    if (pGetFileAttributesW(wpath) & FILE_ATTRIBUTE_DIRECTORY)
     {
         BAIL_IF_MACRO(!pRemoveDirectoryW(wpath), winApiStrError(), 0);
     } /* if */
