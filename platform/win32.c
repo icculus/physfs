@@ -970,7 +970,7 @@ int __PHYSFS_platformClose(void *opaque)
 int __PHYSFS_platformDelete(const char *path)
 {
     /* If filename is a folder */
-    if (GetFileAttributes(path) == FILE_ATTRIBUTE_DIRECTORY)
+    if (GetFileAttributes(path) & FILE_ATTRIBUTE_DIRECTORY)
     {
         BAIL_IF_MACRO(!RemoveDirectory(path), win32strerror(), 0);
     } /* if */
