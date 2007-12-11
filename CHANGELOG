@@ -4,6 +4,7 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+12112007 - Fixed incorrect directory test in Windows code (thanks, Dennis!).
 10012007 - More mingw32 fixes.
 07122007 - Maybe fixed compile on mingw32.
 07112007 - Fixed crash on zero-byte read/write (thanks, Ensiform!).
