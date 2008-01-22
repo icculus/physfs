@@ -67,7 +67,7 @@ typedef struct
 static char *txt404 =
 "HTTP/1.0 404 Not Found\n"
 "Connection: close\n"
-"Content-type: text/html\n"
+"Content-Type: text/html; charset=utf-8\n"
 "\n"
 "<html><head><title>404 Not Found</title></head>\n"
 "<body>Can't find that.</body></html>\n\n";
