@@ -47,7 +47,7 @@
     if (str == NULL) \
         w_assignto = NULL; \
     else { \
-        const PHYSFS_uint64 len = (PHYSFS_uint64) ((strlen(str) * 4) + 1); \
+        const PHYSFS_uint64 len = (PHYSFS_uint64) ((strlen(str) + 1) * 2); \
         w_assignto = (WCHAR *) __PHYSFS_smallAlloc(len); \
         if (w_assignto != NULL) \
             PHYSFS_utf8ToUcs2(str, (PHYSFS_uint16 *) w_assignto, len); \

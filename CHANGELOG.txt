@@ -2,7 +2,8 @@
  * CHANGELOG.
  */
 
-01212008 - Fixed HTTP header in physfshttpd.c.
+01212008 - Fixed HTTP header in physfshttpd.c. Fixed utf-8 to UCS-2 allocation
+           size in Windows code.
 12112007 - Fixed incorrect directory test in Windows code (thanks, Buginator!).
 10012007 - More mingw32 fixes.
 07122007 - Maybe fixed compile on mingw32.
