@@ -86,16 +86,17 @@ SET(ZLIB_SRCS
 )
 
 SET(LZMA_SRCS
-    lzma/7zBuffer.c
-    lzma/7zCrc.c
-    lzma/7zDecode.c
-    lzma/7zExtract.c
-    lzma/7zHeader.c
-    lzma/7zIn.c
-    lzma/7zItem.c
-    lzma/7zMethodID.c
-    lzma/LzmaDecode.c
-    lzma/LzmaStateDecode.c
+    lzma/C/7zCrc.c
+    lzma/C/Archive/7z/7zBuffer.c
+    lzma/C/Archive/7z/7zDecode.c
+    lzma/C/Archive/7z/7zExtract.c
+    lzma/C/Archive/7z/7zHeader.c
+    lzma/C/Archive/7z/7zIn.c
+    lzma/C/Archive/7z/7zItem.c
+    lzma/C/Archive/7z/7zMethodID.c
+    lzma/C/Compress/Branch/BranchX86.c
+    lzma/C/Compress/Branch/BranchX86_2.c
+    lzma/C/Compress/Lzma/LzmaDecode.c
 )
 
 IF(BEOS)
@@ -210,11 +211,6 @@ IF(PHYSFS_ARCHIVE_7Z)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_7Z=1)
     # !!! FIXME: rename to 7z.c?
     SET(PHYSFS_SRCS ${PHYSFS_SRCS} ${LZMA_SRCS})
-    INCLUDE_DIRECTORIES(lzma)
-    ADD_DEFINITIONS(-D_LZMA_IN_CB=1)
-    ADD_DEFINITIONS(-D_LZMA_PROB32=1)
-    ADD_DEFINITIONS(-D_LZMA_SYSTEM_SIZE_T=1)
-    ADD_DEFINITIONS(-D_SZ_ONE_DIRECTORY=1)
 ENDIF(PHYSFS_ARCHIVE_7Z)
 
 OPTION(PHYSFS_ARCHIVE_GRP "Enable Build Engine GRP support" TRUE)
