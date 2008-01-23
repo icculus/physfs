@@ -3,6 +3,7 @@
  */
 
 01222008 - Upgraded lzma sdk, lzma.c improvements (thanks, Dennis!).
+           Added zlib README, and updated LICENSE.txt.
 01212008 - Fixed HTTP header in physfshttpd.c. Fixed utf-8 to UCS-2 allocation
            size in Windows code.
 12112007 - Fixed incorrect directory test in Windows code (thanks, Buginator!).
