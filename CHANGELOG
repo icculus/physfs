@@ -4,6 +4,7 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+01222008 - Added zlib README, and updated LICENSE.txt.
 01212008 - Fixed HTTP header in physfshttpd.c.
 12112007 - Fixed incorrect directory test in Windows code (thanks, Buginator!).
 10012007 - More mingw32 fixes.
