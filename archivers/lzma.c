@@ -130,7 +130,7 @@ SZ_RESULT SzFileReadImp(void *object, void **buffer, size_t maxReqSize,
 SZ_RESULT SzFileReadImp(void *object, void *buffer, size_t size,
                         size_t *processedSize)
 {
-    FileInputStream *s = (FileInputStream *)(object - offsetof(FileInputStream, inStream)); // HACK!
+    FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); // HACK!
     size_t processedSizeLoc = __PHYSFS_platformRead(s->file, buffer, 1, size);
     if (processedSize != 0)
         *processedSize = processedSizeLoc;
@@ -145,7 +145,7 @@ SZ_RESULT SzFileReadImp(void *object, void *buffer, size_t size,
  */
 SZ_RESULT SzFileSeekImp(void *object, CFileSize pos)
 {
-    FileInputStream *s = (FileInputStream *)(object - offsetof(FileInputStream, inStream)); // HACK!
+    FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); // HACK!
     if (__PHYSFS_platformSeek(s->file, (PHYSFS_uint64) pos))
         return SZ_OK;
     return SZE_FAIL;
@@ -563,8 +563,18 @@ static void LZMA_enumerateFiles(dvoid *opaque, const char *dname,
     size_t dlen = strlen(dname),
            dlen_inc = dlen + ((dlen > 0) ? 1 : 0);
     LZMAarchive *archive = (LZMAarchive *) opaque;
-    LZMAfile *file = (dlen ? lzma_find_file(archive, dname) + 1 : archive->files),
-             *lastFile = &archive->files[archive->db.Database.NumFiles];
+    LZMAfile *file = NULL,
+            *lastFile = &archive->files[archive->db.Database.NumFiles];
+        if (dlen)
+        {
+            file = lzma_find_file(archive, dname);
+            if (file != NULL) // if 'file' is NULL it should stay so, otherwise errors will not be handled
+                file += 1;
+        }
+        else
+        {
+            file = archive->files;
+        }
 
     BAIL_IF_MACRO(file == NULL, ERR_NO_SUCH_FILE, );
 
@@ -620,7 +630,7 @@ static int LZMA_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 
     *fileExists = (file != NULL);
 
-    return(file->item->IsDirectory);
+    return(file == NULL ? 0 : file->item->IsDirectory);
 } /* LZMA_isDirectory */
 
 

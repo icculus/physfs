@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+02012008 - lzma fixes (thanks, eH!).
 01222008 - Upgraded lzma sdk, lzma.c improvements (thanks, Dennis!).
            Added zlib README, and updated LICENSE.txt.
 01212008 - Fixed HTTP header in physfshttpd.c. Fixed utf-8 to UCS-2 allocation
