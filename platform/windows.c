@@ -339,6 +339,9 @@ static const char *winApiStrError(void)
                     msgbuf, __PHYSFS_ARRAYLEN(msgbuf),
                     NULL);
 
+    if (rc == 0)
+        msgbuf[0] = '\0';  /* oh well. */
+
     /* chop off newlines. */
     for (ptr = msgbuf; *ptr; ptr++)
     {

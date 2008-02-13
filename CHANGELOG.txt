@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+02132008 - Minor Windows fix (thanks, fydo!).
 02012008 - lzma fixes (thanks, eH!).
 01222008 - Upgraded lzma sdk, lzma.c improvements (thanks, Dennis!).
            Added zlib README, and updated LICENSE.txt.
