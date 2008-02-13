@@ -78,8 +78,7 @@ static const char *win32strerror(void)
 {
     static TCHAR msgbuf[255];
     TCHAR *ptr = msgbuf;
-
-    FormatMessage(
+    DWORD rc = FormatMessage(
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL,
@@ -89,6 +88,9 @@ static const char *win32strerror(void)
         sizeof (msgbuf) / sizeof (TCHAR),
         NULL 
     );
+
+    if (rc == 0)
+        msgbuf = '\0';  /* oh well. */
 
         /* chop off newlines. */
     for (ptr = msgbuf; *ptr; ptr++)
