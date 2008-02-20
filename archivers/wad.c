@@ -287,19 +287,27 @@ static int WAD_isArchive(const char *filename, int forWriting)
 
 static int wad_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    WADentry *a = (WADentry *) _a;
-    return(strcmp(a[one].name, a[two].name));
+    if (one != two)
+    {
+        const WADentry *a = (const WADentry *) _a;
+        return(strcmp(a[one].name, a[two].name));
+    } /* if */
+
+    return 0;
 } /* wad_entry_cmp */
 
 
 static void wad_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    WADentry tmp;
-    WADentry *first = &(((WADentry *) _a)[one]);
-    WADentry *second = &(((WADentry *) _a)[two]);
-    memcpy(&tmp, first, sizeof (WADentry));
-    memcpy(first, second, sizeof (WADentry));
-    memcpy(second, &tmp, sizeof (WADentry));
+    if (one != two)
+    {
+        WADentry tmp;
+        WADentry *first = &(((WADentry *) _a)[one]);
+        WADentry *second = &(((WADentry *) _a)[two]);
+        memcpy(&tmp, first, sizeof (WADentry));
+        memcpy(first, second, sizeof (WADentry));
+        memcpy(second, &tmp, sizeof (WADentry));
+    } /* if */
 } /* wad_entry_swap */
 
 

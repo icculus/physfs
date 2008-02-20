@@ -266,19 +266,27 @@ static int MVL_isArchive(const char *filename, int forWriting)
 
 static int mvl_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    MVLentry *a = (MVLentry *) _a;
-    return(strcmp(a[one].name, a[two].name));
+    if (one != two)
+    {
+        const MVLentry *a = (const MVLentry *) _a;
+        return(strcmp(a[one].name, a[two].name));
+    } /* if */
+
+    return 0;
 } /* mvl_entry_cmp */
 
 
 static void mvl_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    MVLentry tmp;
-    MVLentry *first = &(((MVLentry *) _a)[one]);
-    MVLentry *second = &(((MVLentry *) _a)[two]);
-    memcpy(&tmp, first, sizeof (MVLentry));
-    memcpy(first, second, sizeof (MVLentry));
-    memcpy(second, &tmp, sizeof (MVLentry));
+    if (one != two)
+    {
+        MVLentry tmp;
+        MVLentry *first = &(((MVLentry *) _a)[one]);
+        MVLentry *second = &(((MVLentry *) _a)[two]);
+        memcpy(&tmp, first, sizeof (MVLentry));
+        memcpy(first, second, sizeof (MVLentry));
+        memcpy(second, &tmp, sizeof (MVLentry));
+    } /* if */
 } /* mvl_entry_swap */
 
 
