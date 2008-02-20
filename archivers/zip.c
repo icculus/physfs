@@ -952,19 +952,27 @@ zip_load_entry_puked:
 
 static int zip_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    ZIPentry *a = (ZIPentry *) _a;
-    return(strcmp(a[one].name, a[two].name));
+    if (one != two)
+    {
+        const ZIPentry *a = (const ZIPentry *) _a;
+        return(strcmp(a[one].name, a[two].name));
+    } /* if */
+
+    return 0;
 } /* zip_entry_cmp */
 
 
 static void zip_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    ZIPentry tmp;
-    ZIPentry *first = &(((ZIPentry *) _a)[one]);
-    ZIPentry *second = &(((ZIPentry *) _a)[two]);
-    memcpy(&tmp, first, sizeof (ZIPentry));
-    memcpy(first, second, sizeof (ZIPentry));
-    memcpy(second, &tmp, sizeof (ZIPentry));
+    if (one != two)
+    {
+        ZIPentry tmp;
+        ZIPentry *first = &(((ZIPentry *) _a)[one]);
+        ZIPentry *second = &(((ZIPentry *) _a)[two]);
+        memcpy(&tmp, first, sizeof (ZIPentry));
+        memcpy(first, second, sizeof (ZIPentry));
+        memcpy(second, &tmp, sizeof (ZIPentry));
+    } /* if */
 } /* zip_entry_swap */
 
 

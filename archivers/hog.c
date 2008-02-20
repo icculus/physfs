@@ -228,19 +228,27 @@ static int HOG_isArchive(const char *filename, int forWriting)
 
 static int hog_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    HOGentry *a = (HOGentry *) _a;
-    return(__PHYSFS_stricmpASCII(a[one].name, a[two].name));
+    if (one != two)
+    {
+        const HOGentry *a = (const HOGentry *) _a;
+        return(__PHYSFS_stricmpASCII(a[one].name, a[two].name));
+    } /* if */
+
+    return 0;
 } /* hog_entry_cmp */
 
 
 static void hog_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    HOGentry tmp;
-    HOGentry *first = &(((HOGentry *) _a)[one]);
-    HOGentry *second = &(((HOGentry *) _a)[two]);
-    memcpy(&tmp, first, sizeof (HOGentry));
-    memcpy(first, second, sizeof (HOGentry));
-    memcpy(second, &tmp, sizeof (HOGentry));
+    if (one != two)
+    {
+        HOGentry tmp;
+        HOGentry *first = &(((HOGentry *) _a)[one]);
+        HOGentry *second = &(((HOGentry *) _a)[two]);
+        memcpy(&tmp, first, sizeof (HOGentry));
+        memcpy(first, second, sizeof (HOGentry));
+        memcpy(second, &tmp, sizeof (HOGentry));
+    } /* if */
 } /* hog_entry_swap */
 
 
