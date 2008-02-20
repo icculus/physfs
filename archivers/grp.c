@@ -263,19 +263,27 @@ static int GRP_isArchive(const char *filename, int forWriting)
 
 static int grp_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    GRPentry *a = (GRPentry *) _a;
-    return(strcmp(a[one].name, a[two].name));
+    if (one != two)
+    {
+        const GRPentry *a = (const GRPentry *) _a;
+        return(strcmp(a[one].name, a[two].name));
+    } /* if */
+
+    return 0;
 } /* grp_entry_cmp */
 
 
 static void grp_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    GRPentry tmp;
-    GRPentry *first = &(((GRPentry *) _a)[one]);
-    GRPentry *second = &(((GRPentry *) _a)[two]);
-    memcpy(&tmp, first, sizeof (GRPentry));
-    memcpy(first, second, sizeof (GRPentry));
-    memcpy(second, &tmp, sizeof (GRPentry));
+    if (one != two)
+    {
+        GRPentry tmp;
+        GRPentry *first = &(((GRPentry *) _a)[one]);
+        GRPentry *second = &(((GRPentry *) _a)[two]);
+        memcpy(&tmp, first, sizeof (GRPentry));
+        memcpy(first, second, sizeof (GRPentry));
+        memcpy(second, &tmp, sizeof (GRPentry));
+    } /* if */
 } /* grp_entry_swap */
 
 

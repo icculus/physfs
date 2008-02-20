@@ -296,19 +296,27 @@ static int QPAK_isArchive(const char *filename, int forWriting)
 
 static int qpak_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    QPAKentry *a = (QPAKentry *) _a;
-    return(QPAK_strcmp(a[one].name, a[two].name));
+    if (one != two)
+    {
+        const QPAKentry *a = (const QPAKentry *) _a;
+        return(QPAK_strcmp(a[one].name, a[two].name));
+    } /* if */
+
+    return 0;
 } /* qpak_entry_cmp */
 
 
 static void qpak_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
-    QPAKentry tmp;
-    QPAKentry *first = &(((QPAKentry *) _a)[one]);
-    QPAKentry *second = &(((QPAKentry *) _a)[two]);
-    memcpy(&tmp, first, sizeof (QPAKentry));
-    memcpy(first, second, sizeof (QPAKentry));
-    memcpy(second, &tmp, sizeof (QPAKentry));
+    if (one != two)
+    {
+        QPAKentry tmp;
+        QPAKentry *first = &(((QPAKentry *) _a)[one]);
+        QPAKentry *second = &(((QPAKentry *) _a)[two]);
+        memcpy(&tmp, first, sizeof (QPAKentry));
+        memcpy(first, second, sizeof (QPAKentry));
+        memcpy(second, &tmp, sizeof (QPAKentry));
+    } /* if */
 } /* qpak_entry_swap */
 
 
