@@ -2,6 +2,9 @@
  * CHANGELOG.
  */
 
+02202008 - Various archiver swap and compare functions now check if they are
+           swapping/comparing an item against itself, for efficiency and
+           to prevent overlapping memcpy() calls.
 02132008 - Minor Windows fix (thanks, fydo!).
 02012008 - lzma fixes (thanks, eH!).
 01222008 - Upgraded lzma sdk, lzma.c improvements (thanks, Dennis!).
