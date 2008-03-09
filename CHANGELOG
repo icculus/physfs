@@ -4,6 +4,7 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+03082008 - Fixed compiler warnings in Windows platform layer (thanks, Dennis!).
 02202008 - Various archiver swap and compare functions now check if they are
            swapping/comparing an item against itself, for efficiency and
            to prevent overlapping memcpy() calls.
