@@ -1089,8 +1089,8 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
     HANDLE Handle = ((WinApiFile *) opaque)->handle;
-    DWORD HighOrderPos;
-    DWORD *pHighOrderPos;
+    LONG HighOrderPos;
+    PLONG pHighOrderPos;
     DWORD rc;
 
     /* Get the high order 32-bits of the position */
@@ -1127,7 +1127,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
     HANDLE Handle = ((WinApiFile *) opaque)->handle;
-    DWORD HighPos = 0;
+    LONG HighPos = 0;
     DWORD LowPos;
     PHYSFS_sint64 retval;
 
