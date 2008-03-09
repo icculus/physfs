@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+03082008 - Fixed compiler warnings in Windows platform layer (thanks, Dennis!).
 02202008 - Various archiver swap and compare functions now check if they are
            swapping/comparing an item against itself, for efficiency and
            to prevent overlapping memcpy() calls.
