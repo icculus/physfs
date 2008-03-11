@@ -90,9 +90,9 @@ static const char *win32strerror(void)
     );
 
     if (rc == 0)
-        msgbuf = '\0';  /* oh well. */
+        msgbuf[0] = '\0';  /* oh well. Empty string. */
 
-        /* chop off newlines. */
+    /* chop off newlines... */
     for (ptr = msgbuf; *ptr; ptr++)
     {
         if ((*ptr == '\n') || (*ptr == '\r'))
