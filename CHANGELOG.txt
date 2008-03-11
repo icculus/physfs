@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+03102008 - Changed some text files from ISO-8859-1 to UTF-8.
 03082008 - Fixed compiler warnings in Windows platform layer (thanks, Dennis!).
 02202008 - Various archiver swap and compare functions now check if they are
            swapping/comparing an item against itself, for efficiency and
@@ -141,7 +142,7 @@
 08202005 - Fixed bug in verifyPath() that was breaking PHYSFS_setSaneConfig()
            and other corner cases.
 07242005 - Patched to compile on BeOS.
-07232005 - Fixed bug in zip archiver (thanks, Jörg Walter!).
+07232005 - Fixed bug in zip archiver (thanks, JÃ¶rg Walter!).
            More minor OS/2 tweaks. Updated zlib to 1.2.3, which properly
            includes the security fix. Fixed "make dist" to handle .svn dirs
            and other file changes. Removed "debian" directory. Allow a mount
@@ -341,9 +342,9 @@
 07302002 - Minor error handling fix (thanks, Alexander!)
 07292002 - Found some memory leaks, thanks to Valgrind (which rules, btw).
            Added Russian translations (koi8-r, cp1251, cp866, and iso-8859-5)
-           by Ed Sinjiashvili. Added Spanish translation by Pedro J. Pérez.
+           by Ed Sinjiashvili. Added Spanish translation by Pedro J. PÃ©rez.
            Debian package support in CVS, thanks to Colin Bayer. French
-           translation by Stéphane Peter.
+           translation by StÃ©phane Peter.
 07282002 - macclassic.c now returns human readable error messages instead of
            ERR_OS_ERROR. Closing files on MacOS no longer fails if the volume
            info can't be flushed. Minor error message tweak in os2.c. All
