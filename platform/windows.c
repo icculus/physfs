@@ -256,10 +256,21 @@ static HANDLE WINAPI fallbackCreateFileW(LPCWSTR fname,
 } /* fallbackCreateFileW */
 
 
-/* A blatant abuse of pointer casting... */
-static int symLookup(HMODULE dll, void **addr, const char *sym)
+#if (PHYSFS_MINIMUM_GCC_VERSION(3,3))
+    typedef FARPROC __attribute__((__may_alias__)) PHYSFS_FARPROC;
+#else
+    typedef FARPROC PHYSFS_FARPROC;
+#endif
+
+
+static void symLookup(HMODULE dll, PHYSFS_FARPROC *addr, const char *sym,
+                      int reallyLook, PHYSFS_FARPROC fallback)
 {
-    return( (*addr = GetProcAddress(dll, sym)) != NULL );
+    PHYSFS_FARPROC proc;
+    proc = (PHYSFS_FARPROC) ((reallyLook) ? GetProcAddress(dll, sym) : NULL);
+    if (proc == NULL)
+        proc = fallback;  /* may also be NULL. */
+    *addr = proc;
 } /* symLookup */
 
 
@@ -267,17 +278,12 @@ static int findApiSymbols(void)
 {
     HMODULE dll = NULL;
 
-    #define LOOKUP_NOFALLBACK(x, reallyLook) { \
-        if (reallyLook) \
-            symLookup(dll, (void **) &p##x, #x); \
-        else \
-            p##x = NULL; \
-    }
+    #define LOOKUP_NOFALLBACK(x, reallyLook) \
+        symLookup(dll, (PHYSFS_FARPROC *) &p##x, #x, reallyLook, NULL)
 
-    #define LOOKUP(x, reallyLook) { \
-        if ((!reallyLook) || (!symLookup(dll, (void **) &p##x, #x))) \
-            p##x = fallback##x; \
-    }
+    #define LOOKUP(x, reallyLook) \
+        symLookup(dll, (PHYSFS_FARPROC *) &p##x, #x, \
+                  reallyLook, (PHYSFS_FARPROC) fallback##x)
 
     /* Apparently Win9x HAS the Unicode entry points, they just don't WORK. */
     /*  ...so don't look them up unless we're on NT+. (see osHasUnicode.) */

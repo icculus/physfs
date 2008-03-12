@@ -33,6 +33,13 @@
 extern "C" {
 #endif
 
+#ifdef __GNUC__
+#define PHYSFS_MINIMUM_GCC_VER(major, minor) \
+    ( ((__GNUC__ << 16) + __GNUC_MINOR__) >= (((major) << 16) + (minor)) )
+#else
+#define PHYSFS_MINIMUM_GCC_VER(major, minor) (0)
+#endif
+
 /*
  * Interface for small allocations. If you need a little scratch space for
  *  a throwaway buffer or string, use this. It will make small allocations
@@ -1020,6 +1027,7 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 #define __PHYSFS_UI64(x) x
 #endif
 
+
 /*
  * Check if a ui64 will fit in the platform's address space.
  *  The initial sizeof check will optimize this macro out entirely on
@@ -1031,6 +1039,7 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
     (sizeof (PHYSFS_uint64) > sizeof (size_t)) && \
     ((s) > (__PHYSFS_UI64(0xFFFFFFFFFFFFFFFF) >> (64-(sizeof(size_t)*8)))) \
 )
+
 
 /*
  * This is a strcasecmp() or stricmp() replacement that expects both strings
