@@ -4,6 +4,7 @@
 
 -- stuff in the stable-1.0 branch, backported from 2.0.0 dev branch, etc ---
 
+03122008 - Removed a FIXME.
 03112008 - Fixed wrong array index in Windows platform layer (thanks, James!).
 03082008 - Fixed compiler warnings in Windows platform layer (thanks, Dennis!).
 02202008 - Various archiver swap and compare functions now check if they are
