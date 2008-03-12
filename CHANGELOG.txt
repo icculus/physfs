@@ -2,6 +2,7 @@
  * CHANGELOG.
  */
 
+03122008 - Fixed aliasing bug in Windows platform layer (thanks, Dennis!).
 03102008 - Changed some text files from ISO-8859-1 to UTF-8. Replaced all the
            translations with UTF-8 encoded equivalents.
 03082008 - Fixed compiler warnings in Windows platform layer (thanks, Dennis!).
