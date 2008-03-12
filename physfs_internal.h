@@ -34,10 +34,10 @@ extern "C" {
 #endif
 
 #ifdef __GNUC__
-#define PHYSFS_MINIMUM_GCC_VER(major, minor) \
+#define PHYSFS_MINIMUM_GCC_VERSION(major, minor) \
     ( ((__GNUC__ << 16) + __GNUC_MINOR__) >= (((major) << 16) + (minor)) )
 #else
-#define PHYSFS_MINIMUM_GCC_VER(major, minor) (0)
+#define PHYSFS_MINIMUM_GCC_VERSION(major, minor) (0)
 #endif
 
 /*
