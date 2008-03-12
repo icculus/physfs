@@ -204,7 +204,7 @@ static int determineUserDir(void)
     lib = LoadLibrary("userenv.dll");
     if (lib)
     {
-        /* !!! FIXME: Handle Unicode? */
+        /* If you want Unicode, upgrade to PhysicsFS 1.1.1 or later! */
         GetUserProfileDirectory = (LPFNGETUSERPROFILEDIR)
                               GetProcAddress(lib, "GetUserProfileDirectoryA");
         if (GetUserProfileDirectory)
