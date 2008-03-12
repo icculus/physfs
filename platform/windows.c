@@ -256,7 +256,7 @@ static HANDLE WINAPI fallbackCreateFileW(LPCWSTR fname,
 } /* fallbackCreateFileW */
 
 
-#if PHYSFS_MINIMUM_GCC_VERSION(3,3)
+#if (PHYSFS_MINIMUM_GCC_VERSION(3,3))
     typedef FARPROC __attribute__((__may_alias__)) PHYSFS_FARPROC;
 #else
     typedef FARPROC PHYSFS_FARPROC;
