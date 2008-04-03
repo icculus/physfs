@@ -344,12 +344,25 @@ int __PHYSFS_platformMkDir(const char *path)
 
 static void *doOpen(const char *filename, int mode)
 {
+    const int appending = (mode & O_APPEND);
     int fd;
     int *retval;
     errno = 0;
 
+    /* O_APPEND doesn't actually behave as we'd like. */
+    mode &= ~O_APPEND;
+
     fd = open(filename, mode, S_IRUSR | S_IWUSR);
     BAIL_IF_MACRO(fd < 0, strerror(errno), NULL);
+
+    if (appending)
+    {
+        if (lseek(fd, 0, SEEK_END) < 0)
+        {
+            close(fd);
+            BAIL_MACRO(strerror(errno), NULL);
+        } /* if */
+    } /* if */
 
     retval = (int *) malloc(sizeof (int));
     if (retval == NULL)
