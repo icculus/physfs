@@ -50,6 +50,9 @@ Apple Project Builder support,
 Mac OS X improvements:
     Eric Wing
 
+iPhone support:
+    Christian Gmeiner
+
 HOG archiver,
 MVL archiver:
     Bradley Bell
@@ -80,6 +83,9 @@ General bug fixes:
 
 Bug fixes:
     Jörg Walter
+
+Bug fixes:
+    Olivier Boudeville
 
 Windows .rc file,
 7zip/lzma archiver:
