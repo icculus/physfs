@@ -334,7 +334,7 @@ PHYSFS_COMPILE_TIME_ASSERT(sint64, sizeof(PHYSFS_sint64) == 8);
  * \sa PHYSFS_setBuffer
  * \sa PHYSFS_flush
  */
-typedef struct
+typedef struct PHYSFS_File
 {
     void *opaque;  /**< That's all you get. Don't touch. */
 } PHYSFS_File;
@@ -369,7 +369,7 @@ typedef struct
  *
  * \sa PHYSFS_supportedArchiveTypes
  */
-typedef struct
+typedef struct PHYSFS_ArchiveInfo
 {
     const char *extension;   /**< Archive file extension: "ZIP", for example. */
     const char *description; /**< Human-readable archive description. */
@@ -391,7 +391,7 @@ typedef struct
  * \sa PHYSFS_VERSION
  * \sa PHYSFS_getLinkedVersion
  */
-typedef struct
+typedef struct PHYSFS_Version
 {
     PHYSFS_uint8 major; /**< major revision */
     PHYSFS_uint8 minor; /**< minor revision */
@@ -1974,7 +1974,7 @@ __EXPORT__ int PHYSFS_symbolicLinksPermitted(void);
  *
  * \sa PHYSFS_setAllocator
  */
-typedef struct
+typedef struct PHYSFS_Allocator
 {
     int (*Init)(void);   /**< Initialize. Can be NULL. Zero on failure. */
     void (*Deinit)(void);  /**< Deinitialize your allocator. Can be NULL. */
