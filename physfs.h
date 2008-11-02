@@ -531,7 +531,7 @@ __EXPORT__ int PHYSFS_deinit(void);
  * for (i = PHYSFS_supportedArchiveTypes(); *i != NULL; i++)
  * {
  *     printf("Supported archive: [%s], which is [%s].\n",
- *              i->extension, i->description);
+ *              (*i)->extension, (*i)->description);
  * }
  * \endcode
  *

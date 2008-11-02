@@ -3,7 +3,8 @@
  */
 
 11022008 - iPhone support (thanks, Christian!). Added struct typedefs that
-           are friendlier to predeclaring.
+           are friendlier to predeclaring and fixed example in docs (thanks,
+           Olivier!).
 04032008 - Fixed PHYSFS_openAppend() to work as documented on Unix.
 03122008 - Fixed aliasing bug in Windows platform layer (thanks, Dennis!).
 03102008 - Changed some text files from ISO-8859-1 to UTF-8. Replaced all the
