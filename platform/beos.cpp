@@ -11,6 +11,18 @@
 
 #ifdef PHYSFS_PLATFORM_BEOS
 
+#ifdef PHYSFS_PLATFORM_HAIKU
+#include <os/kernel/OS.h>
+#include <os/app/Roster.h>
+#include <os/storage/Volume.h>
+#include <os/storage/VolumeRoster.h>
+#include <os/storage/Directory.h>
+#include <os/storage/Entry.h>
+#include <os/storage/Path.h>
+#include <os/kernel/fs_info.h>
+#include <os/device/scsi.h>
+#include <os/support/Locker.h>
+#else
 #include <be/kernel/OS.h>
 #include <be/app/Roster.h>
 #include <be/storage/Volume.h>
@@ -21,6 +33,7 @@
 #include <be/kernel/fs_info.h>
 #include <be/device/scsi.h>
 #include <be/support/Locker.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>

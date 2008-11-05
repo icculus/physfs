@@ -81,6 +81,9 @@ Mingw support,
 General bug fixes:
     Matze Braun
 
+Haiku support:
+    scott mc
+
 Bug fixes:
     Jörg Walter
 
