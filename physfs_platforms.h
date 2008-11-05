@@ -12,7 +12,11 @@
  *  PHYSFS_PLATFORM_UNIX on that system.
  */
 
-#if ((defined __BEOS__) || (defined __beos__))
+#if (defined __HAIKU__)
+#  define PHYSFS_PLATFORM_HAIKU
+#  define PHYSFS_PLATFORM_BEOS
+#  define PHYSFS_PLATFORM_POSIX
+#elif ((defined __BEOS__) || (defined __beos__))
 #  define PHYSFS_PLATFORM_BEOS
 #  define PHYSFS_PLATFORM_POSIX
 #elif (defined _WIN32_WCE) || (defined _WIN64_WCE)
