@@ -245,7 +245,8 @@ static void __PHYSFS_quick_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
                 break;
             swapfn(a, i, j);
         } /* while */
-        swapfn(a, i, hi-1);
+        if (i != (hi-1))
+            swapfn(a, i, hi-1);
         __PHYSFS_quick_sort(a, lo, j, cmpfn, swapfn);
         __PHYSFS_quick_sort(a, i+1, hi, cmpfn, swapfn);
     } /* else */
