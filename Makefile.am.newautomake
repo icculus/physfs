@@ -156,4 +156,5 @@ dist-hook:
 	echo >> $(distdir)/docs/README
 	rm -rf `find $(distdir) -name "CVS" -type d`
 	rm -rf `find $(distdir) -name ".svn" -type d`
+	rm -rf $(distdir)/.hg
 
