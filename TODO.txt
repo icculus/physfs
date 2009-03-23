@@ -40,6 +40,7 @@ Stuff:
 - Write up a simple HOWTO on embedding physicsfs in another project.
 - Archivers need abstracted i/o to read from memory or files (archives in archives?)
 - Probably other stuff. Requests and recommendations are welcome.
+- Tag missing releases in revision control.
 
 // end of TODO.txt ...
 
