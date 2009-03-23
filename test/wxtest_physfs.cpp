@@ -22,9 +22,9 @@
 
 #include "physfs.h"
 
-#define TEST_VER_MAJOR  1
-#define TEST_VER_MINOR  1
-#define TEST_VER_PATCH  1
+#define TEST_VER_MAJOR  2
+#define TEST_VER_MINOR  0
+#define TEST_VER_PATCH  0
 
 //static PHYSFS_uint32 do_buffer_size = 0;
 
