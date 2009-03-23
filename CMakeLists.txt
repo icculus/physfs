@@ -7,7 +7,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
 PROJECT(PhysicsFS)
 SET(PHYSFS_VERSION 1.1.1)
-SET(PHYSFS_SOVERSION 1)
+
+# Increment this if/when we break backwards compatibility.
+SET(PHYSFS_SOVERSION 0)
 
 # I hate that they define "WIN32" ... we're about to move to Win64...I hope!
 IF(WIN32 AND NOT WINDOWS)
