@@ -26,10 +26,12 @@ UNIX:
 
 You will need CMake (http://www.cmake.org/) 2.4 or later installed.
 
-Run "cmake ." in the root of the source directory to generate Makefiles.
- You can then run "ccmake ." and customize the build, but the defaults are
- probably okay. You can have CMake generate KDevelop project files if you
- prefer these.
+Make a directory, wherever you like. This will be your build directory.
+
+Chdir to your build directory. Run "cmake /where/i/unpacked/physfs" to
+ generate Makefiles. You can then run "ccmake ." and customize the build,
+ but the defaults are probably okay. You can have CMake generate KDevelop
+ project files if you prefer these.
 
 Run "make". PhysicsFS will now build.
 
@@ -37,13 +39,15 @@ As root, run "make install".
  If you get sick of the library, run "xargs rm < install_manifest.txt" as root
  and it will remove all traces of the library from the system paths.
 
+Once you are satisfied, you can delete the build directory.
+
 Primary Unix development is done with GNU/Linux, but PhysicsFS is known to
  work out of the box with several flavors of Unix. It it doesn't work, patches
  to get it running can be sent to icculus@icculus.org.
 
 
 
-BeOS:
+BeOS, Zeta, and Haiku:
 
 Use the "Unix" instructions, above. The CMake port to BeOS is fairly new at
  the time of this writing, but it works. You can get a build of CMake from
@@ -53,7 +57,7 @@ Use the "Unix" instructions, above. The CMake port to BeOS is fairly new at
 
 Windows:
 
-If building with CygWin, mingw32 or something else that uses the GNU
+If building with Cygwin, mingw32, MSYS, or something else that uses the GNU
  toolchain, follow the Unix instructions, above.
 
 If you want to use Visual Studio, nmake, or the Platform SDK, you will need
@@ -94,7 +98,7 @@ Code exists for PocketPC support, and there are shipping titles that used
 MAC OS 8/9:
 
 Classic Mac OS support has been dropped in PhysicsFS 2.0. Apple hasn't updated
- pre-OSX versions in almost a decade at this point, none of the hardware
+ pre-OSX versions in more than a decade at this point, none of the hardware
  they've shipped will boot it for almost as many years, and finding
  developer tools for it is becoming almost impossible. As the switch to Intel
  hardware has removed the "Classic" emulation environment, it was time to
