@@ -18,7 +18,7 @@ If you've got Doxygen (http://www.doxygen.org/) installed, you can run it
 
 
 UNIX:
-(If you got this code from CVS, run "./bootstrap" first.)
+(If you got this code from Mercurial, run "./bootstrap" first.)
 
 Run ./configure --help and see what features can be optionally enabled or
 disabled. "./configure" does its best to pick optimal defaults for your
