@@ -323,7 +323,7 @@ typedef struct
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 #define PHYSFS_VER_MAJOR 1
 #define PHYSFS_VER_MINOR 0
-#define PHYSFS_VER_PATCH 1
+#define PHYSFS_VER_PATCH 2
 #endif  /* DOXYGEN_SHOULD_IGNORE_THIS */
 
 
