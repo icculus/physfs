@@ -14,18 +14,6 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-/* The macros used to swap values */
-/* Try to use superfast macros on systems that support them */
-#ifdef linux
-#include <asm/byteorder.h>
-#ifdef __arch__swab16
-#define PHYSFS_Swap16  __arch__swab16
-#endif
-#ifdef __arch__swab32
-#define PHYSFS_Swap32  __arch__swab32
-#endif
-#endif /* linux */
-
 #if (defined macintosh) && !(defined __MWERKS__)
 #define __inline__
 #endif
