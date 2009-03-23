@@ -26,7 +26,7 @@
 #elif (defined OS2)
 #  define PHYSFS_PLATFORM_OS2
 #elif ((defined __MACH__) && (defined __APPLE__))
-/* To check if iphone or not, we need to inlcude this file */
+/* To check if iphone or not, we need to include this file */
 # include <TargetConditionals.h> 
 # if (defined(TARGET_IPHONE_SIMULATOR) || (defined TARGET_OS_IPHONE))
 #    define PHYSFS_PLATFORM_UNIX
