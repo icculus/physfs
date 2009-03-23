@@ -1,7 +1,7 @@
 
 1 VERSIONINFO
-FILEVERSION 1,0,1,0
-PRODUCTVERSION 1,0,1,0
+FILEVERSION 1,0,2,0
+PRODUCTVERSION 1,0,2,0
 FILEOS 0x40004
 FILETYPE 0x2
 {
@@ -11,12 +11,12 @@ BLOCK "StringFileInfo"
 	{
 		VALUE "CompanyName", ""
 		VALUE "FileDescription", "PhysicsFS"
-		VALUE "FileVersion", "1, 0, 1, 0"
+		VALUE "FileVersion", "1, 0, 2, 0"
 		VALUE "InternalName", "PhysFS"
 		VALUE "LegalCopyright", "Copyright © 2009 Ryan C. Gordon"
 		VALUE "OriginalFilename", "physfs.dll"
 		VALUE "ProductName", "PhysicsFS"
-		VALUE "ProductVersion", "1, 0, 1, 0"
+		VALUE "ProductVersion", "1, 0, 2, 0"
 	}
 }
 
