@@ -25,7 +25,7 @@
  *  NO WARRANTY.
  *
  * Unless otherwise stated, the rest of PhysicsFS falls under the zlib license.
- *  Please see LICENSE.txt in the root of the source tree.
+ *  Please see LICENSE.txt in the source's "docs" directory.
  *
  *  \author Ryan C. Gordon.
  */
