@@ -126,40 +126,40 @@ emximp -o bin/physfs.a bin/physfs.def
 
 @echo Compiling PhysicsFS library...
 @echo on
-gcc %CFLAGS% -o bin/physfs.obj physfs.c
-gcc %CFLAGS% -o bin/physfs_byteorder.obj physfs_byteorder.c
-gcc %CFLAGS% -o bin/physfs_unicode.obj physfs_unicode.c
-gcc %CFLAGS% -o bin/os2.obj platform/os2.c
-gcc %CFLAGS% -o bin/dir.obj archivers/dir.c
-gcc %CFLAGS% -o bin/grp.obj archivers/grp.c
-gcc %CFLAGS% -o bin/wad.obj archivers/wad.c
-gcc %CFLAGS% -o bin/lzma.obj archivers/lzma.c
-gcc %CFLAGS% -o bin/zip.obj archivers/zip.c
-gcc %CFLAGS% -o bin/qpak.obj archivers/qpak.c
-gcc %CFLAGS% -o bin/hog.obj archivers/hog.c
-gcc %CFLAGS% -o bin/mvl.obj archivers/mvl.c
-gcc %CFLAGS% -o bin/adler32.obj zlib123/adler32.c
-gcc %CFLAGS% -o bin/compress.obj zlib123/compress.c
-gcc %CFLAGS% -o bin/crc32.obj zlib123/crc32.c
-gcc %CFLAGS% -o bin/deflate.obj zlib123/deflate.c
-gcc %CFLAGS% -o bin/gzio.obj zlib123/gzio.c
-gcc %CFLAGS% -o bin/infback.obj zlib123/infback.c
-gcc %CFLAGS% -o bin/inffast.obj zlib123/inffast.c
-gcc %CFLAGS% -o bin/inflate.obj zlib123/inflate.c
-gcc %CFLAGS% -o bin/inftrees.obj zlib123/inftrees.c
-gcc %CFLAGS% -o bin/trees.obj zlib123/trees.c
-gcc %CFLAGS% -o bin/uncompr.obj zlib123/uncompr.c
-gcc %CFLAGS% -o bin/zutil.obj zlib123/zutil.c
-gcc %CFLAGS% -o bin/7zBuffer.obj lzma/7zBuffer.c
-gcc %CFLAGS% -o bin/7zCrc.obj lzma/7zCrc.c
-gcc %CFLAGS% -o bin/7zDecode.obj lzma/7zDecode.c
-gcc %CFLAGS% -o bin/7zExtract.obj lzma/7zExtract.c
-gcc %CFLAGS% -o bin/7zHeader.obj lzma/7zHeader.c
-gcc %CFLAGS% -o bin/7zIn.obj lzma/7zIn.c
-gcc %CFLAGS% -o bin/7zItem.obj lzma/7zItem.c
-gcc %CFLAGS% -o bin/7zMethodID.obj lzma/7zMethodID.c
-gcc %CFLAGS% -o bin/LzmaDecode.obj lzma/LzmaDecode.c
-gcc %CFLAGS% -o bin/LzmaStateDecode.obj lzma/LzmaStateDecode.c
+gcc %CFLAGS% -o bin/physfs.obj src/physfs.c
+gcc %CFLAGS% -o bin/physfs_byteorder.obj src/physfs_byteorder.c
+gcc %CFLAGS% -o bin/physfs_unicode.obj src/physfs_unicode.c
+gcc %CFLAGS% -o bin/os2.obj src/platform/os2.c
+gcc %CFLAGS% -o bin/dir.obj src/archivers/dir.c
+gcc %CFLAGS% -o bin/grp.obj src/archivers/grp.c
+gcc %CFLAGS% -o bin/wad.obj src/archivers/wad.c
+gcc %CFLAGS% -o bin/lzma.obj src/archivers/lzma.c
+gcc %CFLAGS% -o bin/zip.obj src/archivers/zip.c
+gcc %CFLAGS% -o bin/qpak.obj src/archivers/qpak.c
+gcc %CFLAGS% -o bin/hog.obj src/archivers/hog.c
+gcc %CFLAGS% -o bin/mvl.obj src/archivers/mvl.c
+gcc %CFLAGS% -o bin/adler32.obj src/zlib123/adler32.c
+gcc %CFLAGS% -o bin/compress.obj src/zlib123/compress.c
+gcc %CFLAGS% -o bin/crc32.obj src/zlib123/crc32.c
+gcc %CFLAGS% -o bin/deflate.obj src/zlib123/deflate.c
+gcc %CFLAGS% -o bin/gzio.obj src/zlib123/gzio.c
+gcc %CFLAGS% -o bin/infback.obj src/zlib123/infback.c
+gcc %CFLAGS% -o bin/inffast.obj src/zlib123/inffast.c
+gcc %CFLAGS% -o bin/inflate.obj src/zlib123/inflate.c
+gcc %CFLAGS% -o bin/inftrees.obj src/zlib123/inftrees.c
+gcc %CFLAGS% -o bin/trees.obj src/zlib123/trees.c
+gcc %CFLAGS% -o bin/uncompr.obj src/zlib123/uncompr.c
+gcc %CFLAGS% -o bin/zutil.obj src/zlib123/zutil.c
+gcc %CFLAGS% -o bin/7zBuffer.obj src/lzma/7zBuffer.c
+gcc %CFLAGS% -o bin/7zCrc.obj src/lzma/7zCrc.c
+gcc %CFLAGS% -o bin/7zDecode.obj src/lzma/7zDecode.c
+gcc %CFLAGS% -o bin/7zExtract.obj src/lzma/7zExtract.c
+gcc %CFLAGS% -o bin/7zHeader.obj src/lzma/7zHeader.c
+gcc %CFLAGS% -o bin/7zIn.obj src/lzma/7zIn.c
+gcc %CFLAGS% -o bin/7zItem.obj src/lzma/7zItem.c
+gcc %CFLAGS% -o bin/7zMethodID.obj src/lzma/7zMethodID.c
+gcc %CFLAGS% -o bin/LzmaDecode.obj src/lzma/LzmaDecode.c
+gcc %CFLAGS% -o bin/LzmaStateDecode.obj src/lzma/LzmaStateDecode.c
 @echo off
 
 :dolinking

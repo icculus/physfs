@@ -73,38 +73,38 @@ ENDIF(MSVC)
 # Basic chunks of source code ...
 
 SET(ZLIB_SRCS
-    zlib123/adler32.c
-    zlib123/compress.c
-    zlib123/crc32.c
-    zlib123/deflate.c
-    zlib123/gzio.c
-    zlib123/infback.c
-    zlib123/inffast.c
-    zlib123/inflate.c
-    zlib123/inftrees.c
-    zlib123/trees.c
-    zlib123/uncompr.c
-    zlib123/zutil.c
+    src/zlib123/adler32.c
+    src/zlib123/compress.c
+    src/zlib123/crc32.c
+    src/zlib123/deflate.c
+    src/zlib123/gzio.c
+    src/zlib123/infback.c
+    src/zlib123/inffast.c
+    src/zlib123/inflate.c
+    src/zlib123/inftrees.c
+    src/zlib123/trees.c
+    src/zlib123/uncompr.c
+    src/zlib123/zutil.c
 )
 
 SET(LZMA_SRCS
-    lzma/C/7zCrc.c
-    lzma/C/Archive/7z/7zBuffer.c
-    lzma/C/Archive/7z/7zDecode.c
-    lzma/C/Archive/7z/7zExtract.c
-    lzma/C/Archive/7z/7zHeader.c
-    lzma/C/Archive/7z/7zIn.c
-    lzma/C/Archive/7z/7zItem.c
-    lzma/C/Archive/7z/7zMethodID.c
-    lzma/C/Compress/Branch/BranchX86.c
-    lzma/C/Compress/Branch/BranchX86_2.c
-    lzma/C/Compress/Lzma/LzmaDecode.c
+    src/lzma/C/7zCrc.c
+    src/lzma/C/Archive/7z/7zBuffer.c
+    src/lzma/C/Archive/7z/7zDecode.c
+    src/lzma/C/Archive/7z/7zExtract.c
+    src/lzma/C/Archive/7z/7zHeader.c
+    src/lzma/C/Archive/7z/7zIn.c
+    src/lzma/C/Archive/7z/7zItem.c
+    src/lzma/C/Archive/7z/7zMethodID.c
+    src/lzma/C/Compress/Branch/BranchX86.c
+    src/lzma/C/Compress/Branch/BranchX86_2.c
+    src/lzma/C/Compress/Lzma/LzmaDecode.c
 )
 
 IF(BEOS)
     # We add this explicitly, since we don't want CMake to think this
     #  is a C++ project unless we're on BeOS.
-    SET(PHYSFS_BEOS_SRCS platform/beos.cpp)
+    SET(PHYSFS_BEOS_SRCS src/platform_beos.cpp)
     SET(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} be root)
 ENDIF(BEOS)
 
@@ -113,23 +113,23 @@ ENDIF(BEOS)
 #  another project or bring up a new build system: just compile all the source
 #  code and #define the things you want.
 SET(PHYSFS_SRCS
-    physfs.c
-    physfs_byteorder.c
-    physfs_unicode.c
-    platform/os2.c
-    platform/pocketpc.c
-    platform/posix.c
-    platform/unix.c
-    platform/macosx.c
-    platform/windows.c
-    archivers/dir.c
-    archivers/grp.c
-    archivers/hog.c
-    archivers/lzma.c
-    archivers/mvl.c
-    archivers/qpak.c
-    archivers/wad.c
-    archivers/zip.c
+    src/physfs.c
+    src/physfs_byteorder.c
+    src/physfs_unicode.c
+    src/platform_os2.c
+    src/platform_pocketpc.c
+    src/platform_posix.c
+    src/platform_unix.c
+    src/platform_macosx.c
+    src/platform_windows.c
+    src/archiver_dir.c
+    src/archiver_grp.c
+    src/archiver_hog.c
+    src/archiver_lzma.c
+    src/archiver_mvl.c
+    src/archiver_qpak.c
+    src/archiver_wad.c
+    src/archiver_zip.c
     ${PHYSFS_BEOS_SRCS}
 )
 
