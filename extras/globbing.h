@@ -1,5 +1,7 @@
 /** \file globbing.h */
 
+#include "physfs.h"
+
 /**
  * \mainpage PhysicsFS globbing
  *
@@ -9,10 +11,10 @@
  *  locating matching entries.
  *
  * Usage: Set up PhysicsFS as you normally would, then use
- *  PHYSFSEXT_enumerateFilesPattern() when enumerating files. This is just
+ *  PHYSFSEXT_enumerateFilesWildcard() when enumerating files. This is just
  *  like PHYSFS_enumerateFiles(), but it returns a subset that matches your
- *  wildcard pattern. You must call PHYSFS_freeList() on the results, just
- *  like you would with PHYSFS_enumerateFiles().
+ *  wildcard pattern. You must call PHYSFSEXT_freeEnumeration() on the results,
+ *  just PHYSFS_enumerateFiles() would do with PHYSFS_freeList().
  *
  * License: this code is public domain. I make no warranty that it is useful,
  *  correct, harmless, or environmentally safe.
@@ -33,7 +35,7 @@
 
 /**
  * \fn char **PHYSFS_enumerateFilesWildcard(const char *dir, const char *wildcard, int caseSensitive)
- * \brief Get a file listing of a search path's directory.
+ * \brief Get a file listing of a search path's directory, filtered with a wildcard pattern.
  *
  * Matching directories are interpolated. That is, if "C:\mydir" is in the
  *  search path and contains a directory "savegames" that contains "x.sav",
@@ -63,15 +65,89 @@
  * Wildcard strings can use the '*' and '?' characters, currently.
  * Matches can be case-insensitive if you pass a zero for argument 3.
  *
- * Don't forget to call PHYSFS_freeList() with the return value from this
- *  function when you are done with it.
+ * Don't forget to call PHYSFSEXT_freeEnumerator() with the return value from
+ *  this function when you are done with it. As we use PhysicsFS's allocator
+ *  for this list, you must free it before calling PHYSFS_deinit().
+ *  Do not use PHYSFS_freeList() on the returned value!
  *
  *    \param dir directory in platform-independent notation to enumerate.
+ *    \param wildcard Wildcard pattern to use for filtering.
+ *    \param caseSensitive Zero for case-insensitive matching,
+ *                         non-zero for case-sensitive.
  *   \return Null-terminated array of null-terminated strings.
+ *
+ * \sa PHYSFSEXT_freeEnumeration
  */
 __EXPORT__ char **PHYSFSEXT_enumerateFilesWildcard(const char *dir,
                                                    const char *wildcard,
                                                    int caseSensitive);
+
+/**
+ * \fn void PHYSFSEXT_freeEnumeration(char **list)
+ * \brief Free data returned by PHYSFSEXT_enumerateFilesWildcard
+ *
+ * Conceptually, this works like PHYSFS_freeList(), but is used with data
+ *  returned by PHYSFSEXT_enumerateFilesWildcard() only. Be sure to call this
+ *  on any returned data from that function before
+ *
+ *    \param list Pointer previously returned by
+ *                PHYSFSEXT_enumerateFilesWildcard(). It is safe to pass a
+ *                NULL here.
+ *
+ * \sa PHYSFSEXT_enumerateFilesWildcard
+ */
+__EXPORT__ void PHYSFSEXT_freeEnumeration(char **list);
+
+
+/**
+ * \fn void PHYSFSEXT_enumerateFilesCallbackWildcard(const char *dir, const char *wildcard, int caseSensitive, PHYSFS_EnumFilesCallback c, void *d);
+ * \brief Get a file listing of a search path's directory, filtered with a wildcard pattern, using an application-defined callback.
+ *
+ * This function is equivalent to PHYSFSEXT_enumerateFilesWildcard(). It
+ *  reports file listings, filtered by a wildcard pattern.
+ *
+ * Unlike PHYSFS_enumerateFiles(), this function does not return an array.
+ *  Rather, it calls a function specified by the application once per
+ *  element of the search path:
+ *
+ * \code
+ *
+ * static void printDir(void *data, const char *origdir, const char *fname)
+ * {
+ *     printf(" * We've got [%s] in [%s].\n", fname, origdir);
+ * }
+ *
+ * // ...
+ * PHYSFS_enumerateFilesCallbackWildcard("savegames","*.sav",0,printDir,NULL);
+ * \endcode
+ *
+ * Items sent to the callback are not guaranteed to be in any order whatsoever.
+ *  There is no sorting done at this level, and if you need that, you should
+ *  probably use PHYSFS_enumerateFilesWildcard() instead, which guarantees
+ *  alphabetical sorting. This form reports whatever is discovered in each
+ *  archive before moving on to the next. Even within one archive, we can't
+ *  guarantee what order it will discover data. <em>Any sorting you find in
+ *  these callbacks is just pure luck. Do not rely on it.</em> As this walks
+ *  the entire list of archives, you may receive duplicate filenames.
+ *
+ * Wildcard strings can use the '*' and '?' characters, currently.
+ * Matches can be case-insensitive if you pass a zero for argument 3.
+ *
+ *    \param dir Directory, in platform-independent notation, to enumerate.
+ *    \param wildcard Wildcard pattern to use for filtering.
+ *    \param caseSensitive Zero for case-insensitive matching,
+ *                         non-zero for case-sensitive.
+ *    \param c Callback function to notify about search path elements.
+ *    \param d Application-defined data passed to callback. Can be NULL.
+ *
+ * \sa PHYSFS_EnumFilesCallback
+ * \sa PHYSFS_enumerateFiles
+ */
+__EXPORT__ void PHYSFSEXT_enumerateFilesCallbackWildcard(const char *dir,
+                                              const char *wildcard,
+                                              int caseSensitive,
+                                              PHYSFS_EnumFilesCallback c,
+                                              void *d);
 
 /* end of globbing.h ... */
 

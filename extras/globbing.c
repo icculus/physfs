@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
-#include "physfs.h"
 #include "globbing.h"
 
 /**
@@ -22,7 +22,7 @@
  *  NO WARRANTY.
  *
  * Unless otherwise stated, the rest of PhysicsFS falls under the zlib license.
- *  Please see LICENSE.txt in the source's "docs" directory.
+ *  Please see the file LICENSE.txt in the source's root directory.
  *
  *  \author Ryan C. Gordon.
  */
@@ -87,28 +87,108 @@ static int matchesPattern(const char *fname, const char *wildcard,
     return(*fnameptr == *wildptr);
 } /* matchesPattern */
 
+typedef struct
+{
+    const PHYSFS_Allocator *allocator;
+    const char *wildcard;
+    int caseSensitive;
+    PHYSFS_EnumFilesCallback callback;
+    void *origData;
+} WildcardCallbackData;
+
+
+/*
+ * This callback sits between the enumerator and the enduser callback,
+ *  filtering out files that don't match the wildcard pattern.
+ */
+static void wildcardCallback(void *_d, const char *origdir, const char *fname)
+{
+    const WildcardCallbackData *data = (const WildcardCallbackData *) _d;
+    if (matchesPattern(fname, data->wildcard, data->caseSensitive))
+        data->callback(data->origData, origdir, fname);
+} /* wildcardCallback */
+
+
+void PHYSFSEXT_enumerateFilesCallbackWildcard(const char *dir,
+                                              const char *wildcard,
+                                              int caseSensitive,
+                                              PHYSFS_EnumFilesCallback c,
+                                              void *d)
+{
+    WildcardCallbackData data;
+    data.allocator = PHYSFS_getAllocator();
+    data.wildcard = wildcard;
+    data.caseSensitive = caseSensitive;
+    data.callback = c;
+    data.origData = d;
+    PHYSFS_enumerateFilesCallback(dir, wildcardCallback, &data);
+} /* PHYSFSEXT_enumerateFilesCallbackWildcard */
+
+
+void PHYSFSEXT_freeEnumeration(char **list)
+{
+    const PHYSFS_Allocator *allocator = PHYSFS_getAllocator();
+    int i;
+    if (list != NULL)
+    {
+        for (i = 0; list[i] != NULL; i++)
+            allocator->Free(list[i]);
+        allocator->Free(list);
+    } /* if */
+} /* PHYSFSEXT_freeEnumeration */
+
 
 char **PHYSFSEXT_enumerateFilesWildcard(const char *dir, const char *wildcard,
                                         int caseSensitive)
 {
-    char **rc = PHYSFS_enumerateFiles(dir);
-    char **i = rc;
-    char **j;
+    const PHYSFS_Allocator *allocator = PHYSFS_getAllocator();
+    char **list = PHYSFS_enumerateFiles(dir);
+    char **retval = NULL;
+    int totalmatches = 0;
+    int matches = 0;
+    char **i;
 
-    while (*i != NULL)
+    for (i = list; *i != NULL; i++)
     {
+        #if 0
+        printf("matchesPattern: '%s' vs '%s' (%s) ... %s\n", *i, wildcard,
+               caseSensitive ? "case" : "nocase",
+               matchesPattern(*i, wildcard, caseSensitive) ? "true" : "false");
+        #endif
         if (matchesPattern(*i, wildcard, caseSensitive))
-            i++;
-        else
-        {
-            /* FIXME: This counts on physfs's allocation method not changing! */
-            free(*i);
-            for (j = i; *j != NULL; j++)
-                j[0] = j[1];
-        } /* else */
+            totalmatches++;
     } /* for */
 
-    return(rc);
+    retval = (char **) allocator->Malloc(sizeof (char *) * (totalmatches+1));
+    if (retval != NULL)
+    {
+        for (i = list; ((matches < totalmatches) && (*i != NULL)); i++)
+        {
+            if (matchesPattern(*i, wildcard, caseSensitive))
+            {
+                retval[matches] = (char *) allocator->Malloc(strlen(*i) + 1);
+                if (retval[matches] == NULL)
+                {
+                    while (matches--)
+                        allocator->Free(retval[matches]);
+                    allocator->Free(retval);
+                    retval = NULL;
+                    break;
+                } /* if */
+                strcpy(retval[matches], *i);
+                matches++;
+            } /* if */
+        } /* for */
+
+        if (retval != NULL)
+        {
+            assert(totalmatches == matches);
+            retval[matches] = NULL;
+        } /* if */
+    } /* if */
+
+    PHYSFS_freeList(list);
+    return(retval);
 } /* PHYSFSEXT_enumerateFilesWildcard */
 
 
@@ -148,7 +228,7 @@ int main(int argc, char **argv)
     } /* for */
     printf("\n  total %d files.\n\n", rc);
 
-    PHYSFS_freeList(flist);
+    PHYSFSEXT_freeEnumeration(flist);
     PHYSFS_deinit();
 
     return(0);
