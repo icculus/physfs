@@ -2153,6 +2153,13 @@ int PHYSFS_setAllocator(const PHYSFS_Allocator *a)
 } /* PHYSFS_setAllocator */
 
 
+const PHYSFS_Allocator *PHYSFS_getAllocator(void)
+{
+    BAIL_IF_MACRO(!initialized, ERR_NOT_INITIALIZED, NULL);
+    return &allocator;
+} /* PHYSFS_getAllocator */
+
+
 static void *mallocAllocatorMalloc(PHYSFS_uint64 s)
 {
     BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
