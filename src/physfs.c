@@ -872,10 +872,13 @@ const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void)
 void PHYSFS_freeList(void *list)
 {
     void **i;
-    for (i = (void **) list; *i != NULL; i++)
-        allocator.Free(*i);
+    if (list != NULL)
+    {
+        for (i = (void **) list; *i != NULL; i++)
+            allocator.Free(*i);
 
-    allocator.Free(list);
+        allocator.Free(list);
+    } /* if */
 } /* PHYSFS_freeList */
 
 
