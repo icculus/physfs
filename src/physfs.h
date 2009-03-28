@@ -2240,13 +2240,18 @@ __EXPORT__ void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback c, void *d);
  * PHYSFS_enumerateFilesCallback("/some/path", printDir, NULL);
  * \endcode
  *
+ * !!! FIXME: enumerateFiles() does not promise alphabetical sorting by
+ * !!! FIXME:  case-sensitivity in the code, and doesn't promise sorting at
+ * !!! FIXME:  all in the above docs.
+ *
  * Items sent to the callback are not guaranteed to be in any order whatsoever.
  *  There is no sorting done at this level, and if you need that, you should
  *  probably use PHYSFS_enumerateFiles() instead, which guarantees
  *  alphabetical sorting. This form reports whatever is discovered in each
  *  archive before moving on to the next. Even within one archive, we can't
  *  guarantee what order it will discover data. <em>Any sorting you find in
- *  these callbacks is just pure luck. Do not rely on it.</em>
+ *  these callbacks is just pure luck. Do not rely on it.</em> As this walks
+ *  the entire list of archives, you may receive duplicate filenames.
  *
  *    \param dir Directory, in platform-independent notation, to enumerate.
  *    \param c Callback function to notify about search path elements.
