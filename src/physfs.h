@@ -400,7 +400,7 @@ typedef struct PHYSFS_Version
 
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 #define PHYSFS_VER_MAJOR 2
-#define PHYSFS_VER_MINOR 0
+#define PHYSFS_VER_MINOR 1
 #define PHYSFS_VER_PATCH 0
 #endif  /* DOXYGEN_SHOULD_IGNORE_THIS */
 
