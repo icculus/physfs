@@ -550,7 +550,11 @@ __EXPORT__ const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void);
  * Certain PhysicsFS functions return lists of information that are
  *  dynamically allocated. Use this function to free those resources.
  *
+ * It is safe to pass a NULL here, but doing so will cause a crash in versions
+ *  before PhysicsFS 2.1.0.
+ *
  *   \param listVar List of information specified as freeable by this function.
+ *                  Passing NULL is safe; it is a valid no-op.
  *
  * \sa PHYSFS_getCdRomDirs
  * \sa PHYSFS_enumerateFiles
