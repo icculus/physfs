@@ -25,9 +25,7 @@ INCLUDE(CheckIncludeFile)
 INCLUDE(CheckLibraryExists)
 INCLUDE(CheckCSourceCompiles)
 
-INCLUDE_DIRECTORIES(.)
-#INCLUDE_DIRECTORIES(platform)
-#INCLUDE_DIRECTORIES(archivers)
+INCLUDE_DIRECTORIES(./src)
 
 IF(MACOSX)
     # Fallback to older OS X on PowerPC to support wider range of systems...
