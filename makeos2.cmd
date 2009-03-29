@@ -111,6 +111,7 @@ rem goto :dolinking
 @echo "_PHYSFS_mount" >> bin\physfs.def
 @echo "_PHYSFS_getMountPoint" >> bin\physfs.def
 @echo "_PHYSFS_setAllocator" >> bin\physfs.def
+@echo "_PHYSFS_getAllocator" >> bin\physfs.def
 @echo "_PHYSFS_getCdRomDirsCallback" >> bin\physfs.def
 @echo "_PHYSFS_getSearchPathCallback" >> bin\physfs.def
 @echo "_PHYSFS_enumerateFilesCallback" >> bin\physfs.def
