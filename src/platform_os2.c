@@ -95,7 +95,7 @@ static APIRET os2err(APIRET retval)
 {
     char buf[128];
     const char *err = get_os2_error_string(retval);
-    if (err == ERR_OS2_GENERIC)
+    if (strcmp(err, ERR_OS2_GENERIC) == 0)
     {
         snprintf(buf, sizeof (buf), ERR_OS2_GENERIC, (int) retval);
         err = buf;
@@ -139,7 +139,7 @@ static void cvt_path_to_correct_case(char *buf)
         if (ptr != NULL)  /* isolate element to find (fname is the start). */
             *ptr = '\0';
 
-        rc = DosFindFirst(spec, &hdir, FILE_DIRECTORY,
+        rc = DosFindFirst((unsigned char *) spec, &hdir, FILE_DIRECTORY,
                           &fb, sizeof (fb), &count, FIL_STANDARD);
         if (rc == NO_ERROR)
         {
@@ -233,7 +233,7 @@ static int is_cdrom_drive(ULONG drive)
     ULONG ul1, ul2;
     APIRET rc;
     HFILE hfile = NULLHANDLE;
-    char drivename[3] = { 'A' + drive, ':', '\0' };
+    unsigned char drivename[3] = { 'A' + drive, ':', '\0' };
 
     rc = DosOpen(drivename, &hfile, &ul1, 0, 0,
                  OPEN_ACTION_OPEN_IF_EXISTS | OPEN_ACTION_FAIL_IF_NEW,
@@ -297,8 +297,9 @@ char *__PHYSFS_platformGetUserDir(void)
 } /* __PHYSFS_platformGetUserDir */
 
 
-int __PHYSFS_platformExists(const char *fname)
+int __PHYSFS_platformExists(const char *_fname)
 {
+    const unsigned char *fname = (const unsigned char *) _fname;
     FILESTATUS3 fs;
     APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
     return(os2err(rc) == NO_ERROR);
@@ -311,8 +312,9 @@ int __PHYSFS_platformIsSymLink(const char *fname)
 } /* __PHYSFS_platformIsSymlink */
 
 
-int __PHYSFS_platformIsDirectory(const char *fname)
+int __PHYSFS_platformIsDirectory(const char *_fname)
 {
+    const unsigned char *fname = (const unsigned char *) _fname;
     FILESTATUS3 fs;
     APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, 0)
@@ -371,7 +373,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     strcpy(spec, dirname);
     strcat(spec, (spec[strlen(spec) - 1] != '\\') ? "\\*.*" : "*.*");
 
-    rc = DosFindFirst(spec, &hdir,
+    rc = DosFindFirst((unsigned char *) spec, &hdir,
                       FILE_DIRECTORY | FILE_ARCHIVED |
                       FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM,
                       &fb, sizeof (fb), &count, FIL_STANDARD);
@@ -424,8 +426,9 @@ char *__PHYSFS_platformCurrentDir(void)
 } /* __PHYSFS_platformCurrentDir */
 
 
-char *__PHYSFS_platformRealPath(const char *path)
+char *__PHYSFS_platformRealPath(const char *_path)
 {
+    const unsigned char *path = (const unsigned char *) _path;
     char buf[CCHMAXPATH];
     char *retval;
     APIRET rc = DosQueryPathInfo(path, FIL_QUERYFULLNAME, buf, sizeof (buf));
@@ -437,14 +440,16 @@ char *__PHYSFS_platformRealPath(const char *path)
 } /* __PHYSFS_platformRealPath */
 
 
-int __PHYSFS_platformMkDir(const char *path)
+int __PHYSFS_platformMkDir(const char *_filename)
 {
-    return(os2err(DosCreateDir(path, NULL)) == NO_ERROR);
+    const unsigned char *filename = (const unsigned char *) _filename;
+    return(os2err(DosCreateDir(filename, NULL)) == NO_ERROR);
 } /* __PHYSFS_platformMkDir */
 
 
-void *__PHYSFS_platformOpenRead(const char *filename)
+void *__PHYSFS_platformOpenRead(const char *_filename)
 {
+    const unsigned char *filename = (const unsigned char *) _filename;
     ULONG actionTaken = 0;
     HFILE hfile = NULLHANDLE;
 
@@ -462,8 +467,9 @@ void *__PHYSFS_platformOpenRead(const char *filename)
 } /* __PHYSFS_platformOpenRead */
 
 
-void *__PHYSFS_platformOpenWrite(const char *filename)
+void *__PHYSFS_platformOpenWrite(const char *_filename)
 {
+    const unsigned char *filename = (const unsigned char *) _filename;
     ULONG actionTaken = 0;
     HFILE hfile = NULLHANDLE;
 
@@ -481,8 +487,9 @@ void *__PHYSFS_platformOpenWrite(const char *filename)
 } /* __PHYSFS_platformOpenWrite */
 
 
-void *__PHYSFS_platformOpenAppend(const char *filename)
+void *__PHYSFS_platformOpenAppend(const char *_filename)
 {
+    const unsigned char *filename = (const unsigned char *) _filename;
     ULONG dummy = 0;
     HFILE hfile = NULLHANDLE;
     APIRET rc;
@@ -614,17 +621,19 @@ int __PHYSFS_platformClose(void *opaque)
 } /* __PHYSFS_platformClose */
 
 
-int __PHYSFS_platformDelete(const char *path)
+int __PHYSFS_platformDelete(const char *_path)
 {
-    if (__PHYSFS_platformIsDirectory(path))
+    const unsigned char *path = (const unsigned char *) _path;
+    if (__PHYSFS_platformIsDirectory(_path))
         return(os2err(DosDeleteDir(path)) == NO_ERROR);
 
     return(os2err(DosDelete(path) == NO_ERROR));
 } /* __PHYSFS_platformDelete */
 
 
-PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
+PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *_fname)
 {
+    const unsigned char *fname = (const unsigned char *) _fname;
     PHYSFS_sint64 retval;
     struct tm tm;
     FILESTATUS3 fs;
