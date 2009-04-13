@@ -40,6 +40,10 @@
 #include <mntent.h>
 #endif
 
+#ifdef PHYSFS_HAVE_SYS_MNTTAB_H
+#include <sys/mnttab.h>
+#endif
+
 #include "physfs_internal.h"
 
 
@@ -101,6 +105,28 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     } /* while */
 
     endmntent(mounts);
+
+#elif (defined PHYSFS_HAVE_SYS_MNTTAB_H)
+    FILE *mounts = fopen(MNTTAB, "r");
+    struct mnttab ent;
+
+    BAIL_IF_MACRO(mounts == NULL, ERR_IO_ERROR, /*return void*/);
+    while (getmntent(mounts, &ent) == 0)
+    {
+        int add_it = 0;
+        if (strcmp(ent.mnt_fstype, "hsfs") == 0)
+            add_it = 1;
+
+        /* add other mount types here */
+
+        if (add_it)
+            cb(data, ent.mnt_mountp);
+    } /* while */
+
+    fclose(mounts);
+
+#else
+#error Unknown platform. Should have defined PHYSFS_NO_CDROM_SUPPORT, perhaps.
 #endif
 } /* __PHYSFS_platformDetectAvailableCDs */
 

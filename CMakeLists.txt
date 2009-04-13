@@ -169,6 +169,20 @@ IF(UNIX)
             SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
         ENDIF(HAVE_MNTENT_H)
 
+        # !!! FIXME: Solaris fails this, because mnttab.h implicitly
+        # !!! FIXME:  depends on other system headers.  :(
+        #CHECK_INCLUDE_FILE(sys/mnttab.h HAVE_SYS_MNTTAB_H)
+        CHECK_C_SOURCE_COMPILES("
+            #include <stdio.h>
+            #include <sys/mnttab.h>
+            int main(int argc, char **argv) { return 0; }
+        " HAVE_SYS_MNTTAB_H)
+
+        IF(HAVE_SYS_MNTTAB_H)
+            ADD_DEFINITIONS(-DPHYSFS_HAVE_SYS_MNTTAB_H=1)
+            SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
+        ENDIF(HAVE_SYS_MNTTAB_H)
+
         CHECK_INCLUDE_FILE(pthread.h HAVE_PTHREAD_H)
         IF(HAVE_PTHREAD_H)
             SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
