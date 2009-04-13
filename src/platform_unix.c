@@ -55,17 +55,13 @@ int __PHYSFS_platformDeinit(void)
 } /* __PHYSFS_platformDeinit */
 
 
-#ifdef PHYSFS_NO_CDROM_SUPPORT
-
 /* Stub version for platforms without CD-ROM support. */
 void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-} /* __PHYSFS_platformDetectAvailableCDs */
+#if (defined PHYSFS_NO_CDROM_SUPPORT)
+    /* no-op. */
 
 #elif (defined PHYSFS_HAVE_SYS_UCRED_H)
-
-void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
-{
     int i;
     struct statfs *mntbufp = NULL;
     int mounts = getmntinfo(&mntbufp, MNT_WAIT);
@@ -84,12 +80,8 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
         if (add_it)
             cb(data, mntbufp[i].f_mntonname);
     } /* for */
-} /* __PHYSFS_platformDetectAvailableCDs */
 
 #elif (defined PHYSFS_HAVE_MNTENT_H)
-
-void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
-{
     FILE *mounts = NULL;
     struct mntent *ent = NULL;
 
@@ -109,10 +101,8 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     } /* while */
 
     endmntent(mounts);
-
-} /* __PHYSFS_platformDetectAvailableCDs */
-
 #endif
+} /* __PHYSFS_platformDetectAvailableCDs */
 
 
 /* this is in posix.c ... */
