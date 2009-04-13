@@ -392,11 +392,11 @@ int __PHYSFS_utf8strcasecmp(const char *str1, const char *str2)
     {
         const PHYSFS_uint32 cp1 = utf8codepoint(&str1);
         const PHYSFS_uint32 cp2 = utf8codepoint(&str2);
-        if (!utf8codepointcmp(cp1, cp2)) return 0;
+        if (!utf8codepointcmp(cp1, cp2)) break;
         if (cp1 == 0) return 1;
     } /* while */
 
-    return 0;  /* shouldn't hit this. */
+    return 0;
 } /* __PHYSFS_utf8strcasecmp */
 
 
@@ -428,10 +428,10 @@ int __PHYSFS_stricmpASCII(const char *str1, const char *str2)
         else if (cp1 > cp2)
             return 1;
         else if (cp1 == 0)  /* they're both null chars? */
-            return 0;
+            break;
     } /* while */
 
-    return 0;  /* shouldn't hit this. */
+    return 0;
 } /* __PHYSFS_stricmpASCII */
 
 
