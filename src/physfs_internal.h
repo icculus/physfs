@@ -29,6 +29,12 @@
 #include <malloc.h>
 #endif
 
+/* !!! FIXME: if HAVE_ALLOCA_H would be good, too. */
+#if sun
+#include <alloca.h>
+#define __inline__ inline
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
