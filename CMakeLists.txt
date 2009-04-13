@@ -73,6 +73,10 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     ENDIF(PHYSFS_IS_GCC4)
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
+IF(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
+    ADD_DEFINITIONS(-erroff=E_EMPTY_TRANSLATION_UNIT)
+ENDIF(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
+
 IF(MSVC)
     # VS.NET 8.0 got really really anal about strcpy, etc, which even if we
     #  cleaned up our code, zlib, etc still use...so disable the warning.
