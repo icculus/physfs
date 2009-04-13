@@ -26,7 +26,7 @@
 #include "physfs.h"
 
 #define TEST_VERSION_MAJOR  2
-#define TEST_VERSION_MINOR  0
+#define TEST_VERSION_MINOR  1
 #define TEST_VERSION_PATCH  0
 
 static FILE *history_file = NULL;
