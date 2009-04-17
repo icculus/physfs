@@ -219,6 +219,8 @@ extern "C" {
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 #if (defined _MSC_VER)
 #define __EXPORT__ __declspec(dllexport)
+#elif (defined __SUNPRO_C)
+#define __EXPORT__ __global
 #elif ((__GNUC__ >= 3) && (!__EMX__))
 #define __EXPORT__ __attribute__((visibility("default")))
 #else
