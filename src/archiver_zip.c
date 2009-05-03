@@ -373,13 +373,13 @@ static int ZIP_fileClose(fvoid *opaque)
 static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
 {
     PHYSFS_uint8 buf[256];
+    PHYSFS_uint8 extra[4];
     PHYSFS_sint32 i = 0;
     PHYSFS_sint64 filelen;
     PHYSFS_sint64 filepos;
     PHYSFS_sint32 maxread;
     PHYSFS_sint32 totalread = 0;
     int found = 0;
-    PHYSFS_uint32 extra = 0;
 
     filelen = __PHYSFS_platformFileLength(in);
     BAIL_IF_MACRO(filelen == -1, NULL, 0);  /* !!! FIXME: unlocalized string */
@@ -417,7 +417,7 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
         {
             if (__PHYSFS_platformRead(in, buf, maxread - 4, 1) != 1)
                 return(-1);
-            *((PHYSFS_uint32 *) (&buf[maxread - 4])) = extra;
+            memcpy(&buf[maxread - 4], &extra, sizeof (extra));
             totalread += maxread - 4;
         } /* if */
         else
@@ -427,7 +427,7 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
             totalread += maxread;
         } /* else */
 
-        extra = *((PHYSFS_uint32 *) (&buf[0]));
+        memcpy(&extra, buf, sizeof (extra));
 
         for (i = maxread - 4; i > 0; i--)
         {
