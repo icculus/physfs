@@ -23,7 +23,6 @@
 #include <dirent.h>
 #include <time.h>
 #include <errno.h>
-#include <sys/mount.h>
 
 #if (!defined PHYSFS_NO_PTHREADS_SUPPORT)
 #include <pthread.h>
@@ -33,6 +32,7 @@
 #  ifdef PHYSFS_HAVE_MNTENT_H
 #    undef PHYSFS_HAVE_MNTENT_H /* don't do both... */
 #  endif
+#  include <sys/mount.h>
 #  include <sys/ucred.h>
 #endif
 
