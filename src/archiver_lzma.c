@@ -649,6 +649,7 @@ static fvoid *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
     BAIL_IF_MACRO(file == NULL, ERR_NO_SUCH_FILE, NULL);
     BAIL_IF_MACRO(file->folder == NULL, ERR_NOT_A_FILE, NULL);
 
+    file->position = 0;
     file->folder->references++; // Increase refcount for automatic cleanup...
 
     return(file);
