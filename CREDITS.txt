@@ -90,6 +90,12 @@ Bug fixes:
 Bug fixes:
     Olivier Boudeville
 
+Bug fixes:
+    Henk Boom
+
+Build system fixes:
+    Marc Kleine-Budde
+
 Windows .rc file,
 7zip/lzma archiver:
     Dennis Schridde
