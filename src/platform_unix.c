@@ -261,6 +261,14 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
         allocator.Free(envr);
     } /* if */
 
+    if (retval != NULL)
+    {
+        /* try to shrink buffer... */
+        char *ptr = (char *) allocator.Realloc(retval, strlen(retval) + 1);
+        if (ptr != NULL)
+            retval = ptr;  /* oh well if it failed. */
+    } /* if */
+
     return(retval);
 } /* __PHYSFS_platformCalcBaseDir */
 
