@@ -245,6 +245,16 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
      *  the /proc/self/exe symlink.
      */
     retval = readSymLink("/proc/self/exe");
+    if (retval == NULL)
+    {
+        /* older kernels don't have /proc/self ... try PID version... */
+        const unsigned long long pid = (unsigned long long) getpid();
+        char path[64];
+        const int rc = (int) snprintf(path,sizeof(path),"/proc/%llu/exe",pid);
+        if ( (rc > 0) && (rc < sizeof(path)) )
+            retval = readSymLink(path);
+    } /* if */
+
     if (retval != NULL)  /* chop off filename. */
     {
         char *ptr = strrchr(retval, '/');
