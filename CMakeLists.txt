@@ -60,7 +60,10 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     " PHYSFS_IS_GCC4)
 
     IF(PHYSFS_IS_GCC4)
-        ADD_DEFINITIONS(-fvisibility=hidden)
+        # Not supported on several operating systems at this time.
+        IF(NOT OS2 AND NOT SOLARIS AND NOT WINDOWS)
+             ADD_DEFINITIONS(-fvisibility=hidden)
+        ENDIF(NOT OS2 AND NOT SOLARIS AND NOT WINDOWS)
     ENDIF(PHYSFS_IS_GCC4)
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
