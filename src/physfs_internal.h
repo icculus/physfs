@@ -1307,12 +1307,12 @@ char *__PHYSFS_platformGetUserName(void);
 char *__PHYSFS_platformGetUserDir(void);
 
 /*
- * Return a number that uniquely identifies the current thread.
- *  On a platform without threading, (1) will suffice. These numbers are
+ * Return a pointer that uniquely identifies the current thread.
+ *  On a platform without threading, (0x1) will suffice. These numbers are
  *  arbitrary; the only requirement is that no two threads have the same
- *  number.
+ *  pointer.
  */
-PHYSFS_uint64 __PHYSFS_platformGetThreadID(void);
+void *__PHYSFS_platformGetThreadID(void);
 
 /*
  * Return non-zero if filename (in platform-dependent notation) exists.

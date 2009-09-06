@@ -43,7 +43,7 @@ typedef struct __PHYSFS_FILEHANDLE__
 
 typedef struct __PHYSFS_ERRMSGTYPE__
 {
-    PHYSFS_uint64 tid;
+    void *tid;
     int errorAvailable;
     char errorString[80];
     struct __PHYSFS_ERRMSGTYPE__ *next;
@@ -268,7 +268,7 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 static ErrMsg *findErrorForCurrentThread(void)
 {
     ErrMsg *i;
-    PHYSFS_uint64 tid;
+    void *tid;
 
     if (errorLock != NULL)
         __PHYSFS_platformGrabMutex(errorLock);

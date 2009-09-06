@@ -161,9 +161,9 @@ char *__PHYSFS_platformGetUserDir(void)
 } /* __PHYSFS_platformGetUserDir */
 
 
-PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
+void *__PHYSFS_platformGetThreadID(void)
 {
-    return(1);  /* single threaded. */
+    return((void *)1);  /* single threaded. */  /* !!! FIXME: is this true? */
 } /* __PHYSFS_platformGetThreadID */
 
 
