@@ -28,7 +28,7 @@
 #elif ((defined __MACH__) && (defined __APPLE__))
 /* To check if iphone or not, we need to include this file */
 # include <TargetConditionals.h> 
-# if (defined(TARGET_IPHONE_SIMULATOR) || (defined TARGET_OS_IPHONE))
+# if ((TARGET_IPHONE_SIMULATOR) || (TARGET_OS_IPHONE))
 #    define PHYSFS_PLATFORM_UNIX
 #    define PHYSFS_PLATFORM_POSIX
 #    define PHYSFS_NO_CDROM_SUPPORT
