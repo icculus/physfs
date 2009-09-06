@@ -347,7 +347,7 @@ int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 
 #if (defined PHYSFS_NO_PTHREADS_SUPPORT)
 
-PHYSFS_uint64 __PHYSFS_platformGetThreadID(void) { return(0x0001); }
+void *__PHYSFS_platformGetThreadID(void) { return((void *) 0x0001); }
 void *__PHYSFS_platformCreateMutex(void) { return((void *) 0x0001); }
 void __PHYSFS_platformDestroyMutex(void *mutex) {}
 int __PHYSFS_platformGrabMutex(void *mutex) { return(1); }
@@ -362,24 +362,10 @@ typedef struct
     PHYSFS_uint32 count;
 } PthreadMutex;
 
-/* Just in case; this is a panic value. */
-#if ((!defined SIZEOF_INT) || (SIZEOF_INT <= 0))
-#  define SIZEOF_INT 4
-#endif
 
-#if (SIZEOF_INT == 4)
-#  define PHTREAD_TO_UI64(thr) ( (PHYSFS_uint64) ((PHYSFS_uint32) (thr)) )
-#elif (SIZEOF_INT == 2)
-#  define PHTREAD_TO_UI64(thr) ( (PHYSFS_uint64) ((PHYSFS_uint16) (thr)) )
-#elif (SIZEOF_INT == 1)
-#  define PHTREAD_TO_UI64(thr) ( (PHYSFS_uint64) ((PHYSFS_uint8) (thr)) )
-#else
-#  define PHTREAD_TO_UI64(thr) ((PHYSFS_uint64) (thr))
-#endif
-
-PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
+void *__PHYSFS_platformGetThreadID(void)
 {
-    return(PHTREAD_TO_UI64(pthread_self()));
+    return( (void *) ((size_t) pthread_self()) );
 } /* __PHYSFS_platformGetThreadID */
 
 

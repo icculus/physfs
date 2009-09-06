@@ -353,9 +353,9 @@ int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 
-PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
+void *__PHYSFS_platformGetThreadID(void)
 {
-    return( (PHYSFS_uint64) ((size_t) MPCurrentTaskID()) );
+    return( (void *) ((size_t) MPCurrentTaskID()) );
 } /* __PHYSFS_platformGetThreadID */
 
 
