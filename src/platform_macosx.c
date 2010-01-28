@@ -67,7 +67,7 @@ int __PHYSFS_platformInit(void)
     ctx.deallocate = cfallocFree;
     cfallocator = CFAllocatorCreate(kCFAllocatorUseContext, &ctx);
     BAIL_IF_MACRO(cfallocator == NULL, ERR_OUT_OF_MEMORY, 0);
-    return(1);  /* success. */
+    return 1;  /* success. */
 } /* __PHYSFS_platformInit */
 
 
@@ -75,7 +75,7 @@ int __PHYSFS_platformDeinit(void)
 {
     CFRelease(cfallocator);
     cfallocator = NULL;
-    return(1);  /* always succeed. */
+    return 1;  /* always succeed. */
 } /* __PHYSFS_platformDeinit */
 
 
@@ -92,13 +92,13 @@ static int darwinIsWholeMedia(io_service_t service)
     CFTypeRef wholeMedia;
 
     if (!IOObjectConformsTo(service, kIOMediaClass))
-        return(0);
+        return 0;
         
     wholeMedia = IORegistryEntryCreateCFProperty(service,
                                                  CFSTR(kIOMediaWholeKey),
                                                  cfallocator, 0);
     if (wholeMedia == NULL)
-        return(0);
+        return 0;
 
     retval = CFBooleanGetValue(wholeMedia);
     CFRelease(wholeMedia);
@@ -116,27 +116,27 @@ static int darwinIsMountedDisc(char *bsdName, mach_port_t masterPort)
     io_service_t service;
 
     if ((matchingDict = IOBSDNameMatching(masterPort, 0, bsdName)) == NULL)
-        return(0);
+        return 0;
 
     rc = IOServiceGetMatchingServices(masterPort, matchingDict, &iter);
     if ((rc != KERN_SUCCESS) || (!iter))
-        return(0);
+        return 0;
 
     service = IOIteratorNext(iter);
     IOObjectRelease(iter);
     if (!service)
-        return(0);
+        return 0;
 
     rc = IORegistryEntryCreateIterator(service, kIOServicePlane,
              kIORegistryIterateRecursively | kIORegistryIterateParents, &iter);
     
     if (!iter)
-        return(0);
+        return 0;
 
     if (rc != KERN_SUCCESS)
     {
         IOObjectRelease(iter);
-        return(0);
+        return 0;
     } /* if */
 
     IOObjectRetain(service);  /* add an extra object reference... */
@@ -157,7 +157,7 @@ static int darwinIsMountedDisc(char *bsdName, mach_port_t masterPort)
     IOObjectRelease(iter);
     IOObjectRelease(service);
 
-    return(retval);
+    return retval;
 } /* darwinIsMountedDisc */
 
 
@@ -212,7 +212,7 @@ static char *convertCFString(CFStringRef cfstr)
         BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     } /* else */
 
-    return(retval);
+    return retval;
 } /* convertCFString */
 
 
@@ -242,7 +242,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     {
         assert(0);  /* shouldn't ever hit this... */
         CFRelease(cfmutstr);
-        return(NULL);
+        return NULL;
     } /* if */
 
     /* chop the "/exename" from the end of the path string... */
@@ -261,7 +261,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     retval = convertCFString(cfmutstr);
     CFRelease(cfmutstr);
 
-    return(retval);  /* whew. */
+    return retval;  /* whew. */
 } /* __PHYSFS_platformCalcBaseDir */
 
 
@@ -287,13 +287,13 @@ char *__PHYSFS_platformRealPath(const char *path)
     retval = convertCFString(cfstr);
     CFRelease(cfstr);
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformRealPath */
 
 
 char *__PHYSFS_platformCurrentDir(void)
 {
-    return(__PHYSFS_platformRealPath("."));  /* let CFURL sort it out. */
+    return __PHYSFS_platformRealPath(".");  /* let CFURL sort it out. */
 } /* __PHYSFS_platformCurrentDir */
 
 
@@ -308,7 +308,7 @@ static int macosxAllocatorInit(void)
     retval = (cfallocdef != NULL);
     if (retval)
         CFRetain(cfallocdef);
-    return(retval);
+    return retval;
 } /* macosxAllocatorInit */
 
 
@@ -325,14 +325,14 @@ static void macosxAllocatorDeinit(void)
 static void *macosxAllocatorMalloc(PHYSFS_uint64 s)
 {
     BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
-    return(CFAllocatorAllocate(cfallocdef, (CFIndex) s, 0));
+    return CFAllocatorAllocate(cfallocdef, (CFIndex) s, 0);
 } /* macosxAllocatorMalloc */
 
 
 static void *macosxAllocatorRealloc(void *ptr, PHYSFS_uint64 s)
 {
     BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
-    return(CFAllocatorReallocate(cfallocdef, ptr, (CFIndex) s, 0));
+    return CFAllocatorReallocate(cfallocdef, ptr, (CFIndex) s, 0);
 } /* macosxAllocatorRealloc */
 
 
@@ -349,13 +349,13 @@ int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
     allocator.Malloc = macosxAllocatorMalloc;
     allocator.Realloc = macosxAllocatorRealloc;
     allocator.Free = macosxAllocatorFree;
-    return(1);  /* return non-zero: we're supplying custom allocator. */
+    return 1;  /* return non-zero: we're supplying custom allocator. */
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 
 void *__PHYSFS_platformGetThreadID(void)
 {
-    return( (void *) ((size_t) MPCurrentTaskID()) );
+    return ( (void *) ((size_t) MPCurrentTaskID()) );
 } /* __PHYSFS_platformGetThreadID */
 
 
@@ -379,8 +379,8 @@ int __PHYSFS_platformGrabMutex(void *mutex)
 {
     MPCriticalRegionID m = (MPCriticalRegionID) mutex;
     if (MPEnterCriticalRegion(m, kDurationForever) != noErr)
-        return(0);
-    return(1);
+        return 0;
+    return 1;
 } /* __PHYSFS_platformGrabMutex */
 
 

@@ -49,13 +49,13 @@
 
 int __PHYSFS_platformInit(void)
 {
-    return(1);  /* always succeed. */
+    return 1;  /* always succeed. */
 } /* __PHYSFS_platformInit */
 
 
 int __PHYSFS_platformDeinit(void)
 {
-    return(1);  /* always succeed. */
+    return 1;  /* always succeed. */
 } /* __PHYSFS_platformDeinit */
 
 
@@ -185,7 +185,7 @@ static char *findBinaryInPath(const char *bin, char *envr)
         if (access(exe, X_OK) == 0)  /* Exists as executable? We're done. */
         {
             strcpy(exe, start);  /* i'm lazy. piss off. */
-            return(exe);
+            return exe;
         } /* if */
 
         start = ptr + 1;  /* start points to beginning of next element. */
@@ -194,7 +194,7 @@ static char *findBinaryInPath(const char *bin, char *envr)
     if (exe != NULL)
         allocator.Free(exe);
 
-    return(NULL);  /* doesn't exist in path. */
+    return NULL;  /* doesn't exist in path. */
 } /* findBinaryInPath */
 
 
@@ -237,7 +237,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 
     /* fast path: default behaviour can handle this. */
     if ( (argv0 != NULL) && (strchr(argv0, '/') != NULL) )
-        return(NULL);  /* higher level will parse out real path from argv0. */
+        return NULL;  /* higher level will parse out real path from argv0. */
 
     /*
      * Try to avoid using argv0 unless forced to. If there's a Linux-like
@@ -279,7 +279,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
             retval = ptr;  /* oh well if it failed. */
     } /* if */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCalcBaseDir */
 
 
@@ -294,7 +294,7 @@ char *__PHYSFS_platformRealPath(const char *path)
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, resolved_path);
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformRealPath */
 
 
@@ -335,22 +335,22 @@ char *__PHYSFS_platformCurrentDir(void)
         BAIL_MACRO(ERR_NO_SUCH_FILE, NULL);
     } /* if */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCurrentDir */
 
 
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
-    return(0);  /* just use malloc() and friends. */
+    return 0;  /* just use malloc() and friends. */
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 
 #if (defined PHYSFS_NO_PTHREADS_SUPPORT)
 
-void *__PHYSFS_platformGetThreadID(void) { return((void *) 0x0001); }
-void *__PHYSFS_platformCreateMutex(void) { return((void *) 0x0001); }
+void *__PHYSFS_platformGetThreadID(void) { return ((void *) 0x0001); }
+void *__PHYSFS_platformCreateMutex(void) { return ((void *) 0x0001); }
 void __PHYSFS_platformDestroyMutex(void *mutex) {}
-int __PHYSFS_platformGrabMutex(void *mutex) { return(1); }
+int __PHYSFS_platformGrabMutex(void *mutex) { return 1; }
 void __PHYSFS_platformReleaseMutex(void *mutex) {}
 
 #else
@@ -365,7 +365,7 @@ typedef struct
 
 void *__PHYSFS_platformGetThreadID(void)
 {
-    return( (void *) ((size_t) pthread_self()) );
+    return ( (void *) ((size_t) pthread_self()) );
 } /* __PHYSFS_platformGetThreadID */
 
 
@@ -383,7 +383,7 @@ void *__PHYSFS_platformCreateMutex(void)
 
     m->count = 0;
     m->owner = (pthread_t) 0xDEADBEEF;
-    return((void *) m);
+    return ((void *) m);
 } /* __PHYSFS_platformCreateMutex */
 
 
@@ -407,12 +407,12 @@ int __PHYSFS_platformGrabMutex(void *mutex)
     if (m->owner != tid)
     {
         if (pthread_mutex_lock(&m->mutex) != 0)
-            return(0);
+            return 0;
         m->owner = tid;
     } /* if */
 
     m->count++;
-    return(1);
+    return 1;
 } /* __PHYSFS_platformGrabMutex */
 
 

@@ -77,14 +77,14 @@ static int matchesPattern(const char *fname, const char *wildcard,
             fnameptr++;
 
             if (x != y)
-                return(0);
+                return 0;
         } /* else */
     } /* while */
 
     while (*wildptr == '*')
         wildptr++;
 
-    return(*fnameptr == *wildptr);
+    return (*fnameptr == *wildptr);
 } /* matchesPattern */
 
 typedef struct
@@ -188,7 +188,7 @@ char **PHYSFSEXT_enumerateFilesWildcard(const char *dir, const char *wildcard,
     } /* if */
 
     PHYSFS_freeList(list);
-    return(retval);
+    return retval;
 } /* PHYSFSEXT_enumerateFilesWildcard */
 
 
@@ -203,20 +203,20 @@ int main(int argc, char **argv)
     {
         printf("USAGE: %s <pattern> <caseSen>\n"
                "   where <caseSen> is 1 or 0.\n", argv[0]);
-        return(1);
+        return 1;
     } /* if */
 
     if (!PHYSFS_init(argv[0]))
     {
         fprintf(stderr, "PHYSFS_init(): %s\n", PHYSFS_getLastError());
-        return(1);
+        return 1;
     } /* if */
 
     if (!PHYSFS_addToSearchPath(".", 1))
     {
         fprintf(stderr, "PHYSFS_addToSearchPath(): %s\n", PHYSFS_getLastError());
         PHYSFS_deinit();
-        return(1);
+        return 1;
     } /* if */
 
     flist = PHYSFSEXT_enumerateFilesWildcard("/", argv[1], atoi(argv[2]));
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
     PHYSFSEXT_freeEnumeration(flist);
     PHYSFS_deinit();
 
-    return(0);
+    return 0;
 } /* main */
 #endif
 

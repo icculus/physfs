@@ -117,7 +117,7 @@ typedef struct
  */
 static voidpf zlibPhysfsAlloc(voidpf opaque, uInt items, uInt size)
 {
-    return(((PHYSFS_Allocator *) opaque)->Malloc(items * size));
+    return ((PHYSFS_Allocator *) opaque)->Malloc(items * size);
 } /* zlibPhysfsAlloc */
 
 /*
@@ -145,17 +145,17 @@ static const char *zlib_error_string(int rc)
 {
     switch (rc)
     {
-        case Z_OK: return(NULL);  /* not an error. */
-        case Z_STREAM_END: return(NULL); /* not an error. */
+        case Z_OK: return NULL;  /* not an error. */
+        case Z_STREAM_END: return NULL; /* not an error. */
 #ifndef _WIN32_WCE
-        case Z_ERRNO: return(strerror(errno));
+        case Z_ERRNO: return strerror(errno);
 #endif
-        case Z_NEED_DICT: return(ERR_NEED_DICT);
-        case Z_DATA_ERROR: return(ERR_DATA_ERROR);
-        case Z_MEM_ERROR: return(ERR_MEMORY_ERROR);
-        case Z_BUF_ERROR: return(ERR_BUFFER_ERROR);
-        case Z_VERSION_ERROR: return(ERR_VERSION_ERROR);
-        default: return(ERR_UNKNOWN_ERROR);
+        case Z_NEED_DICT: return ERR_NEED_DICT;
+        case Z_DATA_ERROR: return ERR_DATA_ERROR;
+        case Z_MEM_ERROR: return ERR_MEMORY_ERROR;
+        case Z_BUF_ERROR: return ERR_BUFFER_ERROR;
+        case Z_VERSION_ERROR: return ERR_VERSION_ERROR;
+        default: return ERR_UNKNOWN_ERROR;
     } /* switch */
 } /* zlib_error_string */
 
@@ -168,7 +168,7 @@ static int zlib_err(int rc)
     const char *str = zlib_error_string(rc);
     if (str != NULL)
         __PHYSFS_setError(str);
-    return(rc);
+    return rc;
 } /* zlib_err */
 
 
@@ -180,7 +180,7 @@ static int readui32(void *in, PHYSFS_uint32 *val)
     PHYSFS_uint32 v;
     BAIL_IF_MACRO(__PHYSFS_platformRead(in, &v, sizeof (v), 1) != 1, NULL, 0);
     *val = PHYSFS_swapULE32(v);
-    return(1);
+    return 1;
 } /* readui32 */
 
 
@@ -192,7 +192,7 @@ static int readui16(void *in, PHYSFS_uint16 *val)
     PHYSFS_uint16 v;
     BAIL_IF_MACRO(__PHYSFS_platformRead(in, &v, sizeof (v), 1) != 1, NULL, 0);
     *val = PHYSFS_swapULE16(v);
-    return(1);
+    return 1;
 } /* readui16 */
 
 
@@ -266,7 +266,7 @@ static PHYSFS_sint64 ZIP_read(fvoid *opaque, void *buf,
     if (retval > 0)
         finfo->uncompressed_position += (PHYSFS_uint32) (retval * objSize);
 
-    return(retval);
+    return retval;
 } /* ZIP_read */
 
 
@@ -280,13 +280,13 @@ static PHYSFS_sint64 ZIP_write(fvoid *opaque, const void *buf,
 static int ZIP_eof(fvoid *opaque)
 {
     ZIPfileinfo *finfo = (ZIPfileinfo *) opaque;
-    return(finfo->uncompressed_position >= finfo->entry->uncompressed_size);
+    return (finfo->uncompressed_position >= finfo->entry->uncompressed_size);
 } /* ZIP_eof */
 
 
 static PHYSFS_sint64 ZIP_tell(fvoid *opaque)
 {
-    return(((ZIPfileinfo *) opaque)->uncompressed_position);
+    return ((ZIPfileinfo *) opaque)->uncompressed_position;
 } /* ZIP_tell */
 
 
@@ -319,10 +319,10 @@ static int ZIP_seek(fvoid *opaque, PHYSFS_uint64 offset)
             z_stream str;
             initializeZStream(&str);
             if (zlib_err(inflateInit2(&str, -MAX_WBITS)) != Z_OK)
-                return(0);
+                return 0;
 
             if (!__PHYSFS_platformSeek(in, entry->offset))
-                return(0);
+                return 0;
 
             inflateEnd(&finfo->stream);
             memcpy(&finfo->stream, &str, sizeof (z_stream));
@@ -339,18 +339,18 @@ static int ZIP_seek(fvoid *opaque, PHYSFS_uint64 offset)
                 maxread = sizeof (buf);
 
             if (ZIP_read(finfo, buf, maxread, 1) != 1)
-                return(0);
+                return 0;
         } /* while */
     } /* else */
 
-    return(1);
+    return 1;
 } /* ZIP_seek */
 
 
 static PHYSFS_sint64 ZIP_fileLength(fvoid *opaque)
 {
     ZIPfileinfo *finfo = (ZIPfileinfo *) opaque;
-    return(finfo->entry->uncompressed_size);
+    return finfo->entry->uncompressed_size;
 } /* ZIP_fileLength */
 
 
@@ -366,7 +366,7 @@ static int ZIP_fileClose(fvoid *opaque)
         allocator.Free(finfo->buffer);
 
     allocator.Free(finfo);
-    return(1);
+    return 1;
 } /* ZIP_fileClose */
 
 
@@ -416,14 +416,14 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
         if (totalread != 0)
         {
             if (__PHYSFS_platformRead(in, buf, maxread - 4, 1) != 1)
-                return(-1);
+                return -1;
             memcpy(&buf[maxread - 4], &extra, sizeof (extra));
             totalread += maxread - 4;
         } /* if */
         else
         {
             if (__PHYSFS_platformRead(in, buf, maxread, 1) != 1)
-                return(-1);
+                return -1;
             totalread += maxread;
         } /* else */
 
@@ -454,7 +454,7 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
     if (len != NULL)
         *len = filelen;
 
-    return(filepos + i);
+    return (filepos + i);
 } /* zip_find_end_of_central_dir */
 
 
@@ -486,7 +486,7 @@ static int ZIP_isArchive(const char *filename, int forWriting)
     } /* if */
 
     __PHYSFS_platformClose(in);
-    return(retval);
+    return retval;
 } /* ZIP_isArchive */
 
 
@@ -537,11 +537,11 @@ static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path, int *isDir)
             {
                 *isDir = (thispath[pathlen] == '/');
                 if (*isDir)
-                    return(NULL);
+                    return NULL;
             } /* if */
 
             if (thispath[pathlen] == '\0') /* found entry? */
-                return(&a[middle]);
+                return &a[middle];
             else
                 hi = middle - 1;  /* adjust search params, try again. */
         } /* if */
@@ -655,7 +655,7 @@ static ZIPentry *zip_follow_symlink(void *in, ZIPinfo *info, char *path)
     } /* if */
 
     allocator.Free(path);
-    return(entry);
+    return entry;
 } /* zip_follow_symlink */
 
 
@@ -715,7 +715,7 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
         entry->symlink = zip_follow_symlink(in, info, path);
     } /* else */
 
-    return(entry->symlink != NULL);
+    return (entry->symlink != NULL);
 } /* zip_resolve_symlink */
 
 
@@ -755,7 +755,7 @@ static int zip_parse_local(void *in, ZIPentry *entry)
     BAIL_IF_MACRO(!readui16(in, &extralen), NULL, 0);
 
     entry->offset += fnamelen + extralen + 30;
-    return(1);
+    return 1;
 } /* zip_parse_local */
 
 
@@ -800,7 +800,7 @@ static int zip_resolve(void *in, ZIPinfo *info, ZIPentry *entry)
             entry->resolved = ((retval) ? ZIP_RESOLVED : ZIP_BROKEN_FILE);
     } /* if */
 
-    return(retval);
+    return retval;
 } /* zip_resolve */
 
 
@@ -832,27 +832,24 @@ static int zip_version_does_symlinks(PHYSFS_uint32 version)
             break;
     } /* switch */
 
-    return(retval);
+    return retval;
 } /* zip_version_does_symlinks */
 
 
 static int zip_entry_is_symlink(const ZIPentry *entry)
 {
-    return((entry->resolved == ZIP_UNRESOLVED_SYMLINK) ||
-           (entry->resolved == ZIP_BROKEN_SYMLINK) ||
-           (entry->symlink));
+    return ((entry->resolved == ZIP_UNRESOLVED_SYMLINK) ||
+            (entry->resolved == ZIP_BROKEN_SYMLINK) ||
+            (entry->symlink));
 } /* zip_entry_is_symlink */
 
 
 static int zip_has_symlink_attr(ZIPentry *entry, PHYSFS_uint32 extern_attr)
 {
     PHYSFS_uint16 xattr = ((extern_attr >> 16) & 0xFFFF);
-
-    return (
-              (zip_version_does_symlinks(entry->version)) &&
-              (entry->uncompressed_size > 0) &&
-              ((xattr & UNIX_FILETYPE_MASK) == UNIX_FILETYPE_SYMLINK)
-           );
+    return ( (zip_version_does_symlinks(entry->version)) &&
+             (entry->uncompressed_size > 0) &&
+             ((xattr & UNIX_FILETYPE_MASK) == UNIX_FILETYPE_SYMLINK) );
 } /* zip_has_symlink_attr */
 
 
@@ -884,7 +881,7 @@ static PHYSFS_sint64 zip_dos_time_to_physfs_time(PHYSFS_uint32 dostime)
     /* let mktime calculate daylight savings time. */
     unixtime.tm_isdst = -1;
 
-    return((PHYSFS_sint64) mktime(&unixtime));
+    return ((PHYSFS_sint64) mktime(&unixtime));
 #endif
 } /* zip_dos_time_to_physfs_time */
 
@@ -940,11 +937,11 @@ static int zip_load_entry(void *in, ZIPentry *entry, PHYSFS_uint32 ofs_fixup)
     if (!__PHYSFS_platformSeek(in, si64 + extralen + commentlen))
         goto zip_load_entry_puked;
 
-    return(1);  /* success. */
+    return 1;  /* success. */
 
 zip_load_entry_puked:
     allocator.Free(entry->name);
-    return(0);  /* failure. */
+    return 0;  /* failure. */
 } /* zip_load_entry */
 
 
@@ -953,7 +950,7 @@ static int zip_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
     if (one != two)
     {
         const ZIPentry *a = (const ZIPentry *) _a;
-        return(strcmp(a[one].name, a[two].name));
+        return strcmp(a[one].name, a[two].name);
     } /* if */
 
     return 0;
@@ -990,12 +987,12 @@ static int zip_load_entries(void *in, ZIPinfo *info,
         if (!zip_load_entry(in, &info->entries[i], data_ofs))
         {
             zip_free_entries(info->entries, i);
-            return(0);
+            return 0;
         } /* if */
     } /* for */
 
     __PHYSFS_sort(info->entries, max, zip_entry_cmp, zip_entry_swap);
-    return(1);
+    return 1;
 } /* zip_load_entries */
 
 
@@ -1062,7 +1059,7 @@ static int zip_parse_end_of_central_dir(void *in, ZIPinfo *info,
      */
     BAIL_IF_MACRO((pos + 22 + ui16) != len, ERR_UNSUPPORTED_ARCHIVE, 0);
 
-    return(1);  /* made it. */
+    return 1;  /* made it. */
 } /* zip_parse_end_of_central_dir */
 
 
@@ -1082,7 +1079,7 @@ static ZIPinfo *zip_create_zipinfo(const char *name)
 
     info->archiveName = ptr;
     strcpy(info->archiveName, name);
-    return(info);
+    return info;
 } /* zip_create_zipinfo */
 
 
@@ -1108,7 +1105,7 @@ static void *ZIP_openArchive(const char *name, int forWriting)
         goto zip_openarchive_failed;
 
     __PHYSFS_platformClose(in);
-    return(info);
+    return info;
 
 zip_openarchive_failed:
     if (info != NULL)
@@ -1121,7 +1118,7 @@ zip_openarchive_failed:
     if (in != NULL)
         __PHYSFS_platformClose(in);
 
-    return(NULL);
+    return NULL;
 } /* ZIP_openArchive */
 
 
@@ -1137,7 +1134,7 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
     int rc;
 
     if (*path == '\0')  /* root dir? */
-        return(0);
+        return 0;
 
     if ((dlen > 0) && (path[dlen - 1] == '/')) /* ignore trailing slash. */
         dlen--;
@@ -1157,10 +1154,10 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
             else 
             {
                 if (stop_on_first_find) /* Just checking dir's existance? */
-                    return(middle);
+                    return middle;
 
                 if (name[dlen + 1] == '\0') /* Skip initial dir entry. */
-                    return(middle + 1);
+                    return (middle + 1);
 
                 /* there might be more entries earlier in the list. */
                 retval = middle;
@@ -1174,7 +1171,7 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
             hi = middle - 1;
     } /* while */
 
-    return(retval);
+    return retval;
 } /* zip_find_start_of_dir */
 
 
@@ -1246,7 +1243,7 @@ static int ZIP_exists(dvoid *opaque, const char *name)
     int isDir;    
     ZIPinfo *info = (ZIPinfo *) opaque;
     ZIPentry *entry = zip_find_entry(info, name, &isDir);
-    return((entry != NULL) || (isDir));
+    return ((entry != NULL) || (isDir));
 } /* ZIP_exists */
 
 
@@ -1260,10 +1257,10 @@ static PHYSFS_sint64 ZIP_getLastModTime(dvoid *opaque,
 
     *fileExists = ((isDir) || (entry != NULL));
     if (isDir)
-        return(1);  /* Best I can do for a dir... */
+        return 1;  /* Best I can do for a dir... */
 
     BAIL_IF_MACRO(entry == NULL, NULL, -1);
-    return(entry->last_mod_time);
+    return entry->last_mod_time;
 } /* ZIP_getLastModTime */
 
 
@@ -1275,7 +1272,7 @@ static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 
     *fileExists = ((isDir) || (entry != NULL));
     if (isDir)
-        return(1); /* definitely a dir. */
+        return 1; /* definitely a dir. */
 
     /* Follow symlinks. This means we might need to resolve entries. */
     BAIL_IF_MACRO(entry == NULL, ERR_NO_SUCH_FILE, 0);
@@ -1288,13 +1285,13 @@ static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists)
         rc = zip_resolve(in, info, entry);
         __PHYSFS_platformClose(in);
         if (!rc)
-            return(0);
+            return 0;
     } /* if */
 
     BAIL_IF_MACRO(entry->resolved == ZIP_BROKEN_SYMLINK, NULL, 0);
     BAIL_IF_MACRO(entry->symlink == NULL, ERR_NOT_A_DIR, 0);
 
-    return(zip_find_start_of_dir(info, entry->symlink->name, 1) >= 0);
+    return (zip_find_start_of_dir(info, entry->symlink->name, 1) >= 0);
 } /* ZIP_isDirectory */
 
 
@@ -1304,7 +1301,7 @@ static int ZIP_isSymLink(dvoid *opaque, const char *name, int *fileExists)
     const ZIPentry *entry = zip_find_entry((ZIPinfo *) opaque, name, &isDir);
     *fileExists = ((isDir) || (entry != NULL));
     BAIL_IF_MACRO(entry == NULL, NULL, 0);
-    return(zip_entry_is_symlink(entry));
+    return zip_entry_is_symlink(entry);
 } /* ZIP_isSymLink */
 
 
@@ -1328,7 +1325,7 @@ static void *zip_get_file_handle(const char *fn, ZIPinfo *inf, ZIPentry *entry)
         retval = NULL;
     } /* if */
 
-    return(retval);
+    return retval;
 } /* zip_get_file_handle */
 
 
@@ -1361,7 +1358,7 @@ static fvoid *ZIP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
         if (zlib_err(inflateInit2(&finfo->stream, -MAX_WBITS)) != Z_OK)
         {
             ZIP_fileClose(finfo);
-            return(NULL);
+            return NULL;
         } /* if */
 
         finfo->buffer = (PHYSFS_uint8 *) allocator.Malloc(ZIP_READBUFSIZE);
@@ -1372,7 +1369,7 @@ static fvoid *ZIP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
         } /* if */
     } /* if */
 
-    return(finfo);
+    return finfo;
 } /* ZIP_openRead */
 
 

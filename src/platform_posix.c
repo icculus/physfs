@@ -45,7 +45,7 @@ char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
             strcpy(retval, envr);
     } /* if */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCopyEnvironmentVariable */
 
 
@@ -63,7 +63,7 @@ static char *getUserNameByUID(void)
             strcpy(retval, pw->pw_name);
     } /* if */
     
-    return(retval);
+    return retval;
 } /* getUserNameByUID */
 
 
@@ -81,7 +81,7 @@ static char *getUserDirByUID(void)
             strcpy(retval, pw->pw_dir);
     } /* if */
     
-    return(retval);
+    return retval;
 } /* getUserDirByUID */
 
 
@@ -90,7 +90,7 @@ char *__PHYSFS_platformGetUserName(void)
     char *retval = getUserNameByUID();
     if (retval == NULL)
         retval = __PHYSFS_platformCopyEnvironmentVariable("USER");
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformGetUserName */
 
 
@@ -99,7 +99,7 @@ char *__PHYSFS_platformGetUserDir(void)
     char *retval = __PHYSFS_platformCopyEnvironmentVariable("HOME");
     if (retval == NULL)
         retval = getUserDirByUID();
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformGetUserDir */
 
 
@@ -107,7 +107,7 @@ int __PHYSFS_platformExists(const char *fname)
 {
     struct stat statbuf;
     BAIL_IF_MACRO(lstat(fname, &statbuf) == -1, strerror(errno), 0);
-    return(1);
+    return 1;
 } /* __PHYSFS_platformExists */
 
 
@@ -115,7 +115,7 @@ int __PHYSFS_platformIsSymLink(const char *fname)
 {
     struct stat statbuf;
     BAIL_IF_MACRO(lstat(fname, &statbuf) == -1, strerror(errno), 0);
-    return( (S_ISLNK(statbuf.st_mode)) ? 1 : 0 );
+    return ( (S_ISLNK(statbuf.st_mode)) ? 1 : 0 );
 } /* __PHYSFS_platformIsSymlink */
 
 
@@ -123,7 +123,7 @@ int __PHYSFS_platformIsDirectory(const char *fname)
 {
     struct stat statbuf;
     BAIL_IF_MACRO(stat(fname, &statbuf) == -1, strerror(errno), 0);
-    return( (S_ISDIR(statbuf.st_mode)) ? 1 : 0 );
+    return ( (S_ISDIR(statbuf.st_mode)) ? 1 : 0 );
 } /* __PHYSFS_platformIsDirectory */
 
 
@@ -150,7 +150,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     if (append)
         strcat(retval, append);
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCvtToDependent */
 
 
@@ -230,7 +230,7 @@ int __PHYSFS_platformMkDir(const char *path)
     errno = 0;
     rc = mkdir(path, S_IRWXU);
     BAIL_IF_MACRO(rc == -1, strerror(errno), 0);
-    return(1);
+    return 1;
 } /* __PHYSFS_platformMkDir */
 
 
@@ -264,25 +264,25 @@ static void *doOpen(const char *filename, int mode)
     } /* if */
 
     *retval = fd;
-    return((void *) retval);
+    return ((void *) retval);
 } /* doOpen */
 
 
 void *__PHYSFS_platformOpenRead(const char *filename)
 {
-    return(doOpen(filename, O_RDONLY));
+    return doOpen(filename, O_RDONLY);
 } /* __PHYSFS_platformOpenRead */
 
 
 void *__PHYSFS_platformOpenWrite(const char *filename)
 {
-    return(doOpen(filename, O_WRONLY | O_CREAT | O_TRUNC));
+    return doOpen(filename, O_WRONLY | O_CREAT | O_TRUNC);
 } /* __PHYSFS_platformOpenWrite */
 
 
 void *__PHYSFS_platformOpenAppend(const char *filename)
 {
-    return(doOpen(filename, O_WRONLY | O_CREAT | O_APPEND));
+    return doOpen(filename, O_WRONLY | O_CREAT | O_APPEND);
 } /* __PHYSFS_platformOpenAppend */
 
 
@@ -299,7 +299,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     if ((rc < max) && (size > 1))
         lseek(fd, -(rc % size), SEEK_CUR); /* rollback to object boundary. */
 
-    return(rc / size);
+    return (rc / size);
 } /* __PHYSFS_platformRead */
 
 
@@ -316,7 +316,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
     if ((rc < max) && (size > 1))
         lseek(fd, -(rc % size), SEEK_CUR); /* rollback to object boundary. */
 
-    return(rc / size);
+    return (rc / size);
 } /* __PHYSFS_platformWrite */
 
 
@@ -334,7 +334,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
       BAIL_IF_MACRO(lseek(fd, (int) pos, SEEK_SET) == -1, strerror(errno), 0);
     #endif
 
-    return(1);
+    return 1;
 } /* __PHYSFS_platformSeek */
 
 
@@ -353,7 +353,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
       BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
     #endif
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformTell */
 
 
@@ -362,7 +362,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
     int fd = *((int *) opaque);
     struct stat statbuf;
     BAIL_IF_MACRO(fstat(fd, &statbuf) == -1, strerror(errno), -1);
-    return((PHYSFS_sint64) statbuf.st_size);
+    return ((PHYSFS_sint64) statbuf.st_size);
 } /* __PHYSFS_platformFileLength */
 
 
@@ -370,7 +370,7 @@ int __PHYSFS_platformEOF(void *opaque)
 {
     PHYSFS_sint64 pos = __PHYSFS_platformTell(opaque);
     PHYSFS_sint64 len = __PHYSFS_platformFileLength(opaque);
-    return(pos >= len);
+    return (pos >= len);
 } /* __PHYSFS_platformEOF */
 
 
@@ -378,7 +378,7 @@ int __PHYSFS_platformFlush(void *opaque)
 {
     int fd = *((int *) opaque);
     BAIL_IF_MACRO(fsync(fd) == -1, strerror(errno), 0);
-    return(1);
+    return 1;
 } /* __PHYSFS_platformFlush */
 
 
@@ -387,14 +387,14 @@ int __PHYSFS_platformClose(void *opaque)
     int fd = *((int *) opaque);
     BAIL_IF_MACRO(close(fd) == -1, strerror(errno), 0);
     allocator.Free(opaque);
-    return(1);
+    return 1;
 } /* __PHYSFS_platformClose */
 
 
 int __PHYSFS_platformDelete(const char *path)
 {
     BAIL_IF_MACRO(remove(path) == -1, strerror(errno), 0);
-    return(1);
+    return 1;
 } /* __PHYSFS_platformDelete */
 
 

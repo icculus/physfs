@@ -99,7 +99,7 @@ static PHYSFS_sint64 QPAK_read(fvoid *opaque, void *buffer,
     if (rc > 0)
         finfo->curPos += (PHYSFS_uint32) (rc * objSize);
 
-    return(rc);
+    return rc;
 } /* QPAK_read */
 
 
@@ -114,13 +114,13 @@ static int QPAK_eof(fvoid *opaque)
 {
     QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
     QPAKentry *entry = finfo->entry;
-    return(finfo->curPos >= entry->size);
+    return (finfo->curPos >= entry->size);
 } /* QPAK_eof */
 
 
 static PHYSFS_sint64 QPAK_tell(fvoid *opaque)
 {
-    return(((QPAKfileinfo *) opaque)->curPos);
+    return ((QPAKfileinfo *) opaque)->curPos;
 } /* QPAK_tell */
 
 
@@ -136,14 +136,14 @@ static int QPAK_seek(fvoid *opaque, PHYSFS_uint64 offset)
     if (rc)
         finfo->curPos = (PHYSFS_uint32) offset;
 
-    return(rc);
+    return rc;
 } /* QPAK_seek */
 
 
 static PHYSFS_sint64 QPAK_fileLength(fvoid *opaque)
 {
     QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
-    return((PHYSFS_sint64) finfo->entry->size);
+    return ((PHYSFS_sint64) finfo->entry->size);
 } /* QPAK_fileLength */
 
 
@@ -152,7 +152,7 @@ static int QPAK_fileClose(fvoid *opaque)
     QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
     BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
     allocator.Free(finfo);
-    return(1);
+    return 1;
 } /* QPAK_fileClose */
 
 
@@ -190,7 +190,7 @@ static int qpak_open(const char *filename, int forWriting,
         goto openQpak_failed;
 
     *count /= 64;
-    return(1);
+    return 1;
 
 openQpak_failed:
     if (*fh != NULL)
@@ -198,7 +198,7 @@ openQpak_failed:
 
     *count = -1;
     *fh = NULL;
-    return(0);
+    return 0;
 } /* qpak_open */
 
 
@@ -211,7 +211,7 @@ static int QPAK_isArchive(const char *filename, int forWriting)
     if (fh != NULL)
         __PHYSFS_platformClose(fh);
 
-    return(retval);
+    return retval;
 } /* QPAK_isArchive */
 
 
@@ -220,7 +220,7 @@ static int qpak_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
     if (one != two)
     {
         const QPAKentry *a = (const QPAKentry *) _a;
-        return(QPAK_strcmp(a[one].name, a[two].name));
+        return QPAK_strcmp(a[one].name, a[two].name);
     } /* if */
 
     return 0;
@@ -263,19 +263,19 @@ static int qpak_load_entries(const char *name, int forWriting, QPAKinfo *info)
         if (__PHYSFS_platformRead(fh,&entry->name,sizeof(entry->name),1) != 1)
         {
             __PHYSFS_platformClose(fh);
-            return(0);
+            return 0;
         } /* if */
 
         if (__PHYSFS_platformRead(fh,&loc,sizeof(loc),1) != 1)
         {
             __PHYSFS_platformClose(fh);
-            return(0);
+            return 0;
         } /* if */
 
         if (__PHYSFS_platformRead(fh,&entry->size,sizeof(entry->size),1) != 1)
         {
             __PHYSFS_platformClose(fh);
-            return(0);
+            return 0;
         } /* if */
 
         entry->size = PHYSFS_swapULE32(entry->size);
@@ -286,7 +286,7 @@ static int qpak_load_entries(const char *name, int forWriting, QPAKinfo *info)
 
     __PHYSFS_sort(info->entries, info->entryCount,
                   qpak_entry_cmp, qpak_entry_swap);
-    return(1);
+    return 1;
 } /* qpak_load_entries */
 
 
@@ -310,7 +310,7 @@ static void *QPAK_openArchive(const char *name, int forWriting)
 
     strcpy(info->filename, name);
     info->last_mod_time = modtime;
-    return(info);
+    return info;
 
 QPAK_openArchive_failed:
     if (info != NULL)
@@ -322,7 +322,7 @@ QPAK_openArchive_failed:
         allocator.Free(info);
     } /* if */
 
-    return(NULL);
+    return NULL;
 } /* QPAK_openArchive */
 
 
@@ -338,7 +338,7 @@ static PHYSFS_sint32 qpak_find_start_of_dir(QPAKinfo *info, const char *path,
     int rc;
 
     if (*path == '\0')  /* root dir? */
-        return(0);
+        return 0;
 
     if ((dlen > 0) && (path[dlen - 1] == '/')) /* ignore trailing slash. */
         dlen--;
@@ -358,10 +358,10 @@ static PHYSFS_sint32 qpak_find_start_of_dir(QPAKinfo *info, const char *path,
             else 
             {
                 if (stop_on_first_find) /* Just checking dir's existance? */
-                    return(middle);
+                    return middle;
 
                 if (name[dlen + 1] == '\0') /* Skip initial dir entry. */
-                    return(middle + 1);
+                    return (middle + 1);
 
                 /* there might be more entries earlier in the list. */
                 retval = middle;
@@ -375,7 +375,7 @@ static PHYSFS_sint32 qpak_find_start_of_dir(QPAKinfo *info, const char *path,
             hi = middle - 1;
     } /* while */
 
-    return(retval);
+    return retval;
 } /* qpak_find_start_of_dir */
 
 
@@ -473,11 +473,11 @@ static QPAKentry *qpak_find_entry(QPAKinfo *info, const char *path, int *isDir)
             {
                 *isDir = (thispath[pathlen] == '/');
                 if (*isDir)
-                    return(NULL);
+                    return NULL;
             } /* if */
 
             if (thispath[pathlen] == '\0') /* found entry? */
-                return(&a[middle]);
+                return &a[middle];
             else
                 hi = middle - 1;  /* adjust search params, try again. */
         } /* if */
@@ -495,7 +495,7 @@ static int QPAK_exists(dvoid *opaque, const char *name)
     int isDir;    
     QPAKinfo *info = (QPAKinfo *) opaque;
     QPAKentry *entry = qpak_find_entry(info, name, &isDir);
-    return((entry != NULL) || (isDir));
+    return ((entry != NULL) || (isDir));
 } /* QPAK_exists */
 
 
@@ -507,7 +507,7 @@ static int QPAK_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 
     *fileExists = ((isDir) || (entry != NULL));
     if (isDir)
-        return(1); /* definitely a dir. */
+        return 1; /* definitely a dir. */
 
     BAIL_MACRO(ERR_NO_SUCH_FILE, 0);
 } /* QPAK_isDirectory */
@@ -516,7 +516,7 @@ static int QPAK_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 static int QPAK_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 {
     *fileExists = QPAK_exists(opaque, name);
-    return(0);  /* never symlinks in a quake pak. */
+    return 0;  /* never symlinks in a quake pak. */
 } /* QPAK_isSymLink */
 
 
@@ -533,7 +533,7 @@ static PHYSFS_sint64 QPAK_getLastModTime(dvoid *opaque,
     if (*fileExists)  /* use time of QPAK itself in the physical filesystem. */
         retval = info->last_mod_time;
 
-    return(retval);
+    return retval;
 } /* QPAK_getLastModTime */
 
 
@@ -557,12 +557,12 @@ static fvoid *QPAK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
          (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
     {
         allocator.Free(finfo);
-        return(NULL);
+        return NULL;
     } /* if */
 
     finfo->curPos = 0;
     finfo->entry = entry;
-    return(finfo);
+    return finfo;
 } /* QPAK_openRead */
 
 
