@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     if (!PHYSFS_init(argv[0]))
     {
         printf("PHYSFS_init() failed: %s\n", PHYSFS_getLastError());
-        return(42);
+        return 42;
     } /* if */
 
     rc = PHYSFS_addToSearchPath(argv[0], 0);
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     {
         printf("Couldn't find self-extract data: %s\n", PHYSFS_getLastError());
         printf("This might mean you didn't append a zipfile to the binary.\n");
-        return(42);
+        return 42;
     } /* if */
 
     char **files = PHYSFS_enumerateFiles("/");
@@ -61,6 +61,6 @@ int main(int argc, char **argv)
     } /* for */
     PHYSFS_freeList(files);
 
-    return(0);
+    return 0;
 } /* main */
 

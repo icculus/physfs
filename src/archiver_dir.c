@@ -19,7 +19,7 @@ static PHYSFS_sint64 DIR_read(fvoid *opaque, void *buffer,
 {
     PHYSFS_sint64 retval;
     retval = __PHYSFS_platformRead(opaque, buffer, objSize, objCount);
-    return(retval);
+    return retval;
 } /* DIR_read */
 
 
@@ -28,31 +28,31 @@ static PHYSFS_sint64 DIR_write(fvoid *opaque, const void *buffer,
 {
     PHYSFS_sint64 retval;
     retval = __PHYSFS_platformWrite(opaque, buffer, objSize, objCount);
-    return(retval);
+    return retval;
 } /* DIR_write */
 
 
 static int DIR_eof(fvoid *opaque)
 {
-    return(__PHYSFS_platformEOF(opaque));
+    return __PHYSFS_platformEOF(opaque);
 } /* DIR_eof */
 
 
 static PHYSFS_sint64 DIR_tell(fvoid *opaque)
 {
-    return(__PHYSFS_platformTell(opaque));
+    return __PHYSFS_platformTell(opaque);
 } /* DIR_tell */
 
 
 static int DIR_seek(fvoid *opaque, PHYSFS_uint64 offset)
 {
-    return(__PHYSFS_platformSeek(opaque, offset));
+    return __PHYSFS_platformSeek(opaque, offset);
 } /* DIR_seek */
 
 
 static PHYSFS_sint64 DIR_fileLength(fvoid *opaque)
 {
-    return(__PHYSFS_platformFileLength(opaque));
+    return __PHYSFS_platformFileLength(opaque);
 } /* DIR_fileLength */
 
 
@@ -65,14 +65,14 @@ static int DIR_fileClose(fvoid *opaque)
      */
     BAIL_IF_MACRO(!__PHYSFS_platformFlush(opaque), NULL, 0);
     BAIL_IF_MACRO(!__PHYSFS_platformClose(opaque), NULL, 0);
-    return(1);
+    return 1;
 } /* DIR_fileClose */
 
 
 static int DIR_isArchive(const char *filename, int forWriting)
 {
     /* directories ARE archives in this driver... */
-    return(__PHYSFS_platformIsDirectory(filename));
+    return __PHYSFS_platformIsDirectory(filename);
 } /* DIR_isArchive */
 
 
@@ -95,7 +95,7 @@ static void *DIR_openArchive(const char *name, int forWriting)
     if (strcmp((name + namelen) - seplen, dirsep) != 0)
         strcat(retval, dirsep);
 
-    return(retval);
+    return retval;
 } /* DIR_openArchive */
 
 
@@ -121,7 +121,7 @@ static int DIR_exists(dvoid *opaque, const char *name)
     BAIL_IF_MACRO(f == NULL, NULL, 0);
     retval = __PHYSFS_platformExists(f);
     allocator.Free(f);
-    return(retval);
+    return retval;
 } /* DIR_exists */
 
 
@@ -135,7 +135,7 @@ static int DIR_isDirectory(dvoid *opaque, const char *name, int *fileExists)
     if (*fileExists)
         retval = __PHYSFS_platformIsDirectory(d);
     allocator.Free(d);
-    return(retval);
+    return retval;
 } /* DIR_isDirectory */
 
 
@@ -149,7 +149,7 @@ static int DIR_isSymLink(dvoid *opaque, const char *name, int *fileExists)
     if (*fileExists)
         retval = __PHYSFS_platformIsSymLink(f);
     allocator.Free(f);
-    return(retval);
+    return retval;
 } /* DIR_isSymLink */
 
 
@@ -165,7 +165,7 @@ static PHYSFS_sint64 DIR_getLastModTime(dvoid *opaque,
     if (*fileExists)
         retval = __PHYSFS_platformGetLastModTime(d);
     allocator.Free(d);
-    return(retval);
+    return retval;
 } /* DIR_getLastModTime */
 
 
@@ -184,32 +184,32 @@ static fvoid *doOpen(dvoid *opaque, const char *name,
         if (!(*fileExists))
         {
             allocator.Free(f);
-            return(NULL);
+            return NULL;
         } /* if */
     } /* if */
 
     rc = openFunc(f);
     allocator.Free(f);
 
-    return((fvoid *) rc);
+    return ((fvoid *) rc);
 } /* doOpen */
 
 
 static fvoid *DIR_openRead(dvoid *opaque, const char *fnm, int *exist)
 {
-    return(doOpen(opaque, fnm, __PHYSFS_platformOpenRead, exist));
+    return doOpen(opaque, fnm, __PHYSFS_platformOpenRead, exist);
 } /* DIR_openRead */
 
 
 static fvoid *DIR_openWrite(dvoid *opaque, const char *filename)
 {
-    return(doOpen(opaque, filename, __PHYSFS_platformOpenWrite, NULL));
+    return doOpen(opaque, filename, __PHYSFS_platformOpenWrite, NULL);
 } /* DIR_openWrite */
 
 
 static fvoid *DIR_openAppend(dvoid *opaque, const char *filename)
 {
-    return(doOpen(opaque, filename, __PHYSFS_platformOpenAppend, NULL));
+    return doOpen(opaque, filename, __PHYSFS_platformOpenAppend, NULL);
 } /* DIR_openAppend */
 
 
@@ -221,7 +221,7 @@ static int DIR_remove(dvoid *opaque, const char *name)
     BAIL_IF_MACRO(f == NULL, NULL, 0);
     retval = __PHYSFS_platformDelete(f);
     allocator.Free(f);
-    return(retval);
+    return retval;
 } /* DIR_remove */
 
 
@@ -233,7 +233,7 @@ static int DIR_mkdir(dvoid *opaque, const char *name)
     BAIL_IF_MACRO(f == NULL, NULL, 0);
     retval = __PHYSFS_platformMkDir(f);
     allocator.Free(f);
-    return(retval);
+    return retval;
 } /* DIR_mkdir */
 
 

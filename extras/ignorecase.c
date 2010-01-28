@@ -37,12 +37,12 @@ static int caseInsensitiveStringCompare(const char *x, const char *y)
         ux = toupper((int) *x);
         uy = toupper((int) *y);
         if (ux != uy)
-            return((ux > uy) ? 1 : -1);
+            return ((ux > uy) ? 1 : -1);
         x++;
         y++;
     } while ((ux) && (uy));
 
-    return(0);
+    return 0;
 } /* caseInsensitiveStringCompare */
 
 
@@ -53,7 +53,7 @@ static int locateOneElement(char *buf)
     char **i;
 
     if (PHYSFS_exists(buf))
-        return(1);  /* quick rejection: exists in current case. */
+        return 1;  /* quick rejection: exists in current case. */
 
     ptr = strrchr(buf, '/');  /* find entry at end of path. */
     if (ptr == NULL)
@@ -75,13 +75,13 @@ static int locateOneElement(char *buf)
         {
             strcpy(ptr, *i); /* found a match. Overwrite with this case. */
             PHYSFS_freeList(rc);
-            return(1);
+            return 1;
         } /* if */
     } /* for */
 
     /* no match at all... */
     PHYSFS_freeList(rc);
-    return(0);
+    return 0;
 } /* locateOneElement */
 
 
@@ -96,7 +96,7 @@ int PHYSFSEXT_locateCorrectCase(char *buf)
 
     ptr = prevptr = buf;
     if (*ptr == '\0')
-        return(0);  /* Uh...I guess that's success. */
+        return 0;  /* Uh...I guess that's success. */
 
     while (ptr = strchr(ptr + 1, '/'))
     {
@@ -104,11 +104,11 @@ int PHYSFSEXT_locateCorrectCase(char *buf)
         rc = locateOneElement(buf);
         *ptr = '/'; /* restore path separator */
         if (!rc)
-            return(-2);  /* missing element in path. */
+            return -2;  /* missing element in path. */
     } /* while */
 
     /* check final element... */
-    return(locateOneElement(buf) ? 0 : -1);
+    return locateOneElement(buf ? 0 : -1);
 } /* PHYSFSEXT_locateCorrectCase */
 
 
@@ -122,35 +122,35 @@ int main(int argc, char **argv)
     if (!PHYSFS_init(argv[0]))
     {
         fprintf(stderr, "PHYSFS_init(): %s\n", PHYSFS_getLastError());
-        return(1);
+        return 1;
     } /* if */
 
     if (!PHYSFS_addToSearchPath(".", 1))
     {
         fprintf(stderr, "PHYSFS_addToSearchPath(): %s\n", PHYSFS_getLastError());
         PHYSFS_deinit();
-        return(1);
+        return 1;
     } /* if */
 
     if (!PHYSFS_setWriteDir("."))
     {
         fprintf(stderr, "PHYSFS_setWriteDir(): %s\n", PHYSFS_getLastError());
         PHYSFS_deinit();
-        return(1);
+        return 1;
     } /* if */
 
     if (!PHYSFS_mkdir("/a/b/c"))
     {
         fprintf(stderr, "PHYSFS_mkdir(): %s\n", PHYSFS_getLastError());
         PHYSFS_deinit();
-        return(1);
+        return 1;
     } /* if */
 
     if (!PHYSFS_mkdir("/a/b/C"))
     {
         fprintf(stderr, "PHYSFS_mkdir(): %s\n", PHYSFS_getLastError());
         PHYSFS_deinit();
-        return(1);
+        return 1;
     } /* if */
 
     f = PHYSFS_openWrite("/a/b/c/x.txt");
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "PHYSFS_openWrite(): %s\n", PHYSFS_getLastError());
         PHYSFS_deinit();
-        return(1);
+        return 1;
     } /* if */
 
     f = PHYSFS_openWrite("/a/b/C/X.txt");
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "PHYSFS_openWrite(): %s\n", PHYSFS_getLastError());
         PHYSFS_deinit();
-        return(1);
+        return 1;
     } /* if */
 
     strcpy(buf, "/a/b/c/x.txt");
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
     PHYSFS_delete("/a/b");
     PHYSFS_delete("/a");
     PHYSFS_deinit();
-    return(0);
+    return 0;
 } /* main */
 #endif
 

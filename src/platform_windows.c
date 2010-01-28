@@ -59,7 +59,7 @@ static PHYSFS_uint64 wStrLen(const WCHAR *wstr)
     PHYSFS_uint64 len = 0;
     while (*(wstr++))
         len++;
-    return(len);
+    return len;
 } /* wStrLen */
 
 static char *unicodeToUtf8Heap(const WCHAR *w_str)
@@ -76,7 +76,7 @@ static char *unicodeToUtf8Heap(const WCHAR *w_str)
         if (ptr != NULL)
             retval = (char *) ptr;
     } /* if */
-    return(retval);
+    return retval;
 } /* unicodeToUtf8Heap */
 
 
@@ -96,7 +96,7 @@ static char *codepageToUtf8Heap(const char *cpstr)
             PHYSFS_utf8FromUcs2(wbuf, retval, len * 4);
         __PHYSFS_smallFree(wbuf);
     } /* if */
-    return(retval);
+    return retval;
 } /* codepageToUtf8Heap */
 
 
@@ -151,7 +151,7 @@ static BOOL WINAPI fallbackGetUserNameW(LPWSTR buf, LPDWORD len)
     if (buf != NULL)
         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, cpstr, cplen, buf, *len);
     __PHYSFS_smallFree(cpstr);
-    return(retval);
+    return retval;
 } /* fallbackGetUserNameW */
 
 static DWORD WINAPI fallbackFormatMessageW(DWORD dwFlags, LPCVOID lpSource,
@@ -165,7 +165,7 @@ static DWORD WINAPI fallbackFormatMessageW(DWORD dwFlags, LPCVOID lpSource,
     if (retval > 0)
         MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,cpbuf,retval,lpBuf,nSize);
     __PHYSFS_smallFree(cpbuf);
-    return(retval);
+    return retval;
 } /* fallbackFormatMessageW */
 
 static DWORD WINAPI fallbackGetModuleFileNameW(HMODULE hMod, LPWCH lpBuf,
@@ -176,7 +176,7 @@ static DWORD WINAPI fallbackGetModuleFileNameW(HMODULE hMod, LPWCH lpBuf,
     if (retval > 0)
         MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,cpbuf,retval,lpBuf,nSize);
     __PHYSFS_smallFree(cpbuf);
-    return(retval);
+    return retval;
 } /* fallbackGetModuleFileNameW */
 
 static DWORD WINAPI fallbackGetFileAttributesW(LPCWSTR fname)
@@ -187,7 +187,7 @@ static DWORD WINAPI fallbackGetFileAttributesW(LPCWSTR fname)
     WideCharToMultiByte(CP_ACP, 0, fname, buflen, cpstr, buflen, NULL, NULL);
     retval = GetFileAttributesA(cpstr);
     __PHYSFS_smallFree(cpstr);
-    return(retval);
+    return retval;
 } /* fallbackGetFileAttributesW */
 
 static DWORD WINAPI fallbackGetCurrentDirectoryW(DWORD buflen, LPWSTR buf)
@@ -202,7 +202,7 @@ static DWORD WINAPI fallbackGetCurrentDirectoryW(DWORD buflen, LPWSTR buf)
         MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,cpbuf,retval,buf,buflen);
         __PHYSFS_smallFree(cpbuf);
     } /* if */
-    return(retval);
+    return retval;
 } /* fallbackGetCurrentDirectoryW */
 
 static BOOL WINAPI fallbackRemoveDirectoryW(LPCWSTR dname)
@@ -213,7 +213,7 @@ static BOOL WINAPI fallbackRemoveDirectoryW(LPCWSTR dname)
     WideCharToMultiByte(CP_ACP, 0, dname, buflen, cpstr, buflen, NULL, NULL);
     retval = RemoveDirectoryA(cpstr);
     __PHYSFS_smallFree(cpstr);
-    return(retval);
+    return retval;
 } /* fallbackRemoveDirectoryW */
 
 static BOOL WINAPI fallbackCreateDirectoryW(LPCWSTR dname, 
@@ -225,7 +225,7 @@ static BOOL WINAPI fallbackCreateDirectoryW(LPCWSTR dname,
     WideCharToMultiByte(CP_ACP, 0, dname, buflen, cpstr, buflen, NULL, NULL);
     retval = CreateDirectoryA(cpstr, attr);
     __PHYSFS_smallFree(cpstr);
-    return(retval);
+    return retval;
 } /* fallbackCreateDirectoryW */
 
 static BOOL WINAPI fallbackDeleteFileW(LPCWSTR fname)
@@ -236,7 +236,7 @@ static BOOL WINAPI fallbackDeleteFileW(LPCWSTR fname)
     WideCharToMultiByte(CP_ACP, 0, fname, buflen, cpstr, buflen, NULL, NULL);
     retval = DeleteFileA(cpstr);
     __PHYSFS_smallFree(cpstr);
-    return(retval);
+    return retval;
 } /* fallbackDeleteFileW */
 
 static HANDLE WINAPI fallbackCreateFileW(LPCWSTR fname, 
@@ -252,7 +252,7 @@ static HANDLE WINAPI fallbackCreateFileW(LPCWSTR fname,
     retval = CreateFileA(cpstr, dwDesiredAccess, dwShareMode, lpSecurityAttrs,
                          dwCreationDisposition, dwFlagsAndAttrs, hTemplFile);
     __PHYSFS_smallFree(cpstr);
-    return(retval);
+    return retval;
 } /* fallbackCreateFileW */
 
 
@@ -318,7 +318,7 @@ static int findApiSymbols(void)
     #undef LOOKUP_NOFALLBACK
     #undef LOOKUP
 
-    return(1);
+    return 1;
 } /* findApiSymbols */
 
 
@@ -360,7 +360,7 @@ static const char *winApiStrError(void)
 
     /* may truncate, but oh well. */
     PHYSFS_utf8FromUcs2((PHYSFS_uint16 *) msgbuf, utf8buf, sizeof (utf8buf));
-    return((const char *) utf8buf);
+    return ((const char *) utf8buf);
 } /* winApiStrError */
 
 
@@ -418,7 +418,7 @@ static char *getExePath(void)
     } /* else */
     allocator.Free(modpath);
 
-    return(retval);   /* w00t. */
+    return retval;   /* w00t. */
 } /* getExePath */
 
 
@@ -435,7 +435,7 @@ static char *getExePath(void)
 static int determineUserDir(void)
 {
     if (userDir != NULL)
-        return(1);  /* already good to go. */
+        return 1;  /* already good to go. */
 
     /*
      * GetUserProfileDirectoryW() is only available on NT 4.0 and later.
@@ -483,7 +483,7 @@ static int determineUserDir(void)
         BAIL_IF_MACRO(userDir == NULL, NULL, 0); /* STILL failed?! */
     } /* if */
 
-    return(1);  /* We made it: hit the showers. */
+    return 1;  /* We made it: hit the showers. */
 } /* determineUserDir */
 
 
@@ -502,7 +502,7 @@ static BOOL mediaInDrive(const char *drive)
     /* Revert back to old windows error handler */
     SetErrorMode(oldErrorMode);
 
-    return(retval);
+    return retval;
 } /* mediaInDrive */
 
 
@@ -524,9 +524,9 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
     if ((argv0 != NULL) && (strchr(argv0, '\\') != NULL))
-        return(NULL); /* default behaviour can handle this. */
+        return NULL; /* default behaviour can handle this. */
 
-    return(getExePath());
+    return getExePath();
 } /* __PHYSFS_platformCalcBaseDir */
 
 
@@ -546,7 +546,7 @@ char *__PHYSFS_platformGetUserName(void)
         __PHYSFS_smallFree(wbuf);
     } /* if */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformGetUserName */
 
 
@@ -555,13 +555,13 @@ char *__PHYSFS_platformGetUserDir(void)
     char *retval = (char *) allocator.Malloc(strlen(userDir) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, userDir); /* calculated at init time. */
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformGetUserDir */
 
 
 void *__PHYSFS_platformGetThreadID(void)
 {
-    return( (void *) ((size_t) GetCurrentThreadId()) );
+    return ( (void *) ((size_t) GetCurrentThreadId()) );
 } /* __PHYSFS_platformGetThreadID */
 
 
@@ -572,7 +572,7 @@ static int doPlatformExists(LPWSTR wpath)
         pGetFileAttributesW(wpath) == PHYSFS_INVALID_FILE_ATTRIBUTES,
         winApiStrError(), 0
     );
-    return(1);
+    return 1;
 } /* doPlatformExists */
 
 
@@ -584,7 +584,7 @@ int __PHYSFS_platformExists(const char *fname)
     BAIL_IF_MACRO(wpath == NULL, ERR_OUT_OF_MEMORY, 0);
     retval = doPlatformExists(wpath);
     __PHYSFS_smallFree(wpath);
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformExists */
 
 
@@ -624,7 +624,7 @@ int __PHYSFS_platformIsSymLink(const char *fname)
     } /* if */
 
     __PHYSFS_smallFree(wpath);
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformIsSymlink */
 
 
@@ -636,7 +636,7 @@ int __PHYSFS_platformIsDirectory(const char *fname)
     BAIL_IF_MACRO(wpath == NULL, ERR_OUT_OF_MEMORY, 0);
     retval = ((pGetFileAttributesW(wpath) & FILE_ATTRIBUTE_DIRECTORY) != 0);
     __PHYSFS_smallFree(wpath);
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformIsDirectory */
 
 
@@ -665,7 +665,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     for (p = strchr(retval, '/'); p != NULL; p = strchr(p + 1, '/'))
         *p = '\\';
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCvtToDependent */
 
 
@@ -796,7 +796,7 @@ char *__PHYSFS_platformCurrentDir(void)
 
     retval = unicodeToUtf8Heap(wbuf);
     __PHYSFS_smallFree(wbuf);
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCurrentDir */
 
 
@@ -921,7 +921,7 @@ char *__PHYSFS_platformRealPath(const char *path)
     if (p != NULL)
         retval = p;
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformRealPath */
 
 
@@ -933,7 +933,7 @@ int __PHYSFS_platformMkDir(const char *path)
     rc = pCreateDirectoryW(wpath, NULL);
     __PHYSFS_smallFree(wpath);
     BAIL_IF_MACRO(rc == 0, winApiStrError(), 0);
-    return(1);
+    return 1;
 } /* __PHYSFS_platformMkDir */
 
 
@@ -948,7 +948,7 @@ static int getOSInfo(void)
     osVerInfo.dwOSVersionInfoSize = sizeof(osVerInfo);
     BAIL_IF_MACRO(!GetVersionEx(&osVerInfo), winApiStrError(), 0);
     osHasUnicode = (osVerInfo.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS);
-    return(1);
+    return 1;
 } /* getOSInfo */
 
 
@@ -957,7 +957,7 @@ int __PHYSFS_platformInit(void)
     BAIL_IF_MACRO(!getOSInfo(), NULL, 0);
     BAIL_IF_MACRO(!findApiSymbols(), NULL, 0);
     BAIL_IF_MACRO(!determineUserDir(), NULL, 0);
-    return(1);  /* It's all good */
+    return 1;  /* It's all good */
 } /* __PHYSFS_platformInit */
 
 
@@ -977,7 +977,7 @@ int __PHYSFS_platformDeinit(void)
         *(libs[i]) = NULL;
     } /* for */
 
-    return(1); /* It's all good */
+    return 1; /* It's all good */
 } /* __PHYSFS_platformDeinit */
 
 
@@ -1008,19 +1008,19 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 
     retval->readonly = rdonly;
     retval->handle = fileHandle;
-    return(retval);
+    return retval;
 } /* doOpen */
 
 
 void *__PHYSFS_platformOpenRead(const char *filename)
 {
-    return(doOpen(filename, GENERIC_READ, OPEN_EXISTING, 1));
+    return doOpen(filename, GENERIC_READ, OPEN_EXISTING, 1);
 } /* __PHYSFS_platformOpenRead */
 
 
 void *__PHYSFS_platformOpenWrite(const char *filename)
 {
-    return(doOpen(filename, GENERIC_WRITE, CREATE_ALWAYS, 0));
+    return doOpen(filename, GENERIC_WRITE, CREATE_ALWAYS, 0);
 } /* __PHYSFS_platformOpenWrite */
 
 
@@ -1040,7 +1040,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
         } /* if */
     } /* if */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformOpenAppend */
 
 
@@ -1064,7 +1064,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
         retval = CountOfBytesRead / size;
     } /* else */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformRead */
 
 
@@ -1088,7 +1088,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
         retval = CountOfBytesWritten / size;
     } /* else */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformWrite */
 
 
@@ -1126,7 +1126,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
         BAIL_MACRO(winApiStrError(), 0);
     } /* if */
     
-    return(1);  /* No error occured */
+    return 1;  /* No error occured */
 } /* __PHYSFS_platformSeek */
 
 
@@ -1151,7 +1151,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
         assert(retval >= 0);
     } /* else */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformTell */
 
 
@@ -1175,7 +1175,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
         assert(retval >= 0);
     } /* else */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformFileLength */
 
 
@@ -1191,7 +1191,7 @@ int __PHYSFS_platformEOF(void *opaque)
         retval = FilePosition == __PHYSFS_platformFileLength(opaque);
     } /* if */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformEOF */
 
 
@@ -1201,7 +1201,7 @@ int __PHYSFS_platformFlush(void *opaque)
     if (!fh->readonly)
         BAIL_IF_MACRO(!FlushFileBuffers(fh->handle), winApiStrError(), 0);
 
-    return(1);
+    return 1;
 } /* __PHYSFS_platformFlush */
 
 
@@ -1210,7 +1210,7 @@ int __PHYSFS_platformClose(void *opaque)
     HANDLE Handle = ((WinApiFile *) opaque)->handle;
     BAIL_IF_MACRO(!CloseHandle(Handle), winApiStrError(), 0);
     allocator.Free(opaque);
-    return(1);
+    return 1;
 } /* __PHYSFS_platformClose */
 
 
@@ -1226,7 +1226,7 @@ static int doPlatformDelete(LPWSTR wpath)
         BAIL_IF_MACRO(!pDeleteFileW(wpath), winApiStrError(), 0);
     } /* else */
 
-    return(1);   /* if you made it here, it worked. */
+    return 1;   /* if you made it here, it worked. */
 } /* doPlatformDelete */
 
 
@@ -1238,7 +1238,7 @@ int __PHYSFS_platformDelete(const char *path)
     BAIL_IF_MACRO(wpath == NULL, ERR_OUT_OF_MEMORY, 0);
     retval = doPlatformDelete(wpath);
     __PHYSFS_smallFree(wpath);
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformDelete */
 
 
@@ -1249,7 +1249,7 @@ int __PHYSFS_platformDelete(const char *path)
  */
 void *__PHYSFS_platformCreateMutex(void)
 {
-    return((void *) CreateMutex(NULL, FALSE, NULL));
+    return ((void *) CreateMutex(NULL, FALSE, NULL));
 } /* __PHYSFS_platformCreateMutex */
 
 
@@ -1261,7 +1261,7 @@ void __PHYSFS_platformDestroyMutex(void *mutex)
 
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
-    return(WaitForSingleObject((HANDLE) mutex, INFINITE) != WAIT_FAILED);
+    return (WaitForSingleObject((HANDLE) mutex, INFINITE) != WAIT_FAILED);
 } /* __PHYSFS_platformGrabMutex */
 
 
@@ -1324,7 +1324,7 @@ static PHYSFS_sint64 FileTimeToPhysfsTime(const FILETIME *ft)
     /* Convert to a format PhysicsFS can grok... */
     retval = (PHYSFS_sint64) mktime(&tm);
     BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
-    return(retval);
+    return retval;
 } /* FileTimeToPhysfsTime */
 
 
@@ -1386,14 +1386,14 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
         retval = FileTimeToPhysfsTime(&ft);
     } /* if */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformGetLastModTime */
 
 
 /* !!! FIXME: Don't use C runtime for allocators? */
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
-    return(0);  /* just use malloc() and friends. */
+    return 0;  /* just use malloc() and friends. */
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 #endif  /* PHYSFS_PLATFORM_WINDOWS */

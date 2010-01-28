@@ -82,7 +82,7 @@ static PHYSFS_sint64 GRP_read(fvoid *opaque, void *buffer,
     if (rc > 0)
         finfo->curPos += (PHYSFS_uint32) (rc * objSize);
 
-    return(rc);
+    return rc;
 } /* GRP_read */
 
 
@@ -97,13 +97,13 @@ static int GRP_eof(fvoid *opaque)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) opaque;
     GRPentry *entry = finfo->entry;
-    return(finfo->curPos >= entry->size);
+    return (finfo->curPos >= entry->size);
 } /* GRP_eof */
 
 
 static PHYSFS_sint64 GRP_tell(fvoid *opaque)
 {
-    return(((GRPfileinfo *) opaque)->curPos);
+    return ((GRPfileinfo *) opaque)->curPos;
 } /* GRP_tell */
 
 
@@ -119,14 +119,14 @@ static int GRP_seek(fvoid *opaque, PHYSFS_uint64 offset)
     if (rc)
         finfo->curPos = (PHYSFS_uint32) offset;
 
-    return(rc);
+    return rc;
 } /* GRP_seek */
 
 
 static PHYSFS_sint64 GRP_fileLength(fvoid *opaque)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) opaque;
-    return((PHYSFS_sint64) finfo->entry->size);
+    return ((PHYSFS_sint64) finfo->entry->size);
 } /* GRP_fileLength */
 
 
@@ -135,7 +135,7 @@ static int GRP_fileClose(fvoid *opaque)
     GRPfileinfo *finfo = (GRPfileinfo *) opaque;
     BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
     allocator.Free(finfo);
-    return(1);
+    return 1;
 } /* GRP_fileClose */
 
 
@@ -164,7 +164,7 @@ static int grp_open(const char *filename, int forWriting,
 
     *count = PHYSFS_swapULE32(*count);
 
-    return(1);
+    return 1;
 
 openGrp_failed:
     if (*fh != NULL)
@@ -172,7 +172,7 @@ openGrp_failed:
 
     *count = -1;
     *fh = NULL;
-    return(0);
+    return 0;
 } /* grp_open */
 
 
@@ -185,7 +185,7 @@ static int GRP_isArchive(const char *filename, int forWriting)
     if (fh != NULL)
         __PHYSFS_platformClose(fh);
 
-    return(retval);
+    return retval;
 } /* GRP_isArchive */
 
 
@@ -194,7 +194,7 @@ static int grp_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
     if (one != two)
     {
         const GRPentry *a = (const GRPentry *) _a;
-        return(strcmp(a[one].name, a[two].name));
+        return (strcmp(a[one].name, a[two].name));
     } /* if */
 
     return 0;
@@ -239,7 +239,7 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
         if (__PHYSFS_platformRead(fh, &entry->name, 12, 1) != 1)
         {
             __PHYSFS_platformClose(fh);
-            return(0);
+            return 0;
         } /* if */
 
         entry->name[12] = '\0';  /* name isn't null-terminated in file. */
@@ -249,7 +249,7 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
         if (__PHYSFS_platformRead(fh, &entry->size, 4, 1) != 1)
         {
             __PHYSFS_platformClose(fh);
-            return(0);
+            return 0;
         } /* if */
 
         entry->size = PHYSFS_swapULE32(entry->size);
@@ -261,7 +261,7 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
 
     __PHYSFS_sort(info->entries, info->entryCount,
                   grp_entry_cmp, grp_entry_swap);
-    return(1);
+    return 1;
 } /* grp_load_entries */
 
 
@@ -282,7 +282,7 @@ static void *GRP_openArchive(const char *name, int forWriting)
     strcpy(info->filename, name);
     info->last_mod_time = modtime;
 
-    return(info);
+    return info;
 
 GRP_openArchive_failed:
     if (info != NULL)
@@ -294,7 +294,7 @@ GRP_openArchive_failed:
         allocator.Free(info);
     } /* if */
 
-    return(NULL);
+    return NULL;
 } /* GRP_openArchive */
 
 
@@ -338,7 +338,7 @@ static GRPentry *grp_find_entry(GRPinfo *info, const char *name)
         middle = lo + ((hi - lo) / 2);
         rc = strcmp(name, a[middle].name);
         if (rc == 0)  /* found it! */
-            return(&a[middle]);
+            return &a[middle];
         else if (rc > 0)
             lo = middle + 1;
         else
@@ -351,21 +351,21 @@ static GRPentry *grp_find_entry(GRPinfo *info, const char *name)
 
 static int GRP_exists(dvoid *opaque, const char *name)
 {
-    return(grp_find_entry((GRPinfo *) opaque, name) != NULL);
+    return (grp_find_entry((GRPinfo *) opaque, name) != NULL);
 } /* GRP_exists */
 
 
 static int GRP_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 {
     *fileExists = GRP_exists(opaque, name);
-    return(0);  /* never directories in a groupfile. */
+    return 0;  /* never directories in a groupfile. */
 } /* GRP_isDirectory */
 
 
 static int GRP_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 {
     *fileExists = GRP_exists(opaque, name);
-    return(0);  /* never symlinks in a groupfile. */
+    return 0;  /* never symlinks in a groupfile. */
 } /* GRP_isSymLink */
 
 
@@ -380,7 +380,7 @@ static PHYSFS_sint64 GRP_getLastModTime(dvoid *opaque,
     if (*fileExists)  /* use time of GRP itself in the physical filesystem. */
         retval = info->last_mod_time;
 
-    return(retval);
+    return retval;
 } /* GRP_getLastModTime */
 
 
@@ -402,12 +402,12 @@ static fvoid *GRP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
          (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
     {
         allocator.Free(finfo);
-        return(NULL);
+        return NULL;
     } /* if */
 
     finfo->curPos = 0;
     finfo->entry = entry;
-    return(finfo);
+    return finfo;
 } /* GRP_openRead */
 
 

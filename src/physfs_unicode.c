@@ -48,7 +48,7 @@ static PHYSFS_uint32 utf8codepoint(const char **_str)
     else if (octet < 128)  /* one octet char: 0 to 127 */
     {
         (*_str)++;  /* skip to next possible start of codepoint. */
-        return(octet);
+        return octet;
     } /* else if */
 
     else if ((octet > 127) && (octet < 192))  /* bad (starts with 10xxxxxx). */

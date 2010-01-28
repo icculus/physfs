@@ -73,7 +73,7 @@ static void output_archivers(void)
 
 static int cmd_quit(char *args)
 {
-    return(0);
+    return 0;
 } /* cmd_quit */
 
 
@@ -90,7 +90,7 @@ static int cmd_init(char *args)
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* cmd_init */
 
 
@@ -101,7 +101,7 @@ static int cmd_deinit(char *args)
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* cmd_deinit */
 
 
@@ -124,7 +124,7 @@ static int cmd_addarchive(char *args)
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* cmd_addarchive */
 
 
@@ -141,7 +141,7 @@ static int cmd_mount(char *args)
         if (ptr == NULL)
         {
             printf("missing string terminator in argument.\n");
-            return(1);
+            return 1;
         } /* if */
         *(ptr) = '\0';
     } /* if */
@@ -159,7 +159,7 @@ static int cmd_mount(char *args)
         if (ptr == NULL)
         {
             printf("missing string terminator in argument.\n");
-            return(1);
+            return 1;
         } /* if */
         *(ptr) = '\0';
     } /* if */
@@ -177,7 +177,7 @@ static int cmd_mount(char *args)
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* cmd_mount */
 
 
@@ -194,7 +194,7 @@ static int cmd_removearchive(char *args)
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* cmd_removearchive */
 
 
@@ -223,21 +223,21 @@ static int cmd_enumerate(char *args)
         PHYSFS_freeList(rc);
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_enumerate */
 
 
 static int cmd_getdirsep(char *args)
 {
     printf("Directory separator is [%s].\n", PHYSFS_getDirSeparator());
-    return(1);
+    return 1;
 } /* cmd_getdirsep */
 
 
 static int cmd_getlasterror(char *args)
 {
     printf("last error is [%s].\n", PHYSFS_getLastError());
-    return(1);
+    return 1;
 } /* cmd_getlasterror */
 
 
@@ -258,7 +258,7 @@ static int cmd_getcdromdirs(char *args)
         PHYSFS_freeList(rc);
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_getcdromdirs */
 
 
@@ -279,28 +279,28 @@ static int cmd_getsearchpath(char *args)
         PHYSFS_freeList(rc);
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_getcdromdirs */
 
 
 static int cmd_getbasedir(char *args)
 {
     printf("Base dir is [%s].\n", PHYSFS_getBaseDir());
-    return(1);
+    return 1;
 } /* cmd_getbasedir */
 
 
 static int cmd_getuserdir(char *args)
 {
     printf("User dir is [%s].\n", PHYSFS_getUserDir());
-    return(1);
+    return 1;
 } /* cmd_getuserdir */
 
 
 static int cmd_getwritedir(char *args)
 {
     printf("Write dir is [%s].\n", PHYSFS_getWriteDir());
-    return(1);
+    return 1;
 } /* cmd_getwritedir */
 
 
@@ -317,7 +317,7 @@ static int cmd_setwritedir(char *args)
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* cmd_setwritedir */
 
 
@@ -334,7 +334,7 @@ static int cmd_permitsyms(char *args)
     num = atoi(args);
     PHYSFS_permitSymbolicLinks(num);
     printf("Symlinks are now %s.\n", num ? "permitted" : "forbidden");
-    return(1);
+    return 1;
 } /* cmd_permitsyms */
 
 
@@ -358,7 +358,7 @@ static int cmd_setbuffer(char *args)
         printf("Further tests will NOT use a buffer.\n");
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_setbuffer */
 
 
@@ -395,7 +395,7 @@ static int cmd_stressbuffer(char *args)
                 printf("PHYSFS_setBuffer() failed: %s.\n", PHYSFS_getLastError());
                 PHYSFS_close(f);
                 PHYSFS_delete("test.txt");
-                return(1);
+                return 1;
             } /* if */
 
             strcpy(buf, "abcdefghijklmnopqrstuvwxyz0123456789");
@@ -411,7 +411,7 @@ static int cmd_stressbuffer(char *args)
                     {
                         printf("PHYSFS_write() failed: %s.\n", PHYSFS_getLastError());
                         PHYSFS_close(f);
-                        return(1);
+                        return 1;
                     } /* if */
 
                     rndnum = 1 + (int) (1000.0 * rand() / (RAND_MAX + 1.0));
@@ -421,7 +421,7 @@ static int cmd_stressbuffer(char *args)
                         {
                             printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
                             PHYSFS_close(f);
-                            return(1);
+                            return 1;
                         } /* if */
                     } /* if */
 
@@ -429,7 +429,7 @@ static int cmd_stressbuffer(char *args)
                     {
                         printf("PHYSFS_write() failed: %s.\n", PHYSFS_getLastError());
                         PHYSFS_close(f);
-                        return(1);
+                        return 1;
                     } /* if */
 
                     rndnum = 1 + (int) (1000.0 * rand() / (RAND_MAX + 1.0));
@@ -439,7 +439,7 @@ static int cmd_stressbuffer(char *args)
                         {
                             printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
                             PHYSFS_close(f);
-                            return(1);
+                            return 1;
                         } /* if */
                     } /* if */
                 } /* for */
@@ -448,7 +448,7 @@ static int cmd_stressbuffer(char *args)
                 {
                     printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
                     PHYSFS_close(f);
-                    return(1);
+                    return 1;
                 } /* if */
 
             } /* for */
@@ -456,7 +456,7 @@ static int cmd_stressbuffer(char *args)
             if (!PHYSFS_close(f))
             {
                 printf("PHYSFS_close() failed: %s.\n", PHYSFS_getLastError());
-                return(1);  /* oh well. */
+                return 1;  /* oh well. */
             } /* if */
 
             printf(" ... test file written ...\n");
@@ -464,14 +464,14 @@ static int cmd_stressbuffer(char *args)
             if (f == NULL)
             {
                 printf("Failed to reopen stress file for reading: %s.\n", PHYSFS_getLastError());
-                return(1);
+                return 1;
             } /* if */
 
             if (!PHYSFS_setBuffer(f, num))
             {
                 printf("PHYSFS_setBuffer() failed: %s.\n", PHYSFS_getLastError());
                 PHYSFS_close(f);
-                return(1);
+                return 1;
             } /* if */
 
             for (i = 0; i < 10; i++)
@@ -484,7 +484,7 @@ static int cmd_stressbuffer(char *args)
                     {
                         printf("PHYSFS_read() failed: %s.\n", PHYSFS_getLastError());
                         PHYSFS_close(f);
-                        return(1);
+                        return 1;
                     } /* if */
 
                     rndnum = 1 + (int) (1000.0 * rand() / (RAND_MAX + 1.0));
@@ -494,7 +494,7 @@ static int cmd_stressbuffer(char *args)
                         {
                             printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
                             PHYSFS_close(f);
-                            return(1);
+                            return 1;
                         } /* if */
                     } /* if */
 
@@ -502,7 +502,7 @@ static int cmd_stressbuffer(char *args)
                     {
                         printf("PHYSFS_read() failed: %s.\n", PHYSFS_getLastError());
                         PHYSFS_close(f);
-                        return(1);
+                        return 1;
                     } /* if */
 
                     rndnum = 1 + (int) (1000.0 * rand() / (RAND_MAX + 1.0));
@@ -512,7 +512,7 @@ static int cmd_stressbuffer(char *args)
                         {
                             printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
                             PHYSFS_close(f);
-                            return(1);
+                            return 1;
                         } /* if */
                     } /* if */
 
@@ -529,7 +529,7 @@ static int cmd_stressbuffer(char *args)
                             printf("%c", buf2[i]);
                         printf("]\n");
                         PHYSFS_close(f);
-                        return(1);
+                        return 1;
                     } /* if */
                 } /* for */
 
@@ -537,7 +537,7 @@ static int cmd_stressbuffer(char *args)
                 {
                     printf("PHYSFS_flush() failed: %s.\n", PHYSFS_getLastError());
                     PHYSFS_close(f);
-                    return(1);
+                    return 1;
                 } /* if */
 
             } /* for */
@@ -550,7 +550,7 @@ static int cmd_stressbuffer(char *args)
             if (!PHYSFS_close(f))
             {
                 printf("PHYSFS_close() failed: %s.\n", PHYSFS_getLastError());
-                return(1);  /* oh well. */
+                return 1;  /* oh well. */
             } /* if */
 
             PHYSFS_delete("test.txt");
@@ -558,7 +558,7 @@ static int cmd_stressbuffer(char *args)
         } /* else */
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_stressbuffer */
 
 
@@ -586,7 +586,7 @@ static int cmd_setsaneconfig(char *args)
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* cmd_setsaneconfig */
 
 
@@ -603,7 +603,7 @@ static int cmd_mkdir(char *args)
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* cmd_mkdir */
 
 
@@ -620,7 +620,7 @@ static int cmd_delete(char *args)
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* cmd_delete */
 
 
@@ -640,7 +640,7 @@ static int cmd_getrealdir(char *args)
     else
         printf("Not found.\n");
 
-    return(1);
+    return 1;
 } /* cmd_getrealdir */
 
 
@@ -656,7 +656,7 @@ static int cmd_exists(char *args)
 
     rc = PHYSFS_exists(args);
     printf("File %sexists.\n", rc ? "" : "does not ");
-    return(1);
+    return 1;
 } /* cmd_exists */
 
 
@@ -672,7 +672,7 @@ static int cmd_isdir(char *args)
 
     rc = PHYSFS_isDirectory(args);
     printf("File %s a directory.\n", rc ? "is" : "is NOT");
-    return(1);
+    return 1;
 } /* cmd_isdir */
 
 
@@ -688,7 +688,7 @@ static int cmd_issymlink(char *args)
 
     rc = PHYSFS_isSymbolicLink(args);
     printf("File %s a symlink.\n", rc ? "is" : "is NOT");
-    return(1);
+    return 1;
 } /* cmd_issymlink */
 
 
@@ -714,7 +714,7 @@ static int cmd_cat(char *args)
                 printf("failed to set file buffer. Reason: [%s].\n",
                         PHYSFS_getLastError());
                 PHYSFS_close(f);
-                return(1);
+                return 1;
             } /* if */
         } /* if */
 
@@ -737,12 +737,12 @@ static int cmd_cat(char *args)
                            PHYSFS_getLastError());
                 } /* if */
                 PHYSFS_close(f);
-                return(1);
+                return 1;
             } /* if */
         } /* while */
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_cat */
 
 
@@ -770,7 +770,7 @@ static int cmd_filelength(char *args)
         PHYSFS_close(f);
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_filelength */
 
 
@@ -801,7 +801,7 @@ static int cmd_append(char *args)
                 printf("failed to set file buffer. Reason: [%s].\n",
                         PHYSFS_getLastError());
                 PHYSFS_close(f);
-                return(1);
+                return 1;
             } /* if */
         } /* if */
 
@@ -820,7 +820,7 @@ static int cmd_append(char *args)
         PHYSFS_close(f);
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_append */
 
 
@@ -849,7 +849,7 @@ static int cmd_write(char *args)
                 printf("failed to set file buffer. Reason: [%s].\n",
                         PHYSFS_getLastError());
                 PHYSFS_close(f);
-                return(1);
+                return 1;
             } /* if */
         } /* if */
 
@@ -868,7 +868,7 @@ static int cmd_write(char *args)
         PHYSFS_close(f);
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_write */
 
 
@@ -893,7 +893,7 @@ static int cmd_getlastmodtime(char *args)
         printf("Last modified: %s (%ld).\n", modstr, (long) rc);
     } /* else */
 
-    return(1);
+    return 1;
 } /* cmd_getLastModTime */
 
 
@@ -915,7 +915,7 @@ static int count_args(const char *str)
         retval++;
     } /* if */
 
-    return(retval);
+    return retval;
 } /* count_args */
 
 
@@ -985,7 +985,7 @@ static int cmd_help(char *args)
     for (i = commands; i->cmd != NULL; i++)
         output_usage("  -", i);
 
-    return(1);
+    return 1;
 } /* output_cmd_help */
 
 
@@ -1037,14 +1037,14 @@ static int process_command(char *complete_cmd)
     if (complete_cmd == NULL)  /* can happen if user hits CTRL-D, etc. */
     {
         printf("\n");
-        return(0);
+        return 0;
     } /* if */
 
     cmd_copy = (char *) malloc(strlen(complete_cmd) + 1);
     if (cmd_copy == NULL)
     {
         printf("\n\n\nOUT OF MEMORY!\n\n\n");
-        return(0);
+        return 0;
     } /* if */
 
     trim_command(complete_cmd, cmd_copy);
@@ -1084,7 +1084,7 @@ static int process_command(char *complete_cmd)
     } /* if */
 
     free(cmd_copy);
-    return(rc);
+    return rc;
 } /* process_command */
 
 
@@ -1155,7 +1155,7 @@ int main(int argc, char **argv)
     if (!PHYSFS_init(argv[0]))
     {
         printf("PHYSFS_init() failed!\n  reason: %s.\n", PHYSFS_getLastError());
-        return(1);
+        return 1;
     } /* if */
 
     output_versions();
@@ -1215,7 +1215,7 @@ int main(int argc, char **argv)
     printf(" it makes you shoot teh railgun bettar.\n");
 */
 
-    return(0);
+    return 0;
 } /* main */
 
 /* end of test_physfs.c ... */

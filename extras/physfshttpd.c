@@ -144,7 +144,7 @@ static void *do_http(void *_args)
     close(args->sock);
     free(args->addr);
     free(args);
-    return(NULL);
+    return NULL;
 } /* do_http */
 
 
@@ -202,7 +202,7 @@ static int create_listen_socket(short portnum)
         } /* if */
     } /* if */
 
-    return(retval);
+    return retval;
 } /* create_listen_socket */
 
 
@@ -244,13 +244,13 @@ int main(int argc, char **argv)
     if (argc == 1)
     {
         printf("USAGE: %s <archive1> [archive2 [... archiveN]]\n", argv[0]);
-        return(42);
+        return 42;
     } /* if */
 
     if (!PHYSFS_init(argv[0]))
     {
         printf("PHYSFS_init() failed: %s\n", PHYSFS_getLastError());
-        return(42);
+        return 42;
     } /* if */
 
     /* normally, this is bad practice, but oh well. */
@@ -266,7 +266,7 @@ int main(int argc, char **argv)
     if (listensocket < 0)
     {
         printf("listen socket failed to create.\n");
-        return(42);
+        return 42;
     } /* if */
 
     while (1)  /* infinite loop for now. */
@@ -278,13 +278,13 @@ int main(int argc, char **argv)
         {
             printf("accept() failed: %s\n", strerror(errno));
             close(listensocket);
-            return(42);
+            return 42;
         } /* if */
 
         serve_http_request(s, &addr, len);
     } /* while */
 
-    return(0);
+    return 0;
 } /* main */
 
 /* end of physfshttpd.c ... */

@@ -61,7 +61,7 @@ static const char *win32strerror(void)
         } /* if */
     } /* for */
 
-    return((const char *) msgbuf);
+    return ((const char *) msgbuf);
 } /* win32strerror */
 
 
@@ -109,7 +109,7 @@ static char *getExePath()
     if (!success)
     {
         allocator.Free(retval);
-        return(NULL);  /* physfs error message will be set, above. */
+        return NULL;  /* physfs error message will be set, above. */
     } /* if */
 
     buflen = (buflen * 4) + 1;
@@ -117,7 +117,7 @@ static char *getExePath()
     if (charretval != NULL)
         PHYSFS_utf8fromucs2((const PHYSFS_uint16 *) retval, charretval, buflen);
     allocator.Free(retval);
-    return(charretval);   /* w00t. */
+    return charretval;   /* w00t. */
 } /* getExePath */
 
 
@@ -125,14 +125,14 @@ int __PHYSFS_platformInit(void)
 {
     userDir = getExePath();
     BAIL_IF_MACRO(userDir == NULL, NULL, 0); /* failed? */
-    return(1);  /* always succeed. */
+    return 1;  /* always succeed. */
 } /* __PHYSFS_platformInit */
 
 
 int __PHYSFS_platformDeinit(void)
 {
     allocator.Free(userDir);
-    return(1);  /* always succeed. */
+    return 1;  /* always succeed. */
 } /* __PHYSFS_platformDeinit */
 
 
@@ -144,7 +144,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    return(getExePath());
+    return getExePath();
 } /* __PHYSFS_platformCalcBaseDir */
 
 
@@ -163,7 +163,7 @@ char *__PHYSFS_platformGetUserDir(void)
 
 void *__PHYSFS_platformGetThreadID(void)
 {
-    return((void *)1);  /* single threaded. */  /* !!! FIXME: is this true? */
+    return ((void *)1);  /* single threaded. */  /* !!! FIXME: is this true? */
 } /* __PHYSFS_platformGetThreadID */
 
 
@@ -177,7 +177,7 @@ int __PHYSFS_platformExists(const char *fname)
         retval = (GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
     __PHYSFS_smallFree(w_fname);
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformExists */
 
 
@@ -197,7 +197,7 @@ int __PHYSFS_platformIsDirectory(const char *fname)
         retval = ((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
     __PHYSFS_smallFree(w_fname);
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformIsDirectory */
 
 
@@ -226,7 +226,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     for (p = strchr(retval, '/'); p != NULL; p = strchr(p + 1, '/'))
         *p = '\\';
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCvtToDependent */
 
 
@@ -298,7 +298,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 
 char *__PHYSFS_platformCurrentDir(void)
 {
-    return("\\");
+    return "\\";
 } /* __PHYSFS_platformCurrentDir */
 
 
@@ -306,7 +306,7 @@ char *__PHYSFS_platformRealPath(const char *path)
 {
     char *retval = (char *) allocator.Malloc(strlen(path) + 1);
     strcpy(retval,path);
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformRealPath */
 
 
@@ -320,7 +320,7 @@ int __PHYSFS_platformMkDir(const char *path)
         retval = CreateDirectory(w_path, NULL);
         __PHYSFS_smallFree(w_fname);
     } /* if */
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformMkDir */
 
 
@@ -346,19 +346,19 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 
     retval->readonly = rdonly;
     retval->handle = fileHandle;
-    return(retval);
+    return retval;
 } /* doOpen */
 
 
 void *__PHYSFS_platformOpenRead(const char *filename)
 {
-    return(doOpen(filename, GENERIC_READ, OPEN_EXISTING, 1));
+    return doOpen(filename, GENERIC_READ, OPEN_EXISTING, 1);
 } /* __PHYSFS_platformOpenRead */
 
 
 void *__PHYSFS_platformOpenWrite(const char *filename)
 {
-    return(doOpen(filename, GENERIC_WRITE, CREATE_ALWAYS, 0));
+    return doOpen(filename, GENERIC_WRITE, CREATE_ALWAYS, 0);
 } /* __PHYSFS_platformOpenWrite */
 
 
@@ -377,7 +377,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
         } /* if */
     } /* if */
 
-    return(retval);
+    return retval;
 
 } /* __PHYSFS_platformOpenAppend */
 
@@ -402,7 +402,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
         retval = CountOfBytesRead / size;
     } /* else */
 
-    return(retval);
+    return retval;
 
 } /* __PHYSFS_platformRead */
 
@@ -427,7 +427,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
         retval = CountOfBytesWritten / size;
     } /* else */
 
-    return(retval);
+    return retval;
 
 } /* __PHYSFS_platformWrite */
 
@@ -452,7 +452,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
         BAIL_MACRO(win32strerror(), 0);
     }
 
-    return(1);  /* No error occured */
+    return 1;  /* No error occured */
 } /* __PHYSFS_platformSeek */
 
 
@@ -476,7 +476,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
         //assert(retval >= 0);
     } /* else */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformTell */
 
 
@@ -499,7 +499,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
         //assert(retval >= 0);
     } /* else */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformFileLength */
 
 
@@ -515,7 +515,7 @@ int __PHYSFS_platformEOF(void *opaque)
         retval = FilePosition == __PHYSFS_platformFileLength(opaque);
     } /* if */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformEOF */
 
 
@@ -525,7 +525,7 @@ int __PHYSFS_platformFlush(void *opaque)
     if (!fh->readonly)
         BAIL_IF_MACRO(!FlushFileBuffers(fh->handle), win32strerror(), 0);
 
-    return(1);
+    return 1;
 } /* __PHYSFS_platformFlush */
 
 
@@ -534,7 +534,7 @@ int __PHYSFS_platformClose(void *opaque)
     HANDLE Handle = ((winCEfile *) opaque)->handle;
     BAIL_IF_MACRO(!CloseHandle(Handle), win32strerror(), 0);
     allocator.Free(opaque);
-    return(1);
+    return 1;
 } /* __PHYSFS_platformClose */
 
 
@@ -557,7 +557,7 @@ int __PHYSFS_platformDelete(const char *path)
         BAIL_IF_MACRO(retval, win32strerror(), 0);
     } /* else */
 
-    return(1);  /* if you got here, it worked. */
+    return 1;  /* if you got here, it worked. */
 } /* __PHYSFS_platformDelete */
 
 
@@ -568,7 +568,7 @@ int __PHYSFS_platformDelete(const char *path)
  */
 void *__PHYSFS_platformCreateMutex(void)
 {
-    return((void *) CreateMutex(NULL, FALSE, NULL));
+    return (void * CreateMutex(NULL, FALSE, NULL));
 } /* __PHYSFS_platformCreateMutex */
 
 
@@ -580,7 +580,7 @@ void __PHYSFS_platformDestroyMutex(void *mutex)
 
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
-    return(WaitForSingleObject((HANDLE) mutex, INFINITE) != WAIT_FAILED);
+    return (WaitForSingleObject((HANDLE) mutex, INFINITE) != WAIT_FAILED);
 } /* __PHYSFS_platformGrabMutex */
 
 
@@ -599,7 +599,7 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 /* !!! FIXME: Don't use C runtime for allocators? */
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
-    return(0);  /* just use malloc() and friends. */
+    return 0;  /* just use malloc() and friends. */
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 #endif  /* PHYSFS_PLATFORM_POCKETPC */

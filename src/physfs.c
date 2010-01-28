@@ -189,7 +189,7 @@ static char **doEnumStringList(void (*func)(PHYSFS_StringCallback, void *))
     func(enumStringListCallback, &ecd);
     BAIL_IF_MACRO(ecd.errorstr != NULL, ecd.errorstr, NULL);
     ecd.list[ecd.size] = NULL;
-    return(ecd.list);
+    return ecd.list;
 } /* doEnumStringList */
 
 
@@ -283,7 +283,7 @@ static ErrMsg *findErrorForCurrentThread(void)
             {
                 if (errorLock != NULL)
                     __PHYSFS_platformReleaseMutex(errorLock);
-                return(i);
+                return i;
             } /* if */
         } /* for */
     } /* if */
@@ -291,7 +291,7 @@ static ErrMsg *findErrorForCurrentThread(void)
     if (errorLock != NULL)
         __PHYSFS_platformReleaseMutex(errorLock);
 
-    return(NULL);   /* no error available. */
+    return NULL;   /* no error available. */
 } /* findErrorForCurrentThread */
 
 
@@ -334,10 +334,10 @@ const char *PHYSFS_getLastError(void)
     ErrMsg *err = findErrorForCurrentThread();
 
     if ((err == NULL) || (!err->errorAvailable))
-        return(NULL);
+        return NULL;
 
     err->errorAvailable = 0;
-    return(err->errorString);
+    return err->errorString;
 } /* PHYSFS_getLastError */
 
 
@@ -383,7 +383,7 @@ static const char *find_filename_extension(const char *fname)
     if (retval != NULL)
         retval++;  /* skip '.' */
 
-    return(retval);
+    return retval;
 } /* find_filename_extension */
 
 
@@ -409,7 +409,7 @@ static DirHandle *tryOpenDir(const PHYSFS_Archiver *funcs,
         } /* if */
     } /* if */
 
-    return(retval);
+    return retval;
 } /* tryOpenDir */
 
 
@@ -446,7 +446,7 @@ static DirHandle *openDirectory(const char *d, int forWriting)
     } /* else */
 
     BAIL_IF_MACRO(retval == NULL, ERR_UNSUPPORTED_ARCHIVE, NULL);
-    return(retval);
+    return retval;
 } /* openDirectory */
 
 
@@ -492,7 +492,7 @@ static int sanitizePlatformIndependentPath(const char *src, char *dst)
         *(dst++) = ch;
     } while (ch != '\0');
 
-    return(1);
+    return 1;
 } /* sanitizePlatformIndependentPath */
 
 
@@ -512,25 +512,25 @@ static int partOfMountPoint(DirHandle *h, char *fname)
     size_t len, mntpntlen;
 
     if (h->mountPoint == NULL)
-        return(0);
+        return 0;
     else if (*fname == '\0')
-        return(1);
+        return 1;
 
     len = strlen(fname);
     mntpntlen = strlen(h->mountPoint);
     if (len > mntpntlen)  /* can't be a subset of mountpoint. */
-        return(0);
+        return 0;
 
     /* if true, must be not a match or a complete match, but not a subset. */
     if ((len + 1) == mntpntlen)
-        return(0);
+        return 0;
 
     rc = strncmp(fname, h->mountPoint, len); /* !!! FIXME: case insensitive? */
     if (rc != 0)
-        return(0);  /* not a match. */
+        return 0;  /* not a match. */
 
     /* make sure /a/b matches /a/b/ and not /a/bc ... */
-    return(h->mountPoint[len] == '/');
+    return h->mountPoint[len] == '/';
 } /* partOfMountPoint */
 
 
@@ -568,7 +568,7 @@ static DirHandle *createDirHandle(const char *newDir,
     } /* if */
 
     __PHYSFS_smallFree(tmpmntpnt);
-    return(dirHandle);
+    return dirHandle;
 
 badDirHandle:
     if (dirHandle != NULL)
@@ -580,7 +580,7 @@ badDirHandle:
     } /* if */
 
     __PHYSFS_smallFree(tmpmntpnt);
-    return(NULL);
+    return NULL;
 } /* createDirHandle */
 
 
@@ -590,7 +590,7 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
     FileHandle *i;
 
     if (dh == NULL)
-        return(1);
+        return 1;
 
     for (i = openList; i != NULL; i = i->next)
         BAIL_IF_MACRO(i->dirHandle == dh, ERR_FILES_STILL_OPEN, 0);
@@ -599,7 +599,7 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
     allocator.Free(dh->dirName);
     allocator.Free(dh->mountPoint);
     allocator.Free(dh);
-    return(1);
+    return 1;
 } /* freeDirHandle */
 
 
@@ -628,7 +628,7 @@ static char *calculateUserDir(void)
         allocator.Free((void *) uname);
     } /* else */
 
-    return(retval);
+    return retval;
 } /* calculateUserDir */
 
 
@@ -638,18 +638,18 @@ static int appendDirSep(char **dir)
     char *ptr;
 
     if (strcmp((*dir + strlen(*dir)) - strlen(dirsep), dirsep) == 0)
-        return(1);
+        return 1;
 
     ptr = (char *) allocator.Realloc(*dir, strlen(*dir) + strlen(dirsep) + 1);
     if (!ptr)
     {
         allocator.Free(*dir);
-        return(0);
+        return 0;
     } /* if */
 
     strcat(ptr, dirsep);
     *dir = ptr;
-    return(1);
+    return 1;
 } /* appendDirSep */
 
 
@@ -662,7 +662,7 @@ static char *calculateBaseDir(const char *argv0)
     /* Give the platform layer first shot at this. */
     retval = __PHYSFS_platformCalcBaseDir(argv0);
     if (retval != NULL)
-        return(retval);
+        return retval;
 
     /* We need argv0 to go on. */
     BAIL_IF_MACRO(argv0 == NULL, ERR_ARGV0_IS_NULL, NULL);
@@ -691,7 +691,7 @@ static char *calculateBaseDir(const char *argv0)
         BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
         memcpy(retval, argv0, size);
         retval[size] = '\0';
-        return(retval);
+        return retval;
     } /* if */
 
     /* argv0 wasn't helpful. */
@@ -709,7 +709,7 @@ static int initializeMutexes(void)
     if (stateLock == NULL)
         goto initializeMutexes_failed;
 
-    return(1);  /* success. */
+    return 1;  /* success. */
 
 initializeMutexes_failed:
     if (errorLock != NULL)
@@ -719,7 +719,7 @@ initializeMutexes_failed:
         __PHYSFS_platformDestroyMutex(stateLock);
 
     errorLock = stateLock = NULL;
-    return(0);  /* failed. */
+    return 0;  /* failed. */
 } /* initializeMutexes */
 
 
@@ -764,7 +764,7 @@ int PHYSFS_init(const char *argv0)
     {
         allocator.Free(baseDir);
         baseDir = NULL;
-        return(0);
+        return 0;
     } /* if */
 
     initialized = 1;
@@ -772,7 +772,7 @@ int PHYSFS_init(const char *argv0)
     /* This makes sure that the error subsystem is initialized. */
     __PHYSFS_setError(PHYSFS_getLastError());
 
-    return(1);
+    return 1;
 } /* PHYSFS_init */
 
 
@@ -788,14 +788,14 @@ static int closeFileHandleList(FileHandle **list)
         if (!i->funcs->fileClose(i->opaque))
         {
             *list = i;
-            return(0);
+            return 0;
         } /* if */
 
         allocator.Free(i);
     } /* for */
 
     *list = NULL;
-    return(1);
+    return 1;
 } /* closeFileHandleList */
 
 
@@ -852,19 +852,19 @@ int PHYSFS_deinit(void)
         allocator.Deinit();
 
     errorLock = stateLock = NULL;
-    return(1);
+    return 1;
 } /* PHYSFS_deinit */
 
 
 int PHYSFS_isInit(void)
 {
-    return(initialized);
+    return initialized;
 } /* PHYSFS_isInit */
 
 
 const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void)
 {
-    return(supported_types);
+    return supported_types;
 } /* PHYSFS_supportedArchiveTypes */
 
 
@@ -883,13 +883,13 @@ void PHYSFS_freeList(void *list)
 
 const char *PHYSFS_getDirSeparator(void)
 {
-    return(__PHYSFS_platformDirSeparator);
+    return __PHYSFS_platformDirSeparator;
 } /* PHYSFS_getDirSeparator */
 
 
 char **PHYSFS_getCdRomDirs(void)
 {
-    return(doEnumStringList(__PHYSFS_platformDetectAvailableCDs));
+    return doEnumStringList(__PHYSFS_platformDetectAvailableCDs);
 } /* PHYSFS_getCdRomDirs */
 
 
@@ -901,13 +901,13 @@ void PHYSFS_getCdRomDirsCallback(PHYSFS_StringCallback callback, void *data)
 
 const char *PHYSFS_getBaseDir(void)
 {
-    return(baseDir);   /* this is calculated in PHYSFS_init()... */
+    return baseDir;   /* this is calculated in PHYSFS_init()... */
 } /* PHYSFS_getBaseDir */
 
 
 const char *PHYSFS_getUserDir(void)
 {
-    return(userDir);   /* this is calculated in PHYSFS_init()... */
+    return userDir;   /* this is calculated in PHYSFS_init()... */
 } /* PHYSFS_getUserDir */
 
 
@@ -920,7 +920,7 @@ const char *PHYSFS_getWriteDir(void)
         retval = writeDir->dirName;
     __PHYSFS_platformReleaseMutex(stateLock);
 
-    return(retval);
+    return retval;
 } /* PHYSFS_getWriteDir */
 
 
@@ -945,7 +945,7 @@ int PHYSFS_setWriteDir(const char *newDir)
 
     __PHYSFS_platformReleaseMutex(stateLock);
 
-    return(retval);
+    return retval;
 } /* PHYSFS_setWriteDir */
 
 
@@ -986,13 +986,13 @@ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
     } /* else */
 
     __PHYSFS_platformReleaseMutex(stateLock);
-    return(1);
+    return 1;
 } /* PHYSFS_mount */
 
 
 int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
 {
-    return(PHYSFS_mount(newDir, NULL, appendToPath));
+    return PHYSFS_mount(newDir, NULL, appendToPath);
 } /* PHYSFS_addToSearchPath */
 
 
@@ -1029,7 +1029,7 @@ int PHYSFS_removeFromSearchPath(const char *oldDir)
 
 char **PHYSFS_getSearchPath(void)
 {
-    return(doEnumStringList(PHYSFS_getSearchPathCallback));
+    return doEnumStringList(PHYSFS_getSearchPathCallback);
 } /* PHYSFS_getSearchPath */
 
 
@@ -1043,7 +1043,7 @@ const char *PHYSFS_getMountPoint(const char *dir)
         {
             const char *retval = ((i->mountPoint) ? i->mountPoint : "/");
             __PHYSFS_platformReleaseMutex(stateLock);
-            return(retval);
+            return retval;
         } /* if */
     } /* for */
     __PHYSFS_platformReleaseMutex(stateLock);
@@ -1166,7 +1166,7 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
         PHYSFS_freeList(rc);
     } /* if */
 
-    return(1);
+    return 1;
 } /* PHYSFS_setSaneConfig */
 
 
@@ -1178,7 +1178,7 @@ void PHYSFS_permitSymbolicLinks(int allow)
 
 int PHYSFS_symbolicLinksPermitted(void)
 {
-    return(allowSymLinks);
+    return allowSymLinks;
 } /* PHYSFS_symbolicLinksPermitted */
 
 
@@ -1249,7 +1249,7 @@ char *__PHYSFS_convertToDependent(const char *prepend,
         strcat(str, append);
     } /* if */
 
-    return(str);
+    return str;
 } /* __PHYSFS_convertToDependent */
 
 
@@ -1281,7 +1281,7 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
     char *end;
 
     if (*fname == '\0')  /* quick rejection. */
-        return(1);
+        return 1;
 
     /* !!! FIXME: This codeblock sucks. */
     if (h->mountPoint != NULL)  /* NULL mountpoint means "/". */
@@ -1337,7 +1337,7 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
         } /* while */
     } /* if */
 
-    return(retval);
+    return retval;
 } /* verifyPath */
 
 
@@ -1381,7 +1381,7 @@ static int doMkdir(const char *_dname, char *dname)
     } /* while */
 
     __PHYSFS_platformReleaseMutex(stateLock);
-    return(retval);
+    return retval;
 } /* doMkdir */
 
 
@@ -1397,7 +1397,7 @@ int PHYSFS_mkdir(const char *_dname)
     BAIL_IF_MACRO(dname == NULL, ERR_OUT_OF_MEMORY, 0);
     retval = doMkdir(_dname, dname);
     __PHYSFS_smallFree(dname);
-    return(retval);
+    return retval;
 } /* PHYSFS_mkdir */
 
 
@@ -1415,7 +1415,7 @@ static int doDelete(const char *_fname, char *fname)
     retval = h->funcs->remove(h->opaque, fname);
 
     __PHYSFS_platformReleaseMutex(stateLock);
-    return(retval);
+    return retval;
 } /* doDelete */
 
 
@@ -1431,7 +1431,7 @@ int PHYSFS_delete(const char *_fname)
     BAIL_IF_MACRO(fname == NULL, ERR_OUT_OF_MEMORY, 0);
     retval = doDelete(_fname, fname);
     __PHYSFS_smallFree(fname);
-    return(retval);
+    return retval;
 } /* PHYSFS_delete */
 
 
@@ -1464,7 +1464,7 @@ const char *PHYSFS_getRealDir(const char *_fname)
     } /* if */
 
     __PHYSFS_smallFree(fname);
-    return(retval);
+    return retval;
 } /* PHYSFS_getRealDir */
 
 
@@ -1485,7 +1485,7 @@ static int locateInStringList(const char *str,
         cmp = strcmp(list[middle], str);
 
         if (cmp == 0)  /* it's in the list already. */
-            return(1);
+            return 1;
         else if (cmp > 0)
             len = half_len;
         else
@@ -1496,7 +1496,7 @@ static int locateInStringList(const char *str,
     } /* while */
 
     *pos = lo;
-    return(0);
+    return 0;
 } /* locateInStringList */
 
 
@@ -1544,7 +1544,7 @@ char **PHYSFS_enumerateFiles(const char *path)
     BAIL_IF_MACRO(ecd.list == NULL, ERR_OUT_OF_MEMORY, NULL);
     PHYSFS_enumerateFilesCallback(path, enumFilesCallback, &ecd);
     ecd.list[ecd.size] = NULL;
-    return(ecd.list);
+    return ecd.list;
 } /* PHYSFS_enumerateFiles */
 
 
@@ -1617,7 +1617,7 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
 
 int PHYSFS_exists(const char *fname)
 {
-    return(PHYSFS_getRealDir(fname) != NULL);
+    return (PHYSFS_getRealDir(fname) != NULL);
 } /* PHYSFS_exists */
 
 
@@ -1658,7 +1658,7 @@ PHYSFS_sint64 PHYSFS_getLastModTime(const char *_fname)
     } /* if */
 
     __PHYSFS_smallFree(fname);
-    return(retval);
+    return retval;
 } /* PHYSFS_getLastModTime */
 
 
@@ -1697,7 +1697,7 @@ int PHYSFS_isDirectory(const char *_fname)
     } /* else */
 
     __PHYSFS_smallFree(fname);
-    return(retval);
+    return retval;
 } /* PHYSFS_isDirectory */
 
 
@@ -1738,7 +1738,7 @@ int PHYSFS_isSymbolicLink(const char *_fname)
     } /* else */
 
     __PHYSFS_smallFree(fname);
-    return(retval);
+    return retval;
 } /* PHYSFS_isSymbolicLink */
 
 
@@ -1795,19 +1795,19 @@ static PHYSFS_File *doOpenWrite(const char *_fname, int appending)
     } /* if */
 
     __PHYSFS_smallFree(fname);
-    return((PHYSFS_File *) fh);
+    return ((PHYSFS_File *) fh);
 } /* doOpenWrite */
 
 
 PHYSFS_File *PHYSFS_openWrite(const char *filename)
 {
-    return(doOpenWrite(filename, 0));
+    return doOpenWrite(filename, 0);
 } /* PHYSFS_openWrite */
 
 
 PHYSFS_File *PHYSFS_openAppend(const char *filename)
 {
-    return(doOpenWrite(filename, 1));
+    return doOpenWrite(filename, 1);
 } /* PHYSFS_openAppend */
 
 
@@ -1870,7 +1870,7 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
     } /* if */
 
     __PHYSFS_smallFree(fname);
-    return((PHYSFS_File *) fh);
+    return ((PHYSFS_File *) fh);
 } /* PHYSFS_openRead */
 
 
@@ -1889,7 +1889,7 @@ static int closeHandleInOpenList(FileHandle **list, FileHandle *handle)
             if (rc)
                 rc = handle->funcs->fileClose(handle->opaque);
             if (!rc)
-                return(-1);
+                return -1;
 
             if (tmp != NULL)  /* free any associated buffer. */
                 allocator.Free(tmp);
@@ -1900,12 +1900,12 @@ static int closeHandleInOpenList(FileHandle **list, FileHandle *handle)
                 prev->next = handle->next;
 
             allocator.Free(handle);
-            return(1);
+            return 1;
         } /* if */
         prev = i;
     } /* for */
 
-    return(0);
+    return 0;
 } /* closeHandleInOpenList */
 
 
@@ -1927,7 +1927,7 @@ int PHYSFS_close(PHYSFS_File *_handle)
 
     __PHYSFS_platformReleaseMutex(stateLock);
     BAIL_IF_MACRO(!rc, ERR_NOT_A_HANDLE, 0);
-    return(1);
+    return 1;
 } /* PHYSFS_close */
 
 
@@ -1951,7 +1951,7 @@ static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
             if (rc <= 0)
             {
                 fh->bufpos -= remainder;
-                return(((rc == -1) && (retval == 0)) ? -1 : retval);
+                return ( ((rc == -1) && (retval == 0)) ? -1 : retval );
             } /* if */
 
             buffered = fh->buffill = (PHYSFS_uint32) rc;
@@ -1971,7 +1971,7 @@ static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
         objCount -= copied;
     } /* while */
 
-    return(retval);
+    return retval;
 } /* doBufferedRead */
 
 
@@ -1984,9 +1984,9 @@ PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle, void *buffer,
     BAIL_IF_MACRO(objSize == 0, NULL, 0);
     BAIL_IF_MACRO(objCount == 0, NULL, 0);
     if (fh->buffer != NULL)
-        return(doBufferedRead(fh, buffer, objSize, objCount));
+        return doBufferedRead(fh, buffer, objSize, objCount);
 
-    return(fh->funcs->read(fh->opaque, buffer, objSize, objCount));
+    return fh->funcs->read(fh->opaque, buffer, objSize, objCount);
 } /* PHYSFS_read */
 
 
@@ -2001,12 +2001,12 @@ static PHYSFS_sint64 doBufferedWrite(PHYSFS_File *handle, const void *buffer,
     {
         memcpy(fh->buffer + fh->buffill, buffer, objSize * objCount);
         fh->buffill += (objSize * objCount);
-        return(objCount);
+        return objCount;
     } /* if */
 
     /* would overflow buffer. Flush and then write the new objects, too. */
     BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, -1);
-    return(fh->funcs->write(fh->opaque, buffer, objSize, objCount));
+    return fh->funcs->write(fh->opaque, buffer, objSize, objCount);
 } /* doBufferedWrite */
 
 
@@ -2019,9 +2019,9 @@ PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle, const void *buffer,
     BAIL_IF_MACRO(objSize == 0, NULL, 0);
     BAIL_IF_MACRO(objCount == 0, NULL, 0);
     if (fh->buffer != NULL)
-        return(doBufferedWrite(handle, buffer, objSize, objCount));
+        return doBufferedWrite(handle, buffer, objSize, objCount);
 
-    return(fh->funcs->write(fh->opaque, buffer, objSize, objCount));
+    return fh->funcs->write(fh->opaque, buffer, objSize, objCount);
 } /* PHYSFS_write */
 
 
@@ -2030,10 +2030,10 @@ int PHYSFS_eof(PHYSFS_File *handle)
     FileHandle *fh = (FileHandle *) handle;
 
     if (!fh->forReading)  /* never EOF on files opened for write/append. */
-        return(0);
+        return 0;
 
     /* eof if buffer is empty and archiver says so. */
-    return((fh->bufpos == fh->buffill) && (fh->funcs->eof(fh->opaque)));
+    return (fh->bufpos == fh->buffill && (fh->funcs->eof(fh->opaque)));
 } /* PHYSFS_eof */
 
 
@@ -2044,7 +2044,7 @@ PHYSFS_sint64 PHYSFS_tell(PHYSFS_File *handle)
     PHYSFS_sint64 retval = fh->forReading ?
                             (pos - fh->buffill) + fh->bufpos :
                             (pos + fh->buffill);
-    return(retval);
+    return retval;
 } /* PHYSFS_tell */
 
 
@@ -2062,20 +2062,20 @@ int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos)
             || ((offset < 0) && (-offset <= fh->bufpos)) /* backward */ )
         {
             fh->bufpos += (PHYSFS_uint32) offset;
-            return(1); /* successful seek */
+            return 1; /* successful seek */
         } /* if */
     } /* if */
 
     /* we have to fall back to a 'raw' seek. */
     fh->buffill = fh->bufpos = 0;
-    return(fh->funcs->seek(fh->opaque, pos));
+    return fh->funcs->seek(fh->opaque, pos);
 } /* PHYSFS_seek */
 
 
 PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_File *handle)
 {
     FileHandle *fh = (FileHandle *) handle;
-    return(fh->funcs->fileLength(fh->opaque));
+    return fh->funcs->fileLength(fh->opaque);
 } /* PHYSFS_filelength */
 
 
@@ -2123,7 +2123,7 @@ int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 _bufsize)
 
     fh->bufsize = bufsize;
     fh->buffill = fh->bufpos = 0;
-    return(1);
+    return 1;
 } /* PHYSFS_setBuffer */
 
 
@@ -2133,14 +2133,14 @@ int PHYSFS_flush(PHYSFS_File *handle)
     PHYSFS_sint64 rc;
 
     if ((fh->forReading) || (fh->bufpos == fh->buffill))
-        return(1);  /* open for read or buffer empty are successful no-ops. */
+        return 1;  /* open for read or buffer empty are successful no-ops. */
 
     /* dump buffer to disk. */
     rc = fh->funcs->write(fh->opaque, fh->buffer + fh->bufpos,
                           fh->buffill - fh->bufpos, 1);
     BAIL_IF_MACRO(rc <= 0, NULL, 0);
     fh->bufpos = fh->buffill = 0;
-    return(1);
+    return 1;
 } /* PHYSFS_flush */
 
 
@@ -2151,7 +2151,7 @@ int PHYSFS_setAllocator(const PHYSFS_Allocator *a)
     if (externalAllocator)
         memcpy(&allocator, a, sizeof (PHYSFS_Allocator));
 
-    return(1);
+    return 1;
 } /* PHYSFS_setAllocator */
 
 
@@ -2166,7 +2166,7 @@ static void *mallocAllocatorMalloc(PHYSFS_uint64 s)
 {
     BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
     #undef malloc
-    return(malloc((size_t) s));
+    return malloc((size_t) s);
 } /* mallocAllocatorMalloc */
 
 
@@ -2174,7 +2174,7 @@ static void *mallocAllocatorRealloc(void *ptr, PHYSFS_uint64 s)
 {
     BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
     #undef realloc
-    return(realloc(ptr, (size_t) s));
+    return realloc(ptr, (size_t) s);
 } /* mallocAllocatorRealloc */
 
 
@@ -2211,10 +2211,10 @@ void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len)
         /*printf("%s alloc'd (%d) bytes at (%p).\n",
                 useHeap ? "heap" : "stack", (int) len, ptr);*/
         *retval = useHeap;
-        return(retval+1);
+        return (retval + 1);
     } /* if */
 
-    return(NULL);  /* allocation failed. */
+    return NULL;  /* allocation failed. */
 } /* __PHYSFS_initSmallAlloc */
 
 

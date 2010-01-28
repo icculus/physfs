@@ -38,36 +38,36 @@ static const char *get_os2_error_string(APIRET rc)
 {
     switch (rc)
     {
-        case NO_ERROR: return(NULL);  /* not an error. */
-        case ERROR_INTERRUPT: return(NULL);  /* not an error. */
-        case ERROR_TIMEOUT: return(NULL);  /* not an error. */
-        case ERROR_NOT_ENOUGH_MEMORY: return(ERR_OUT_OF_MEMORY);
-        case ERROR_FILE_NOT_FOUND: return(ERR_NO_SUCH_FILE);
-        case ERROR_PATH_NOT_FOUND: return(ERR_NO_SUCH_PATH);
-        case ERROR_ACCESS_DENIED: return(ERR_ACCESS_DENIED);
-        case ERROR_NOT_DOS_DISK: return(ERR_NOT_A_DOS_DISK);
-        case ERROR_SHARING_VIOLATION: return(ERR_SHARING_VIOLATION);
-        case ERROR_CANNOT_MAKE: return(ERR_CANNOT_MAKE);
-        case ERROR_DEVICE_IN_USE: return(ERR_DEV_IN_USE);
-        case ERROR_OPEN_FAILED: return(ERR_OPEN_FAILED);
-        case ERROR_DISK_FULL: return(ERR_DISK_FULL);
-        case ERROR_PIPE_BUSY: return(ERR_PIPE_BUSY);
-        case ERROR_SHARING_BUFFER_EXCEEDED: return(ERR_SHARING_BUF_EXCEEDED);
-        case ERROR_FILENAME_EXCED_RANGE: return(ERR_BAD_FILENAME);
-        case ERROR_META_EXPANSION_TOO_LONG: return(ERR_BAD_FILENAME);
-        case ERROR_TOO_MANY_HANDLES: return(ERR_TOO_MANY_HANDLES);
-        case ERROR_TOO_MANY_OPEN_FILES: return(ERR_TOO_MANY_HANDLES);
-        case ERROR_NO_MORE_SEARCH_HANDLES: return(ERR_TOO_MANY_HANDLES);
-        case ERROR_SEEK_ON_DEVICE: return(ERR_SEEK_ERROR);
-        case ERROR_NEGATIVE_SEEK: return(ERR_SEEK_OUT_OF_RANGE);
-        /*!!! FIXME: Where did this go?  case ERROR_DEL_CURRENT_DIRECTORY: return(ERR_DEL_CWD);*/
-        case ERROR_WRITE_PROTECT: return(ERR_WRITE_PROTECT_ERROR);
-        case ERROR_WRITE_FAULT: return(ERR_WRITE_FAULT);
-        case ERROR_LOCK_VIOLATION: return(ERR_LOCK_VIOLATION);
-        case ERROR_GEN_FAILURE: return(ERR_GEN_FAILURE);
-        case ERROR_UNCERTAIN_MEDIA: return(ERR_UNCERTAIN_MEDIA);
-        case ERROR_PROTECTION_VIOLATION: return(ERR_PROT_VIOLATION);
-        case ERROR_BROKEN_PIPE: return(ERR_BROKEN_PIPE);
+        case NO_ERROR: return NULL;  /* not an error. */
+        case ERROR_INTERRUPT: return NULL;  /* not an error. */
+        case ERROR_TIMEOUT: return NULL;  /* not an error. */
+        case ERROR_NOT_ENOUGH_MEMORY: return ERR_OUT_OF_MEMORY;
+        case ERROR_FILE_NOT_FOUND: return ERR_NO_SUCH_FILE;
+        case ERROR_PATH_NOT_FOUND: return ERR_NO_SUCH_PATH;
+        case ERROR_ACCESS_DENIED: return ERR_ACCESS_DENIED;
+        case ERROR_NOT_DOS_DISK: return ERR_NOT_A_DOS_DISK;
+        case ERROR_SHARING_VIOLATION: return ERR_SHARING_VIOLATION;
+        case ERROR_CANNOT_MAKE: return ERR_CANNOT_MAKE;
+        case ERROR_DEVICE_IN_USE: return ERR_DEV_IN_USE;
+        case ERROR_OPEN_FAILED: return ERR_OPEN_FAILED;
+        case ERROR_DISK_FULL: return ERR_DISK_FULL;
+        case ERROR_PIPE_BUSY: return ERR_PIPE_BUSY;
+        case ERROR_SHARING_BUFFER_EXCEEDED: return ERR_SHARING_BUF_EXCEEDED;
+        case ERROR_FILENAME_EXCED_RANGE: return ERR_BAD_FILENAME;
+        case ERROR_META_EXPANSION_TOO_LONG: return ERR_BAD_FILENAME;
+        case ERROR_TOO_MANY_HANDLES: return ERR_TOO_MANY_HANDLES;
+        case ERROR_TOO_MANY_OPEN_FILES: return ERR_TOO_MANY_HANDLES;
+        case ERROR_NO_MORE_SEARCH_HANDLES: return ERR_TOO_MANY_HANDLES;
+        case ERROR_SEEK_ON_DEVICE: return ERR_SEEK_ERROR;
+        case ERROR_NEGATIVE_SEEK: return ERR_SEEK_OUT_OF_RANGE;
+        /*!!! FIXME: Where did this go?  case ERROR_DEL_CURRENT_DIRECTORY: return ERR_DEL_CWD;*/
+        case ERROR_WRITE_PROTECT: return ERR_WRITE_PROTECT_ERROR;
+        case ERROR_WRITE_FAULT: return ERR_WRITE_FAULT;
+        case ERROR_LOCK_VIOLATION: return ERR_LOCK_VIOLATION;
+        case ERROR_GEN_FAILURE: return ERR_GEN_FAILURE;
+        case ERROR_UNCERTAIN_MEDIA: return ERR_UNCERTAIN_MEDIA;
+        case ERROR_PROTECTION_VIOLATION: return ERR_PROT_VIOLATION;
+        case ERROR_BROKEN_PIPE: return ERR_BROKEN_PIPE;
 
         case ERROR_INVALID_PARAMETER:
         case ERROR_INVALID_NAME:
@@ -82,12 +82,12 @@ static const char *get_os2_error_string(APIRET rc)
         case ERROR_BAD_DRIVER_LEVEL:
         case ERROR_DIRECT_ACCESS_HANDLE:
         case ERROR_NOT_OWNER:
-            return(ERR_PHYSFS_BAD_OS_CALL);
+            return ERR_PHYSFS_BAD_OS_CALL;
 
-        default: return(ERR_OS2_GENERIC);
+        default: return ERR_OS2_GENERIC;
     } /* switch */
 
-    return(NULL);
+    return NULL;
 } /* get_os2_error_string */
 
 
@@ -104,7 +104,7 @@ static APIRET os2err(APIRET retval)
     if (err != NULL)
         __PHYSFS_setError(err);
 
-    return(retval);
+    return retval;
 } /* os2err */
 
 
@@ -200,7 +200,7 @@ int __PHYSFS_platformInit(void)
     baseDir = (char *) allocator.Malloc(len + 1);
     BAIL_IF_MACRO(baseDir == NULL, ERR_OUT_OF_MEMORY, 0);
     strcpy(baseDir, buf);
-    return(1);  /* success. */
+    return 1;  /* success. */
 } /* __PHYSFS_platformInit */
 
 
@@ -209,7 +209,7 @@ int __PHYSFS_platformDeinit(void)
     assert(baseDir != NULL);
     allocator.Free(baseDir);
     baseDir = NULL;
-    return(1);  /* success. */
+    return 1;  /* success. */
 } /* __PHYSFS_platformDeinit */
 
 
@@ -220,7 +220,7 @@ static int disc_is_inserted(ULONG drive)
     DosError(FERR_DISABLEHARDERR | FERR_DISABLEEXCEPTION);
     rc = DosQueryFSInfo(drive + 1, FSIL_VOLSER, buf, sizeof (buf));
     DosError(FERR_ENABLEHARDERR | FERR_ENABLEEXCEPTION);
-    return(rc == NO_ERROR);
+    return (rc == NO_ERROR);
 } /* is_cdrom_inserted */
 
 
@@ -248,7 +248,7 @@ static int is_cdrom_drive(ULONG drive)
                      &param, sizeof (param), &ul1, &data, sizeof (data), &ul2);
 
     DosClose(hfile);
-    return((rc == NO_ERROR) && (PHYSFS_swapULE32(data) == CD01));
+    return ((rc == NO_ERROR) && (PHYSFS_swapULE32(data) == CD01));
 } /* is_cdrom_drive */
 
 
@@ -281,19 +281,19 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     char *retval = (char *) allocator.Malloc(strlen(baseDir) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, baseDir); /* calculated at init time. */
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCalcBaseDir */
 
 
 char *__PHYSFS_platformGetUserName(void)
 {
-    return(NULL);  /* (*shrug*) */
+    return NULL;  /* (*shrug*) */
 } /* __PHYSFS_platformGetUserName */
 
 
 char *__PHYSFS_platformGetUserDir(void)
 {
-    return(__PHYSFS_platformCalcBaseDir(NULL));
+    return __PHYSFS_platformCalcBaseDir(NULL);
 } /* __PHYSFS_platformGetUserDir */
 
 
@@ -302,13 +302,13 @@ int __PHYSFS_platformExists(const char *_fname)
     const unsigned char *fname = (const unsigned char *) _fname;
     FILESTATUS3 fs;
     APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
-    return(os2err(rc) == NO_ERROR);
+    return (os2err(rc) == NO_ERROR);
 } /* __PHYSFS_platformExists */
 
 
 int __PHYSFS_platformIsSymLink(const char *fname)
 {
-    return(0);  /* no symlinks in OS/2. */
+    return 0;  /* no symlinks in OS/2. */
 } /* __PHYSFS_platformIsSymlink */
 
 
@@ -318,7 +318,7 @@ int __PHYSFS_platformIsDirectory(const char *_fname)
     FILESTATUS3 fs;
     APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, 0)
-    return((fs.attrFile & FILE_DIRECTORY) != 0);
+    return ((fs.attrFile & FILE_DIRECTORY) != 0);
 } /* __PHYSFS_platformIsDirectory */
 
 
@@ -348,7 +348,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     for (p = strchr(retval, '/'); p != NULL; p = strchr(p + 1, '/'))
         *p = '\\';
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCvtToDependent */
 
 
@@ -416,13 +416,13 @@ char *__PHYSFS_platformCurrentDir(void)
     if (os2err(rc) != NO_ERROR)
     {
         allocator.Free(retval);
-        return(NULL);
+        return NULL;
     } /* if */
 
     retval[0] = ('A' + (currentDisk - 1));
     retval[1] = ':';
     retval[2] = '\\';
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCurrentDir */
 
 
@@ -436,14 +436,14 @@ char *__PHYSFS_platformRealPath(const char *_path)
     retval = (char *) allocator.Malloc(strlen(buf) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, buf);
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformRealPath */
 
 
 int __PHYSFS_platformMkDir(const char *_filename)
 {
     const unsigned char *filename = (const unsigned char *) _filename;
-    return(os2err(DosCreateDir(filename, NULL)) == NO_ERROR);
+    return (os2err(DosCreateDir(filename, NULL)) == NO_ERROR);
 } /* __PHYSFS_platformMkDir */
 
 
@@ -463,7 +463,7 @@ void *__PHYSFS_platformOpenRead(const char *_filename)
                    OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
                    OPEN_ACCESS_READONLY, NULL));
 
-    return((void *) hfile);
+    return ((void *) hfile);
 } /* __PHYSFS_platformOpenRead */
 
 
@@ -483,7 +483,7 @@ void *__PHYSFS_platformOpenWrite(const char *_filename)
                    OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
                    OPEN_ACCESS_READWRITE, NULL));
 
-    return((void *) hfile);
+    return ((void *) hfile);
 } /* __PHYSFS_platformOpenWrite */
 
 
@@ -513,7 +513,7 @@ void *__PHYSFS_platformOpenAppend(const char *_filename)
         } /* if */
     } /* if */
 
-    return((void *) hfile);
+    return ((void *) hfile);
 } /* __PHYSFS_platformOpenAppend */
 
 
@@ -530,13 +530,13 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
         if (br < size)
         {
             DosSetFilePtr(hfile, -br, FILE_CURRENT, &br); /* try to cleanup. */
-            return(retval);
+            return retval;
         } /* if */
 
         buffer = (void *) ( ((char *) buffer) + size );
     } /* for */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformRead */
 
 
@@ -553,13 +553,13 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
         if (bw < size)
         {
             DosSetFilePtr(hfile, -bw, FILE_CURRENT, &bw); /* try to cleanup. */
-            return(retval);
+            return retval;
         } /* if */
 
         buffer = (void *) ( ((char *) buffer) + size );
     } /* for */
 
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformWrite */
 
 
@@ -572,7 +572,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
     /* hooray for 32-bit filesystem limits!  :) */
     BAIL_IF_MACRO((PHYSFS_uint64) dist != pos, ERR_SEEK_OUT_OF_RANGE, 0);
 
-    return(os2err(DosSetFilePtr(hfile, dist, FILE_BEGIN, &dummy)) == NO_ERROR);
+    return (os2err(DosSetFilePtr(hfile, dist, FILE_BEGIN, &dummy)) == NO_ERROR);
 } /* __PHYSFS_platformSeek */
 
 
@@ -582,7 +582,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
     HFILE hfile = (HFILE) opaque;
     APIRET rc = os2err(DosSetFilePtr(hfile, 0, FILE_CURRENT, &pos));
     BAIL_IF_MACRO(rc != NO_ERROR, NULL, -1);
-    return((PHYSFS_sint64) pos);
+    return ((PHYSFS_sint64) pos);
 } /* __PHYSFS_platformTell */
 
 
@@ -592,7 +592,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
     HFILE hfile = (HFILE) opaque;
     APIRET rc = DosQueryFileInfo(hfile, FIL_STANDARD, &fs, sizeof (fs));
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, -1);
-    return((PHYSFS_sint64) fs.cbFile);
+    return ((PHYSFS_sint64) fs.cbFile);
 } /* __PHYSFS_platformFileLength */
 
 
@@ -605,19 +605,19 @@ int __PHYSFS_platformEOF(void *opaque)
     pos = __PHYSFS_platformTell(opaque);
     BAIL_IF_MACRO(pos == -1, NULL, 1);  /* (*shrug*) */
 
-    return(pos >= len);
+    return (pos >= len);
 } /* __PHYSFS_platformEOF */
 
 
 int __PHYSFS_platformFlush(void *opaque)
 {
-    return(os2err(DosResetBuffer((HFILE) opaque) == NO_ERROR));
+    return (os2err(DosResetBuffer((HFILE) opaque)) == NO_ERROR);
 } /* __PHYSFS_platformFlush */
 
 
 int __PHYSFS_platformClose(void *opaque)
 {
-    return(os2err(DosClose((HFILE) opaque) == NO_ERROR));
+    return (os2err(DosClose((HFILE) opaque)) == NO_ERROR);
 } /* __PHYSFS_platformClose */
 
 
@@ -625,9 +625,9 @@ int __PHYSFS_platformDelete(const char *_path)
 {
     const unsigned char *path = (const unsigned char *) _path;
     if (__PHYSFS_platformIsDirectory(_path))
-        return(os2err(DosDeleteDir(path)) == NO_ERROR);
+        return (os2err(DosDeleteDir(path)) == NO_ERROR);
 
-    return(os2err(DosDelete(path) == NO_ERROR));
+    return (os2err(DosDelete(path)) == NO_ERROR);
 } /* __PHYSFS_platformDelete */
 
 
@@ -654,7 +654,7 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *_fname)
     /* Convert to a format PhysicsFS can grok... */
     retval = (PHYSFS_sint64) mktime(&tm);
     BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformGetLastModTime */
 
 
@@ -668,7 +668,7 @@ void *__PHYSFS_platformGetThreadID(void)
      *  default value (zero might as well do) if it does.
      */
     BAIL_IF_MACRO(os2err(DosGetInfoBlocks(&ptib, &ppib)) != NO_ERROR, 0, 0);
-    return((void *) ptib->tib_ordinal);
+    return ((void *) ptib->tib_ordinal);
 } /* __PHYSFS_platformGetThreadID */
 
 
@@ -676,7 +676,7 @@ void *__PHYSFS_platformCreateMutex(void)
 {
     HMTX hmtx = NULLHANDLE;
     os2err(DosCreateMutexSem(NULL, &hmtx, 0, 0));
-    return((void *) hmtx);
+    return ((void *) hmtx);
 } /* __PHYSFS_platformCreateMutex */
 
 
@@ -689,7 +689,7 @@ void __PHYSFS_platformDestroyMutex(void *mutex)
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
     /* Do _NOT_ call os2err() (which sets the physfs error msg) in here! */
-    return(DosRequestMutexSem((HMTX) mutex, SEM_INDEFINITE_WAIT) == NO_ERROR);
+    return (DosRequestMutexSem((HMTX) mutex, SEM_INDEFINITE_WAIT) == NO_ERROR);
 } /* __PHYSFS_platformGrabMutex */
 
 
@@ -702,7 +702,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 /* !!! FIXME: Don't use C runtime for allocators? */
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
-    return(0);  /* just use malloc() and friends. */
+    return 0;  /* just use malloc() and friends. */
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 #endif  /* PHYSFS_PLATFORM_OS2 */

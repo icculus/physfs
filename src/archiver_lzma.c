@@ -175,7 +175,7 @@ static int lzma_file_cmp_stdlib(const void *key, const void *object)
 {
     const char *name = (const char *) key;
     LZMAfile *file = (LZMAfile *) object;
-    return(strcmp(name, file->item->Name));
+    return strcmp(name, file->item->Name);
 } /* lzma_file_cmp_posix */
 
 
@@ -186,7 +186,7 @@ static int lzma_file_cmp_stdlib(const void *key, const void *object)
 static int lzma_file_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     LZMAfile *files = (LZMAfile *) _a;
-    return(strcmp(files[one].item->Name, files[two].item->Name));
+    return strcmp(files[one].item->Name, files[two].item->Name);
 } /* lzma_file_cmp */
 
 
@@ -213,7 +213,7 @@ static LZMAfile * lzma_find_file(LZMAarchive *archive, const char *name)
 
     BAIL_IF_MACRO(file == NULL, ERR_NO_SUCH_FILE, NULL);
 
-    return(file);
+    return file;
 } /* lzma_find_file */
 
 
@@ -232,7 +232,7 @@ static int lzma_file_init(LZMAarchive *archive, PHYSFS_uint32 fileIndex)
     file->position = 0;
     file->offset = 0; /* Offset will be set by LZMA_read() */
 
-    return(1);
+    return 1;
 } /* lzma_load_file */
 
 
@@ -247,13 +247,13 @@ static int lzma_files_init(LZMAarchive *archive)
     {
         if (!lzma_file_init(archive, fileIndex))
         {
-            return(0); // FALSE on failure
+            return 0; // FALSE on failure
         }
     } /* for */
 
    __PHYSFS_sort(archive->files, numFiles, lzma_file_cmp, lzma_file_swap);
 
-    return(1);
+    return 1;
 } /* lzma_load_files */
 
 
@@ -318,7 +318,7 @@ static int lzma_err(SZ_RESULT rc)
             __PHYSFS_setError(ERR_UNKNOWN_ERROR);
     } /* switch */
 
-    return(rc);
+    return rc;
 } /* lzma_err */
 
 
@@ -433,7 +433,7 @@ static int LZMA_fileClose(fvoid *opaque)
         file->folder->cache = NULL;
     }
 
-    return(1);
+    return 1;
 } /* LZMA_fileClose */
 
 
@@ -457,7 +457,7 @@ static int LZMA_isArchive(const char *filename, int forWriting)
     __PHYSFS_platformClose(in);
 
     /* Test whether sig is the 7z signature */
-    return(TestSignatureCandidate(sig));
+    return TestSignatureCandidate(sig);
 } /* LZMA_isArchive */
 
 
@@ -478,7 +478,7 @@ static void *LZMA_openArchive(const char *name, int forWriting)
     {
         __PHYSFS_platformClose(archive->stream.file);
         lzma_archive_exit(archive);
-        return(NULL); // Error is set by platformOpenRead!
+        return NULL; // Error is set by platformOpenRead!
     }
 
     CrcGenerateTable();
@@ -534,7 +534,7 @@ static void *LZMA_openArchive(const char *name, int forWriting)
         BAIL_MACRO(ERR_UNKNOWN_ERROR, NULL);
     }
 
-    return(archive);
+    return archive;
 } /* LZMA_openArchive */
 
 
@@ -603,7 +603,7 @@ static void LZMA_enumerateFiles(dvoid *opaque, const char *dname,
 static int LZMA_exists(dvoid *opaque, const char *name)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
-    return(lzma_find_file(archive, name) != NULL);
+    return (lzma_find_file(archive, name) != NULL);
 } /* LZMA_exists */
 
 
@@ -619,7 +619,7 @@ static PHYSFS_sint64 LZMA_getLastModTime(dvoid *opaque,
     BAIL_IF_MACRO(file == NULL, NULL, -1);
 	BAIL_IF_MACRO(!file->item->IsLastWriteTimeDefined, NULL, -1); // write-time may not be defined for every file
 
-    return(lzma_filetime_to_unix_timestamp(&file->item->LastWriteTime));
+    return lzma_filetime_to_unix_timestamp(&file->item->LastWriteTime);
 } /* LZMA_getLastModTime */
 
 
@@ -630,7 +630,7 @@ static int LZMA_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 
     *fileExists = (file != NULL);
 
-    return(file == NULL ? 0 : file->item->IsDirectory);
+    return ((file == NULL) ? 0 : file->item->IsDirectory);
 } /* LZMA_isDirectory */
 
 
@@ -652,7 +652,7 @@ static fvoid *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
     file->position = 0;
     file->folder->references++; // Increase refcount for automatic cleanup...
 
-    return(file);
+    return file;
 } /* LZMA_openRead */
 
 
