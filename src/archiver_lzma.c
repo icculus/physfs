@@ -108,7 +108,7 @@ static void SzFreePhysicsFS(void *address)
 SZ_RESULT SzFileReadImp(void *object, void **buffer, size_t maxReqSize,
                         size_t *processedSize)
 {
-    FileInputStream *s = (FileInputStream *)(object - offsetof(FileInputStream, inStream)); // HACK!
+    FileInputStream *s = (FileInputStream *)(object - offsetof(FileInputStream, inStream)); /* HACK! */
     PHYSFS_sint64 processedSizeLoc = 0;
 
     if (maxReqSize > BUFFER_SIZE)
@@ -130,7 +130,7 @@ SZ_RESULT SzFileReadImp(void *object, void **buffer, size_t maxReqSize,
 SZ_RESULT SzFileReadImp(void *object, void *buffer, size_t size,
                         size_t *processedSize)
 {
-    FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); // HACK!
+    FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); /* HACK! */
     size_t processedSizeLoc = __PHYSFS_platformRead(s->file, buffer, 1, size);
     if (processedSize != 0)
         *processedSize = processedSizeLoc;
@@ -145,7 +145,7 @@ SZ_RESULT SzFileReadImp(void *object, void *buffer, size_t size,
  */
 SZ_RESULT SzFileSeekImp(void *object, CFileSize pos)
 {
-    FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); // HACK!
+    FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); /* HACK! */
     if (__PHYSFS_platformSeek(s->file, (PHYSFS_uint64) pos))
         return SZ_OK;
     return SZE_FAIL;
@@ -209,7 +209,7 @@ static void lzma_file_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
  */
 static LZMAfile * lzma_find_file(LZMAarchive *archive, const char *name)
 {
-    LZMAfile *file = bsearch(name, archive->files, archive->db.Database.NumFiles, sizeof(*archive->files), lzma_file_cmp_stdlib); // FIXME: Should become __PHYSFS_search!!!
+    LZMAfile *file = bsearch(name, archive->files, archive->db.Database.NumFiles, sizeof(*archive->files), lzma_file_cmp_stdlib); /* FIXME: Should become __PHYSFS_search!!! */
 
     BAIL_IF_MACRO(file == NULL, ERR_NO_SUCH_FILE, NULL);
 
@@ -225,10 +225,10 @@ static int lzma_file_init(LZMAarchive *archive, PHYSFS_uint32 fileIndex)
     LZMAfile *file = &archive->files[fileIndex];
     PHYSFS_uint32 folderIndex = archive->db.FileIndexToFolderIndexMap[fileIndex];
 
-    file->index = fileIndex; // Store index into 7z array, since we sort our own.
+    file->index = fileIndex; /* Store index into 7z array, since we sort our own. */
     file->archive = archive;
-    file->folder = (folderIndex != (PHYSFS_uint32)-1 ? &archive->folders[folderIndex] : NULL); // Directories don't have a folder (they contain no own data...)
-    file->item = &archive->db.Database.Files[fileIndex]; // Holds crucial data and is often referenced -> Store link
+    file->folder = (folderIndex != (PHYSFS_uint32)-1 ? &archive->folders[folderIndex] : NULL); /* Directories don't have a folder (they contain no own data...) */
+    file->item = &archive->db.Database.Files[fileIndex]; /* Holds crucial data and is often referenced -> Store link */
     file->position = 0;
     file->offset = 0; /* Offset will be set by LZMA_read() */
 
@@ -247,7 +247,7 @@ static int lzma_files_init(LZMAarchive *archive)
     {
         if (!lzma_file_init(archive, fileIndex))
         {
-            return 0; // FALSE on failure
+            return 0; /* FALSE on failure */
         }
     } /* for */
 
@@ -450,7 +450,7 @@ static int LZMA_isArchive(const char *filename, int forWriting)
     /* Read signature bytes */
     if (__PHYSFS_platformRead(in, sig, k7zSignatureSize, 1) != 1)
     {
-        __PHYSFS_platformClose(in); // Don't forget to close the file before returning...
+        __PHYSFS_platformClose(in); /* Don't forget to close the file before returning... */
         BAIL_MACRO(NULL, 0);
     }
 
@@ -478,7 +478,7 @@ static void *LZMA_openArchive(const char *name, int forWriting)
     {
         __PHYSFS_platformClose(archive->stream.file);
         lzma_archive_exit(archive);
-        return NULL; // Error is set by platformOpenRead!
+        return NULL; /* Error is set by platformOpenRead! */
     }
 
     CrcGenerateTable();
@@ -491,7 +491,7 @@ static void *LZMA_openArchive(const char *name, int forWriting)
         SzArDbExFree(&archive->db, SzFreePhysicsFS);
         __PHYSFS_platformClose(archive->stream.file);
         lzma_archive_exit(archive);
-        return NULL; // Error is set by lzma_err!
+        return NULL; /* Error is set by lzma_err! */
     } /* if */
 
     len = archive->db.Database.NumFiles * sizeof (LZMAfile);
@@ -568,7 +568,7 @@ static void LZMA_enumerateFiles(dvoid *opaque, const char *dname,
         if (dlen)
         {
             file = lzma_find_file(archive, dname);
-            if (file != NULL) // if 'file' is NULL it should stay so, otherwise errors will not be handled
+            if (file != NULL) /* if 'file' is NULL it should stay so, otherwise errors will not be handled */
                 file += 1;
         }
         else
@@ -617,7 +617,7 @@ static PHYSFS_sint64 LZMA_getLastModTime(dvoid *opaque,
     *fileExists = (file != NULL);
 
     BAIL_IF_MACRO(file == NULL, NULL, -1);
-	BAIL_IF_MACRO(!file->item->IsLastWriteTimeDefined, NULL, -1); // write-time may not be defined for every file
+	BAIL_IF_MACRO(!file->item->IsLastWriteTimeDefined, NULL, -1); /* write-time may not be defined for every file */
 
     return lzma_filetime_to_unix_timestamp(&file->item->LastWriteTime);
 } /* LZMA_getLastModTime */
@@ -650,7 +650,7 @@ static fvoid *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
     BAIL_IF_MACRO(file->folder == NULL, ERR_NOT_A_FILE, NULL);
 
     file->position = 0;
-    file->folder->references++; // Increase refcount for automatic cleanup...
+    file->folder->references++; /* Increase refcount for automatic cleanup... */
 
     return file;
 } /* LZMA_openRead */
