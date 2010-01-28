@@ -604,13 +604,13 @@ int __PHYSFS_platformEOF(void *opaque)
 
 int __PHYSFS_platformFlush(void *opaque)
 {
-    return(os2err(DosResetBuffer((HFILE) opaque) == NO_ERROR));
+    return(os2err(DosResetBuffer((HFILE) opaque)) == NO_ERROR);
 } /* __PHYSFS_platformFlush */
 
 
 int __PHYSFS_platformClose(void *opaque)
 {
-    return(os2err(DosClose((HFILE) opaque) == NO_ERROR));
+    return(os2err(DosClose((HFILE) opaque)) == NO_ERROR);
 } /* __PHYSFS_platformClose */
 
 
@@ -619,7 +619,7 @@ int __PHYSFS_platformDelete(const char *path)
     if (__PHYSFS_platformIsDirectory(path))
         return(os2err(DosDeleteDir(path)) == NO_ERROR);
 
-    return(os2err(DosDelete(path) == NO_ERROR));
+    return(os2err(DosDelete(path)) == NO_ERROR);
 } /* __PHYSFS_platformDelete */
 
 
