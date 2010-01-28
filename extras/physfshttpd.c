@@ -156,14 +156,14 @@ static void serve_http_request(int sock, struct sockaddr *addr,
     {
         printf("out of memory.\n");
         return;
-    } // if
+    } /* if */
     args->addr = (struct sockaddr *) malloc(addrlen);
     if (args->addr == NULL)
     {
         free(args);
         printf("out of memory.\n");
         return;
-    } // if
+    } /* if */
 
     args->sock = sock;
     args->addrlen = addrlen;
