@@ -78,7 +78,7 @@
  *
  * \sa PHYSFSEXT_freeEnumeration
  */
-__EXPORT__ char **PHYSFSEXT_enumerateFilesWildcard(const char *dir,
+PHYSFS_DECL char **PHYSFSEXT_enumerateFilesWildcard(const char *dir,
                                                    const char *wildcard,
                                                    int caseSensitive);
 
@@ -96,7 +96,7 @@ __EXPORT__ char **PHYSFSEXT_enumerateFilesWildcard(const char *dir,
  *
  * \sa PHYSFSEXT_enumerateFilesWildcard
  */
-__EXPORT__ void PHYSFSEXT_freeEnumeration(char **list);
+PHYSFS_DECL void PHYSFSEXT_freeEnumeration(char **list);
 
 
 /**
@@ -143,7 +143,7 @@ __EXPORT__ void PHYSFSEXT_freeEnumeration(char **list);
  * \sa PHYSFS_EnumFilesCallback
  * \sa PHYSFS_enumerateFiles
  */
-__EXPORT__ void PHYSFSEXT_enumerateFilesCallbackWildcard(const char *dir,
+PHYSFS_DECL void PHYSFSEXT_enumerateFilesCallbackWildcard(const char *dir,
                                               const char *wildcard,
                                               int caseSensitive,
                                               PHYSFS_EnumFilesCallback c,
