@@ -228,6 +228,18 @@ extern "C" {
 #define PHYSFS_DECL
 #endif
 
+#if 0  /* !!! FIXME: look into this later. */
+#if defined(PHYSFS_CALL)
+/* do nothing. */
+#elif defined(__WIN32__) && !defined(__GNUC__)
+#define PHYSFS_CALL __cdecl
+#elif defined(__OS2__)  /* use _System, so it works across all compilers. */
+#define PHYSFS_CALL _System
+#else
+#define PHYSFS_CALL
+#endif
+#endif
+
 /**
  * \typedef PHYSFS_uint8
  * \brief An unsigned, 8-bit integer type.
