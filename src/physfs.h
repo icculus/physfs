@@ -212,12 +212,21 @@
 #ifndef _INCLUDE_PHYSFS_H_
 #define _INCLUDE_PHYSFS_H_
 
+#ifdef SWIG
+%module physfs
+%{
+#include "physfs.h"
+%}
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #if defined(PHYSFS_DECL)
 /* do nothing. */
+#elif (defined SWIG)
+#define PHYSFS_DECL extern
 #elif (defined _MSC_VER)
 #define PHYSFS_DECL __declspec(dllexport)
 #elif (defined __SUNPRO_C)
@@ -303,6 +312,7 @@ typedef signed long long      PHYSFS_sint64;
 #endif
 
 
+#ifndef SWIG
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 /* Make sure the types really have the right sizes */
 #define PHYSFS_COMPILE_TIME_ASSERT(name, x)               \
@@ -323,6 +333,7 @@ PHYSFS_COMPILE_TIME_ASSERT(sint64, sizeof(PHYSFS_sint64) == 8);
 #undef PHYSFS_COMPILE_TIME_ASSERT
 
 #endif  /* DOXYGEN_SHOULD_IGNORE_THIS */
+#endif  /* SWIG */
 
 
 /**
@@ -412,6 +423,10 @@ typedef struct PHYSFS_Version
     PHYSFS_uint8 patch; /**< patchlevel */
 } PHYSFS_Version;
 
+
+
+#ifndef SWIG  /* not available from scripting languages. */
+
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 #define PHYSFS_VER_MAJOR 2
 #define PHYSFS_VER_MINOR 1
@@ -443,6 +458,8 @@ typedef struct PHYSFS_Version
     (x)->minor = PHYSFS_VER_MINOR; \
     (x)->patch = PHYSFS_VER_PATCH; \
 }
+
+#endif  /* SWIG */
 
 
 /**
@@ -1373,6 +1390,8 @@ PHYSFS_DECL int PHYSFS_flush(PHYSFS_File *handle);
 
 /* Byteorder stuff... */
 
+#ifndef SWIG  /* not available from scripting languages. */
+
 /**
  * \fn PHYSFS_sint16 PHYSFS_swapSLE16(PHYSFS_sint16 val)
  * \brief Swap littleendian signed 16 to platform's native byte order.
@@ -1536,6 +1555,8 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_swapSBE64(PHYSFS_sint64 val);
  *          any sort of 64-bit support.
  */
 PHYSFS_DECL PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val);
+
+#endif  /* SWIG */
 
 
 /**
@@ -1972,6 +1993,8 @@ PHYSFS_DECL int PHYSFS_isInit(void);
 PHYSFS_DECL int PHYSFS_symbolicLinksPermitted(void);
 
 
+#ifndef SWIG  /* not available from scripting languages. */
+
 /**
  * \struct PHYSFS_Allocator
  * \brief PhysicsFS allocation function pointers.
@@ -2030,6 +2053,8 @@ typedef struct PHYSFS_Allocator
  *           when used between PHYSFS_init() and PHYSFS_deinit() calls.
  */
 PHYSFS_DECL int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
+
+#endif  /* SWIG */
 
 
 /**
@@ -2100,6 +2125,8 @@ PHYSFS_DECL int PHYSFS_mount(const char *newDir,
  */
 PHYSFS_DECL const char *PHYSFS_getMountPoint(const char *dir);
 
+
+#ifndef SWIG  /* not available from scripting languages. */
 
 /**
  * \typedef PHYSFS_StringCallback
@@ -2439,6 +2466,8 @@ PHYSFS_DECL void PHYSFS_utf8FromLatin1(const char *src, char *dst,
  * \sa PHYSFS_setAllocator
  */
 PHYSFS_DECL const PHYSFS_Allocator *PHYSFS_getAllocator(void);
+
+#endif  /* SWIG */
 
 
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
