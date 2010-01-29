@@ -39,7 +39,7 @@ extern "C" {
  *  @return A valid SDL_RWops structure on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-__EXPORT__ SDL_RWops *PHYSFSRWOPS_openRead(const char *fname);
+PHYSFS_DECL SDL_RWops *PHYSFSRWOPS_openRead(const char *fname);
 
 /**
  * Open a platform-independent filename for writing, and make it accessible
@@ -51,7 +51,7 @@ __EXPORT__ SDL_RWops *PHYSFSRWOPS_openRead(const char *fname);
  *  @return A valid SDL_RWops structure on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-__EXPORT__ SDL_RWops *PHYSFSRWOPS_openWrite(const char *fname);
+PHYSFS_DECL SDL_RWops *PHYSFSRWOPS_openWrite(const char *fname);
 
 /**
  * Open a platform-independent filename for appending, and make it accessible
@@ -63,7 +63,7 @@ __EXPORT__ SDL_RWops *PHYSFSRWOPS_openWrite(const char *fname);
  *  @return A valid SDL_RWops structure on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-__EXPORT__ SDL_RWops *PHYSFSRWOPS_openAppend(const char *fname);
+PHYSFS_DECL SDL_RWops *PHYSFSRWOPS_openAppend(const char *fname);
 
 /**
  * Make a SDL_RWops from an existing PhysicsFS file handle. You should
@@ -75,7 +75,7 @@ __EXPORT__ SDL_RWops *PHYSFSRWOPS_openAppend(const char *fname);
  *  @return A valid SDL_RWops structure on success, NULL on error. Specifics
  *           of the error can be gleaned from PHYSFS_getLastError().
  */
-__EXPORT__ SDL_RWops *PHYSFSRWOPS_makeRWops(PHYSFS_file *handle);
+PHYSFS_DECL SDL_RWops *PHYSFSRWOPS_makeRWops(PHYSFS_file *handle);
 
 #ifdef __cplusplus
 }
