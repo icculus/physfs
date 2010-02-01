@@ -5,6 +5,9 @@
 #include "physfs.h"
 %}
 
+/* I _think_ this is safe for now. */
+%warnfilter(451) PHYSFS_ArchiveInfo;
+
 %ignore _INCLUDE_PHYSFS_H_;  /* ignore the include-once blocker. */
 %ignore PHYSFS_DECL;  /* ignore the export define. */
 %ignore PHYSFS_CALL;  /* ignore the calling conventions define. */
