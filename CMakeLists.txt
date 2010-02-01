@@ -426,7 +426,7 @@ IF(PHYSFS_BUILD_PERL)
             OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/physfs-perl.c" "${CMAKE_CURRENT_BINARY_DIR}/physfs.pm"
             MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/extras/physfs-swig.i"
             COMMAND "${SWIG}"
-            ARGS -w451 ${SWIG_OPT_CFLAGS} -perl -outdir "${CMAKE_CURRENT_BINARY_DIR}" -o "${CMAKE_CURRENT_BINARY_DIR}/physfs-perl.c" "${CMAKE_CURRENT_SOURCE_DIR}/extras/physfs-swig.i"
+            ARGS ${SWIG_OPT_CFLAGS} -perl -outdir "${CMAKE_CURRENT_BINARY_DIR}" -o "${CMAKE_CURRENT_BINARY_DIR}/physfs-perl.c" "${CMAKE_CURRENT_SOURCE_DIR}/extras/physfs-swig.i"
             COMMENT "Generating Perl bindings..."
         )
 
