@@ -1066,7 +1066,9 @@ static void open_history_file(void)
 
         do
         {
-            fgets(buf, sizeof (buf), f);
+            if (fgets(buf, sizeof (buf), f) == NULL)
+                break;
+
             if (buf[strlen(buf) - 1] == '\n')
                 buf[strlen(buf) - 1] = '\0';
             add_history(buf);
