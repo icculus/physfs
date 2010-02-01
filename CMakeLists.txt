@@ -358,6 +358,94 @@ IF(PHYSFS_BUILD_WX_TEST)
     ENDIF(wxWidgets_FOUND)
 ENDIF(PHYSFS_BUILD_WX_TEST)
 
+
+# Scripting language bindings...
+
+#CMake's SWIG support is basically useless.
+#FIND_PACKAGE(SWIG)
+
+FIND_PROGRAM(SWIG swig DOC "Path to swig command line app: http://swig.org/")
+IF(NOT SWIG)
+    MESSAGE(STATUS "SWIG not found. You won't be able to build scripting language bindings.")
+ELSE(NOT SWIG)
+    MARK_AS_ADVANCED(SWIG)
+    IF(DEFINED CMAKE_BUILD_TYPE)
+        IF((NOT CMAKE_BUILD_TYPE STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
+            IF(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+                SET(SWIG_OPT_CFLAGS "-small")
+            ELSE(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+                SET(SWIG_OPT_CFLAGS "-O")
+            ENDIF(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+        ENDIF((NOT CMAKE_BUILD_TYPE STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    ENDIF(DEFINED CMAKE_BUILD_TYPE)
+    MACRO(ADD_SCRIPT_BINDING_OPTION _VAR _LANG _DEFVAL)
+        OPTION(${_VAR} "Build ${_LANG} bindings." ${_DEFVAL})
+        MARK_AS_ADVANCED(${_VAR})
+    ENDMACRO(ADD_SCRIPT_BINDING_OPTION)
+    ADD_SCRIPT_BINDING_OPTION(PHYSFS_BUILD_PERL "Perl" TRUE)
+ENDIF(NOT SWIG)
+
+IF(PHYSFS_BUILD_PERL)
+    MESSAGE(STATUS "Configuring Perl bindings...")
+    INCLUDE(FindPerl)
+    IF(NOT PERL_FOUND)
+        MESSAGE(STATUS "Perl not found. You won't be able to build perl bindings.")
+        SET(PHYSFS_BUILD_PERL FALSE)
+    ENDIF(NOT PERL_FOUND)
+
+    MACRO(GET_PERL_CONFIG _KEY _VALUE)
+        IF(PHYSFS_BUILD_PERL)
+            MESSAGE(STATUS "Figuring out perl config value '${_KEY}' ...")
+            EXECUTE_PROCESS(
+                COMMAND ${PERL_EXECUTABLE} -w -e "use Config; print \$Config{${_KEY}};"
+                RESULT_VARIABLE GET_PERL_CONFIG_RC
+                OUTPUT_VARIABLE ${_VALUE}
+            )
+            IF(NOT GET_PERL_CONFIG_RC EQUAL 0)
+                MESSAGE(STATUS "Perl executable ('${PERL_EXECUTABLE}') reported failure: ${GET_PERL_CONFIG_RC}")
+                SET(PHYSFS_BUILD_PERL FALSE)
+            ENDIF(NOT GET_PERL_CONFIG_RC EQUAL 0)
+            IF(NOT ${_VALUE})
+                MESSAGE(STATUS "Perl executable ('${PERL_EXECUTABLE}') didn't have a value for '${_KEY}'")
+                SET(PHYSFS_BUILD_PERL FALSE)
+            ENDIF(NOT ${_VALUE})
+
+            IF(PHYSFS_BUILD_PERL)
+                MESSAGE(STATUS "Perl says: '${${_VALUE}}'.")
+            ENDIF(PHYSFS_BUILD_PERL)
+        ENDIF(PHYSFS_BUILD_PERL)
+    ENDMACRO(GET_PERL_CONFIG)
+
+    # !!! FIXME: installsitearch might be the wrong location.
+    GET_PERL_CONFIG("installarchlib" PERL_INCLUDE_PATH)
+    GET_PERL_CONFIG("ccflags" PERL_CCFLAGS)
+    GET_PERL_CONFIG("installsitearch" PERL_INSTALL_PATH)
+
+    IF(PHYSFS_BUILD_PERL)
+        ADD_CUSTOM_COMMAND(
+            OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/physfs-perl.c" "${CMAKE_CURRENT_BINARY_DIR}/physfs.pm"
+            MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/extras/physfs-swig.i"
+            COMMAND "${SWIG}"
+            ARGS -w451 ${SWIG_OPT_CFLAGS} -perl -outdir "${CMAKE_CURRENT_BINARY_DIR}" -o "${CMAKE_CURRENT_BINARY_DIR}/physfs-perl.c" "${CMAKE_CURRENT_SOURCE_DIR}/extras/physfs-swig.i"
+            COMMENT "Generating Perl bindings..."
+        )
+
+        ADD_LIBRARY(physfs-perl SHARED "${CMAKE_CURRENT_BINARY_DIR}/physfs-perl.c")
+        SET_TARGET_PROPERTIES(physfs PROPERTIES VERSION ${PHYSFS_VERSION})
+        SET_TARGET_PROPERTIES(physfs PROPERTIES SOVERSION ${PHYSFS_SOVERSION})
+        TARGET_LINK_LIBRARIES(physfs-perl ${PHYSFS_LIB_TARGET})
+        SET_TARGET_PROPERTIES(physfs-perl PROPERTIES
+            COMPILE_FLAGS "\"-I${PERL_INCLUDE_PATH}/CORE\" ${PERL_CCFLAGS} -w"
+            OUTPUT_NAME "physfs"
+        )
+        INSTALL(TARGETS physfs-perl LIBRARY DESTINATION "${PERL_INSTALL_PATH}")
+        INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/physfs.pm" DESTINATION "${PERL_INSTALL_PATH}")
+        MESSAGE(STATUS "Perl bindings configured!")
+    ELSE(PHYSFS_BUILD_PERL)
+        MESSAGE(STATUS "Couldn't figure out perl configuration. Skipping perl bindings.")
+    ENDIF(PHYSFS_BUILD_PERL)
+ENDIF(PHYSFS_BUILD_PERL)
+
 INSTALL(TARGETS ${PHYSFS_INSTALL_TARGETS}
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
@@ -396,6 +484,7 @@ MESSAGE_BOOL_OPTION("Thread safety" PHYSFS_HAVE_THREAD_SUPPORT)
 MESSAGE_BOOL_OPTION("Build own zlib" PHYSFS_INTERNAL_ZLIB)
 MESSAGE_BOOL_OPTION("Build static library" PHYSFS_BUILD_STATIC)
 MESSAGE_BOOL_OPTION("Build shared library" PHYSFS_BUILD_SHARED)
+MESSAGE_BOOL_OPTION("Build Perl bindings" PHYSFS_BUILD_PERL)
 MESSAGE_BOOL_OPTION("Build wxWidgets test program" PHYSFS_BUILD_WX_TEST)
 MESSAGE_BOOL_OPTION("Build stdio test program" PHYSFS_BUILD_TEST)
 IF(PHYSFS_BUILD_TEST)

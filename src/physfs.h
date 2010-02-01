@@ -212,13 +212,6 @@
 #ifndef _INCLUDE_PHYSFS_H_
 #define _INCLUDE_PHYSFS_H_
 
-#ifdef SWIG
-%module physfs
-%{
-#include "physfs.h"
-%}
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
