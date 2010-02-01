@@ -13,8 +13,8 @@
 %ignore PHYSFS_CALL;  /* ignore the calling conventions define. */
 %ignore PHYSFS_file;  /* legacy type define. */
 
-#ifdef SWIGPERL
-/* The Perl bindings put everything in a namespace, so we don't need PHYSFS_ */
+/* Some bindings put everything in a namespace, so we don't need PHYSFS_ */
+#if defined(SWIGPERL) || defined(SWIGRUBY)
 %rename(File) PHYSFS_File;
 %rename(Version) PHYSFS_Version;
 %rename(ArchiveInfo) PHYSFS_ArchiveInfo;
