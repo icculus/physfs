@@ -448,7 +448,7 @@ IF(PHYSFS_BUILD_PERL)
     MARK_AS_ADVANCED(PERL)
 
     # !!! FIXME: installsitearch might be the wrong location.
-    GET_PERL_CONFIG("installarchlib" PERL_INCLUDE_PATH)
+    GET_PERL_CONFIG("archlibexp" PERL_INCLUDE_PATH)
     GET_PERL_CONFIG("ccflags" PERL_CCFLAGS)
     GET_PERL_CONFIG("installsitearch" PERL_INSTALL_PATH)
 
