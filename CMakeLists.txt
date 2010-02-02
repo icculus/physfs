@@ -416,26 +416,26 @@ ENDIF(NOT SWIG)
 
 IF(PHYSFS_BUILD_PERL)
     MESSAGE(STATUS "Configuring Perl bindings...")
-    INCLUDE(FindPerl)
-    IF(NOT PERL_FOUND)
+    FIND_PROGRAM(PERL perl DOC "Path to perl command line app: http://perl.org/")
+    IF(NOT PERL)
         MESSAGE(STATUS "Perl not found. You won't be able to build perl bindings.")
         SET(PHYSFS_BUILD_PERL FALSE)
-    ENDIF(NOT PERL_FOUND)
+    ENDIF(NOT PERL)
 
     MACRO(GET_PERL_CONFIG _KEY _VALUE)
         IF(PHYSFS_BUILD_PERL)
             MESSAGE(STATUS "Figuring out perl config value '${_KEY}' ...")
             EXECUTE_PROCESS(
-                COMMAND ${PERL_EXECUTABLE} -w -e "use Config; print \$Config{${_KEY}};"
+                COMMAND ${PERL} -w -e "use Config; print \$Config{${_KEY}};"
                 RESULT_VARIABLE GET_PERL_CONFIG_RC
                 OUTPUT_VARIABLE ${_VALUE}
             )
             IF(NOT GET_PERL_CONFIG_RC EQUAL 0)
-                MESSAGE(STATUS "Perl executable ('${PERL_EXECUTABLE}') reported failure: ${GET_PERL_CONFIG_RC}")
+                MESSAGE(STATUS "Perl executable ('${PERL}') reported failure: ${GET_PERL_CONFIG_RC}")
                 SET(PHYSFS_BUILD_PERL FALSE)
             ENDIF(NOT GET_PERL_CONFIG_RC EQUAL 0)
             IF(NOT ${_VALUE})
-                MESSAGE(STATUS "Perl executable ('${PERL_EXECUTABLE}') didn't have a value for '${_KEY}'")
+                MESSAGE(STATUS "Perl executable ('${PERL}') didn't have a value for '${_KEY}'")
                 SET(PHYSFS_BUILD_PERL FALSE)
             ENDIF(NOT ${_VALUE})
 
@@ -444,6 +444,8 @@ IF(PHYSFS_BUILD_PERL)
             ENDIF(PHYSFS_BUILD_PERL)
         ENDIF(PHYSFS_BUILD_PERL)
     ENDMACRO(GET_PERL_CONFIG)
+
+    MARK_AS_ADVANCED(PERL)
 
     # !!! FIXME: installsitearch might be the wrong location.
     GET_PERL_CONFIG("installarchlib" PERL_INCLUDE_PATH)
