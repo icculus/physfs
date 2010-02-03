@@ -346,7 +346,13 @@ ELSE(DOXYGEN_FOUND)
 ENDIF(DOXYGEN_FOUND)
 
 IF(UNIX)
-    ADD_CUSTOM_TARGET(dist ./extras/makedist.sh ${PHYSFS_VERSION} COMMENT "Building source tarball")
+    SET(PHYSFS_TARBALL "${CMAKE_CURRENT_SOURCE_DIR}/../physfs-${PHYSFS_VERSION}.tar.gz")
+    ADD_CUSTOM_TARGET(
+        dist
+        hg archive -t tgz "${PHYSFS_TARBALL}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "Building source tarball '${PHYSFS_TARBALL}'..."
+    )
 ENDIF(UNIX)
 
 MACRO(MESSAGE_BOOL_OPTION _NAME _VALUE)
