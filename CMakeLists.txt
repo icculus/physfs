@@ -407,6 +407,7 @@ ELSE(NOT SWIG)
                 LINK_FLAGS "${_EXTRALDFLAGS}"
                 LIBRARY_OUTPUT_NAME "physfs"
                 LIBRARY_OUTPUT_DIRECTORY "${_TARGETDIR}"
+                CLEAN_DIRECT_OUTPUT 1
             )
             INSTALL(TARGETS ${_TARGET} LIBRARY DESTINATION "${_INSTALLPATH}")
             MESSAGE(STATUS "${_LANG} bindings configured!")
