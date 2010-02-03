@@ -521,7 +521,17 @@ ELSE(DOXYGEN_FOUND)
 ENDIF(DOXYGEN_FOUND)
 
 IF(UNIX)
-    ADD_CUSTOM_TARGET(dist ./extras/makedist.sh ${PHYSFS_VERSION} COMMENT "Building source tarball")
+    ADD_CUSTOM_TARGET(
+        dist
+        ./extras/makedist.sh ${PHYSFS_VERSION}
+        COMMENT "Building source tarball..."
+    )
+    ADD_CUSTOM_TARGET(
+        uninstall
+        "${CMAKE_CURRENT_SOURCE_DIR}/extras/uninstall.sh"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMENT "Uninstall the project..."
+    )
 ENDIF(UNIX)
 
 MACRO(MESSAGE_BOOL_OPTION _NAME _VALUE)
