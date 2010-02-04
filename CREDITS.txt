@@ -103,6 +103,9 @@ Windows .rc file,
 OS/2 updates:
     Dave Yeo
 
+Bug fixes:
+    Patrice Mandin
+
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 
