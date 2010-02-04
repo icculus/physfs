@@ -2,6 +2,10 @@
 
 #include <memory.h>
 
+/* BEGIN PHYSFS CHANGE */
+#include <string.h>
+/* END PHYSFS CHANGE */
+
 #include "7zDecode.h"
 #ifdef _SZ_ONE_DIRECTORY
 #include "LzmaDecode.h"
