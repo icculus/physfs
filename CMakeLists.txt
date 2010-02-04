@@ -434,6 +434,7 @@ IF(PHYSFS_BUILD_PERL)
         MESSAGE(STATUS "Perl not found. You won't be able to build perl bindings.")
         SET(PHYSFS_BUILD_PERL FALSE)
     ENDIF(NOT PERL)
+    MARK_AS_ADVANCED(PERL)
 
     MACRO(GET_PERL_CONFIG _KEY _VALUE)
         IF(PHYSFS_BUILD_PERL)
@@ -457,8 +458,6 @@ IF(PHYSFS_BUILD_PERL)
             ENDIF(PHYSFS_BUILD_PERL)
         ENDIF(PHYSFS_BUILD_PERL)
     ENDMACRO(GET_PERL_CONFIG)
-
-    MARK_AS_ADVANCED(PERL)
 
     # !!! FIXME: installsitearch might be the wrong location.
     GET_PERL_CONFIG("archlibexp" PERL_INCLUDE_PATH)
@@ -491,24 +490,55 @@ IF(PHYSFS_BUILD_PERL)
     )
 ENDIF(PHYSFS_BUILD_PERL)
 
-IF(PHYSFS_BUILD_RUBY)
-    MESSAGE(STATUS "Ruby bindings aren't ready yet. Disabling.")
-    SET(PHYSFS_BUILD_RUBY FALSE)  # !!! FIXME: write me.
-ENDIF(PHYSFS_BUILD_RUBY)
-
+# !!! FIXME: lots of cut-and-paste from perl bindings.
 IF(PHYSFS_BUILD_RUBY)
     MESSAGE(STATUS "Configuring Ruby bindings...")
-    FIND_PACKAGE(Ruby)
-    IF(NOT RUBY_FOUND)
+    FIND_PROGRAM(RUBY ruby DOC "Path to ruby command line app: http://ruby-lang.org/")
+    IF(NOT RUBY)
         MESSAGE(STATUS "Ruby not found. You won't be able to build ruby bindings.")
         SET(PHYSFS_BUILD_RUBY FALSE)
-    ENDIF(NOT RUBY_FOUND)
+    ENDIF(NOT RUBY)
+    MARK_AS_ADVANCED(RUBY)
 
-    #MESSAGE(STATUS "RUBY_EXECUTABLE '${RUBY_EXECUTABLE}'")
-    #MESSAGE(STATUS "RUBY_INCLUDE_DIRS '${RUBY_INCLUDE_DIRS}'")
-    #MESSAGE(STATUS "RUBY_LIBRARY '${RUBY_LIBRARY}'")
-    #MESSAGE(STATUS "RUBY_VERSION '${RUBY_VERSION}'")
-    #CONFIGURE_SWIG_BINDING(Ruby "${PERL_INSTALL_PATH}" "" "" "")
+    MACRO(GET_RUBY_CONFIG _KEY _VALUE)
+        IF(PHYSFS_BUILD_RUBY)
+            MESSAGE(STATUS "Figuring out ruby config value '${_KEY}' ...")
+            EXECUTE_PROCESS(
+                COMMAND ${RUBY} -e "require 'rbconfig'; puts RbConfig::CONFIG['${_KEY}'];"
+                RESULT_VARIABLE GET_RUBY_CONFIG_RC
+                OUTPUT_VARIABLE ${_VALUE}
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            IF(NOT GET_RUBY_CONFIG_RC EQUAL 0)
+                MESSAGE(STATUS "Ruby executable ('${RUBY}') reported failure: ${GET_RUBY_CONFIG_RC}")
+                SET(PHYSFS_BUILD_RUBY FALSE)
+            ENDIF(NOT GET_RUBY_CONFIG_RC EQUAL 0)
+            IF(NOT ${_VALUE})
+                MESSAGE(STATUS "Ruby executable ('${RUBY}') didn't have a value for '${_KEY}'")
+                SET(PHYSFS_BUILD_RUBY FALSE)
+            ENDIF(NOT ${_VALUE})
+
+            IF(PHYSFS_BUILD_RUBY)
+                MESSAGE(STATUS "Ruby says: '${${_VALUE}}'.")
+            ENDIF(PHYSFS_BUILD_RUBY)
+        ENDIF(PHYSFS_BUILD_RUBY)
+    ENDMACRO(GET_RUBY_CONFIG)
+
+    GET_RUBY_CONFIG("archdir" RUBY_INCLUDE_PATH)
+    GET_RUBY_CONFIG("CFLAGS" RUBY_CCFLAGS)
+    GET_RUBY_CONFIG("LDFLAGS" RUBY_LDFLAGS)
+    GET_RUBY_CONFIG("sitearchdir" RUBY_INSTALL_PATH)
+    GET_RUBY_CONFIG("LIBRUBYARG_SHARED" RUBY_LIBRUBY)
+    GET_RUBY_CONFIG("libdir" RUBY_LIBDIR)
+
+    CONFIGURE_SWIG_BINDING(Ruby "${RUBY_INSTALL_PATH}" "" "\"-I${RUBY_INCLUDE_PATH}\" ${RUBY_CCFLAGS} -w" "\"-L${RUBY_LIBDIR}\" ${RUBY_LIBRUBY} ${RUBY_LDFLAGS}")
+    SET_TARGET_PROPERTIES(physfs-ruby PROPERTIES PREFIX "")
+    INSTALL(
+        FILES test/test_physfs.rb
+        DESTINATION bin
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+    )
 ENDIF(PHYSFS_BUILD_RUBY)
 
 
