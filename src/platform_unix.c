@@ -24,7 +24,7 @@
 #include <time.h>
 #include <errno.h>
 
-#if (!defined PHYSFS_NO_PTHREADS_SUPPORT)
+#if (!defined PHYSFS_NO_THREAD_SUPPORT)
 #include <pthread.h>
 #endif
 
@@ -345,7 +345,7 @@ int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 
-#if (defined PHYSFS_NO_PTHREADS_SUPPORT)
+#if (defined PHYSFS_NO_THREAD_SUPPORT)
 
 void *__PHYSFS_platformGetThreadID(void) { return ((void *) 0x0001); }
 void *__PHYSFS_platformCreateMutex(void) { return ((void *) 0x0001); }
@@ -429,7 +429,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     } /* if */
 } /* __PHYSFS_platformReleaseMutex */
 
-#endif /* !PHYSFS_NO_PTHREADS_SUPPORT */
+#endif /* !PHYSFS_NO_THREAD_SUPPORT */
 
 #endif /* PHYSFS_PLATFORM_UNIX */
 
