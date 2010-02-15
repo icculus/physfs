@@ -23,7 +23,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
-#include <sys/stat.h>
 
 #include "physfs_internal.h"
 
@@ -587,29 +586,6 @@ int __PHYSFS_platformExists(const char *fname)
     __PHYSFS_smallFree(wpath);
     return retval;
 } /* __PHYSFS_platformExists */
-
-int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st)
-{
-    int retval = 0;
-    LPWSTR wpath;
-    struct _stat64 pstat;
-    UTF8_TO_UNICODE_STACK_MACRO(wpath, fname);
-    BAIL_IF_MACRO(wpath == NULL, ERR_OUT_OF_MEMORY, -1);
-    
-    retval = _wstat64(wpath, &pstat);
-    if (retval == 0)
-    {
-        st->size = pstat.st_size;
-        st->mtime = pstat.st_mtime;
-        st->atime = pstat.st_atime;
-        st->ctime = pstat.st_ctime;
-        st->is_dir = (pstat.st_mode & _S_IFDIR) ? 1:0;
-        st->is_symlink = 0;
-    } /* if */
-
-    __PHYSFS_smallFree(wpath);
-    return(retval);
-} /*  __PHYSFS_platformStat */
 
 
 static int isSymlinkAttrs(const DWORD attr, const DWORD tag)

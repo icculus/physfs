@@ -423,12 +423,6 @@ static PHYSFS_sint64 HOG_getLastModTime(dvoid *opaque,
 } /* HOG_getLastModTime */
 
 
-static int HOG_stat(dvoid *opaque, const char *name, PHYSFS_Stat *st)
-{
-    return -1;  /* !!! FIXME: write me */
-} /* HOG_stat */
-
-
 static fvoid *HOG_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     HOGinfo *info = ((HOGinfo *) opaque);
@@ -496,7 +490,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
     HOG_openArchive,        /* openArchive() method    */
     HOG_enumerateFiles,     /* enumerateFiles() method */
     HOG_exists,             /* exists() method         */
-    HOG_stat,               /* stat() method           */
     HOG_isDirectory,        /* isDirectory() method    */
     HOG_isSymLink,          /* isSymLink() method      */
     HOG_getLastModTime,     /* getLastModTime() method */

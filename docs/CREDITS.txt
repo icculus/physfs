@@ -105,9 +105,6 @@ OS/2 updates:
 Bug fixes:
     Patrice Mandin
 
-PHYSFS_stat() API:
-    Christoph Nelles
-
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 

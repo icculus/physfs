@@ -443,12 +443,6 @@ static PHYSFS_sint64 WAD_getLastModTime(dvoid *opaque,
 } /* WAD_getLastModTime */
 
 
-static int WAD_stat(dvoid *opaque, const char *name, PHYSFS_Stat *st)
-{
-    return -1;  /* !!! FIXME: write me */
-} /* WAD_stat */
-
-
 static fvoid *WAD_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     WADinfo *info = ((WADinfo *) opaque);
@@ -516,7 +510,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
     WAD_openArchive,        /* openArchive() method    */
     WAD_enumerateFiles,     /* enumerateFiles() method */
     WAD_exists,             /* exists() method         */
-    WAD_stat,               /* stat() method           */
     WAD_isDirectory,        /* isDirectory() method    */
     WAD_isSymLink,          /* isSymLink() method      */
     WAD_getLastModTime,     /* getLastModTime() method */

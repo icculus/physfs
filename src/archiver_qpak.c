@@ -537,12 +537,6 @@ static PHYSFS_sint64 QPAK_getLastModTime(dvoid *opaque,
 } /* QPAK_getLastModTime */
 
 
-static int QPAK_stat(dvoid *opaque, const char *name, PHYSFS_Stat *st)
-{
-    return -1;  /* !!! FIXME: write me */
-} /* QPAK_stat */
-
-
 static fvoid *QPAK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     QPAKinfo *info = ((QPAKinfo *) opaque);
@@ -612,7 +606,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
     QPAK_openArchive,        /* openArchive() method    */
     QPAK_enumerateFiles,     /* enumerateFiles() method */
     QPAK_exists,             /* exists() method         */
-    QPAK_stat,               /* stat() method           */
     QPAK_isDirectory,        /* isDirectory() method    */
     QPAK_isSymLink,          /* isSymLink() method      */
     QPAK_getLastModTime,     /* getLastModTime() method */
