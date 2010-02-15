@@ -623,12 +623,6 @@ static PHYSFS_sint64 LZMA_getLastModTime(dvoid *opaque,
 } /* LZMA_getLastModTime */
 
 
-static int LZMA_stat(dvoid *opaque, const char *name, PHYSFS_Stat *st)
-{
-    return -1;  /* !!! FIXME: write me */
-} /* LZMA_stat */
-
-
 static int LZMA_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
@@ -718,7 +712,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
     LZMA_openArchive,        /* openArchive() method    */
     LZMA_enumerateFiles,     /* enumerateFiles() method */
     LZMA_exists,             /* exists() method         */
-    LZMA_stat,               /* stat() method           */
     LZMA_isDirectory,        /* isDirectory() method    */
     LZMA_isSymLink,          /* isSymLink() method      */
     LZMA_getLastModTime,     /* getLastModTime() method */

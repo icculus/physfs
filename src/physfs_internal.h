@@ -774,12 +774,6 @@ typedef struct
     int (*exists)(dvoid *opaque, const char *name);
 
         /*
-         * Returns zero if filename can be opened for reading and
-         *  information was retreived. Non-zero otherwise.
-         */
-    int (*stat)(dvoid *opaque, const char *name, PHYSFS_Stat *st);
-
-        /*
          * Returns non-zero if filename is really a directory.
          *  This filename is in platform-independent notation.
          *  Symlinks should be followed; if what the symlink points
@@ -1349,12 +1343,6 @@ int __PHYSFS_platformIsSymLink(const char *fname);
  *  or isn't a directory, then the retval is false.
  */
 int __PHYSFS_platformIsDirectory(const char *fname);
-
-
-/*
- * !!! FIXME: comment me.
- */
-int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st);
 
 
 /*
