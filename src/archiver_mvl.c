@@ -380,6 +380,12 @@ static PHYSFS_sint64 MVL_getLastModTime(dvoid *opaque,
 } /* MVL_getLastModTime */
 
 
+static int MVL_stat(dvoid *opaque, const char *name, PHYSFS_Stat *st)
+{
+    return -1;  /* !!! FIXME: write me */
+} /* MVL_stat */
+
+
 static fvoid *MVL_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     MVLinfo *info = ((MVLinfo *) opaque);
@@ -447,6 +453,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
     MVL_openArchive,        /* openArchive() method    */
     MVL_enumerateFiles,     /* enumerateFiles() method */
     MVL_exists,             /* exists() method         */
+    MVL_stat,               /* stat() method           */
     MVL_isDirectory,        /* isDirectory() method    */
     MVL_isSymLink,          /* isSymLink() method      */
     MVL_getLastModTime,     /* getLastModTime() method */

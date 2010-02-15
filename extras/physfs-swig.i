@@ -83,6 +83,7 @@
 %rename(symbolicLinksPermitted) PHYSFS_symbolicLinksPermitted;
 %rename(mount) PHYSFS_mount;
 %rename(getMountPoint) PHYSFS_getMountPoint;
+%rename(stat) PHYSFS_stat;
 #endif  /* SWIGPERL */
 
 %include "../src/physfs.h"

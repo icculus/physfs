@@ -1620,6 +1620,50 @@ int PHYSFS_exists(const char *fname)
     return (PHYSFS_getRealDir(fname) != NULL);
 } /* PHYSFS_exists */
 
+int PHYSFS_stat(const char *_fname, PHYSFS_Stat *st)
+{
+    char *fname;
+    size_t len;
+    int retval = -1;
+
+    BAIL_IF_MACRO(_fname == NULL, ERR_INVALID_ARGUMENT, -1);
+    BAIL_IF_MACRO(st == NULL, ERR_INVALID_ARGUMENT, -1);
+
+    memset(st, 0, sizeof(PHYSFS_Stat));
+    len = strlen(_fname) + 1;
+    fname = (char *) __PHYSFS_smallAlloc(len);
+    BAIL_IF_MACRO(fname == NULL, ERR_OUT_OF_MEMORY, -1);
+
+    if (sanitizePlatformIndependentPath(_fname, fname))
+    {
+        if (*fname == '\0')  /* eh...punt if it's the root dir. */
+        {
+            retval = 0;  /* !!! FIXME: Maybe this should be an error? */
+            st->is_dir = 1;
+        } /* if */
+        else
+        {
+            DirHandle *i;
+            int exists = 0;
+            __PHYSFS_platformGrabMutex(stateLock);
+            for (i = searchPath; ((i != NULL) && (!exists)); i = i->next)
+            {
+                char *arcfname = fname;
+                exists = partOfMountPoint(i, arcfname);
+                if (exists)
+                    retval = 1; /* !!! FIXME: What's the right value? */
+                else if (verifyPath(i, &arcfname, 0))
+                {
+                   retval = i->funcs->stat(i->opaque, arcfname, st);
+                } /* else if */
+            } /* for */
+            __PHYSFS_platformReleaseMutex(stateLock);
+        } /* else */
+    } /* if */
+
+    __PHYSFS_smallFree(fname);
+    return(retval);
+}
 
 PHYSFS_sint64 PHYSFS_getLastModTime(const char *_fname)
 {

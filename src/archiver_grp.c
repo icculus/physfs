@@ -384,6 +384,12 @@ static PHYSFS_sint64 GRP_getLastModTime(dvoid *opaque,
 } /* GRP_getLastModTime */
 
 
+static int GRP_stat(dvoid *opaque, const char *name, PHYSFS_Stat *st)
+{
+    return -1;  /* !!! FIXME: write me */
+} /* GRP_stat */
+
+
 static fvoid *GRP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     GRPinfo *info = (GRPinfo *) opaque;
@@ -451,6 +457,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
     GRP_openArchive,        /* openArchive() method    */
     GRP_enumerateFiles,     /* enumerateFiles() method */
     GRP_exists,             /* exists() method         */
+    GRP_stat,               /* stat() method           */
     GRP_isDirectory,        /* isDirectory() method    */
     GRP_isSymLink,          /* isSymLink() method      */
     GRP_getLastModTime,     /* getLastModTime() method */
