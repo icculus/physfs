@@ -169,6 +169,20 @@ static PHYSFS_sint64 DIR_getLastModTime(dvoid *opaque,
 } /* DIR_getLastModTime */
 
 
+static int DIR_stat(dvoid *opaque, const char *name, PHYSFS_Stat *st)
+{
+    char *d = __PHYSFS_platformCvtToDependent((char *)opaque, name, NULL);
+    int retval = -1;
+
+    BAIL_IF_MACRO(d == NULL, NULL, -1);
+
+    retval = __PHYSFS_platformStat(d, st);
+
+    allocator.Free(d);
+    return(retval);
+} /* DIR_stat */
+
+
 static fvoid *doOpen(dvoid *opaque, const char *name,
                      void *(*openFunc)(const char *filename),
                      int *fileExists)
@@ -261,6 +275,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     DIR_openArchive,        /* openArchive() method    */
     DIR_enumerateFiles,     /* enumerateFiles() method */
     DIR_exists,             /* exists() method         */
+    DIR_stat,               /* stat() method           */
     DIR_isDirectory,        /* isDirectory() method    */
     DIR_isSymLink,          /* isSymLink() method      */
     DIR_getLastModTime,     /* getLastModTime() method */

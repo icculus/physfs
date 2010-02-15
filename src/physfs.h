@@ -2463,6 +2463,42 @@ PHYSFS_DECL const PHYSFS_Allocator *PHYSFS_getAllocator(void);
 #endif  /* SWIG */
 
 
+/**
+ * \struct PHYSFS_Stat
+ * \brief Information on a file in a PhysicsFS filesystem.
+ *
+ * Created as a way to get a file's information without repeated calls and
+ *  without having to open the file.
+ *
+ * \sa PHYSFS_stat
+ */
+typedef struct PHYSFS_Stat
+{
+    int is_dir;
+    int is_symlink;
+    PHYSFS_sint64 size;
+    PHYSFS_sint64 atime;
+    PHYSFS_sint64 mtime;
+    PHYSFS_sint64 ctime;
+} PHYSFS_Stat;
+
+
+/**
+ * \fn int PHYSFS_stat(const char *fname, PHYSFS_Stat * st)
+ * \brief Get information on a file in the search path.
+ *
+ *    \param fname filename in platform-independent notation.
+ *    \param st pointer to an PHYSFS_Stat structure.
+ *   \return 0 on success (file exists and information retreived successfully),
+ *           non-zero otherwise.
+ *
+ * !!! FIXME: have to distinguish between "unsupported", "missing" and
+ * !!! FIXME:  "failure" results.
+ *
+ * \sa PHYSFS_Stat
+ */
+PHYSFS_DECL int PHYSFS_stat(const char *fname, PHYSFS_Stat *st);
+
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
 
 

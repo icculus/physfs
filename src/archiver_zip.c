@@ -1264,6 +1264,12 @@ static PHYSFS_sint64 ZIP_getLastModTime(dvoid *opaque,
 } /* ZIP_getLastModTime */
 
 
+static int ZIP_stat(dvoid *opaque, const char *name, PHYSFS_Stat *st)
+{
+    return -1;  /* !!! FIXME: write me */
+} /* ZIP_stat */
+
+
 static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 {
     ZIPinfo *info = (ZIPinfo *) opaque;
@@ -1422,6 +1428,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
     ZIP_openArchive,        /* openArchive() method    */
     ZIP_enumerateFiles,     /* enumerateFiles() method */
     ZIP_exists,             /* exists() method         */
+    ZIP_stat,               /* stat() method           */
     ZIP_isDirectory,        /* isDirectory() method    */
     ZIP_isSymLink,          /* isSymLink() method      */
     ZIP_getLastModTime,     /* getLastModTime() method */

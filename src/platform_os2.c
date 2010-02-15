@@ -322,6 +322,12 @@ int __PHYSFS_platformIsDirectory(const char *_fname)
 } /* __PHYSFS_platformIsDirectory */
 
 
+int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st)
+{
+    return -1;  /* !!! FIXME: write me */
+} /* __PHYSFS_platformStat */
+
+
 /* !!! FIXME: can we lose the malloc here? */
 char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,

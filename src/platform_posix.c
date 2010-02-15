@@ -127,6 +127,27 @@ int __PHYSFS_platformIsDirectory(const char *fname)
 } /* __PHYSFS_platformIsDirectory */
 
 
+int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st)
+{
+    int retval = 0;
+    struct stat pstat;
+
+    /* !!! FIXME: lstat()? */
+    retval = stat(fname, &pstat);
+    if (retval == 0)
+    {
+        st->size = pstat.st_size;
+        st->mtime = pstat.st_mtime;
+        st->atime = pstat.st_atime;
+        st->ctime = pstat.st_ctime;
+        st->is_symlink = S_ISLNK(pstat.st_mode) ? 1 : 0;
+        st->is_dir = S_ISDIR(pstat.st_mode) ? 1 : 0;
+    } /* if */
+
+    return(retval);
+} /* __PHYSFS_platformStat */
+
+
 char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,
                                       const char *append)
