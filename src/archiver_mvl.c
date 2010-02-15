@@ -312,7 +312,7 @@ static void MVL_enumerateFiles(dvoid *opaque, const char *dname,
 } /* MVL_enumerateFiles */
 
 
-static MVLentry *mvl_find_entry(MVLinfo *info, const char *name)
+static MVLentry *mvl_find_entry(const MVLinfo *info, const char *name)
 {
     char *ptr = strchr(name, '.');
     MVLentry *a = info->entries;
@@ -431,6 +431,27 @@ static int MVL_mkdir(dvoid *opaque, const char *name)
 } /* MVL_mkdir */
 
 
+static int MVL_stat(fvoid *opaque, const char *filename, int *exists,
+                    PHYSFS_Stat *stat)
+{
+    const MVLinfo *info = (const MVLinfo *) opaque;
+    const MVLentry *entry = mvl_find_entry(info, filename);
+
+    *exists = (entry != 0);
+    if (!entry)
+        return 0;
+
+    stat->filesize = entry->size;
+    stat->filetype = PHYSFS_FILETYPE_REGULAR;
+    stat->modtime = info->last_mod_time;
+    stat->createtime = info->last_mod_time;
+    stat->accesstime = 0;
+    stat->readonly = 1;
+
+    return 0;
+} /* MVL_stat */
+
+
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MVL =
 {
     "MVL",
@@ -462,7 +483,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
     MVL_tell,               /* tell() method           */
     MVL_seek,               /* seek() method           */
     MVL_fileLength,         /* fileLength() method     */
-    MVL_fileClose           /* fileClose() method      */
+    MVL_fileClose,          /* fileClose() method      */
+    MVL_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_MVL */

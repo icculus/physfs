@@ -2144,6 +2144,56 @@ int PHYSFS_flush(PHYSFS_File *handle)
 } /* PHYSFS_flush */
 
 
+int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
+{
+    int retval = 0;
+    char *fname;
+    size_t len;
+
+    BAIL_IF_MACRO(_fname == NULL, ERR_INVALID_ARGUMENT, -1);
+    BAIL_IF_MACRO(stat == NULL, ERR_INVALID_ARGUMENT, -1);
+    len = strlen(_fname) + 1;
+    fname = (char *) __PHYSFS_smallAlloc(len);
+    BAIL_IF_MACRO(fname == NULL, ERR_OUT_OF_MEMORY, -1);
+
+    /* !!! FIXME: what should this be set to if we fail completely? */
+    memset(stat, '\0', sizeof (PHYSFS_Stat));
+
+    if (sanitizePlatformIndependentPath(_fname, fname))
+    {
+        if (*fname == '\0')
+        {
+            stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
+            stat->readonly = !writeDir; /* Writeable if we have a writeDir */
+            retval = 0;
+        } /* if */
+        else
+        {
+            DirHandle *i;
+            int exists = 0;
+            __PHYSFS_platformGrabMutex(stateLock);
+            for (i = searchPath; ((i != NULL) && (!exists)); i = i->next)
+            {
+                char *arcfname = fname;
+                exists = partOfMountPoint(i, arcfname);
+                if (exists)
+                    retval = 1; /* !!! FIXME: What's the right value? */
+                else if (verifyPath(i, &arcfname, 0))
+                {
+                    stat->readonly = !(writeDir &&
+                                 (strcmp(writeDir->dirName, i->dirName) == 0));
+                    retval = i->funcs->stat(i->opaque, arcfname, &exists, stat);
+                } /* else if */
+            } /* for */
+            __PHYSFS_platformReleaseMutex(stateLock);
+        } /* else */
+    } /* if */
+
+    __PHYSFS_smallFree(fname);
+    return retval;
+} /* PHYSFS_stat */
+
+
 int PHYSFS_setAllocator(const PHYSFS_Allocator *a)
 {
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);

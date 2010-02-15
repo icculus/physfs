@@ -631,6 +631,25 @@ int __PHYSFS_platformDelete(const char *_path)
 } /* __PHYSFS_platformDelete */
 
 
+/* Convert to a format PhysicsFS can grok... */
+PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
+{
+    struct tm tm;
+
+    tm.tm_sec = ((PHYSFS_uint32) time->.twosecs) * 2;
+    tm.tm_min = time->minutes;
+    tm.tm_hour = time->hours;
+    tm.tm_mday = date->day;
+    tm.tm_mon = date->month;
+    tm.tm_year = ((PHYSFS_uint32) date->year) + 80;
+    tm.tm_wday = -1 /*st_localtz.wDayOfWeek*/;
+    tm.tm_yday = -1;
+    tm.tm_isdst = -1;
+
+    return (PHYSFS_sint64) mktime(&tm);
+} /* os2TimeToUnixTime */
+
+
 PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *_fname)
 {
     const unsigned char *fname = (const unsigned char *) _fname;
@@ -640,22 +659,61 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *_fname)
     APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
     BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, -1);
 
-    /* Convert to a format that mktime() can grok... */
-    tm.tm_sec = ((PHYSFS_uint32) fs.ftimeLastWrite.twosecs) * 2;
-    tm.tm_min = fs.ftimeLastWrite.minutes;
-    tm.tm_hour = fs.ftimeLastWrite.hours;
-    tm.tm_mday = fs.fdateLastWrite.day;
-    tm.tm_mon = fs.fdateLastWrite.month;
-    tm.tm_year = ((PHYSFS_uint32) fs.fdateLastWrite.year) + 80;
-    tm.tm_wday = -1 /*st_localtz.wDayOfWeek*/;
-    tm.tm_yday = -1;
-    tm.tm_isdst = -1;
-
     /* Convert to a format PhysicsFS can grok... */
-    retval = (PHYSFS_sint64) mktime(&tm);
+    retval = os2TimeToUnixTime(&fs.fdateLastWrite, &fs.ftimeLastWrite);
+
     BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
     return retval;
 } /* __PHYSFS_platformGetLastModTime */
+
+
+static int __PHYSFS_platformStat(const char *_fname, int *exists,
+                                 PHYSFS_Stat *stat)
+{
+    struct tm tm;
+    FILESTATUS3 fs;
+    const unsigned char *fname = (const unsigned char *) _fname;
+    const APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
+
+    if (rc != NO_ERROR)
+    {
+        if (rc == ERROR_PATH_NOT_FOUND)
+        {
+            *exists = 0;
+            return 0;
+        } /* if */
+        BAIL_MACRO(get_os2_error_string(rc), -1);
+    } /* if */
+
+    *exists = 1;
+
+    if (fs.attrFile & FILE_DIRECTORY)
+    {
+        stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
+        stat->filesize = 0;
+    } /* if */
+    else
+    {
+        stat->filetype = PHYSFS_FILETYPE_REGULAR;
+        stat->filesize = fs.cbFile;
+    } /* else */
+
+    stat->modtime = os2TimeToUnixTime(&fs.fdateLastWrite, &fs.ftimeLastWrite);
+    if (stat->modtime < 0)
+        stat->modtime = 0;
+
+    stat->accesstime = os2TimeToUnixTime(&fs.fdateLastAccess, &fs.ftimeLastAccess);
+    if (stat->accesstime < 0)
+        stat->accesstime = 0;
+
+    stat->createtime = os2TimeToUnixTime(&fs.fdateCreation, &fs.ftimeCreation);
+    if (stat->createtime < 0)
+        stat->createtime = 0;
+
+    stat->readonly = ((fs.attrFile & FILE_READONLY) == FILE_READONLY);
+
+    return 0;
+} /* __PHYSFS_platformStat */
 
 
 void *__PHYSFS_platformGetThreadID(void)

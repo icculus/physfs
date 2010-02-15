@@ -83,6 +83,8 @@
 %rename(symbolicLinksPermitted) PHYSFS_symbolicLinksPermitted;
 %rename(mount) PHYSFS_mount;
 %rename(getMountPoint) PHYSFS_getMountPoint;
+%rename(Stat) PHYSFS_Stat;   /* !!! FIXME: case insensitive script languages? */
+%rename(stat) PHYSFS_stat;
 #endif  /* SWIGPERL */
 
 %include "../src/physfs.h"

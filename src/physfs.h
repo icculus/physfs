@@ -417,7 +417,6 @@ typedef struct PHYSFS_Version
 } PHYSFS_Version;
 
 
-
 #ifndef SWIG  /* not available from scripting languages. */
 
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
@@ -2462,6 +2461,60 @@ PHYSFS_DECL const PHYSFS_Allocator *PHYSFS_getAllocator(void);
 
 #endif  /* SWIG */
 
+/**
+ * \enum PHYSFS_FileType
+ * \brief Type of a File
+ *
+ * Possible types of a file.
+ *
+ * \sa PHYSFS_stat
+ */
+typedef enum PHYSFS_FileType
+{
+	PHYSFS_FILETYPE_REGULAR, /**< a normal file */
+	PHYSFS_FILETYPE_DIRECTORY, /**< a directory */
+	PHYSFS_FILETYPE_SYMLINK, /**< a symlink */
+	PHYSFS_FILETYPE_OTHER /**< something completely different like a device */
+} PHYSFS_FileType;
+
+/**
+ * \struct PHYSFS_Stat
+ * \brief Meta data for a file or directory
+ *
+ * Container for various meta data about a file in the virtual file system.
+ * PHYSFS_stat() uses this structure for returning the information. The time
+ * data will be either a real timestamp or -1 if there is none. So every value
+ * is at least epoch. The FileSize is only valid for real files. And the
+ * readonly tells you whether when you open a file for writing you are writing
+ * to the same file as if you were opening it, given you have enough
+ * filesystem rights to do that.
+ *
+ * \sa PHYSFS_stat
+ * \sa PHYSFS_FileType
+ */
+typedef struct PHYSFS_Stat
+{
+	PHYSFS_sint64 filesize; /**< size in bytes, -1 for non-files and unknown */
+	PHYSFS_sint64 modtime;  /**< same value as PHYSFS_getLastModTime() */
+	PHYSFS_sint64 createtime; /**< like modtime, but for file creation time */
+	PHYSFS_sint64 accesstime; /**< like modtime, but for file access time */
+	PHYSFS_FileType filetype; /**< File? Directory? Symlink? */
+	int readonly; /**< non-zero if read only, zero if writable. */
+} PHYSFS_Stat;
+
+/**
+ * \fn int PHYSFS_stat(const char *fname, PHYSFS_Stat *stat)
+ * \brief Get various information about a directory or a file.
+ *
+ * Obtain various information about a file or directory from the meta data.
+ *
+ *    \param fname filename to check, in platform-indepedent notation.
+ *    \param stat pointer to structure to fill in with data about (fname).
+ *   \return 0 on success, non-zero on error.
+ *
+ * \sa PHYSFS_Stat
+ */
+PHYSFS_DECL int PHYSFS_stat(const char *fname, PHYSFS_Stat *stat);
 
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
 

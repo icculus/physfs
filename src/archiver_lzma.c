@@ -207,7 +207,7 @@ static void lzma_file_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 /*
  * Find entry 'name' in 'archive'
  */
-static LZMAfile * lzma_find_file(LZMAarchive *archive, const char *name)
+static LZMAfile * lzma_find_file(const LZMAarchive *archive, const char *name)
 {
     LZMAfile *file = bsearch(name, archive->files, archive->db.Database.NumFiles, sizeof(*archive->files), lzma_file_cmp_stdlib); /* FIXME: Should become __PHYSFS_search!!! */
 
@@ -695,6 +695,42 @@ static int LZMA_mkdir(dvoid *opaque, const char *name)
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* LZMA_mkdir */
 
+static int LZMA_stat(fvoid *opaque, const char *filename, int *exists,
+                     PHYSFS_Stat *stat)
+{
+    const LZMAarchive *archive = (const LZMAarchive *) opaque;
+    const LZMAfile *file = lzma_find_file(archive, filename);
+
+    *exists = (file != 0);
+    if (!file)
+        return 0;
+
+    if(file->item->IsDirectory)
+    {
+        stat->filesize = 0;
+        stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
+    } /* if */
+    else
+    {
+        stat->filesize = (PHYSFS_sint64) file->item->Size;
+        stat->filetype = PHYSFS_FILETYPE_REGULAR;
+    } /* else */
+
+    /* !!! FIXME: the 0's should be -1's? */
+    if (file->item->IsLastWriteTimeDefined)
+        stat->modtime = lzma_filetime_to_unix_timestamp(&file->item->LastWriteTime);
+    else
+        stat->modtime = 0;
+
+    /* real create and accesstype are currently not in the lzma SDK */
+    stat->createtime = stat->modtime;
+    stat->accesstime = 0;
+
+    stat->readonly = 1;  /* 7zips are always read only */
+
+    return 0;
+} /* LZMA_stat */
+
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_LZMA =
 {
@@ -727,7 +763,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
     LZMA_tell,               /* tell() method           */
     LZMA_seek,               /* seek() method           */
     LZMA_fileLength,         /* fileLength() method     */
-    LZMA_fileClose           /* fileClose() method      */
+    LZMA_fileClose,          /* fileClose() method      */
+    LZMA_stat         /* stat() method    */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_7Z */

@@ -773,7 +773,6 @@ static int cmd_filelength(char *args)
     return 1;
 } /* cmd_filelength */
 
-
 #define WRITESTR "The cat sat on the mat.\n\n"
 
 static int cmd_append(char *args)
@@ -872,12 +871,13 @@ static int cmd_write(char *args)
 } /* cmd_write */
 
 
-static void modTimeToStr(PHYSFS_sint64 modtime, char *modstr, size_t strsize)
+static char* modTimeToStr(PHYSFS_sint64 modtime, char *modstr, size_t strsize)
 {
     time_t t = (time_t) modtime;
     char *str = ctime(&t);
     strncpy(modstr, str, strsize);
     modstr[strsize-1] = '\0';
+    return modstr;
 } /* modTimeToStr */
 
 
@@ -895,6 +895,44 @@ static int cmd_getlastmodtime(char *args)
 
     return 1;
 } /* cmd_getLastModTime */
+
+static int cmd_stat(char *args)
+{
+    PHYSFS_Stat stat;
+    char timestring[65];
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    if(PHYSFS_stat(args, &stat))
+    {
+        printf("failed to stat. Reason [%s].\n", PHYSFS_getLastError());
+        return 1;
+    } /* if */
+
+    printf("Filename: %s\n", args);
+    printf("Size %d\n",(int) stat.filesize);
+
+    if(stat.filetype == PHYSFS_FILETYPE_REGULAR)
+        printf("Type: File\n");
+    else if(stat.filetype == PHYSFS_FILETYPE_DIRECTORY)
+        printf("Type: Directory\n");
+    else if(stat.filetype == PHYSFS_FILETYPE_SYMLINK)
+        printf("Type: Symlink\n");
+    else
+        printf("Type: Unknown\n");
+
+    printf("Created at: %s", modTimeToStr(stat.createtime, timestring, 64));
+    printf("Last modified at: %s", modTimeToStr(stat.modtime, timestring, 64));
+    printf("Last accessed at: %s", modTimeToStr(stat.accesstime, timestring, 64));
+    printf("Readonly: %s\n", stat.readonly ? "true" : "false");
+
+    return 1;
+} /* cmd_filelength */
+
 
 
 /* must have spaces trimmed prior to this call. */
@@ -959,6 +997,7 @@ static const command_info commands[] =
     { "issymlink",      cmd_issymlink,      1, "<fileToCheck>"              },
     { "cat",            cmd_cat,            1, "<fileToCat>"                },
     { "filelength",     cmd_filelength,     1, "<fileToCheck>"              },
+    { "stat",           cmd_stat,           1, "<fileToStat>"               },
     { "append",         cmd_append,         1, "<fileToAppend>"             },
     { "write",          cmd_write,          1, "<fileToCreateOrTrash>"      },
     { "getlastmodtime", cmd_getlastmodtime, 1, "<fileToExamine>"            },
@@ -1166,6 +1205,7 @@ int main(int argc, char **argv)
     open_history_file();
 
     printf("Enter commands. Enter \"help\" for instructions.\n");
+    fflush(stdout);
 
     do
     {
@@ -1176,6 +1216,7 @@ int main(int argc, char **argv)
         buf = (char *) malloc(512);
         memset(buf, '\0', 512);
         printf("> ");
+        fflush(stdout);
         for (i = 0; i < 511; i++)
         {
             int ch = fgetc(stdin);
@@ -1202,6 +1243,7 @@ int main(int argc, char **argv)
 #endif
 
         rc = process_command(buf);
+        fflush(stdout);
         if (buf != NULL)
             free(buf);
     } while (rc);

@@ -316,7 +316,7 @@ static void GRP_enumerateFiles(dvoid *opaque, const char *dname,
 } /* GRP_enumerateFiles */
 
 
-static GRPentry *grp_find_entry(GRPinfo *info, const char *name)
+static GRPentry *grp_find_entry(const GRPinfo *info, const char *name)
 {
     char *ptr = strchr(name, '.');
     GRPentry *a = info->entries;
@@ -435,6 +435,27 @@ static int GRP_mkdir(dvoid *opaque, const char *name)
 } /* GRP_mkdir */
 
 
+static int GRP_stat(fvoid *opaque, const char *filename, int *exists,
+                    PHYSFS_Stat *stat)
+{
+    const GRPinfo *info = (const GRPinfo *) opaque;
+    const GRPentry *entry = grp_find_entry(info, filename);
+
+    *exists = (entry != 0);
+    if (!entry)
+        return 0;
+
+    stat->filesize = entry->size;
+    stat->filetype = PHYSFS_FILETYPE_REGULAR;
+    stat->modtime = info->last_mod_time;
+    stat->createtime = info->last_mod_time;
+    stat->accesstime = -1;
+    stat->readonly = 1;
+
+    return 0;
+} /* GRP_stat */
+
+
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
 {
     "GRP",
@@ -466,7 +487,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
     GRP_tell,               /* tell() method           */
     GRP_seek,               /* seek() method           */
     GRP_fileLength,         /* fileLength() method     */
-    GRP_fileClose           /* fileClose() method      */
+    GRP_fileClose,          /* fileClose() method      */
+    GRP_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_GRP */
