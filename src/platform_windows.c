@@ -1390,6 +1390,127 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 } /* __PHYSFS_platformGetLastModTime */
 
 
+static int __PHYSFS_platformStatOldWay(const char *filename, int *exists,
+                                       PHYSFS_Stat *stat)
+{
+    WIN32_FIND_DATA winstat;
+    const HANDLE searchhandle = FindFirstFile(filename, &winstat);
+
+    if (searchhandle == INVALID_HANDLE_VALUE)  /* call failed? */
+    {
+        /* !!! FIXME: not errno...try GetLastError() */
+        if (errno == ERROR_FILE_NOT_FOUND)
+        {
+            *exists = 0;
+            return 0;
+        } /* if */
+        BAIL_MACRO(strerror(errno), -1);
+    } /* if */
+
+    FindClose(searchhandle); /* close handle, not needed anymore */
+
+    *exists = 1;
+
+    if (winstat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
+    else if (winstat.dwFileAttributes  & FILE_ATTRIBUTE_OFFLINE)
+        stat->filetype = PHYSFS_FILETYPE_OTHER;
+    else
+        stat->filetype = PHYSFS_FILETYPE_OTHER; /* !!! FIXME: _REGULAR? */
+
+    if (stat->filetype == PHYSFS_FILETYPE_REGULAR)
+        stat->filesize = (((PHYSFS_uint64) winstat.nFileSizeHigh) << 32) | winstat.nFileSizeLow;
+
+    stat->modtime = FileTimeToPhysfsTime(&winstat.ftLastWriteTime);
+    stat->accesstime = FileTimeToPhysfsTime(&winstat.ftLastAccessTime);
+    stat->createtime = FileTimeToPhysfsTime(&winstat.ftCreationTime);
+    stat->readonly = ((winstat.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0);
+
+    return 0;
+} /* __PHYSFS_platformStatOldWay */
+
+
+static int __PHYSFS_platformStatNewWay(const char *filename, int *exists,
+                                       PHYSFS_Stat *stat)
+{
+    WIN32_FILE_ATTRIBUTE_DATA winstat;
+    WCHAR *wstr = NULL;
+    BOOL rc = 0;
+
+    UTF8_TO_UNICODE_STACK_MACRO(wstr, filename);
+    if (!wstr)  /* maybe better luck in the old way... */
+        return __PHYSFS_platformStatOldWay(filename, exists, stat);
+
+    if (pGetFileAttributesExW)
+        rc = pGetFileAttributesExW(wstr, GetFileExInfoStandard, &winstat);
+    else
+    {
+        const int len = (int) (wStrLen(wstr) + 1);
+        char *cp = (char *) __PHYSFS_smallAlloc(len);
+        if (cp)
+        {
+            WideCharToMultiByte(CP_ACP, 0, wstr, len, cp, len, 0, 0);
+            rc = pGetFileAttributesExA(cp, GetFileExInfoStandard, &winstat);
+        } /* if */
+    } /* else */
+
+    __PHYSFS_smallFree(wstr);
+
+    if (!rc)
+    {
+        if (errno == ERROR_FILE_NOT_FOUND)  /* !!! FIXME: errno is wrong */
+        {
+            *exists = 0;
+            return 0;
+        } /* if */
+        else
+        {
+            BAIL_MACRO(strerror(errno), -1);
+        } /* else */
+    } /* if */
+
+    *exists = 1;
+
+    stat->modtime = FileTimeToPhysfsTime(&winstat.ftLastWriteTime);
+    stat->accesstime = FileTimeToPhysfsTime(&winstat.ftLastAccessTime);
+    stat->createtime = FileTimeToPhysfsTime(&winstat.ftCreationTime);
+
+    if(winstat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    {
+        stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
+        stat->filesize = 0;
+    } /* if */
+
+    else if(winstat.dwFileAttributes & (FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_DEVICE))
+    {
+        /* !!! FIXME: what are reparse points? */
+        stat->filetype = PHYSFS_FILETYPE_OTHER;
+        /* !!! FIXME: don't rely on this */
+        stat->filesize = 0;
+    } /* else if */
+
+    /* !!! FIXME: check for symlinks on Vista. */
+
+    else
+    {
+        stat->filetype = PHYSFS_FILETYPE_REGULAR;
+        filesize = (((PHYSFS_uint64) winstat.nFileSizeHigh) << 32) | winstat.nFileSizeLow;
+    } /* else */
+
+    stat->readonly = ((winstat.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0);
+
+    return 0;
+} /* __PHYSFS_platformStatNewWay */
+
+
+int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *stat)
+{
+    if (pGetFileAttributesExW || pGetFileAttributesExA)
+        return __PHYSFS_platformStatNewWay(filename, exists, stat);
+    return __PHYSFS_platformStatOldWay(filename, exists, stat);
+} /* __PHYSFS_platformStat */
+
+
 /* !!! FIXME: Don't use C runtime for allocators? */
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {

@@ -355,7 +355,7 @@ static void HOG_enumerateFiles(dvoid *opaque, const char *dname,
 } /* HOG_enumerateFiles */
 
 
-static HOGentry *hog_find_entry(HOGinfo *info, const char *name)
+static HOGentry *hog_find_entry(const HOGinfo *info, const char *name)
 {
     char *ptr = strchr(name, '.');
     HOGentry *a = info->entries;
@@ -474,6 +474,27 @@ static int HOG_mkdir(dvoid *opaque, const char *name)
 } /* HOG_mkdir */
 
 
+static int HOG_stat(fvoid *opaque, const char *filename, int *exists,
+                    PHYSFS_Stat *stat)
+{
+    const HOGinfo *info = (const HOGinfo *) opaque;
+    const HOGentry *entry = hog_find_entry(info, filename);
+
+    *exists = (entry != 0);
+    if (!entry)
+        return 0;
+
+    stat->filesize = entry->size;
+    stat->filetype = PHYSFS_FILETYPE_REGULAR;
+    stat->modtime = info->last_mod_time;
+    stat->createtime = info->last_mod_time;
+    stat->accesstime = -1;
+    stat->readonly = 1;
+
+    return 0;
+} /* HOG_stat */
+
+
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_HOG =
 {
     "HOG",
@@ -505,7 +526,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
     HOG_tell,               /* tell() method           */
     HOG_seek,               /* seek() method           */
     HOG_fileLength,         /* fileLength() method     */
-    HOG_fileClose           /* fileClose() method      */
+    HOG_fileClose,          /* fileClose() method      */
+    HOG_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_HOG */

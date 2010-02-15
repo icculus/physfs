@@ -509,7 +509,8 @@ static void zip_free_entries(ZIPentry *entries, PHYSFS_uint32 max)
  *  notation. Directories don't have ZIPentries associated with them, but 
  *  (*isDir) will be set to non-zero if a dir was hit.
  */
-static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path, int *isDir)
+static ZIPentry *zip_find_entry(const ZIPinfo *info, const char *path,
+                                int *isDir)
 {
     ZIPentry *a = info->entries;
     PHYSFS_sint32 pathlen = strlen(path);
@@ -1406,6 +1407,44 @@ static int ZIP_mkdir(dvoid *opaque, const char *name)
 } /* ZIP_mkdir */
 
 
+static int ZIP_stat(fvoid *opaque, const char *filename, int *exists,
+                    PHYSFS_Stat *stat)
+{
+    int isDir = 0;
+    const ZIPinfo *info = (const ZIPinfo *) opaque;
+    const ZIPentry *entry = zip_find_entry(info, filename, &isDir);
+
+    *exists = isDir || (entry != 0);
+    if (!*exists)
+        return 0;
+
+    if (isDir)
+    {
+        stat->filesize = 0;
+        stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
+    } /* if */
+
+    else if (zip_entry_is_symlink(entry))
+    {
+        stat->filesize = 0;
+        stat->filetype = PHYSFS_FILETYPE_SYMLINK;
+    } /* else if */
+
+    else
+    {
+        stat->filesize = entry->uncompressed_size;
+        stat->filetype = PHYSFS_FILETYPE_REGULAR;
+    } /* else */
+
+    stat->modtime = ((entry) ? entry->last_mod_time : 0);
+    stat->createtime = stat->modtime;
+    stat->accesstime = 0;
+    stat->readonly = 1; /* .zip files are always read only */
+
+    return 0;
+} /* ZIP_stat */
+
+
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 {
     "ZIP",
@@ -1437,7 +1476,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
     ZIP_tell,               /* tell() method           */
     ZIP_seek,               /* seek() method           */
     ZIP_fileLength,         /* fileLength() method     */
-    ZIP_fileClose           /* fileClose() method      */
+    ZIP_fileClose,          /* fileClose() method      */
+    ZIP_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_ZIP */

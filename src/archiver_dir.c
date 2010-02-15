@@ -243,6 +243,18 @@ static void DIR_dirClose(dvoid *opaque)
 } /* DIR_dirClose */
 
 
+static int DIR_stat(fvoid *opaque, const char *name, int *exists,
+                    PHYSFS_Stat *stat)
+{
+    char *d = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
+    int retval = 0;
+
+    BAIL_IF_MACRO(d == NULL, NULL, 0);
+    retval = __PHYSFS_platformStat(d, exists, stat);
+    allocator.Free(d);
+    return retval;
+} /* DIR_stat */
+
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 {
@@ -251,7 +263,6 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
     "Ryan C. Gordon <icculus@icculus.org>",
     "http://icculus.org/physfs/",
 };
-
 
 
 const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
@@ -276,7 +287,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     DIR_tell,               /* tell() method           */
     DIR_seek,               /* seek() method           */
     DIR_fileLength,         /* fileLength() method     */
-    DIR_fileClose           /* fileClose() method      */
+    DIR_fileClose,          /* fileClose() method      */
+    DIR_stat                /* stat() method           */
 };
 
 /* end of dir.c ... */

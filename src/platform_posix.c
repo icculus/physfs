@@ -405,6 +405,52 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
     return statbuf.st_mtime;
 } /* __PHYSFS_platformGetLastModTime */
 
+
+int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
+{
+    struct stat statbuf;
+
+    /* !!! FIXME: lstat()? */
+    if (stat(filename, &statbuf))
+    {
+        if (errno == ENOENT)
+        {
+            *exists = 0;
+            return 0;
+        } /* if */
+        else
+        {
+            BAIL_MACRO(strerror(errno), -1);
+        } /* else */
+    } /* if */
+
+    if (S_ISREG(statbuf.st_mode))
+    {
+        st->filetype = PHYSFS_FILETYPE_REGULAR;
+        st->filesize = statbuf.st_size;
+    } /* if */
+
+    else if(S_ISDIR(statbuf.st_mode))
+    {
+        st->filetype = PHYSFS_FILETYPE_DIRECTORY;
+        st->filesize = 0;
+    } /* else if */
+
+    else
+    {
+        st->filetype = PHYSFS_FILETYPE_OTHER;
+        st->filesize = statbuf.st_size;
+    } /* else */
+
+    st->modtime = statbuf.st_mtime;
+    st->createtime = statbuf.st_ctime;
+    st->accesstime = statbuf.st_atime;
+
+    /* !!! FIXME: maybe we should just report full permissions? */
+    st->readonly = access(filename, W_OK);
+    return 0;
+} /* __PHYSFS_platformStat */
+
 #endif  /* PHYSFS_PLATFORM_POSIX */
 
 /* end of posix.c ... */

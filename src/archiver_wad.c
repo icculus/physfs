@@ -361,7 +361,7 @@ static void WAD_enumerateFiles(dvoid *opaque, const char *dname,
 } /* WAD_enumerateFiles */
 
 
-static WADentry *wad_find_entry(WADinfo *info, const char *name)
+static WADentry *wad_find_entry(const WADinfo *info, const char *name)
 {
     WADentry *a = info->entries;
     PHYSFS_sint32 lo = 0;
@@ -494,6 +494,27 @@ static int WAD_mkdir(dvoid *opaque, const char *name)
 } /* WAD_mkdir */
 
 
+static int WAD_stat(fvoid *opaque, const char *filename, int *exists,
+                    PHYSFS_Stat *stat)
+{
+    const WADinfo *info = (const WADinfo *) opaque;
+    const WADentry *entry = wad_find_entry(info, filename);
+
+    *exists = (entry != 0);
+    if (!entry)
+        return 0;
+
+    stat->filesize = entry->size;
+    stat->filetype = PHYSFS_FILETYPE_REGULAR;
+    stat->accesstime = 0;
+    stat->modtime = ((WADinfo *) opaque)->last_mod_time;
+    stat->createtime = ((WADinfo *) opaque)->last_mod_time;
+    stat->readonly = 1; /* WADs are always readonly */
+
+    return 0;
+} /* WAD_stat */
+
+
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_WAD =
 {
     "WAD",
@@ -525,7 +546,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
     WAD_tell,               /* tell() method           */
     WAD_seek,               /* seek() method           */
     WAD_fileLength,         /* fileLength() method     */
-    WAD_fileClose           /* fileClose() method      */
+    WAD_fileClose,          /* fileClose() method      */
+    WAD_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_WAD */

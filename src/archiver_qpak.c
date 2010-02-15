@@ -445,7 +445,8 @@ static void QPAK_enumerateFiles(dvoid *opaque, const char *dname,
  *  notation. Directories don't have QPAKentries associated with them, but 
  *  (*isDir) will be set to non-zero if a dir was hit.
  */
-static QPAKentry *qpak_find_entry(QPAKinfo *info, const char *path, int *isDir)
+static QPAKentry *qpak_find_entry(const QPAKinfo *info, const char *path,
+                                  int *isDir)
 {
     QPAKentry *a = info->entries;
     PHYSFS_sint32 pathlen = strlen(path);
@@ -590,6 +591,37 @@ static int QPAK_mkdir(dvoid *opaque, const char *name)
 } /* QPAK_mkdir */
 
 
+static int QPAK_stat(fvoid *opaque, const char *filename, int *exists,
+                     PHYSFS_Stat *stat)
+{
+    int isDir = 0;
+    const QPAKinfo *info = (const QPAKinfo *) opaque;
+    const QPAKentry *entry = qpak_find_entry(info, filename, &isDir);
+
+    *exists = ((isDir) || (entry != NULL));
+    if (!exists)
+        return 0;
+
+    if (isDir)
+    {
+        stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
+        stat->filesize = 0;
+    } /* if */
+    else
+    {
+        stat->filetype = PHYSFS_FILETYPE_REGULAR;
+        stat->filesize = entry->size;
+    } /* else */
+
+    stat->modtime = info->last_mod_time;
+    stat->createtime = info->last_mod_time;
+    stat->accesstime = 0;
+    stat->readonly = 1;
+
+    return 0;
+} /* QPAK_stat */
+
+
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_QPAK =
 {
     "PAK",
@@ -621,7 +653,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
     QPAK_tell,               /* tell() method           */
     QPAK_seek,               /* seek() method           */
     QPAK_fileLength,         /* fileLength() method     */
-    QPAK_fileClose           /* fileClose() method      */
+    QPAK_fileClose,          /* fileClose() method      */
+    QPAK_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_QPAK */

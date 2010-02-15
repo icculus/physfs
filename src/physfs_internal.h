@@ -937,6 +937,13 @@ typedef struct
          *  file. On failure, call __PHYSFS_setError().
          */
     int (*fileClose)(fvoid *opaque);
+
+        /* !!! FIXME: return info (may be|is) wrong.
+         * Obtain basic file metadata.
+         *  Returns non-zero on success, zero if can't close
+         *  file. On failure, call __PHYSFS_setError().
+         */
+    int (*stat)(fvoid *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
 } PHYSFS_Archiver;
 
 
@@ -1243,6 +1250,13 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque);
  *  return the file length in 8-bit bytes.
  */
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle);
+
+
+/*
+ * !!! FIXME: comment me.
+ */
+int __PHYSFS_platformStat(const char *fn, int *exists, PHYSFS_Stat *stat);
+
 
 /*
  * Determine if a file is at EOF. (opaque) should be cast to whatever data

@@ -561,6 +561,103 @@ int __PHYSFS_platformDelete(const char *path)
 } /* __PHYSFS_platformDelete */
 
 
+/* Shamelessly copied from platform_windows.c */
+static PHYSFS_sint64 FileTimeToPhysfsTime(const FILETIME *ft)
+{
+    SYSTEMTIME st_utc;
+    SYSTEMTIME st_localtz;
+    TIME_ZONE_INFORMATION tzi;
+    DWORD tzid;
+    PHYSFS_sint64 retval;
+    struct tm tm;
+
+    BAIL_IF_MACRO(!FileTimeToSystemTime(ft, &st_utc), winApiStrError(), -1);
+    tzid = GetTimeZoneInformation(&tzi);
+    BAIL_IF_MACRO(tzid == TIME_ZONE_ID_INVALID, winApiStrError(), -1);
+
+    /* (This API is unsupported and fails on non-NT systems. */
+    if (!SystemTimeToTzSpecificLocalTime(&tzi, &st_utc, &st_localtz))
+    {
+        /* do it by hand. Grumble... */
+        ULARGE_INTEGER ui64;
+        FILETIME new_ft;
+        ui64.LowPart = ft->dwLowDateTime;
+        ui64.HighPart = ft->dwHighDateTime;
+
+        if (tzid == TIME_ZONE_ID_STANDARD)
+            tzi.Bias += tzi.StandardBias;
+        else if (tzid == TIME_ZONE_ID_DAYLIGHT)
+            tzi.Bias += tzi.DaylightBias;
+
+        /* convert from minutes to 100-nanosecond increments... */
+        ui64.QuadPart -= (((LONGLONG) tzi.Bias) * (600000000));
+
+        /* Move it back into a FILETIME structure... */
+        new_ft.dwLowDateTime = ui64.LowPart;
+        new_ft.dwHighDateTime = ui64.HighPart;
+
+        /* Convert to something human-readable... */
+        if (!FileTimeToSystemTime(&new_ft, &st_localtz))
+            BAIL_MACRO(winApiStrError(), -1);
+    } /* if */
+
+    /* Convert to a format that mktime() can grok... */
+    tm.tm_sec = st_localtz.wSecond;
+    tm.tm_min = st_localtz.wMinute;
+    tm.tm_hour = st_localtz.wHour;
+    tm.tm_mday = st_localtz.wDay;
+    tm.tm_mon = st_localtz.wMonth - 1;
+    tm.tm_year = st_localtz.wYear - 1900;
+    tm.tm_wday = -1 /*st_localtz.wDayOfWeek*/;
+    tm.tm_yday = -1;
+    tm.tm_isdst = -1;
+
+    /* Convert to a format PhysicsFS can grok... */
+    retval = (PHYSFS_sint64) mktime(&tm);
+    BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
+    return retval;
+} /* FileTimeToPhysfsTime */
+
+
+int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *stat)
+{
+    WIN32_FIND_DATA winstat;
+    const HANDLE searchhandle = FindFirstFile(filename, &winstat);
+
+    if (searchhandle == INVALID_HANDLE_VALUE)  /* call failed? */
+    {
+        /* !!! FIXME: FindFirstFile() doesn't set errno. Use GetLastError()?. */
+        if (errno == ERROR_FILE_NOT_FOUND)
+        {
+            *exists = 0;
+            return 0;
+        } /* if */
+        BAIL_MACRO(win32strerror, -1);
+    } /* if */
+
+    FindClose(searchhandle);  /* close handle, not needed anymore */
+
+    *exists = 1;
+
+    if(winstat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
+    else if (winstat.dwFileAttributes & (FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_ROMMODULE))
+        stat->filetype = PHYSFS_FILETYPE_OTHER;
+    else
+        stat->filetype = PHYSFS_FILETYPE_OTHER;  /* !!! FIXME: _REGULAR? */
+
+    if (stat->filetype == PHYSFS_FILETYPE_REGULAR)
+        stat->filesize = (((PHYSFS_uint64) winstat.nFileSizeHigh) << 32) | winstat.nFileSizeLow;
+
+    stat->modtime = FileTimeToPhysfsTime(&winstat.ftLastWriteTime);
+    stat->accesstime = FileTimeToPhysfsTime(&winstat.ftLastAccessTime);
+    stat->createtime = FileTimeToPhysfsTime(&winstat.ftCreationTime);
+    stat->readonly = ((winstat.dwFileAttributes & (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_INROM)) != 0);
+
+    return 0;
+} /* __PHYSFS_platformStat */
+
+
 /*
  * !!! FIXME: why aren't we using Critical Sections instead of Mutexes?
  * !!! FIXME:  mutexes on Windows are for cross-process sync. CritSects are
@@ -568,7 +665,7 @@ int __PHYSFS_platformDelete(const char *path)
  */
 void *__PHYSFS_platformCreateMutex(void)
 {
-    return (void * CreateMutex(NULL, FALSE, NULL));
+    return ((void *) CreateMutex(NULL, FALSE, NULL));
 } /* __PHYSFS_platformCreateMutex */
 
 
