@@ -1494,7 +1494,7 @@ static int __PHYSFS_platformStatNewWay(const char *filename, int *exists,
     else
     {
         stat->filetype = PHYSFS_FILETYPE_REGULAR;
-        filesize = (((PHYSFS_uint64) winstat.nFileSizeHigh) << 32) | winstat.nFileSizeLow;
+        stat->filesize = (((PHYSFS_uint64) winstat.nFileSizeHigh) << 32) | winstat.nFileSizeLow;
     } /* else */
 
     stat->readonly = ((winstat.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0);
