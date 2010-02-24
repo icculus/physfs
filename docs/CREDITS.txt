@@ -109,6 +109,9 @@ PHYSFS_stat() API:
     Christoph Nelles
     Indy Sams
 
+Bug fixes:
+    Dan Olson
+
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 
