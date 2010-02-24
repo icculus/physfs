@@ -108,7 +108,7 @@ int PHYSFSEXT_locateCorrectCase(char *buf)
     } /* while */
 
     /* check final element... */
-    return locateOneElement(buf ? 0 : -1);
+    return locateOneElement(buf) ? 0 : -1;
 } /* PHYSFSEXT_locateCorrectCase */
 
 
