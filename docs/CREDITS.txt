@@ -110,7 +110,7 @@ PHYSFS_stat() API:
     Indy Sams
 
 Bug fixes:
-    Dan Olson
+    Steven Fuller
 
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
