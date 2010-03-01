@@ -98,6 +98,8 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
         if (strcmp(ent->mnt_type, "iso9660") == 0)
             add_it = 1;
 
+        /* !!! FIXME: udf? automount? */
+
         /* add other mount types here */
 
         if (add_it)
