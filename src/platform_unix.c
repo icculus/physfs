@@ -46,6 +46,10 @@
 
 #include "physfs_internal.h"
 
+/* !!! FIXME: we should probably remove MAXPATHLEN entirely, if we can. */
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024
+#endif
 
 int __PHYSFS_platformInit(void)
 {
