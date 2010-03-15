@@ -23,7 +23,6 @@
 #include <dirent.h>
 #include <time.h>
 #include <errno.h>
-#include <sys/mount.h>
 
 #if (!defined PHYSFS_NO_THREAD_SUPPORT)
 #include <pthread.h>
@@ -34,6 +33,7 @@
 #    undef PHYSFS_HAVE_MNTENT_H /* don't do both... */
 #  endif
 #  include <sys/ucred.h>
+#  include <sys/mount.h>
 #endif
 
 #ifdef PHYSFS_HAVE_MNTENT_H
@@ -42,6 +42,9 @@
 
 #include "physfs_internal.h"
 
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024
+#endif
 
 int __PHYSFS_platformInit(void)
 {
