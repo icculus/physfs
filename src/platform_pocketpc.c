@@ -331,8 +331,8 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
     wchar_t *w_fname = NULL;
 
     UTF8_TO_UNICODE_STACK_MACRO(w_fname, fname);
-    fileHandle = CreateFile(w_fname, mode, FILE_SHARE_READ, NULL,
-                            creation, FILE_ATTRIBUTE_NORMAL, NULL);
+    fileHandle = CreateFile(w_fname, mode, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                            NULL, creation, FILE_ATTRIBUTE_NORMAL, NULL);
     __PHYSFS_smallFree(w_fname);
 
     BAIL_IF_MACRO(fileHandle == INVALID_HANDLE_VALUE, win32strerror(), NULL);
