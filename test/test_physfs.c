@@ -746,6 +746,53 @@ static int cmd_cat(char *args)
 } /* cmd_cat */
 
 
+#define CRC32_BUFFERSIZE 512
+static int cmd_crc32(char *args)
+{
+    PHYSFS_File *f;
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    f = PHYSFS_openRead(args);
+    if (f == NULL)
+        printf("failed to open. Reason: [%s].\n", PHYSFS_getLastError());
+    else
+    {
+        PHYSFS_uint8 buffer[CRC32_BUFFERSIZE];
+        PHYSFS_uint32 crc = -1;
+        PHYSFS_sint64 bytesread;
+
+        while ((bytesread = PHYSFS_read(f, buffer, 1, CRC32_BUFFERSIZE)) > 0)
+        {
+            PHYSFS_uint32 i, bit;
+            for (i = 0; i < bytesread; i++)
+            {
+                for (bit = 0; bit < 8; bit++, buffer[i] >>= 1)
+                    crc = (crc >> 1) ^ (((crc ^ buffer[i]) & 1) ? 0xEDB88320 : 0);
+            } /* for */
+        } /* while */
+
+        if (bytesread < 0)
+        {
+            printf("error while reading. Reason: [%s].\n",
+                   PHYSFS_getLastError());
+            return 1;
+        } /* if */
+
+        PHYSFS_close(f);
+
+        crc ^= -1;
+        printf("CRC32 for %s: 0x%08X\n", args, crc);
+    } /* else */
+
+    return 1;
+} /* cmd_crc32 */
+
+
 static int cmd_filelength(char *args)
 {
     PHYSFS_File *f;
@@ -1003,6 +1050,7 @@ static const command_info commands[] =
     { "getlastmodtime", cmd_getlastmodtime, 1, "<fileToExamine>"            },
     { "setbuffer",      cmd_setbuffer,      1, "<bufferSize>"               },
     { "stressbuffer",   cmd_stressbuffer,   1, "<bufferSize>"               },
+    { "crc32",          cmd_crc32,          1, "<fileToHash>"               },
     { NULL,             NULL,              -1, NULL                         }
 };
 
