@@ -993,8 +993,8 @@ static PHYSFS_sint64 ISO9660_write(fvoid *opaque, const void *buffer,
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ISO9660 =
 {
-    "ISO Image",
-    "ISO9660 Image file",
+    "ISO",
+    "ISO9660 image file",
     "Christoph Nelles <evilazrael@evilazrael.de>",
     "http://www.evilazrael.de",
 };
