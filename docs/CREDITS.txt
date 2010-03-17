@@ -109,6 +109,9 @@ PHYSFS_stat() API:
     Christoph Nelles
     Indy Sams
 
+ISO9660 archiver:
+    Christoph Nelles
+
 Bug fixes:
     Steven Fuller
 

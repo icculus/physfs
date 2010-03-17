@@ -148,6 +148,7 @@ SET(PHYSFS_SRCS
     src/archiver_qpak.c
     src/archiver_wad.c
     src/archiver_zip.c
+    src/archiver_iso9660.c
     ${PHYSFS_BEOS_SRCS}
 )
 

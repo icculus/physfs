@@ -66,6 +66,8 @@ extern const PHYSFS_Archiver       __PHYSFS_Archiver_MVL;
 extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_WAD;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_WAD;
 extern const PHYSFS_Archiver       __PHYSFS_Archiver_DIR;
+extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_ISO9660;
+extern const PHYSFS_Archiver       __PHYSFS_Archiver_ISO9660;
 
 
 static const PHYSFS_ArchiveInfo *supported_types[] =
@@ -91,6 +93,7 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
 #if (defined PHYSFS_SUPPORTS_WAD)
     &__PHYSFS_ArchiveInfo_WAD,
 #endif
+    &__PHYSFS_ArchiveInfo_ISO9660,
     NULL
 };
 
@@ -118,6 +121,7 @@ static const PHYSFS_Archiver *archivers[] =
 #if (defined PHYSFS_SUPPORTS_WAD)
     &__PHYSFS_Archiver_WAD,
 #endif
+    &__PHYSFS_Archiver_ISO9660,
     NULL
 };
 
