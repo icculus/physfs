@@ -93,7 +93,9 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
 #if (defined PHYSFS_SUPPORTS_WAD)
     &__PHYSFS_ArchiveInfo_WAD,
 #endif
+#if (defined PHYSFS_SUPPORTS_ISO9660)
     &__PHYSFS_ArchiveInfo_ISO9660,
+#endif
     NULL
 };
 
@@ -121,7 +123,9 @@ static const PHYSFS_Archiver *archivers[] =
 #if (defined PHYSFS_SUPPORTS_WAD)
     &__PHYSFS_Archiver_WAD,
 #endif
+#if (defined PHYSFS_SUPPORTS_ISO9660)
     &__PHYSFS_Archiver_ISO9660,
+#endif
     NULL
 };
 

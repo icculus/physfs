@@ -22,7 +22,7 @@
  * - Ambiguities in the standard
  */
 
-#include "physfs.h"
+#if (defined PHYSFS_SUPPORTS_GRP)
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -1024,6 +1024,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
     ISO9660_fileClose,          /* fileClose() method      */
     ISO9660_stat                /* stat() method           */
 };
+
+#endif  /* defined PHYSFS_SUPPORTS_ISO9660 */
 
 /* end of archiver_iso9660.c ... */
 
