@@ -1,4 +1,8 @@
-/** \file physfs.h */
+/**
+ * \file physfs.h
+ *
+ * Main header file for PhysicsFS.
+ */
 
 /**
  * \mainpage PhysicsFS
@@ -986,7 +990,7 @@ __EXPORT__ const char *PHYSFS_getRealDir(const char *filename);
  * PHYSFS_freeList(rc);
  * \endcode
  *
- *  ...will print:
+ *  \...will print:
  *
  * \verbatim
  * We've got [x.sav].
@@ -1076,10 +1080,10 @@ __EXPORT__ int PHYSFS_isSymbolicLink(const char *fname);
  *  (Jan 1, 1970). The exact derivation and accuracy of this time depends on
  *  the particular archiver. If there is no reasonable way to obtain this
  *  information for a particular archiver, or there was some sort of error,
- *  this function returns (-1).
+ *  this function returns (\-1).
  *
  *   \param filename filename to check, in platform-independent notation.
- *  \return last modified time of the file. -1 if it can't be determined.
+ *  \return last modified time of the file. \-1 if it can't be determined.
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
 
@@ -1195,7 +1199,7 @@ __EXPORT__ int PHYSFS_close(PHYSFS_File *handle);
  *   \param objCount number of (objSize) objects to read from (handle).
  *  \return number of objects read. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount), as can PHYSFS_eof().
- *            -1 if complete failure.
+ *            \-1 if complete failure.
  *
  * \sa PHYSFS_eof
  */
@@ -1215,7 +1219,7 @@ __EXPORT__ PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
  *   \param objSize size in bytes of objects being read from (handle).
  *   \param objCount number of (objSize) objects to read from (handle).
  *  \return number of objects written. PHYSFS_getLastError() can shed light on
- *           the reason this might be < (objCount). -1 if complete failure.
+ *           the reason this might be < (objCount). \-1 if complete failure.
  */
 __EXPORT__ PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle,
                                       const void *buffer,
@@ -1245,7 +1249,7 @@ __EXPORT__ int PHYSFS_eof(PHYSFS_File *handle);
  * \brief Determine current position within a PhysicsFS filehandle.
  *
  *   \param handle handle returned from PHYSFS_open*().
- *  \return offset in bytes from start of file. -1 if error occurred.
+ *  \return offset in bytes from start of file. \-1 if error occurred.
  *           Specifics of the error can be gleaned from PHYSFS_getLastError().
  *
  * \sa PHYSFS_seek
@@ -1275,13 +1279,13 @@ __EXPORT__ int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos);
  * \brief Get total length of a file in bytes.
  *
  * Note that if the file size can't be determined (since the archive is
- *  "streamed" or whatnot) than this will report (-1). Also note that if
+ *  "streamed" or whatnot) than this will report (\-1). Also note that if
  *  another process/thread is writing to this file at the same time, then
  *  the information this function supplies could be incorrect before you
  *  get it. Use with caution, or better yet, don't use at all.
  *
  *   \param handle handle returned from PHYSFS_open*().
- *  \return size in bytes of the file. -1 if can't be determined.
+ *  \return size in bytes of the file. \-1 if can't be determined.
  *
  * \sa PHYSFS_tell
  * \sa PHYSFS_seek
