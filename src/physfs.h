@@ -1,4 +1,8 @@
-/** \file physfs.h */
+/**
+ * \file physfs.h
+ *
+ * Main header file for PhysicsFS.
+ */
 
 /**
  * \mainpage PhysicsFS
@@ -1015,7 +1019,7 @@ PHYSFS_DECL const char *PHYSFS_getRealDir(const char *filename);
  * PHYSFS_freeList(rc);
  * \endcode
  *
- *  ...will print:
+ *  \...will print:
  *
  * \verbatim
  * We've got [x.sav].
@@ -1105,10 +1109,10 @@ PHYSFS_DECL int PHYSFS_isSymbolicLink(const char *fname);
  *  (Jan 1, 1970). The exact derivation and accuracy of this time depends on
  *  the particular archiver. If there is no reasonable way to obtain this
  *  information for a particular archiver, or there was some sort of error,
- *  this function returns (-1).
+ *  this function returns (\-1).
  *
  *   \param filename filename to check, in platform-independent notation.
- *  \return last modified time of the file. -1 if it can't be determined.
+ *  \return last modified time of the file. \-1 if it can't be determined.
  */
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
 
@@ -1224,7 +1228,7 @@ PHYSFS_DECL int PHYSFS_close(PHYSFS_File *handle);
  *   \param objCount number of (objSize) objects to read from (handle).
  *  \return number of objects read. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount), as can PHYSFS_eof().
- *            -1 if complete failure.
+ *            \-1 if complete failure.
  *
  * \sa PHYSFS_eof
  */
@@ -1244,7 +1248,7 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
  *   \param objSize size in bytes of objects being read from (handle).
  *   \param objCount number of (objSize) objects to read from (handle).
  *  \return number of objects written. PHYSFS_getLastError() can shed light on
- *           the reason this might be < (objCount). -1 if complete failure.
+ *           the reason this might be < (objCount). \-1 if complete failure.
  */
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle,
                                        const void *buffer,
@@ -1274,7 +1278,7 @@ PHYSFS_DECL int PHYSFS_eof(PHYSFS_File *handle);
  * \brief Determine current position within a PhysicsFS filehandle.
  *
  *   \param handle handle returned from PHYSFS_open*().
- *  \return offset in bytes from start of file. -1 if error occurred.
+ *  \return offset in bytes from start of file. \-1 if error occurred.
  *           Specifics of the error can be gleaned from PHYSFS_getLastError().
  *
  * \sa PHYSFS_seek
@@ -1304,13 +1308,13 @@ PHYSFS_DECL int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos);
  * \brief Get total length of a file in bytes.
  *
  * Note that if the file size can't be determined (since the archive is
- *  "streamed" or whatnot) than this will report (-1). Also note that if
+ *  "streamed" or whatnot) than this will report (\-1). Also note that if
  *  another process/thread is writing to this file at the same time, then
  *  the information this function supplies could be incorrect before you
  *  get it. Use with caution, or better yet, don't use at all.
  *
  *   \param handle handle returned from PHYSFS_open*().
- *  \return size in bytes of the file. -1 if can't be determined.
+ *  \return size in bytes of the file. \-1 if can't be determined.
  *
  * \sa PHYSFS_tell
  * \sa PHYSFS_seek
@@ -2433,7 +2437,7 @@ PHYSFS_DECL void PHYSFS_utf8FromLatin1(const char *src, char *dst,
  * (This is for limited, hardcore use. If you don't immediately see a need
  *  for it, you can probably ignore this forever.)
  *
- * This function exposes the function pointers that make up the currently-used
+ * This function exposes the function pointers that make up the currently used
  *  allocator. This can be useful for apps that want to access PhysicsFS's
  *  internal, default allocation routines, as well as for external code that
  *  wants to share the same allocator, even if the application specified their
@@ -2452,7 +2456,7 @@ PHYSFS_DECL void PHYSFS_utf8FromLatin1(const char *src, char *dst,
  *  safely ignore it altogether.
  *
  *  \return Current allocator, as set by PHYSFS_setAllocator(), or PhysicsFS's
- *          internal, default allocator if no application-defined allocator
+ *          internal, default allocator if no application defined allocator
  *          is currently set. Will return NULL if the library is not
  *          initialized.
  *
@@ -2485,7 +2489,7 @@ typedef enum PHYSFS_FileType
  *
  * Container for various meta data about a file in the virtual file system.
  * PHYSFS_stat() uses this structure for returning the information. The time
- * data will be either a real timestamp or -1 if there is none. So every value
+ * data will be either a real timestamp or \-1 if there is none. So every value
  * is at least epoch. The FileSize is only valid for real files. And the
  * readonly tells you whether when you open a file for writing you are writing
  * to the same file as if you were opening it, given you have enough
@@ -2496,7 +2500,7 @@ typedef enum PHYSFS_FileType
  */
 typedef struct PHYSFS_Stat
 {
-	PHYSFS_sint64 filesize; /**< size in bytes, -1 for non-files and unknown */
+	PHYSFS_sint64 filesize; /**< size in bytes, \-1 for non-files and unknown */
 	PHYSFS_sint64 modtime;  /**< same value as PHYSFS_getLastModTime() */
 	PHYSFS_sint64 createtime; /**< like modtime, but for file creation time */
 	PHYSFS_sint64 accesstime; /**< like modtime, but for file access time */
