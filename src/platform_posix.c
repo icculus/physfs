@@ -97,8 +97,21 @@ char *__PHYSFS_platformGetUserName(void)
 char *__PHYSFS_platformGetUserDir(void)
 {
     char *retval = __PHYSFS_platformCopyEnvironmentVariable("HOME");
+
+    /* if the environment variable was set, make sure it's really a dir. */
+    if (retval != NULL)
+    {
+        struct stat statbuf;
+        if ((stat(retval, &statbuf) == -1) || (S_ISDIR(statbuf.st_mode) == 0))
+        {
+            allocator.Free(retval);
+            retval = NULL;
+        } /* if */
+    } /* if */
+
     if (retval == NULL)
         retval = getUserDirByUID();
+
     return retval;
 } /* __PHYSFS_platformGetUserDir */
 
