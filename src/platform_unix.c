@@ -101,6 +101,14 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
         int add_it = 0;
         if (strcmp(ent->mnt_type, "iso9660") == 0)
             add_it = 1;
+        else if (strcmp(ent->mnt_type, "udf") == 0)
+            add_it = 1;
+
+        /* !!! FIXME: these might pick up floppy drives, right? */
+        else if (strcmp(ent->mnt_type, "auto") == 0)
+            add_it = 1;
+        else if (strcmp(ent->mnt_type, "supermount") == 0)
+            add_it = 1;
 
         /* !!! FIXME: udf? automount? */
 
