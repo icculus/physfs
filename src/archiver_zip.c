@@ -373,7 +373,7 @@ static int ZIP_fileClose(fvoid *opaque)
 static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
 {
     PHYSFS_uint8 buf[256];
-    PHYSFS_uint8 extra[4];
+    PHYSFS_uint8 extra[4] = { 0, 0, 0, 0 };
     PHYSFS_sint32 i = 0;
     PHYSFS_sint64 filelen;
     PHYSFS_sint64 filepos;
