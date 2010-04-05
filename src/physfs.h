@@ -1244,9 +1244,9 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
  * The file must be opened for writing.
  *
  *   \param handle retval from PHYSFS_openWrite() or PHYSFS_openAppend().
- *   \param buffer buffer to store read data into.
- *   \param objSize size in bytes of objects being read from (handle).
- *   \param objCount number of (objSize) objects to read from (handle).
+ *   \param buffer buffer of bytes to write to (handle).
+ *   \param objSize size in bytes of objects being written to (handle).
+ *   \param objCount number of (objSize) objects to write to (handle).
  *  \return number of objects written. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount). -1 if complete failure.
  */
