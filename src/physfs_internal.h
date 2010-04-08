@@ -35,6 +35,10 @@
 #define __inline__ inline
 #endif
 
+#if defined(__sun) || defined(sun)
+#include <alloca.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
