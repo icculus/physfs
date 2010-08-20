@@ -165,24 +165,27 @@
  *  This means that if all you care about is English (ASCII characters <= 127)
  *  then you just use regular C strings. If you care about Unicode (and you
  *  should!) then you need to figure out what your platform wants, needs, and
- *  offers. If you are on Windows and build with Unicode support, your TCHAR
- *  strings are two bytes per character (this is called "UCS-2 encoding"). You
+ *  offers. If you are on Windows before Win2000 and build with Unicode
+ *  support, your TCHAR strings are two bytes per character (this is called
+ *  "UCS-2 encoding"). Any modern Windows uses UTF-16, which is two bytes
+ *  per character for most characters, but some characters are four. You
  *  should convert them to UTF-8 before handing them to PhysicsFS with
- *  PHYSFS_utf8FromUcs2(). If you're using Unix or Mac OS X, your wchar_t
- *  strings are four bytes per character ("UCS-4 encoding"). Use
- *  PHYSFS_utf8FromUcs4(). Mac OS X can give you UTF-8 directly from a
- *  CFString, and many Unixes generally give you C strings in UTF-8 format
- *  everywhere. If you have a single-byte high ASCII charset, like so-many
- *  European "codepages" you may be out of luck. We'll convert from "Latin1"
- *  to UTF-8 only, and never back to Latin1. If you're above ASCII 127, all
- *  bets are off: move to Unicode or use your platform's facilities. Passing a
- *  C string with high-ASCII data that isn't UTF-8 encoded will NOT do what
- *  you expect!
+ *  PHYSFS_utf8FromUcs2() or PHYSFS_utf8FromUtf16(). If you're using Unix or
+ *  Mac OS X, your wchar_t strings are four bytes per character ("UCS-4
+ *  encoding"). Use PHYSFS_utf8FromUcs4(). Mac OS X can give you UTF-8
+ *  directly from a CFString or NSString, and many Unixes generally give you C
+ *  strings in UTF-8 format everywhere. If you have a single-byte high ASCII
+ *  charset, like so-many European "codepages" you may be out of luck. We'll
+ *  convert from "Latin1" to UTF-8 only, and never back to Latin1. If you're
+ *  above ASCII 127, all bets are off: move to Unicode or use your platform's
+ *  facilities. Passing a C string with high-ASCII data that isn't UTF-8
+ *  encoded will NOT do what you expect!
  *
- * Naturally, there's also PHYSFS_utf8ToUcs2() and PHYSFS_utf8ToUcs4() to get
- *  data back into a format you like. Behind the scenes, PhysicsFS will use
- *  Unicode where possible: the UTF-8 strings on Windows will be converted
- *  and used with the multibyte Windows APIs, for example.
+ * Naturally, there's also PHYSFS_utf8ToUcs2(), PHYSFS_utf8ToUtf16(), and
+ *  PHYSFS_utf8ToUcs4() to get data back into a format you like. Behind the
+ *  scenes, PhysicsFS will use Unicode where possible: the UTF-8 strings on
+ *  Windows will be converted and used with the multibyte Windows APIs, for
+ *  example.
  *
  * PhysicsFS offers basic encoding conversion support, but not a whole string
  *  library. Get your stuff into whatever format you can work with.
@@ -2355,8 +2358,12 @@ PHYSFS_DECL void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst,
  * \fn void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len)
  * \brief Convert a UCS-2 string to a UTF-8 string.
  *
+ * \warning you almost certainly should use PHYSFS_utf8FromUtf16(), which
+ *  became available in PhysicsFS 2.1, unless you know what you're doing.
+ *
  * UCS-2 strings are 16-bits per character: \c TCHAR on Windows, when building
- *  with Unicode support.
+ *  with Unicode support. Please note that modern versions of Windows use
+ *  UTF-16, not UCS-2. You almost certainly want PHYSFS_utf8FromUtf16() instead.
  *
  * To ensure that the destination buffer is large enough for the conversion,
  *  please allocate a buffer that is double the size of the source buffer.
@@ -2367,12 +2374,11 @@ PHYSFS_DECL void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst,
  *  will always be null-terminated and never have an incomplete UTF-8
  *  sequence at the end. If the buffer length is 0, this function does nothing.
  *
- * Please note that UCS-2 is not UTF-16; we do not support the "surrogate"
- *  values at this time.
- *
  *   \param src Null-terminated source string in UCS-2 format.
  *   \param dst Buffer to store converted UTF-8 string.
  *   \param len Size, in bytes, of destination buffer.
+ *
+ * \sa PHYSFS_utf8FromUtf16
  */
 PHYSFS_DECL void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst,
                                      PHYSFS_uint64 len);
@@ -2381,8 +2387,13 @@ PHYSFS_DECL void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst,
  * \fn PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-8 string to a UCS-2 string.
  *
+ * \warning you almost certainly should use PHYSFS_utf8ToUtf16(), which
+ *  became available in PhysicsFS 2.1, unless you know what you're doing.
+ *
  * UCS-2 strings are 16-bits per character: \c TCHAR on Windows, when building
- *  with Unicode support.
+ *  with Unicode support. Please note that modern versions of Windows use
+ *  UTF-16, not UCS-2. You almost certainly want PHYSFS_utf8ToUtf16() instead,
+ *  but you need to understand how that changes things, too.
  *
  * To ensure that the destination buffer is large enough for the conversion,
  *  please allocate a buffer that is double the size of the source buffer.
@@ -2393,12 +2404,11 @@ PHYSFS_DECL void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst,
  *  will always be null-terminated and never have an incomplete UCS-2
  *  sequence at the end. If the buffer length is 0, this function does nothing.
  *
- * Please note that UCS-2 is not UTF-16; we do not support the "surrogate"
- *  values at this time.
- *
  *   \param src Null-terminated source string in UTF-8 format.
  *   \param dst Buffer to store converted UCS-2 string.
  *   \param len Size, in bytes, of destination buffer.
+ *
+ * \sa PHYSFS_utf8ToUtf16
  */
 PHYSFS_DECL void PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst,
                                    PHYSFS_uint64 len);
@@ -2523,6 +2533,66 @@ typedef struct PHYSFS_Stat
  * \sa PHYSFS_Stat
  */
 PHYSFS_DECL int PHYSFS_stat(const char *fname, PHYSFS_Stat *stat);
+
+/**
+ * \fn void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len)
+ * \brief Convert a UTF-16 string to a UTF-8 string.
+ *
+ * UTF-16 strings are 16-bits per character (except some chars, which are
+ *  32-bits): \c TCHAR on Windows, when building with Unicode support. Modern
+ *  Windows releases use UTF-16. Windows releases before 2000 used TCHAR, but
+ *  only handled UCS-2. UTF-16 _is_ UCS-2, except for the characters that
+ *  are 4 bytes, which aren't representable in UCS-2 at all anyhow. If you
+ *  aren't sure, you should be using UTF-16 at this point on Windows.
+ *
+ * To ensure that the destination buffer is large enough for the conversion,
+ *  please allocate a buffer that is double the size of the source buffer.
+ *  UTF-8 never uses more than 32-bits per character, so while it may shrink
+ *  a UTF-16 string, it may also expand it.
+ *
+ * Strings that don't fit in the destination buffer will be truncated, but
+ *  will always be null-terminated and never have an incomplete UTF-8
+ *  sequence at the end. If the buffer length is 0, this function does nothing.
+ *
+ *   \param src Null-terminated source string in UTF-16 format.
+ *   \param dst Buffer to store converted UTF-8 string.
+ *   \param len Size, in bytes, of destination buffer.
+ */
+PHYSFS_DECL void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst,
+                                      PHYSFS_uint64 len);
+
+/**
+ * \fn PHYSFS_utf8ToUtf16(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len)
+ * \brief Convert a UTF-8 string to a UTF-16 string.
+ *
+ * UTF-16 strings are 16-bits per character (except some chars, which are
+ *  32-bits): \c TCHAR on Windows, when building with Unicode support. Modern
+ *  Windows releases use UTF-16. Windows releases before 2000 used TCHAR, but
+ *  only handled UCS-2. UTF-16 _is_ UCS-2, except for the characters that
+ *  are 4 bytes, which aren't representable in UCS-2 at all anyhow. If you
+ *  aren't sure, you should be using UTF-16 at this point on Windows.
+ *
+ * To ensure that the destination buffer is large enough for the conversion,
+ *  please allocate a buffer that is double the size of the source buffer.
+ *  UTF-8 uses from one to four bytes per character, but UTF-16 always uses
+ *  two to four, so an entirely low-ASCII string will double in size! The
+ *  UTF-16 characters that would take four bytes also take four bytes in UTF-8,
+ *  so you don't need to allocate 4x the space just in case: double will do.
+ *
+ * Strings that don't fit in the destination buffer will be truncated, but
+ *  will always be null-terminated and never have an incomplete UTF-16
+ *  surrogate pair at the end. If the buffer length is 0, this function does
+ *  nothing.
+ *
+ *   \param src Null-terminated source string in UTF-8 format.
+ *   \param dst Buffer to store converted UTF-16 string.
+ *   \param len Size, in bytes, of destination buffer.
+ *
+ * \sa PHYSFS_utf8ToUtf16
+ */
+PHYSFS_DECL void PHYSFS_utf8ToUtf16(const char *src, PHYSFS_uint16 *dst,
+                                    PHYSFS_uint64 len);
+
 
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
 

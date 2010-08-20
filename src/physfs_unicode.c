@@ -215,8 +215,7 @@ void PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len)
         else if (cp == UNICODE_BOGUS_CHAR_VALUE)
             cp = UNICODE_BOGUS_CHAR_CODEPOINT;
 
-        /* !!! BLUESKY: UTF-16 surrogates? */
-        if (cp > 0xFFFF)
+        if (cp > 0xFFFF)  /* UTF-16 surrogates (bogus chars in UCS-2) */
             cp = UNICODE_BOGUS_CHAR_CODEPOINT;
 
         *(dst++) = cp;
@@ -225,6 +224,38 @@ void PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len)
 
     *dst = 0;
 } /* PHYSFS_utf8ToUcs2 */
+
+
+void PHYSFS_utf8ToUtf16(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len)
+{
+    len -= sizeof (PHYSFS_uint16);   /* save room for null char. */
+    while (len >= sizeof (PHYSFS_uint16))
+    {
+        PHYSFS_uint32 cp = utf8codepoint(&src);
+        if (cp == 0)
+            break;
+        else if (cp == UNICODE_BOGUS_CHAR_VALUE)
+            cp = UNICODE_BOGUS_CHAR_CODEPOINT;
+
+        if (cp > 0xFFFF)  /* encode as surrogate pair */
+        {
+            if (len < (sizeof (PHYSFS_uint16) * 2))
+                break;  /* not enough room for the pair, stop now. */
+
+            cp -= 0x10000;  /* Make this a 20-bit value */
+
+            *(dst++) = 0xD800 + ((cp >> 10) & 0x3FF);
+            len -= sizeof (PHYSFS_uint16);
+
+            cp = 0xDC00 + (cp & 0x3FF);
+        } /* if */
+
+        *(dst++) = cp;
+        len -= sizeof (PHYSFS_uint16);
+    } /* while */
+
+    *dst = 0;
+} /* PHYSFS_utf8ToUtf16 */
 
 static void utf8fromcodepoint(PHYSFS_uint32 cp, char **_dst, PHYSFS_uint64 *_len)
 {
@@ -332,6 +363,40 @@ void PHYSFS_utf8FromLatin1(const char *src, char *dst, PHYSFS_uint64 len)
 } /* PHYSFS_utf8FromLatin1 */
 
 #undef UTF8FROMTYPE
+
+
+void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len)
+{
+    if (len == 0)
+        return;
+
+    len--;
+    while (len)
+    {
+        PHYSFS_uint32 cp = (PHYSFS_uint32) *(src++);
+        if (cp == 0)
+            break;
+
+        /* Orphaned second half of surrogate pair? */
+        if ((cp >= 0xDC00) && (cp <= 0xDFFF))
+            cp = UNICODE_BOGUS_CHAR_CODEPOINT;
+        else if ((cp >= 0xD800) && (cp <= 0xDBFF))  /* start surrogate pair! */
+        {
+            const PHYSFS_uint32 pair = (PHYSFS_uint32) *src;
+            if ((pair < 0xDC00) || (pair > 0xDFFF))
+                cp = UNICODE_BOGUS_CHAR_CODEPOINT;
+            else
+            {
+                src++;  // eat the other surrogate.
+                cp = (((cp - 0xD800) << 10) | (pair - 0xDC00));
+            } /* else */
+        } /* else if */
+
+        utf8fromcodepoint(cp, &dst, &len);
+    } /* while */
+
+    *dst = '\0';
+} /* PHYSFS_utf8FromUtf16 */
 
 
 typedef struct CaseFoldMapping
