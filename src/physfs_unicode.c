@@ -305,6 +305,7 @@ static void utf8fromcodepoint(PHYSFS_uint32 cp, char **_dst, PHYSFS_uint64 *_len
 } /* utf8fromcodepoint */
 
 #define UTF8FROMTYPE(typ, src, dst, len) \
+    if (len == 0) return; \
     len--;  \
     while (len) \
     { \
