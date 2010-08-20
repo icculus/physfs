@@ -323,7 +323,7 @@ void PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst, PHYSFS_uint64 len)
 void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len)
 {
     UTF8FROMTYPE(PHYSFS_uint64, src, dst, len);
-} /* PHYSFS_utf8FromUcs4 */
+} /* PHYSFS_utf8FromUcs2 */
 
 /* latin1 maps to unicode codepoints directly, we just utf-8 encode it. */
 void PHYSFS_utf8FromLatin1(const char *src, char *dst, PHYSFS_uint64 len)
@@ -453,7 +453,7 @@ int __PHYSFS_strnicmpASCII(const char *str1, const char *str2, PHYSFS_uint32 n)
     } /* while */
 
     return 0;
-} /* __PHYSFS_stricmpASCII */
+} /* __PHYSFS_strnicmpASCII */
 
 
 /* end of physfs_unicode.c ... */
