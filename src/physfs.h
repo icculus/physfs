@@ -1113,6 +1113,8 @@ PHYSFS_DECL int PHYSFS_isSymbolicLink(const char *fname);
  *
  *   \param filename filename to check, in platform-independent notation.
  *  \return last modified time of the file. -1 if it can't be determined.
+ *
+ * \sa PHYSFS_Stat
  */
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
 
