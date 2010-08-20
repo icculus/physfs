@@ -1625,6 +1625,7 @@ int PHYSFS_exists(const char *fname)
 } /* PHYSFS_exists */
 
 
+/* !!! FIXME: should this just call PHYSFS_stat() now? */
 PHYSFS_sint64 PHYSFS_getLastModTime(const char *_fname)
 {
     PHYSFS_sint64 retval = -1;
