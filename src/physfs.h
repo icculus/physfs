@@ -2563,6 +2563,9 @@ typedef struct PHYSFS_Stat
  */
 PHYSFS_DECL int PHYSFS_stat(const char *fname, PHYSFS_Stat *stat);
 
+
+#ifndef SWIG  /* not available from scripting languages. */
+
 /**
  * \fn void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-16 string to a UTF-8 string.
@@ -2621,6 +2624,8 @@ PHYSFS_DECL void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst,
  */
 PHYSFS_DECL void PHYSFS_utf8ToUtf16(const char *src, PHYSFS_uint16 *dst,
                                     PHYSFS_uint64 len);
+
+#endif  /* SWIG */
 
 
 /**
