@@ -239,6 +239,16 @@ extern "C" {
 #define PHYSFS_DECL
 #endif
 
+#if defined(PHYSFS_DEPRECATED)
+/* do nothing. */
+#elif (defined SWIG)  /* ignore deprecated, since bindings use everything. */
+#define PHYSFS_DEPRECATED
+#elif (__GNUC__ >= 4)  /* technically, this arrived in gcc 3.1, but oh well. */
+#define PHYSFS_DEPRECATED __attribute__((deprecated))
+#else
+#define PHYSFS_DEPRECATED
+#endif
+
 #if 0  /* !!! FIXME: look into this later. */
 #if defined(PHYSFS_CALL)
 /* do nothing. */
@@ -1248,7 +1258,8 @@ PHYSFS_DECL int PHYSFS_close(PHYSFS_File *handle);
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
                                       void *buffer,
                                       PHYSFS_uint32 objSize,
-                                      PHYSFS_uint32 objCount);
+                                      PHYSFS_uint32 objCount)
+                                        PHYSFS_DEPRECATED;
 
 /**
  * \fn PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle, const void *buffer, PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
@@ -1275,7 +1286,8 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle,
                                        const void *buffer,
                                        PHYSFS_uint32 objSize,
-                                       PHYSFS_uint32 objCount);
+                                       PHYSFS_uint32 objCount)
+                                        PHYSFS_DEPRECATED;
 
 
 /* File position stuff... */
