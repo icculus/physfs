@@ -32,7 +32,6 @@
 /* !!! FIXME: if HAVE_ALLOCA_H would be good, too. */
 #if sun
 #include <alloca.h>
-#define __inline__ inline
 #endif
 
 #if defined(__sun) || defined(sun)
@@ -48,6 +47,14 @@ extern "C" {
     ( ((__GNUC__ << 16) + __GNUC_MINOR__) >= (((major) << 16) + (minor)) )
 #else
 #define PHYSFS_MINIMUM_GCC_VERSION(major, minor) (0)
+#endif
+
+#ifdef __cplusplus
+    /* C++ always has a real inline keyword. */
+#elif (defined macintosh) && !(defined __MWERKS__)
+#   define inline
+#elif (defined _MSC_VER)
+#   define inline __inline
 #endif
 
 /*
