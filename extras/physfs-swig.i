@@ -11,6 +11,7 @@
 %ignore _INCLUDE_PHYSFS_H_;  /* ignore the include-once blocker. */
 %ignore PHYSFS_DECL;  /* ignore the export define. */
 %ignore PHYSFS_CALL;  /* ignore the calling conventions define. */
+%ignore PHYSFS_DEPRECATED;  /* ignore the deprecation define. */
 %ignore PHYSFS_file;  /* legacy type define. */
 
 /* Some bindings put everything in a namespace, so we don't need PHYSFS_ */
@@ -85,7 +86,9 @@
 %rename(getMountPoint) PHYSFS_getMountPoint;
 %rename(Stat) PHYSFS_Stat;   /* !!! FIXME: case insensitive script languages? */
 %rename(stat) PHYSFS_stat;
-#endif  /* SWIGPERL */
+%rename(readBytes) PHYSFS_readBytes;
+%rename(writeBytes) PHYSFS_writeBytes;
+#endif
 
 %include "../src/physfs.h"
 
