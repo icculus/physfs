@@ -1627,45 +1627,11 @@ int PHYSFS_exists(const char *fname)
 } /* PHYSFS_exists */
 
 
-/* !!! FIXME: should this just call PHYSFS_stat() now? */
-PHYSFS_sint64 PHYSFS_getLastModTime(const char *_fname)
+PHYSFS_sint64 PHYSFS_getLastModTime(const char *fname)
 {
-    PHYSFS_sint64 retval = -1;
-    char *fname;
-    size_t len;
-
-    BAIL_IF_MACRO(_fname == NULL, ERR_INVALID_ARGUMENT, -1);
-    len = strlen(_fname) + 1;
-    fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MACRO(fname == NULL, ERR_OUT_OF_MEMORY, -1);
-
-    if (sanitizePlatformIndependentPath(_fname, fname))
-    {
-        if (*fname == '\0')   /* eh...punt if it's the root dir. */
-            retval = 1;  /* !!! FIXME: Maybe this should be an error? */
-        else
-        {
-            DirHandle *i;
-            int exists = 0;
-            __PHYSFS_platformGrabMutex(stateLock);
-            for (i = searchPath; ((i != NULL) && (!exists)); i = i->next)
-            {
-                char *arcfname = fname;
-                exists = partOfMountPoint(i, arcfname);
-                if (exists)
-                    retval = 1; /* !!! FIXME: What's the right value? */
-                else if (verifyPath(i, &arcfname, 0))
-                {
-                    retval = i->funcs->getLastModTime(i->opaque, arcfname,
-                                                      &exists);
-                } /* else if */
-            } /* for */
-            __PHYSFS_platformReleaseMutex(stateLock);
-        } /* else */
-    } /* if */
-
-    __PHYSFS_smallFree(fname);
-    return retval;
+    PHYSFS_Stat statbuf;
+    BAIL_IF_MACRO(PHYSFS_stat(fname, &statbuf) != 0, NULL, -1);
+    return statbuf.modtime;
 } /* PHYSFS_getLastModTime */
 
 
