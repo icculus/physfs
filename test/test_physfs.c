@@ -407,9 +407,9 @@ static int cmd_stressbuffer(char *args)
                 {
                     PHYSFS_uint32 right = 1 + (PHYSFS_uint32) (35.0 * rand() / (RAND_MAX + 1.0));
                     PHYSFS_uint32 left = 36 - right;
-                    if (PHYSFS_write(f, buf, left, 1) != 1)
+                    if (PHYSFS_writeBytes(f, buf, left) != left)
                     {
-                        printf("PHYSFS_write() failed: %s.\n", PHYSFS_getLastError());
+                        printf("PHYSFS_writeBytes() failed: %s.\n", PHYSFS_getLastError());
                         PHYSFS_close(f);
                         return 1;
                     } /* if */
@@ -425,9 +425,9 @@ static int cmd_stressbuffer(char *args)
                         } /* if */
                     } /* if */
 
-                    if (PHYSFS_write(f, buf + left, 1, right) != right)
+                    if (PHYSFS_writeBytes(f, buf + left, right) != right)
                     {
-                        printf("PHYSFS_write() failed: %s.\n", PHYSFS_getLastError());
+                        printf("PHYSFS_writeBytes() failed: %s.\n", PHYSFS_getLastError());
                         PHYSFS_close(f);
                         return 1;
                     } /* if */
@@ -480,9 +480,9 @@ static int cmd_stressbuffer(char *args)
                 {
                     PHYSFS_uint32 right = 1 + (PHYSFS_uint32) (35.0 * rand() / (RAND_MAX + 1.0));
                     PHYSFS_uint32 left = 36 - right;
-                    if (PHYSFS_read(f, buf2, left, 1) != 1)
+                    if (PHYSFS_readBytes(f, buf2, left) != left)
                     {
-                        printf("PHYSFS_read() failed: %s.\n", PHYSFS_getLastError());
+                        printf("PHYSFS_readBytes() failed: %s.\n", PHYSFS_getLastError());
                         PHYSFS_close(f);
                         return 1;
                     } /* if */
@@ -498,9 +498,9 @@ static int cmd_stressbuffer(char *args)
                         } /* if */
                     } /* if */
 
-                    if (PHYSFS_read(f, buf2 + left, 1, right) != right)
+                    if (PHYSFS_readBytes(f, buf2 + left, right) != right)
                     {
-                        printf("PHYSFS_read() failed: %s.\n", PHYSFS_getLastError());
+                        printf("PHYSFS_readBytes() failed: %s.\n", PHYSFS_getLastError());
                         PHYSFS_close(f);
                         return 1;
                     } /* if */
@@ -723,7 +723,7 @@ static int cmd_cat(char *args)
             char buffer[128];
             PHYSFS_sint64 rc;
             PHYSFS_sint64 i;
-            rc = PHYSFS_read(f, buffer, 1, sizeof (buffer));
+            rc = PHYSFS_readBytes(f, buffer, sizeof (buffer));
 
             for (i = 0; i < rc; i++)
                 fputc((int) buffer[i], stdout);
@@ -766,7 +766,7 @@ static int cmd_crc32(char *args)
         PHYSFS_uint32 crc = -1;
         PHYSFS_sint64 bytesread;
 
-        while ((bytesread = PHYSFS_read(f, buffer, 1, CRC32_BUFFERSIZE)) > 0)
+        while ((bytesread = PHYSFS_readBytes(f, buffer, CRC32_BUFFERSIZE)) > 0)
         {
             PHYSFS_uint32 i, bit;
             for (i = 0; i < bytesread; i++)
@@ -852,7 +852,7 @@ static int cmd_append(char *args)
         } /* if */
 
         bw = strlen(WRITESTR);
-        rc = PHYSFS_write(f, WRITESTR, 1, bw);
+        rc = PHYSFS_writeBytes(f, WRITESTR, bw);
         if (rc != bw)
         {
             printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n",
@@ -900,7 +900,7 @@ static int cmd_write(char *args)
         } /* if */
 
         bw = strlen(WRITESTR);
-        rc = PHYSFS_write(f, WRITESTR, 1, bw);
+        rc = PHYSFS_writeBytes(f, WRITESTR, bw);
         if (rc != bw)
         {
             printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n",
