@@ -2562,7 +2562,8 @@ typedef struct PHYSFS_Stat
  *
  *    \param fname filename to check, in platform-indepedent notation.
  *    \param stat pointer to structure to fill in with data about (fname).
- *   \return 0 on success, non-zero on error.  // !!! FIXME: arg, that's backwards from everything else in PhysicsFS!
+ *   \return non-zero on success, zero on failure. On failure, (stat)'s
+ *           contents are undefined.
  *
  * \sa PHYSFS_Stat
  */

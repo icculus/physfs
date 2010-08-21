@@ -657,7 +657,7 @@ static int __PHYSFS_platformStat(const char *_fname, int *exists,
             *exists = 0;
             return 0;
         } /* if */
-        BAIL_MACRO(get_os2_error_string(rc), -1);
+        BAIL_MACRO(get_os2_error_string(rc), 0);
     } /* if */
 
     *exists = 1;
@@ -687,7 +687,7 @@ static int __PHYSFS_platformStat(const char *_fname, int *exists,
 
     stat->readonly = ((fs.attrFile & FILE_READONLY) == FILE_READONLY);
 
-    return 0;
+    return 1;
 } /* __PHYSFS_platformStat */
 
 

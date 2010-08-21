@@ -1381,7 +1381,7 @@ static int __PHYSFS_platformStatOldWay(const char *filename, int *exists,
             *exists = 0;
             return 0;
         } /* if */
-        BAIL_MACRO(strerror(errno), -1);
+        BAIL_MACRO(strerror(errno), 0);
     } /* if */
 
     FindClose(searchhandle); /* close handle, not needed anymore */
@@ -1403,7 +1403,7 @@ static int __PHYSFS_platformStatOldWay(const char *filename, int *exists,
     stat->createtime = FileTimeToPhysfsTime(&winstat.ftCreationTime);
     stat->readonly = ((winstat.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0);
 
-    return 0;
+    return 1;
 } /* __PHYSFS_platformStatOldWay */
 
 
@@ -1442,7 +1442,7 @@ static int __PHYSFS_platformStatNewWay(const char *filename, int *exists,
         } /* if */
         else
         {
-            BAIL_MACRO(strerror(errno), -1);
+            BAIL_MACRO(strerror(errno), 0);
         } /* else */
     } /* if */
 
@@ -1476,7 +1476,7 @@ static int __PHYSFS_platformStatNewWay(const char *filename, int *exists,
 
     stat->readonly = ((winstat.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0);
 
-    return 0;
+    return 1;
 } /* __PHYSFS_platformStatNewWay */
 
 

@@ -485,7 +485,7 @@ static int HOG_stat(fvoid *opaque, const char *filename, int *exists,
     stat->accesstime = -1;
     stat->readonly = 1;
 
-    return 0;
+    return 1;
 } /* HOG_stat */
 
 

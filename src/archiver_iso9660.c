@@ -920,7 +920,7 @@ static int ISO9660_stat(dvoid *opaque, const char *name, int *exists,
         stat->filetype = PHYSFS_FILETYPE_REGULAR;
     } /* else */
 
-    return 0;
+    return 1;
 } /* ISO9660_stat */
 
 
