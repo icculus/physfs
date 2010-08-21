@@ -347,7 +347,7 @@ static int iso_readimage(ISO9660Handle *handle, PHYSFS_uint64 where,
                          PHYSFS_uint32 objCount)
 {
     BAIL_IF_MACRO(!__PHYSFS_platformGrabMutex(handle->mutex),
-            ERR_LOCK_VIOLATION, -1)
+            ERR_LOCK_VIOLATION, -1);
     int rc = -1;
     if (where != handle->currpos)
         GOTO_IF_MACRO(!__PHYSFS_platformSeek(handle->fhandle,where), NULL,

@@ -1022,14 +1022,14 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 
 
 /* These get used all over for lessening code clutter. */
-#define BAIL_MACRO(e, r) { __PHYSFS_setError(e); return r; }
-#define BAIL_IF_MACRO(c, e, r) if (c) { __PHYSFS_setError(e); return r; }
-#define BAIL_MACRO_MUTEX(e, m, r) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; }
-#define BAIL_IF_MACRO_MUTEX(c, e, m, r) if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; }
-#define GOTO_MACRO(e, g) { __PHYSFS_setError(e); goto g; }
-#define GOTO_IF_MACRO(c, e, g) if (c) { __PHYSFS_setError(e); goto g; }
-#define GOTO_MACRO_MUTEX(e, m, g) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; }
-#define GOTO_IF_MACRO_MUTEX(c, e, m, g) if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; }
+#define BAIL_MACRO(e, r) do { __PHYSFS_setError(e); return r; } while (0)
+#define BAIL_IF_MACRO(c, e, r) do { if (c) { __PHYSFS_setError(e); return r; } } while (0)
+#define BAIL_MACRO_MUTEX(e, m, r) do {  __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; } while (0)
+#define BAIL_IF_MACRO_MUTEX(c, e, m, r) do { if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; } } while (0)
+#define GOTO_MACRO(e, g) do { __PHYSFS_setError(e); goto g; } while (0)
+#define GOTO_IF_MACRO(c, e, g) do { if (c) { __PHYSFS_setError(e); goto g; } } while (0)
+#define GOTO_MACRO_MUTEX(e, m, g) do { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; } while (0)
+#define GOTO_IF_MACRO_MUTEX(c, e, m, g) do { if (c) { __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; } } while (0)
 
 #define __PHYSFS_ARRAYLEN(x) ( (sizeof (x)) / (sizeof (x[0])) )
 
