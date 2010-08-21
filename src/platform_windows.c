@@ -292,12 +292,10 @@ static int findApiSymbols(void)
     if (dll != NULL)
         LOOKUP_NOFALLBACK(GetUserProfileDirectoryW, osHasUnicode);
 
-    /* !!! FIXME: what do they call advapi32.dll on Win64? */
     dll = libAdvApi32 = LoadLibraryA("advapi32.dll");
     if (dll != NULL)
         LOOKUP(GetUserNameW, osHasUnicode);
 
-    /* !!! FIXME: what do they call kernel32.dll on Win64? */
     dll = libKernel32 = LoadLibraryA("kernel32.dll");
     if (dll != NULL)
     {
