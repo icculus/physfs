@@ -504,7 +504,7 @@ static int WAD_stat(fvoid *opaque, const char *filename, int *exists,
     stat->createtime = ((WADinfo *) opaque)->last_mod_time;
     stat->readonly = 1; /* WADs are always readonly */
 
-    return 0;
+    return 1;
 } /* WAD_stat */
 
 

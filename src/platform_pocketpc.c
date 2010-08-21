@@ -609,7 +609,7 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *stat)
             *exists = 0;
             return 0;
         } /* if */
-        BAIL_MACRO(win32strerror, -1);
+        BAIL_MACRO(win32strerror, 0);
     } /* if */
 
     FindClose(searchhandle);  /* close handle, not needed anymore */
@@ -631,7 +631,7 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *stat)
     stat->createtime = FileTimeToPhysfsTime(&winstat.ftCreationTime);
     stat->readonly = ((winstat.dwFileAttributes & (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_INROM)) != 0);
 
-    return 0;
+    return 1;
 } /* __PHYSFS_platformStat */
 
 

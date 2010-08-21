@@ -1630,7 +1630,7 @@ int PHYSFS_exists(const char *fname)
 PHYSFS_sint64 PHYSFS_getLastModTime(const char *fname)
 {
     PHYSFS_Stat statbuf;
-    BAIL_IF_MACRO(PHYSFS_stat(fname, &statbuf) != 0, NULL, -1);
+    BAIL_IF_MACRO(!PHYSFS_stat(fname, &statbuf), NULL, -1);
     return statbuf.modtime;
 } /* PHYSFS_getLastModTime */
 
@@ -2172,8 +2172,13 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
     fname = (char *) __PHYSFS_smallAlloc(len);
     BAIL_IF_MACRO(fname == NULL, ERR_OUT_OF_MEMORY, -1);
 
-    /* !!! FIXME: what should this be set to if we fail completely? */
-    memset(stat, '\0', sizeof (PHYSFS_Stat));
+    /* set some sane defaults... */
+    stat->filesize = -1;
+    stat->modtime = -1;
+    stat->createtime = -1;
+    stat->accesstime = -1;
+    stat->filetype = PHYSFS_FILETYPE_OTHER;
+    stat->readonly = 1;  /* !!! FIXME */
 
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
@@ -2181,7 +2186,7 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
         {
             stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
             stat->readonly = !writeDir; /* Writeable if we have a writeDir */
-            retval = 0;
+            retval = 1;
         } /* if */
         else
         {
@@ -2193,9 +2198,14 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
                 char *arcfname = fname;
                 exists = partOfMountPoint(i, arcfname);
                 if (exists)
-                    retval = 1; /* !!! FIXME: What's the right value? */
+                {
+                    stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
+                    stat->readonly = 1;  /* !!! FIXME */
+                    retval = 1;
+                } /* if */
                 else if (verifyPath(i, &arcfname, 0))
                 {
+                    /* !!! FIXME: this test is wrong and should be elsewhere. */
                     stat->readonly = !(writeDir &&
                                  (strcmp(writeDir->dirName, i->dirName) == 0));
                     retval = i->funcs->stat(i->opaque, arcfname, &exists, stat);

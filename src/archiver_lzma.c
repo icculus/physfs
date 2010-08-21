@@ -721,7 +721,7 @@ static int LZMA_stat(fvoid *opaque, const char *filename, int *exists,
 
     stat->readonly = 1;  /* 7zips are always read only */
 
-    return 0;
+    return 1;
 } /* LZMA_stat */
 
 

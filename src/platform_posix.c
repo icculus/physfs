@@ -429,10 +429,8 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
             *exists = 0;
             return 0;
         } /* if */
-        else
-        {
-            BAIL_MACRO(strerror(errno), -1);
-        } /* else */
+
+        BAIL_MACRO(strerror(errno), 0);
     } /* if */
 
     if (S_ISREG(statbuf.st_mode))
@@ -459,7 +457,7 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
 
     /* !!! FIXME: maybe we should just report full permissions? */
     st->readonly = access(filename, W_OK);
-    return 0;
+    return 1;
 } /* __PHYSFS_platformStat */
 
 #endif  /* PHYSFS_PLATFORM_POSIX */

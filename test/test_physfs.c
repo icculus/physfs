@@ -931,7 +931,7 @@ static char* modTimeToStr(PHYSFS_sint64 modtime, char *modstr, size_t strsize)
 static int cmd_getlastmodtime(char *args)
 {
     PHYSFS_Stat statbuf;
-    if (PHYSFS_stat(args, &statbuf) != 0)  // !!! FIXME: backwards, api will change later.
+    if (!PHYSFS_stat(args, &statbuf))
         printf("Failed to determine. Reason: [%s].\n", PHYSFS_getLastError());
     else
     {
@@ -954,7 +954,7 @@ static int cmd_stat(char *args)
         args[strlen(args) - 1] = '\0';
     } /* if */
 
-    if(PHYSFS_stat(args, &stat))
+    if(!PHYSFS_stat(args, &stat))
     {
         printf("failed to stat. Reason [%s].\n", PHYSFS_getLastError());
         return 1;

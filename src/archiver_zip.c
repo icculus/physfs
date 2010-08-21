@@ -1433,7 +1433,7 @@ static int ZIP_stat(fvoid *opaque, const char *filename, int *exists,
     stat->accesstime = 0;
     stat->readonly = 1; /* .zip files are always read only */
 
-    return 0;
+    return 1;
 } /* ZIP_stat */
 
 
