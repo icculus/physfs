@@ -930,14 +930,14 @@ static char* modTimeToStr(PHYSFS_sint64 modtime, char *modstr, size_t strsize)
 
 static int cmd_getlastmodtime(char *args)
 {
-    PHYSFS_sint64 rc = PHYSFS_getLastModTime(args);
-    if (rc == -1)
+    PHYSFS_Stat statbuf;
+    if (PHYSFS_stat(args, &statbuf) != 0)  // !!! FIXME: backwards, api will change later.
         printf("Failed to determine. Reason: [%s].\n", PHYSFS_getLastError());
     else
     {
         char modstr[64];
-        modTimeToStr(rc, modstr, sizeof (modstr));
-        printf("Last modified: %s (%ld).\n", modstr, (long) rc);
+        modTimeToStr(statbuf.modtime, modstr, sizeof (modstr));
+        printf("Last modified: %s (%ld).\n", modstr, (long) statbuf.modtime);
     } /* else */
 
     return 1;

@@ -1118,18 +1118,22 @@ PHYSFS_DECL int PHYSFS_isSymbolicLink(const char *fname);
  * \fn PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename)
  * \brief Get the last modification time of a file.
  *
- * The modtime is returned as a number of seconds since the epoch
- *  (Jan 1, 1970). The exact derivation and accuracy of this time depends on
- *  the particular archiver. If there is no reasonable way to obtain this
- *  information for a particular archiver, or there was some sort of error,
- *  this function returns (-1).
+ * The modtime is returned as a number of seconds since the Unix epoch
+ *  (midnight, Jan 1, 1970). The exact derivation and accuracy of this time
+ *  depends on the particular archiver. If there is no reasonable way to
+ *  obtain this information for a particular archiver, or there was some sort
+ *  of error, this function returns (-1).
+ *
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This
+ *             function just wraps it anyhow.
  *
  *   \param filename filename to check, in platform-independent notation.
  *  \return last modified time of the file. -1 if it can't be determined.
  *
- * \sa PHYSFS_Stat
+ * \sa PHYSFS_stat
  */
-PHYSFS_DECL PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename);
+PHYSFS_DECL PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename)
+                                                PHYSFS_DEPRECATED;
 
 
 /* i/o stuff... */
@@ -2529,12 +2533,13 @@ typedef enum PHYSFS_FileType
  * \brief Meta data for a file or directory
  *
  * Container for various meta data about a file in the virtual file system.
- * PHYSFS_stat() uses this structure for returning the information. The time
- * data will be either a real timestamp or -1 if there is none. So every value
- * is at least epoch. The FileSize is only valid for real files. And the
- * readonly tells you whether when you open a file for writing you are writing
- * to the same file as if you were opening it, given you have enough
- * filesystem rights to do that.
+ *  PHYSFS_stat() uses this structure for returning the information. The time
+ *  data will be either the number of seconds since the Unix epoch (midnight,
+ *  Jan 1, 1970), or -1 if there the information isn't available or applicable.
+ *  The (filesize) field is measured in bytes.
+ *  The (readonly) field tells you whether when you open a file for writing you
+ *  are writing to the same file as if you were opening it, given you have
+ *  enough filesystem rights to do that.  !!! FIXME: this might change.
  *
  * \sa PHYSFS_stat
  * \sa PHYSFS_FileType
@@ -2542,7 +2547,7 @@ typedef enum PHYSFS_FileType
 typedef struct PHYSFS_Stat
 {
 	PHYSFS_sint64 filesize; /**< size in bytes, -1 for non-files and unknown */
-	PHYSFS_sint64 modtime;  /**< same value as PHYSFS_getLastModTime() */
+	PHYSFS_sint64 modtime;  /**< last modification time */
 	PHYSFS_sint64 createtime; /**< like modtime, but for file creation time */
 	PHYSFS_sint64 accesstime; /**< like modtime, but for file access time */
 	PHYSFS_FileType filetype; /**< File? Directory? Symlink? */
@@ -2557,7 +2562,7 @@ typedef struct PHYSFS_Stat
  *
  *    \param fname filename to check, in platform-indepedent notation.
  *    \param stat pointer to structure to fill in with data about (fname).
- *   \return 0 on success, non-zero on error.
+ *   \return 0 on success, non-zero on error.  // !!! FIXME: arg, that's backwards from everything else in PhysicsFS!
  *
  * \sa PHYSFS_Stat
  */
