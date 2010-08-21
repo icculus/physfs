@@ -6,6 +6,8 @@
  *  This file written by Christoph Nelles.
  */
 
+/* !!! FIXME: this file needs Ryanification. */
+
 /*
  * Handles CD-ROM disk images (and raw CD-ROM devices).
  *
