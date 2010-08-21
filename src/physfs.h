@@ -1227,6 +1227,13 @@ PHYSFS_DECL int PHYSFS_close(PHYSFS_File *handle);
  *
  * The file must be opened for reading.
  *
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_readBytes() instead. This
+ *             function just wraps it anyhow. This function never clarified
+ *             what would happen if you managed to read a partial object, so
+ *             working at the byte level makes this cleaner for everyone,
+ *             especially now that data streams can be supplied by the
+ *             application.
+ *
  *   \param handle handle returned from PHYSFS_openRead().
  *   \param buffer buffer to store read data into.
  *   \param objSize size in bytes of objects being read from (handle).
@@ -1235,6 +1242,7 @@ PHYSFS_DECL int PHYSFS_close(PHYSFS_File *handle);
  *           the reason this might be < (objCount), as can PHYSFS_eof().
  *            -1 if complete failure.
  *
+ * \sa PHYSFS_readBytes
  * \sa PHYSFS_eof
  */
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
@@ -1248,12 +1256,21 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
  *
  * The file must be opened for writing.
  *
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_writeBytes() instead. This
+ *             function just wraps it anyhow. This function never clarified
+ *             what would happen if you managed to write a partial object, so
+ *             working at the byte level makes this cleaner for everyone,
+ *             especially now that data streams can be supplied by the
+ *             application.
+ *
  *   \param handle retval from PHYSFS_openWrite() or PHYSFS_openAppend().
  *   \param buffer buffer of bytes to write to (handle).
  *   \param objSize size in bytes of objects being written to (handle).
  *   \param objCount number of (objSize) objects to write to (handle).
  *  \return number of objects written. PHYSFS_getLastError() can shed light on
  *           the reason this might be < (objCount). -1 if complete failure.
+ *
+ * \sa PHYSFS_writeBytes
  */
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle,
                                        const void *buffer,
@@ -2592,6 +2609,52 @@ PHYSFS_DECL void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst,
  */
 PHYSFS_DECL void PHYSFS_utf8ToUtf16(const char *src, PHYSFS_uint16 *dst,
                                     PHYSFS_uint64 len);
+
+
+/**
+ * \fn PHYSFS_sint64 PHYSFS_readBytes(PHYSFS_File *handle, void *buffer, PHYSFS_uint64 len)
+ * \brief Read bytes from a PhysicsFS filehandle
+ *
+ * The file must be opened for reading.
+ *
+ *   \param handle handle returned from PHYSFS_openRead().
+ *   \param buffer buffer of at least (len) bytes to store read data into.
+ *   \param len number of bytes being read from (handle).
+ *  \return number of bytes read. This may be less than (len); this does not
+ *          signify an error, necessarily (a short read may mean EOF).
+ *          PHYSFS_getLastError() can shed light on the reason this might
+ *          be < (len), as can PHYSFS_eof(). -1 if complete failure.
+ *
+ * \sa PHYSFS_eof
+ */
+PHYSFS_DECL PHYSFS_sint64 PHYSFS_readBytes(PHYSFS_File *handle, void *buffer,
+                                           PHYSFS_uint64 len);
+
+/**
+ * \fn PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle, const void *buffer, PHYSFS_uint64 len)
+ * \brief Write data to a PhysicsFS filehandle
+ *
+ * The file must be opened for writing.
+ *
+ * Please note that while (len) is an unsigned 64-bit integer, you are limited
+ *  to 63 bits (9223372036854775807 bytes), so we can return a negative value
+ *  on error. If length is greater than 0x7FFFFFFFFFFFFFFF, this function will
+ *  immediately fail. For systems without a 64-bit datatype, you are limited
+ *  to 31 bits (0x7FFFFFFF, or 2147483647 bytes). We trust most things won't
+ *  need to do multiple gigabytes of i/o in one call anyhow, but why limit
+ *  things?
+ *
+ *   \param handle retval from PHYSFS_openWrite() or PHYSFS_openAppend().
+ *   \param buffer buffer of (len) bytes to write to (handle).
+ *   \param len number of bytes being written to (handle).
+ *  \return number of bytes written. This may be less than (len); in the case
+ *          of an error, the system may try to write as many bytes as possible,
+ *          so an incomplete write might occur. PHYSFS_getLastError() can shed
+ *          light on the reason this might be < (len). -1 if complete failure.
+ */
+PHYSFS_DECL PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle,
+                                            const void *buffer,
+                                            PHYSFS_uint64 len);
 
 
 /* Everything above this line is part of the PhysicsFS 2.1 API. */

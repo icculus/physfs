@@ -217,7 +217,7 @@ typedef struct __ISO9660FileHandle
     PHYSFS_uint64 startblock;
     ISO9660Handle *isohandle;
     PHYSFS_uint32 (*read) (struct __ISO9660FileHandle *filehandle, void *buffer,
-            PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+            PHYSFS_uint64 len);
     int (*seek)(struct __ISO9660FileHandle *filehandle,  PHYSFS_sint64 offset);
     int (*close)(struct __ISO9660FileHandle *filehandle);
     /* !!! FIXME: anonymouse union is going to cause problems. */
@@ -343,8 +343,7 @@ static int iso_extractfilename(ISO9660Handle *handle,
  ******************************************************************************/
 
 static int iso_readimage(ISO9660Handle *handle, PHYSFS_uint64 where,
-                         void *buffer, PHYSFS_uint32 objSize,
-                         PHYSFS_uint32 objCount)
+                         void *buffer, PHYSFS_uint64 len)
 {
     BAIL_IF_MACRO(!__PHYSFS_platformGrabMutex(handle->mutex),
             ERR_LOCK_VIOLATION, -1);
@@ -352,13 +351,13 @@ static int iso_readimage(ISO9660Handle *handle, PHYSFS_uint64 where,
     if (where != handle->currpos)
         GOTO_IF_MACRO(!__PHYSFS_platformSeek(handle->fhandle,where), NULL,
                 unlockme);
-    rc = __PHYSFS_platformRead(handle->fhandle, buffer, objSize, objCount);
+    rc = __PHYSFS_platformRead(handle->fhandle, buffer, len);
     if (rc == -1)
     {
         handle->currpos = (PHYSFS_uint64) -1;
         GOTO_MACRO(NULL, unlockme);
     } /* if */
-    handle->currpos += rc * objSize;
+    handle->currpos += rc;
 
     unlockme:
     __PHYSFS_platformReleaseMutex(handle->mutex);
@@ -371,7 +370,7 @@ static PHYSFS_sint64 iso_readfiledescriptor(ISO9660Handle *handle,
                                             ISO9660FileDescriptor *descriptor)
 {
     PHYSFS_sint64 rc = iso_readimage(handle, where, descriptor,
-                                     sizeof (descriptor->recordlen), 1);
+                                     sizeof (descriptor->recordlen));
     BAIL_IF_MACRO(rc == -1, NULL, -1);
     BAIL_IF_MACRO(rc != 1, ERR_CORRUPTED, -1);
 
@@ -379,7 +378,7 @@ static PHYSFS_sint64 iso_readfiledescriptor(ISO9660Handle *handle,
         return 0; /* fill bytes at the end of a sector */
 
     rc = iso_readimage(handle, where + 1, &descriptor->extattributelen,
-            descriptor->recordlen - sizeof(descriptor->recordlen), 1);
+            descriptor->recordlen - sizeof(descriptor->recordlen));
     BAIL_IF_MACRO(rc == -1, NULL, -1);
     BAIL_IF_MACRO(rc != 1, ERR_CORRUPTED, -1);
 
@@ -476,7 +475,7 @@ static int iso_read_ext_attributes(ISO9660Handle *handle, int block,
                                    ISO9660ExtAttributeRec *attributes)
 {
     return iso_readimage(handle, block * 2048, attributes,
-                         sizeof(ISO9660ExtAttributeRec), 1);
+                         sizeof(ISO9660ExtAttributeRec));
 } /* iso_read_ext_attributes */
 
 
@@ -502,7 +501,7 @@ static int ISO9660_isArchive(const char *filename, int forWriting)
     } /* if */
 
     /* Read magic number */
-    if (__PHYSFS_platformRead(in, magicnumber, 5, 1) != 1)
+    if (__PHYSFS_platformRead(in, magicnumber, 5) != 5)
     {
         __PHYSFS_platformClose(in); /* Don't forget to close the file before returning... */
         BAIL_MACRO(NULL, 0);
@@ -543,7 +542,7 @@ static void *ISO9660_openArchive(const char *filename, int forWriting)
     while (1)
     {
         ISO9660VolumeDescriptor descriptor;
-        GOTO_IF_MACRO(__PHYSFS_platformRead(handle->fhandle, &descriptor, sizeof(ISO9660VolumeDescriptor),1) != 1, "Cannot read from image", errorcleanup);
+        GOTO_IF_MACRO(__PHYSFS_platformRead(handle->fhandle, &descriptor, sizeof(ISO9660VolumeDescriptor)) != sizeof(ISO9660VolumeDescriptor), "Cannot read from image", errorcleanup);
         GOTO_IF_MACRO(strncmp(descriptor.identifier, "CD001", 5) != 0, ERR_NOT_AN_ARCHIVE, errorcleanup);
 
         if (descriptor.type == 255)
@@ -618,22 +617,20 @@ static void ISO9660_dirClose(dvoid *opaque)
 
 
 static PHYSFS_uint32 iso_file_read_mem(ISO9660FileHandle *filehandle,
-                                       void *buffer, PHYSFS_uint32 objSize,
-                                       PHYSFS_uint32 objCount)
+                                       void *buffer, PHYSFS_uint64 len)
 {
     /* check remaining bytes & max obj which can be fetched */
-    PHYSFS_sint64 bytesleft = filehandle->filesize - filehandle->currpos;
-    PHYSFS_uint64 maxObjs = bytesleft / objSize;
-    if (maxObjs < objCount)
-        objCount = maxObjs;
+    const PHYSFS_sint64 bytesleft = filehandle->filesize - filehandle->currpos;
+    if (bytesleft < len)
+        len = bytesleft;
 
-    if (objCount == 0)
+    if (len == 0)
         return 0;
 
-    memcpy(buffer, filehandle->cacheddata + filehandle->currpos,
-            objCount * objSize);
-    filehandle->currpos += objSize * objCount;
-    return objCount;
+    memcpy(buffer, filehandle->cacheddata + filehandle->currpos, (size_t) len);
+
+    filehandle->currpos += len;
+    return (PHYSFS_uint32) len;
 } /* iso_file_read_mem */
 
 
@@ -656,21 +653,19 @@ static int iso_file_close_mem(ISO9660FileHandle *fhandle)
 
 
 static PHYSFS_uint32 iso_file_read_foreign(ISO9660FileHandle *filehandle,
-                                           void *buffer, PHYSFS_uint32 objSize,
-                                           PHYSFS_uint32 objCount)
+                                           void *buffer, PHYSFS_uint64 len)
 {
     /* check remaining bytes & max obj which can be fetched */
-    PHYSFS_sint64 bytesleft = filehandle->filesize - filehandle->currpos;
-    PHYSFS_uint64 maxObjs = bytesleft / objSize;
-    if (maxObjs < objCount)
-        objCount = maxObjs;
+    const PHYSFS_sint64 bytesleft = filehandle->filesize - filehandle->currpos;
+    if (bytesleft < len)
+        len = bytesleft;
 
     PHYSFS_sint64 rc =  __PHYSFS_platformRead(filehandle->filehandle, buffer,
-                                              objSize, objCount);
+                                              len);
     BAIL_IF_MACRO(rc == -1, NULL, -1);
 
-    filehandle->currpos += rc * objSize; /* i trust my internal book keeping */
-    BAIL_IF_MACRO(rc < objCount, ERR_CORRUPTED, -1);
+    filehandle->currpos += rc; /* i trust my internal book keeping */
+    BAIL_IF_MACRO(rc < len, ERR_CORRUPTED, -1);
     return rc;
 } /* iso_file_read_foreign */
 
@@ -703,7 +698,7 @@ static int iso_file_open_mem(ISO9660Handle *handle, ISO9660FileHandle *fhandle)
     fhandle->cacheddata = allocator.Malloc(fhandle->filesize);
     BAIL_IF_MACRO(!fhandle->cacheddata, ERR_OUT_OF_MEMORY, -1);
     int rc = iso_readimage(handle, fhandle->startblock * 2048,
-                           fhandle->cacheddata, fhandle->filesize, 1);
+                           fhandle->cacheddata, fhandle->filesize);
     GOTO_IF_MACRO(rc < 0, NULL, freemem);
     GOTO_IF_MACRO(rc == 0, ERR_CORRUPTED, freemem);
 
@@ -783,12 +778,10 @@ static int ISO9660_fileClose(fvoid *opaque)
     return fhandle->close(fhandle);
 } /* ISO9660_fileClose */
 
-static PHYSFS_sint64 ISO9660_read(fvoid *opaque, void *buffer,
-                                  PHYSFS_uint32 objSize,
-                                  PHYSFS_uint32 objCount)
+static PHYSFS_sint64 ISO9660_read(fvoid *opaque, void *buf, PHYSFS_uint64 len)
 {
     ISO9660FileHandle *fhandle = (ISO9660FileHandle*) opaque;
-    return fhandle->read(fhandle, buffer, objSize, objCount);
+    return fhandle->read(fhandle, buf, len);
 } /* ISO9660_read */
 
 
@@ -985,9 +978,7 @@ static int ISO9660_mkdir(dvoid *opaque, const char *name)
 } /* ISO9660_mkdir */
 
 
-static PHYSFS_sint64 ISO9660_write(fvoid *opaque, const void *buffer,
-                                   PHYSFS_uint32 objSize,
-                                   PHYSFS_uint32 objCount)
+static PHYSFS_sint64 ISO9660_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* ISO9660_write */

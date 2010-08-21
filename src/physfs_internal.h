@@ -893,23 +893,19 @@ typedef struct
      */
 
         /*
-         * Read more from the file.
-         * Returns number of objects of (objSize) bytes read from file, -1
-         *  if complete failure.
+         * Read (len) bytes from the file.
+         * Returns number of bytes read from file, -1 if complete failure.
          * On failure, call __PHYSFS_setError().
          */
-    PHYSFS_sint64 (*read)(fvoid *opaque, void *buffer,
-                          PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+    PHYSFS_sint64 (*read)(fvoid *opaque, void *buffer, PHYSFS_uint64 len);
 
         /*
-         * Write more to the file. Archives don't have to implement this.
-         *  (Set it to NULL if not implemented).
-         * Returns number of objects of (objSize) bytes written to file, -1
-         *  if complete failure.
+         * Write (len) bytes to the file. Archives don't have to implement
+         *  this; set it to NULL if not implemented.
+         * Returns number of bytes written to file, -1 if complete failure.
          * On failure, call __PHYSFS_setError().
          */
-    PHYSFS_sint64 (*write)(fvoid *opaque, const void *buffer,
-                 PHYSFS_uint32 objSize, PHYSFS_uint32 objCount);
+    PHYSFS_sint64 (*write)(fvoid *opaque, const void *buf, PHYSFS_uint64 len);
 
         /*
          * Returns non-zero if at end of file.
@@ -1033,15 +1029,18 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
 
 #define __PHYSFS_ARRAYLEN(x) ( (sizeof (x)) / (sizeof (x[0])) )
 
-#if (defined __GNUC__)
+#ifdef PHYSFS_NO_64BIT_SUPPORT
+#define __PHYSFS_SI64(x) ((PHYSFS_sint64) (x))
+#define __PHYSFS_UI64(x) ((PHYSFS_uint64) (x))
+#elif (defined __GNUC__)
 #define __PHYSFS_SI64(x) x##LL
 #define __PHYSFS_UI64(x) x##ULL
 #elif (defined _MSC_VER)
 #define __PHYSFS_SI64(x) x##i64
 #define __PHYSFS_UI64(x) x##ui64
 #else
-#define __PHYSFS_SI64(x) x
-#define __PHYSFS_UI64(x) x
+#define __PHYSFS_SI64(x) ((PHYSFS_sint64) (x))
+#define __PHYSFS_UI64(x) ((PHYSFS_uint64) (x))
 #endif
 
 
@@ -1192,30 +1191,32 @@ void *__PHYSFS_platformOpenAppend(const char *filename);
 
 /*
  * Read more data from a platform-specific file handle. (opaque) should be
- *  cast to whatever data type your platform uses. Read a maximum of (count)
- *  objects of (size) 8-bit bytes to the area pointed to by (buffer). If there
- *  isn't enough data available, return the number of full objects read, and
- *  position the file pointer at the start of the first incomplete object.
- *  On success, return (count) and position the file pointer one byte past
- *  the end of the last read object. Return (-1) if there is a catastrophic
+ *  cast to whatever data type your platform uses. Read a maximum of (len)
+ *  8-bit bytes to the area pointed to by (buf). If there isn't enough data
+ *  available, return the number of bytes read, and position the file pointer
+ *  immediately after those bytes.
+ *  On success, return (len) and position the file pointer immediately past
+ *  the end of the last read byte. Return (-1) if there is a catastrophic
  *  error, and call __PHYSFS_setError() to describe the problem; the file
- *  pointer should not move in such a case.
+ *  pointer should not move in such a case. A partial read is success; only
+ *  return (-1) on total failure; presumably, the next read call after a
+ *  partial read will fail as such.
  */
-PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
-                                    PHYSFS_uint32 size, PHYSFS_uint32 count);
+PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len);
 
 /*
  * Write more data to a platform-specific file handle. (opaque) should be
- *  cast to whatever data type your platform uses. Write a maximum of (count)
- *  objects of (size) 8-bit bytes from the area pointed to by (buffer). If
- *  there isn't enough data available, return the number of full objects
- *  written, and position the file pointer at the start of the first
- *  incomplete object. Return (-1) if there is a catastrophic error, and call
- *  __PHYSFS_setError() to describe the problem; the file pointer should not
- *  move in such a case.
+ *  cast to whatever data type your platform uses. Write a maximum of (len)
+ *  8-bit bytes from the area pointed to by (buffer). If there is a problem,
+ *  return the number of bytes written, and position the file pointer
+ *  immediately after those bytes. Return (-1) if there is a catastrophic
+ *  error, and call __PHYSFS_setError() to describe the problem; the file
+ *  pointer should not move in such a case. A partial write is success; only
+ *  return (-1) on total failure; presumably, the next write call after a
+ *  partial write will fail as such.
  */
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
-                                     PHYSFS_uint32 size, PHYSFS_uint32 count);
+                                     PHYSFS_uint64 len);
 
 /*
  * Set the file pointer to a new position. (opaque) should be cast to

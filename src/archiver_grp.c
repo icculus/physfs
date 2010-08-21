@@ -57,6 +57,12 @@ typedef struct
 } GRPfileinfo;
 
 
+static inline int readAll(void *fh, void *buf, const PHYSFS_uint64 len)
+{
+    return (__PHYSFS_platformRead(fh, buf, len) == len);
+} /* readAll */
+
+
 static void GRP_dirClose(dvoid *opaque)
 {
     GRPinfo *info = ((GRPinfo *) opaque);
@@ -66,28 +72,25 @@ static void GRP_dirClose(dvoid *opaque)
 } /* GRP_dirClose */
 
 
-static PHYSFS_sint64 GRP_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 GRP_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
 {
     GRPfileinfo *finfo = (GRPfileinfo *) opaque;
-    GRPentry *entry = finfo->entry;
-    PHYSFS_uint32 bytesLeft = entry->size - finfo->curPos;
-    PHYSFS_uint32 objsLeft = (bytesLeft / objSize);
+    const GRPentry *entry = finfo->entry;
+    const PHYSFS_uint64 bytesLeft = (PHYSFS_uint64)(entry->size-finfo->curPos);
     PHYSFS_sint64 rc;
 
-    if (objsLeft < objCount)
-        objCount = objsLeft;
+    if (bytesLeft < len)
+        len = bytesLeft;
 
-    rc = __PHYSFS_platformRead(finfo->handle, buffer, objSize, objCount);
+    rc = __PHYSFS_platformRead(finfo->handle, buffer, len);
     if (rc > 0)
-        finfo->curPos += (PHYSFS_uint32) (rc * objSize);
+        finfo->curPos += (PHYSFS_uint32) rc;
 
     return rc;
 } /* GRP_read */
 
 
-static PHYSFS_sint64 GRP_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 GRP_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* GRP_write */
@@ -150,7 +153,7 @@ static int grp_open(const char *filename, int forWriting,
     *fh = __PHYSFS_platformOpenRead(filename);
     BAIL_IF_MACRO(*fh == NULL, NULL, 0);
     
-    if (__PHYSFS_platformRead(*fh, buf, 12, 1) != 1)
+    if (!readAll(*fh, buf, 12))
         goto openGrp_failed;
 
     if (memcmp(buf, "KenSilverman", 12) != 0)
@@ -159,7 +162,7 @@ static int grp_open(const char *filename, int forWriting,
         goto openGrp_failed;
     } /* if */
 
-    if (__PHYSFS_platformRead(*fh, count, sizeof (PHYSFS_uint32), 1) != 1)
+    if (!readAll(*fh, count, sizeof (PHYSFS_uint32)))
         goto openGrp_failed;
 
     *count = PHYSFS_swapULE32(*count);
@@ -236,7 +239,8 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
-        if (__PHYSFS_platformRead(fh, &entry->name, 12, 1) != 1)
+        if ( (!readAll(fh, &entry->name, 12)) ||
+             (!readAll(fh, &entry->size, sizeof (PHYSFS_uint32))) )
         {
             __PHYSFS_platformClose(fh);
             return 0;
@@ -245,12 +249,6 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
         entry->name[12] = '\0';  /* name isn't null-terminated in file. */
         if ((ptr = strchr(entry->name, ' ')) != NULL)
             *ptr = '\0';  /* trim extra spaces. */
-
-        if (__PHYSFS_platformRead(fh, &entry->size, 4, 1) != 1)
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
 
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = location;

@@ -14,21 +14,15 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-static PHYSFS_sint64 DIR_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 DIR_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
 {
-    PHYSFS_sint64 retval;
-    retval = __PHYSFS_platformRead(opaque, buffer, objSize, objCount);
-    return retval;
+    return __PHYSFS_platformRead(opaque, buffer, len);
 } /* DIR_read */
 
 
-static PHYSFS_sint64 DIR_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 DIR_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
 {
-    PHYSFS_sint64 retval;
-    retval = __PHYSFS_platformWrite(opaque, buffer, objSize, objCount);
-    return retval;
+    return __PHYSFS_platformWrite(f, buf, len);
 } /* DIR_write */
 
 

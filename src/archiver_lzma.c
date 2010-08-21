@@ -113,7 +113,7 @@ SZ_RESULT SzFileReadImp(void *object, void **buffer, size_t maxReqSize,
 
     if (maxReqSize > BUFFER_SIZE)
         maxReqSize = BUFFER_SIZE;
-    processedSizeLoc = __PHYSFS_platformRead(s->file, s->buffer, 1, maxReqSize);
+    processedSizeLoc = __PHYSFS_platformRead(s->file, s->buffer, maxReqSize);
     *buffer = s->buffer;
     if (processedSize != NULL)
         *processedSize = (size_t) processedSizeLoc;
@@ -131,7 +131,7 @@ SZ_RESULT SzFileReadImp(void *object, void *buffer, size_t size,
                         size_t *processedSize)
 {
     FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); /* HACK! */
-    size_t processedSizeLoc = __PHYSFS_platformRead(s->file, buffer, 1, size);
+    size_t processedSizeLoc = __PHYSFS_platformRead(s->file, buffer, size);
     if (processedSize != 0)
         *processedSize = processedSizeLoc;
     return SZ_OK;
@@ -322,25 +322,19 @@ static int lzma_err(SZ_RESULT rc)
 } /* lzma_err */
 
 
-static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuf, PHYSFS_uint64 len)
 {
     LZMAfile *file = (LZMAfile *) opaque;
 
-    size_t wantedSize = objSize*objCount;
+    size_t wantedSize = (size_t) len;
     size_t remainingSize = file->item->Size - file->position;
     size_t fileSize = 0;
 
     BAIL_IF_MACRO(wantedSize == 0, NULL, 0); /* quick rejection. */
     BAIL_IF_MACRO(remainingSize == 0, ERR_PAST_EOF, 0);
 
-    if (remainingSize < wantedSize)
-    {
-        wantedSize = remainingSize - (remainingSize % objSize);
-        objCount = (PHYSFS_uint32) (remainingSize / objSize);
-        BAIL_IF_MACRO(objCount == 0, ERR_PAST_EOF, 0); /* quick rejection. */
-        __PHYSFS_setError(ERR_PAST_EOF); /* this is always true here. */
-    } /* if */
+    if (wantedSize > remainingSize)
+        wantedSize = remainingSize;
 
     /* Only decompress the folder if it is not allready cached */
     if (file->folder->cache == NULL)
@@ -365,19 +359,18 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuffer,
             return -1;
     } /* if */
 
-    /* Copy wanted bytes over from cache to outBuffer */
-    memcpy(outBuffer,
+    /* Copy wanted bytes over from cache to outBuf */
+    memcpy(outBuf,
             (file->folder->cache +
                     file->offset + file->position),
             wantedSize);
     file->position += wantedSize; /* Increase virtual position */
 
-    return objCount;
+    return wantedSize;
 } /* LZMA_read */
 
 
-static PHYSFS_sint64 LZMA_write(fvoid *opaque, const void *buf,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 LZMA_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* LZMA_write */
@@ -448,7 +441,7 @@ static int LZMA_isArchive(const char *filename, int forWriting)
     BAIL_IF_MACRO(in == NULL, NULL, 0);
 
     /* Read signature bytes */
-    if (__PHYSFS_platformRead(in, sig, k7zSignatureSize, 1) != 1)
+    if (__PHYSFS_platformRead(in, sig, k7zSignatureSize) != k7zSignatureSize)
     {
         __PHYSFS_platformClose(in); /* Don't forget to close the file before returning... */
         BAIL_MACRO(NULL, 0);

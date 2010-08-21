@@ -382,53 +382,30 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 } /* __PHYSFS_platformOpenAppend */
 
 
-PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
-                                    PHYSFS_uint32 size, PHYSFS_uint32 count)
+PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 {
     HANDLE Handle = ((winCEfile *) opaque)->handle;
-    DWORD CountOfBytesRead;
-    PHYSFS_sint64 retval;
+    DWORD CountOfBytesRead = 0;
 
-    /* Read data from the file */
-    /*!!! - uint32 might be a greater # than DWORD */
-    if (!ReadFile(Handle, buffer, count * size, &CountOfBytesRead, NULL))
-    {
-        retval = -1;
-    } /* if */
-    else
-    {
-        /* Return the number of "objects" read. */
-        /* !!! - What if not the right amount of bytes was read to make an object? */
-        retval = CountOfBytesRead / size;
-    } /* else */
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
 
-    return retval;
-
+    if (!ReadFile(Handle, buf, (DWORD) len, &CountOfBytesRead, NULL))
+        return -1;  /* !!! FIXME: set an error string? */
+    return (PHYSFS_sint64) CountOfBytesRead;
 } /* __PHYSFS_platformRead */
 
 
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
-                                     PHYSFS_uint32 size, PHYSFS_uint32 count)
+                                     PHYSFS_uint64 len)
 {
     HANDLE Handle = ((winCEfile *) opaque)->handle;
-    DWORD CountOfBytesWritten;
-    PHYSFS_sint64 retval;
+    DWORD CountOfBytesWritten = 0;
 
-    /* Read data from the file */
-    /*!!! - uint32 might be a greater # than DWORD */
-    if (!WriteFile(Handle, buffer, count * size, &CountOfBytesWritten, NULL))
-    {
-        retval = -1;
-    } /* if */
-    else
-    {
-        /* Return the number of "objects" read. */
-        /*!!! - What if not the right number of bytes was written? */
-        retval = CountOfBytesWritten / size;
-    } /* else */
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
 
-    return retval;
-
+    if (!WriteFile(Handle, buffer, (DWORD) len, &CountOfBytesWritten, NULL))
+        return -1;
+    return PHYSFS_sint64) CountOfBytesWritten;
 } /* __PHYSFS_platformWrite */
 
 

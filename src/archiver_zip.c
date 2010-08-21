@@ -172,13 +172,18 @@ static int zlib_err(int rc)
 } /* zlib_err */
 
 
+static inline int readAll(void *fh, void *buf, const PHYSFS_uint64 len)
+{
+    return (__PHYSFS_platformRead(fh, buf, len) == len);
+} /* readAll */
+
 /*
  * Read an unsigned 32-bit int and swap to native byte order.
  */
 static int readui32(void *in, PHYSFS_uint32 *val)
 {
     PHYSFS_uint32 v;
-    BAIL_IF_MACRO(__PHYSFS_platformRead(in, &v, sizeof (v), 1) != 1, NULL, 0);
+    BAIL_IF_MACRO(!readAll(in, &v, sizeof (v)), NULL, 0);
     *val = PHYSFS_swapULE32(v);
     return 1;
 } /* readui32 */
@@ -190,41 +195,32 @@ static int readui32(void *in, PHYSFS_uint32 *val)
 static int readui16(void *in, PHYSFS_uint16 *val)
 {
     PHYSFS_uint16 v;
-    BAIL_IF_MACRO(__PHYSFS_platformRead(in, &v, sizeof (v), 1) != 1, NULL, 0);
+    BAIL_IF_MACRO(!readAll(in, &v, sizeof (v)), NULL, 0);
     *val = PHYSFS_swapULE16(v);
     return 1;
 } /* readui16 */
 
 
-static PHYSFS_sint64 ZIP_read(fvoid *opaque, void *buf,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 ZIP_read(fvoid *opaque, void *buf, PHYSFS_uint64 len)
 {
     ZIPfileinfo *finfo = (ZIPfileinfo *) opaque;
     ZIPentry *entry = finfo->entry;
     PHYSFS_sint64 retval = 0;
-    PHYSFS_sint64 maxread = ((PHYSFS_sint64) objSize) * objCount;
+    PHYSFS_sint64 maxread = (PHYSFS_sint64) len;
     PHYSFS_sint64 avail = entry->uncompressed_size -
                           finfo->uncompressed_position;
 
+    if (avail < maxread)
+        maxread = avail;
+
     BAIL_IF_MACRO(maxread == 0, NULL, 0);    /* quick rejection. */
 
-    if (avail < maxread)
-    {
-        maxread = avail - (avail % objSize);
-        objCount = (PHYSFS_uint32) (maxread / objSize);
-        BAIL_IF_MACRO(objCount == 0, ERR_PAST_EOF, 0);  /* quick rejection. */
-        __PHYSFS_setError(ERR_PAST_EOF);   /* this is always true here. */
-    } /* if */
-
     if (entry->compression_method == COMPMETH_NONE)
-    {
-        retval = __PHYSFS_platformRead(finfo->handle, buf, objSize, objCount);
-    } /* if */
-
+        retval = __PHYSFS_platformRead(finfo->handle, buf, maxread);
     else
     {
         finfo->stream.next_out = buf;
-        finfo->stream.avail_out = objSize * objCount;
+        finfo->stream.avail_out = maxread;
 
         while (retval < maxread)
         {
@@ -241,9 +237,8 @@ static PHYSFS_sint64 ZIP_read(fvoid *opaque, void *buf,
                     if (br > ZIP_READBUFSIZE)
                         br = ZIP_READBUFSIZE;
 
-                    br = __PHYSFS_platformRead(finfo->handle,
-                                               finfo->buffer,
-                                               1, (PHYSFS_uint32) br);
+                    br = __PHYSFS_platformRead(finfo->handle, finfo->buffer,
+                                               (PHYSFS_uint64) br);
                     if (br <= 0)
                         break;
 
@@ -259,19 +254,16 @@ static PHYSFS_sint64 ZIP_read(fvoid *opaque, void *buf,
             if (rc != Z_OK)
                 break;
         } /* while */
-
-        retval /= objSize;
     } /* else */
 
     if (retval > 0)
-        finfo->uncompressed_position += (PHYSFS_uint32) (retval * objSize);
+        finfo->uncompressed_position += (PHYSFS_uint32) retval;
 
     return retval;
 } /* ZIP_read */
 
 
-static PHYSFS_sint64 ZIP_write(fvoid *opaque, const void *buf,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 ZIP_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* ZIP_write */
@@ -338,7 +330,7 @@ static int ZIP_seek(fvoid *opaque, PHYSFS_uint64 offset)
             if (maxread > sizeof (buf))
                 maxread = sizeof (buf);
 
-            if (ZIP_read(finfo, buf, maxread, 1) != 1)
+            if (ZIP_read(finfo, buf, maxread) != maxread)
                 return 0;
         } /* while */
     } /* else */
@@ -415,14 +407,14 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
         /* make sure we catch a signature between buffers. */
         if (totalread != 0)
         {
-            if (__PHYSFS_platformRead(in, buf, maxread - 4, 1) != 1)
+            if (!readAll(in, buf, maxread - 4))
                 return -1;
             memcpy(&buf[maxread - 4], &extra, sizeof (extra));
             totalread += maxread - 4;
         } /* if */
         else
         {
-            if (__PHYSFS_platformRead(in, buf, maxread, 1) != 1)
+            if (!readAll(in, buf, maxread))
                 return -1;
             totalread += maxread;
         } /* else */
@@ -678,7 +670,7 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
     BAIL_IF_MACRO(path == NULL, ERR_OUT_OF_MEMORY, 0);
     
     if (entry->compression_method == COMPMETH_NONE)
-        rc = (__PHYSFS_platformRead(in, path, size, 1) == 1);
+        rc = readAll(in, path, size);
 
     else  /* symlink target path is compressed... */
     {
@@ -687,7 +679,7 @@ static int zip_resolve_symlink(void *in, ZIPinfo *info, ZIPentry *entry)
         PHYSFS_uint8 *compressed = (PHYSFS_uint8*) __PHYSFS_smallAlloc(complen);
         if (compressed != NULL)
         {
-            if (__PHYSFS_platformRead(in, compressed, complen, 1) == 1)
+            if (readAll(in, compressed, complen))
             {
                 initializeZStream(&stream);
                 stream.next_in = compressed;
@@ -924,7 +916,7 @@ static int zip_load_entry(void *in, ZIPentry *entry, PHYSFS_uint32 ofs_fixup)
 
     entry->name = (char *) allocator.Malloc(fnamelen + 1);
     BAIL_IF_MACRO(entry->name == NULL, ERR_OUT_OF_MEMORY, 0);
-    if (__PHYSFS_platformRead(in, entry->name, fnamelen, 1) != 1)
+    if (!readAll(in, entry->name, fnamelen))
         goto zip_load_entry_puked;
 
     entry->name[fnamelen] = '\0';  /* null-terminate the filename. */
