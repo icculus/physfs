@@ -8,6 +8,8 @@
  *  This file written by Ryan C. Gordon.
  */
 
+/* !!! FIXME: ERR_PAST_EOF shouldn't trigger for reads. Just return zero. */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1937,96 +1939,138 @@ int PHYSFS_close(PHYSFS_File *_handle)
 
 
 static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
-                                    PHYSFS_uint32 objSize,
-                                    PHYSFS_uint32 objCount)
+                                    PHYSFS_uint64 len)
 {
     PHYSFS_sint64 retval = 0;
-    PHYSFS_uint32 remainder = 0;
+    PHYSFS_uint32 buffered = 0;
+    PHYSFS_sint64 rc = 0;
 
-    while (objCount > 0)
+    if (len == 0)
+        return 0;
+
+    buffered = fh->buffill - fh->bufpos;
+    if (buffered >= len)  /* totally in the buffer, just copy and return! */
     {
-        PHYSFS_uint32 buffered = fh->buffill - fh->bufpos;
-        PHYSFS_uint64 mustread = (objSize * objCount) - remainder;
-        PHYSFS_uint32 copied;
+        memcpy(buffer, fh->buffer + fh->bufpos, (size_t) len);
+        fh->bufpos += (PHYSFS_uint32) len;
+        return (PHYSFS_sint64) len;
+    } /* else if */
 
-        if (buffered == 0) /* need to refill buffer? */
-        {
-            PHYSFS_sint64 rc = fh->funcs->read(fh->opaque, fh->buffer,
-                                                1, fh->bufsize);
-            if (rc <= 0)
-            {
-                fh->bufpos -= remainder;
-                return ( ((rc == -1) && (retval == 0)) ? -1 : retval );
-            } /* if */
-
-            buffered = fh->buffill = (PHYSFS_uint32) rc;
-            fh->bufpos = 0;
-        } /* if */
-
-        if (buffered > mustread)
-            buffered = (PHYSFS_uint32) mustread;
-
+    if (buffered > 0) /* partially in the buffer... */
+    {
         memcpy(buffer, fh->buffer + fh->bufpos, (size_t) buffered);
         buffer = ((PHYSFS_uint8 *) buffer) + buffered;
-        fh->bufpos += buffered;
-        buffered += remainder;  /* take remainder into account. */
-        copied = (buffered / objSize);
-        remainder = (buffered % objSize);
-        retval += copied;
-        objCount -= copied;
-    } /* while */
+        len -= buffered;
+        retval = buffered;
+        buffered = fh->buffill = fh->bufpos = 0;
+    } /* if */
 
-    return retval;
+    /* if you got here, the buffer is drained and we still need bytes. */
+    assert(buffered == 0);
+    assert(len > 0);
+
+    if (len >= fh->bufsize)  /* need more than the buffer takes. */
+    {
+        /* leave buffer empty, go right to output instead. */
+        rc = fh->funcs->read(fh->opaque, buffer, len);
+        if (rc < 0)
+            return ((retval == 0) ? rc : retval);
+        return retval + rc;
+    } /* if */
+
+    /* need less than buffer can take. Fill buffer. */
+    rc = fh->funcs->read(fh->opaque, fh->buffer, fh->bufsize);
+    if (rc < 0)
+        return ((retval == 0) ? rc : retval);
+
+    assert(fh->bufpos == 0);
+    fh->buffill = (PHYSFS_uint32) rc;
+    rc = doBufferedRead(fh, buffer, len);  /* go from the start, again. */
+    if (rc < 0)
+        return ((retval == 0) ? rc : retval);
+
+    return retval + rc;
 } /* doBufferedRead */
 
 
 PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle, void *buffer,
-                          PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+                          PHYSFS_uint32 size, PHYSFS_uint32 count)
 {
-    FileHandle *fh = (FileHandle *) handle;
-
-    BAIL_IF_MACRO(!fh->forReading, ERR_FILE_ALREADY_OPEN_W, -1);
-    BAIL_IF_MACRO(objSize == 0, NULL, 0);
-    BAIL_IF_MACRO(objCount == 0, NULL, 0);
-    if (fh->buffer != NULL)
-        return doBufferedRead(fh, buffer, objSize, objCount);
-
-    return fh->funcs->read(fh->opaque, buffer, objSize, objCount);
+    const PHYSFS_uint64 len = ((PHYSFS_uint64) size) * ((PHYSFS_uint64) count);
+    const PHYSFS_sint64 retval = PHYSFS_readBytes(handle, buffer, len);
+    return ( (retval <= 0) ? retval : (retval / ((PHYSFS_sint64) count)) );
 } /* PHYSFS_read */
 
 
+PHYSFS_sint64 PHYSFS_readBytes(PHYSFS_File *handle, void *buffer,
+                               PHYSFS_uint64 len)
+{
+    FileHandle *fh = (FileHandle *) handle;
+
+#ifdef PHYSFS_NO_64BIT_SUPPORT
+    const PHYSFS_uint64 maxlen = __PHYSFS_UI64(0x7FFFFFFF);
+#else
+    const PHYSFS_uint64 maxlen = __PHYSFS_UI64(0x7FFFFFFFFFFFFFFF);
+#endif
+
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
+    BAIL_IF_MACRO(len > maxlen, ERR_INVALID_ARGUMENT, -1);
+    BAIL_IF_MACRO(!fh->forReading, ERR_FILE_ALREADY_OPEN_W, -1);
+    BAIL_IF_MACRO(len == 0, NULL, 0);
+    if (fh->buffer != NULL)
+        return doBufferedRead(fh, buffer, len);
+
+    return fh->funcs->read(fh->opaque, buffer, len);
+} /* PHYSFS_readBytes */
+
+
 static PHYSFS_sint64 doBufferedWrite(PHYSFS_File *handle, const void *buffer,
-                                     PHYSFS_uint32 objSize,
-                                     PHYSFS_uint32 objCount)
+                                     PHYSFS_uint64 len)
 {
     FileHandle *fh = (FileHandle *) handle;
 
     /* whole thing fits in the buffer? */
-    if (fh->buffill + (objSize * objCount) < fh->bufsize)
+    if ( (((PHYSFS_uint64) fh->buffill) + len) < fh->bufsize )
     {
-        memcpy(fh->buffer + fh->buffill, buffer, objSize * objCount);
-        fh->buffill += (objSize * objCount);
-        return objCount;
+        memcpy(fh->buffer + fh->buffill, buffer, (size_t) len);
+        fh->buffill += (PHYSFS_uint32) len;
+        return (PHYSFS_sint64) len;
     } /* if */
 
     /* would overflow buffer. Flush and then write the new objects, too. */
     BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, -1);
-    return fh->funcs->write(fh->opaque, buffer, objSize, objCount);
+    return fh->funcs->write(fh->opaque, buffer, len);
 } /* doBufferedWrite */
 
 
 PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle, const void *buffer,
-                           PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+                           PHYSFS_uint32 size, PHYSFS_uint32 count)
+{
+    const PHYSFS_uint64 len = ((PHYSFS_uint64) size) * ((PHYSFS_uint64) count);
+    const PHYSFS_sint64 retval = PHYSFS_writeBytes(handle, buffer, len);
+    return ( (retval <= 0) ? retval : (retval / ((PHYSFS_sint64) count)) );
+} /* PHYSFS_write */
+
+
+PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle, const void *buffer,
+                                PHYSFS_uint64 len)
 {
     FileHandle *fh = (FileHandle *) handle;
 
-    BAIL_IF_MACRO(fh->forReading, ERR_FILE_ALREADY_OPEN_R, -1);
-    BAIL_IF_MACRO(objSize == 0, NULL, 0);
-    BAIL_IF_MACRO(objCount == 0, NULL, 0);
-    if (fh->buffer != NULL)
-        return doBufferedWrite(handle, buffer, objSize, objCount);
+#ifdef PHYSFS_NO_64BIT_SUPPORT
+    const PHYSFS_uint64 maxlen = __PHYSFS_UI64(0x7FFFFFFF);
+#else
+    const PHYSFS_uint64 maxlen = __PHYSFS_UI64(0x7FFFFFFFFFFFFFFF);
+#endif
 
-    return fh->funcs->write(fh->opaque, buffer, objSize, objCount);
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
+    BAIL_IF_MACRO(len > maxlen, ERR_INVALID_ARGUMENT, -1);
+    BAIL_IF_MACRO(fh->forReading, ERR_FILE_ALREADY_OPEN_R, -1);
+    BAIL_IF_MACRO(len == 0, NULL, 0);
+    if (fh->buffer != NULL)
+        return doBufferedWrite(handle, buffer, len);
+
+    return fh->funcs->write(fh->opaque, buffer, len);
 } /* PHYSFS_write */
 
 
@@ -2142,7 +2186,7 @@ int PHYSFS_flush(PHYSFS_File *handle)
 
     /* dump buffer to disk. */
     rc = fh->funcs->write(fh->opaque, fh->buffer + fh->bufpos,
-                          fh->buffill - fh->bufpos, 1);
+                          fh->buffill - fh->bufpos);
     BAIL_IF_MACRO(rc <= 0, NULL, 0);
     fh->bufpos = fh->buffill = 0;
     return 1;

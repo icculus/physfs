@@ -300,36 +300,34 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 
 
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
-                                    PHYSFS_uint32 size, PHYSFS_uint32 count)
+                                    PHYSFS_uint64 len)
 {
     int fd = *((int *) opaque);
-    int max = size * count;
-    int rc = read(fd, buffer, max);
+    ssize_t rc = 0;
 
-    BAIL_IF_MACRO(rc == -1, strerror(errno), rc);
-    assert(rc <= max);
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
 
-    if ((rc < max) && (size > 1))
-        lseek(fd, -(rc % size), SEEK_CUR); /* rollback to object boundary. */
-
-    return (rc / size);
+    rc = read(fd, buffer, (size_t) len);
+    BAIL_IF_MACRO(rc == -1, strerror(errno), (PHYSFS_sint64) rc);
+    assert(rc >= 0);
+    assert(rc <= len);
+    return (PHYSFS_sint64) rc;
 } /* __PHYSFS_platformRead */
 
 
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
-                                     PHYSFS_uint32 size, PHYSFS_uint32 count)
+                                     PHYSFS_uint64 len)
 {
     int fd = *((int *) opaque);
-    int max = size * count;
-    int rc = write(fd, (void *) buffer, max);
+    ssize_t rc = 0;
 
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
+
+    rc = write(fd, (void *) buffer, (size_t) len);
     BAIL_IF_MACRO(rc == -1, strerror(errno), rc);
-    assert(rc <= max);
-
-    if ((rc < max) && (size > 1))
-        lseek(fd, -(rc % size), SEEK_CUR); /* rollback to object boundary. */
-
-    return (rc / size);
+    assert(rc >= 0);
+    assert(rc <= len);
+    return (PHYSFS_sint64) rc;
 } /* __PHYSFS_platformWrite */
 
 

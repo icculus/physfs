@@ -71,6 +71,12 @@ typedef struct
 } HOGfileinfo;
 
 
+static inline int readAll(void *fh, void *buf, const PHYSFS_uint64 len)
+{
+    return (__PHYSFS_platformRead(fh, buf, len) == len);
+} /* readAll */
+
+
 static void HOG_dirClose(dvoid *opaque)
 {
     HOGinfo *info = ((HOGinfo *) opaque);
@@ -80,28 +86,25 @@ static void HOG_dirClose(dvoid *opaque)
 } /* HOG_dirClose */
 
 
-static PHYSFS_sint64 HOG_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 HOG_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
 {
     HOGfileinfo *finfo = (HOGfileinfo *) opaque;
-    HOGentry *entry = finfo->entry;
-    PHYSFS_uint32 bytesLeft = entry->size - finfo->curPos;
-    PHYSFS_uint32 objsLeft = (bytesLeft / objSize);
+    const HOGentry *entry = finfo->entry;
+    const PHYSFS_uint64 bytesLeft = (PHYSFS_uint64)(entry->size-finfo->curPos);
     PHYSFS_sint64 rc;
 
-    if (objsLeft < objCount)
-        objCount = objsLeft;
+    if (bytesLeft < len)
+        len = bytesLeft;
 
-    rc = __PHYSFS_platformRead(finfo->handle, buffer, objSize, objCount);
+    rc = __PHYSFS_platformRead(finfo->handle, buffer, len);
     if (rc > 0)
-        finfo->curPos += (PHYSFS_uint32) (rc * objSize);
+        finfo->curPos += (PHYSFS_uint32) rc;
 
     return rc;
 } /* HOG_read */
 
 
-static PHYSFS_sint64 HOG_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 HOG_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* HOG_write */
@@ -168,7 +171,7 @@ static int hog_open(const char *filename, int forWriting,
     *fh = __PHYSFS_platformOpenRead(filename);
     BAIL_IF_MACRO(*fh == NULL, NULL, 0);
 
-    if (__PHYSFS_platformRead(*fh, buf, 3, 1) != 1)
+    if (!readAll(*fh, buf, 3))
         goto openHog_failed;
 
     if (memcmp(buf, "DHF", 3) != 0)
@@ -179,10 +182,10 @@ static int hog_open(const char *filename, int forWriting,
 
     while (1)
     {
-        if (__PHYSFS_platformRead(*fh, buf, 13, 1) != 1)
+        if (!readAll(*fh, buf, 13))
             break; /* eof here is ok */
 
-        if (__PHYSFS_platformRead(*fh, &size, 4, 1) != 1)
+        if (!readAll(*fh, &size, sizeof (PHYSFS_uint32)))
             goto openHog_failed;
 
         size = PHYSFS_swapULE32(size);
@@ -269,13 +272,8 @@ static int hog_load_entries(const char *name, int forWriting, HOGinfo *info)
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
-        if (__PHYSFS_platformRead(fh, &entry->name, 13, 1) != 1)
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
-
-        if (__PHYSFS_platformRead(fh, &entry->size, 4, 1) != 1)
+        if ( (!readAll(fh, &entry->name, 13)) ||
+             (!readAll(fh, &entry->size, sizeof (PHYSFS_uint32))) )
         {
             __PHYSFS_platformClose(fh);
             return 0;
@@ -283,18 +281,14 @@ static int hog_load_entries(const char *name, int forWriting, HOGinfo *info)
 
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = (unsigned int) __PHYSFS_platformTell(fh);
-        if (entry->startPos == -1)
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        }
 
         /* Skip over entry */
-        if (!__PHYSFS_platformSeek(fh, entry->startPos + entry->size))
+        if ( (entry->startPos == -1) ||
+             (!__PHYSFS_platformSeek(fh, entry->startPos + entry->size)) )
         {
             __PHYSFS_platformClose(fh);
             return 0;
-        }
+        } /* if */
     } /* for */
 
     __PHYSFS_platformClose(fh);

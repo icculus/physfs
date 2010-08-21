@@ -517,49 +517,24 @@ void *__PHYSFS_platformOpenAppend(const char *_filename)
 } /* __PHYSFS_platformOpenAppend */
 
 
-PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
-                                    PHYSFS_uint32 size, PHYSFS_uint32 count)
+PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 {
-    HFILE hfile = (HFILE) opaque;
-    PHYSFS_sint64 retval;
-    ULONG br;
-
-    for (retval = 0; retval < count; retval++)
-    {
-        os2err(DosRead(hfile, buffer, size, &br));
-        if (br < size)
-        {
-            DosSetFilePtr(hfile, -br, FILE_CURRENT, &br); /* try to cleanup. */
-            return retval;
-        } /* if */
-
-        buffer = (void *) ( ((char *) buffer) + size );
-    } /* for */
-
-    return retval;
+    ULONG br = 0;
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
+    if (os2err(DosRead((HFILE) opaque, buf, (ULONG) len, &br)) != NO_ERROR)
+        return (br > 0) ? ((PHYSFS_sint64) br) : -1;
+    return (PHYSFS_sint64) br;
 } /* __PHYSFS_platformRead */
 
 
-PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
-                                     PHYSFS_uint32 size, PHYSFS_uint32 count)
+PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buf,
+                                     PHYSFS_uint64 len)
 {
-    HFILE hfile = (HFILE) opaque;
-    PHYSFS_sint64 retval;
-    ULONG bw;
-
-    for (retval = 0; retval < count; retval++)
-    {
-        os2err(DosWrite(hfile, buffer, size, &bw));
-        if (bw < size)
-        {
-            DosSetFilePtr(hfile, -bw, FILE_CURRENT, &bw); /* try to cleanup. */
-            return retval;
-        } /* if */
-
-        buffer = (void *) ( ((char *) buffer) + size );
-    } /* for */
-
-    return retval;
+    ULONG bw = 0;
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
+    if (os2err(DosWrite((HFILE) opaque, buf, (ULONG) len, &bw)) != NO_ERROR)
+        return (bw > 0) ? ((PHYSFS_sint64) bw) : -1;
+    return (PHYSFS_sint64) bw;
 } /* __PHYSFS_platformWrite */
 
 

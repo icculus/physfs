@@ -83,28 +83,25 @@ static void QPAK_dirClose(dvoid *opaque)
 } /* QPAK_dirClose */
 
 
-static PHYSFS_sint64 QPAK_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 QPAK_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
 {
     QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
-    QPAKentry *entry = finfo->entry;
-    PHYSFS_uint32 bytesLeft = entry->size - finfo->curPos;
-    PHYSFS_uint32 objsLeft = (bytesLeft / objSize);
+    const QPAKentry *entry = finfo->entry;
+    const PHYSFS_uint64 bytesLeft = (PHYSFS_uint64)(entry->size-finfo->curPos);
     PHYSFS_sint64 rc;
 
-    if (objsLeft < objCount)
-        objCount = objsLeft;
+    if (bytesLeft < len)
+        len = bytesLeft;
 
-    rc = __PHYSFS_platformRead(finfo->handle, buffer, objSize, objCount);
+    rc = __PHYSFS_platformRead(finfo->handle, buffer, len);
     if (rc > 0)
-        finfo->curPos += (PHYSFS_uint32) (rc * objSize);
+        finfo->curPos += (PHYSFS_uint32) rc;
 
     return rc;
 } /* QPAK_read */
 
 
-static PHYSFS_sint64 QPAK_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 QPAK_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* QPAK_write */
@@ -156,6 +153,11 @@ static int QPAK_fileClose(fvoid *opaque)
 } /* QPAK_fileClose */
 
 
+static inline int readAll(void *fh, void *buf, const PHYSFS_uint64 len)
+{
+    return (__PHYSFS_platformRead(fh, buf, len) == len);
+} /* readAll */
+
 static int qpak_open(const char *filename, int forWriting,
                     void **fh, PHYSFS_uint32 *count)
 {
@@ -167,18 +169,18 @@ static int qpak_open(const char *filename, int forWriting,
     *fh = __PHYSFS_platformOpenRead(filename);
     BAIL_IF_MACRO(*fh == NULL, NULL, 0);
     
-    if (__PHYSFS_platformRead(*fh, &buf, sizeof (PHYSFS_uint32), 1) != 1)
+    if (!readAll(*fh, &buf, sizeof (PHYSFS_uint32)))
         goto openQpak_failed;
 
     buf = PHYSFS_swapULE32(buf);
     GOTO_IF_MACRO(buf != QPAK_SIG, ERR_UNSUPPORTED_ARCHIVE, openQpak_failed);
 
-    if (__PHYSFS_platformRead(*fh, &buf, sizeof (PHYSFS_uint32), 1) != 1)
+    if (!readAll(*fh, &buf, sizeof (PHYSFS_uint32)))
         goto openQpak_failed;
 
     buf = PHYSFS_swapULE32(buf);  /* directory table offset. */
 
-    if (__PHYSFS_platformRead(*fh, count, sizeof (PHYSFS_uint32), 1) != 1)
+    if (!readAll(*fh, count, sizeof (PHYSFS_uint32)))
         goto openQpak_failed;
 
     *count = PHYSFS_swapULE32(*count);
@@ -258,28 +260,16 @@ static int qpak_load_entries(const char *name, int forWriting, QPAKinfo *info)
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
-        PHYSFS_uint32 loc;
-
-        if (__PHYSFS_platformRead(fh,&entry->name,sizeof(entry->name),1) != 1)
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
-
-        if (__PHYSFS_platformRead(fh,&loc,sizeof(loc),1) != 1)
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
-
-        if (__PHYSFS_platformRead(fh,&entry->size,sizeof(entry->size),1) != 1)
+        if ( (!readAll(fh, &entry->name, sizeof (entry->name))) ||
+             (!readAll(fh, &entry->startPos, sizeof (entry->startPos))) ||
+             (!readAll(fh, &entry->size, sizeof(entry->size))) )
         {
             __PHYSFS_platformClose(fh);
             return 0;
         } /* if */
 
         entry->size = PHYSFS_swapULE32(entry->size);
-        entry->startPos = PHYSFS_swapULE32(loc);
+        entry->startPos = PHYSFS_swapULE32(entry->startPos);
     } /* for */
 
     __PHYSFS_platformClose(fh);

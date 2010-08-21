@@ -85,28 +85,25 @@ static void WAD_dirClose(dvoid *opaque)
 } /* WAD_dirClose */
 
 
-static PHYSFS_sint64 WAD_read(fvoid *opaque, void *buffer,
-                              PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 WAD_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
 {
     WADfileinfo *finfo = (WADfileinfo *) opaque;
-    WADentry *entry = finfo->entry;
-    PHYSFS_uint32 bytesLeft = entry->size - finfo->curPos;
-    PHYSFS_uint32 objsLeft = (bytesLeft / objSize);
+    const WADentry *entry = finfo->entry;
+    const PHYSFS_uint64 bytesLeft = (PHYSFS_uint64)(entry->size-finfo->curPos);
     PHYSFS_sint64 rc;
 
-    if (objsLeft < objCount)
-        objCount = objsLeft;
+    if (bytesLeft < len)
+        len = bytesLeft;
 
-    rc = __PHYSFS_platformRead(finfo->handle, buffer, objSize, objCount);
+    rc = __PHYSFS_platformRead(finfo->handle, buffer, len);
     if (rc > 0)
-        finfo->curPos += (PHYSFS_uint32) (rc * objSize);
+        finfo->curPos += (PHYSFS_uint32) rc;
 
     return rc;
 } /* WAD_read */
 
 
-static PHYSFS_sint64 WAD_write(fvoid *opaque, const void *buffer,
-                               PHYSFS_uint32 objSize, PHYSFS_uint32 objCount)
+static PHYSFS_sint64 WAD_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* WAD_write */
@@ -158,6 +155,12 @@ static int WAD_fileClose(fvoid *opaque)
 } /* WAD_fileClose */
 
 
+static inline int readAll(void *fh, void *buf, const PHYSFS_uint64 len)
+{
+    return (__PHYSFS_platformRead(fh, buf, len) == len);
+} /* readAll */
+
+
 static int wad_open(const char *filename, int forWriting,
                     void **fh, PHYSFS_uint32 *count,PHYSFS_uint32 *offset)
 {
@@ -169,7 +172,7 @@ static int wad_open(const char *filename, int forWriting,
     *fh = __PHYSFS_platformOpenRead(filename);
     BAIL_IF_MACRO(*fh == NULL, NULL, 0);
     
-    if (__PHYSFS_platformRead(*fh, buf, 4, 1) != 1)
+    if (!readAll(*fh, buf, 4))
         goto openWad_failed;
 
     if (memcmp(buf, "IWAD", 4) != 0 && memcmp(buf, "PWAD", 4) != 0)
@@ -178,12 +181,12 @@ static int wad_open(const char *filename, int forWriting,
         goto openWad_failed;
     } /* if */
 
-    if (__PHYSFS_platformRead(*fh, count, sizeof (PHYSFS_uint32), 1) != 1)
+    if (!readAll(*fh, count, sizeof (PHYSFS_uint32)))
         goto openWad_failed;
 
     *count = PHYSFS_swapULE32(*count);
 
-    if (__PHYSFS_platformRead(*fh, offset, sizeof (PHYSFS_uint32), 1) != 1)
+    if (!readAll(*fh, offset, sizeof (PHYSFS_uint32)))
         goto openWad_failed;
 
     *offset = PHYSFS_swapULE32(*offset);
@@ -262,19 +265,9 @@ static int wad_load_entries(const char *name, int forWriting, WADinfo *info)
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
-        if (__PHYSFS_platformRead(fh, &entry->startPos, 4, 1) != 1)
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
-        
-        if (__PHYSFS_platformRead(fh, &entry->size, 4, 1) != 1)
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
-
-        if (__PHYSFS_platformRead(fh, &entry->name, 8, 1) != 1)
+        if ( (!readAll(fh, &entry->startPos, sizeof (PHYSFS_uint32))) ||
+             (!readAll(fh, &entry->size, sizeof (PHYSFS_uint32))) ||
+             (!readAll(fh, &entry->name, 8)) )
         {
             __PHYSFS_platformClose(fh);
             return 0;
