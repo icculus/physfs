@@ -2134,6 +2134,7 @@ int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 _bufsize)
     PHYSFS_uint32 bufsize;
 
     /* !!! FIXME: Unlocalized string. */
+    /* !!! FIXME: actually, why use 32 bits here? */
     BAIL_IF_MACRO(_bufsize > 0xFFFFFFFF, "buffer must fit in 32-bits", 0);
     bufsize = (PHYSFS_uint32) _bufsize;
 
