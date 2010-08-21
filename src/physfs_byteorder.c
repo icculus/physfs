@@ -83,222 +83,58 @@ PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 x) { return x; }
 PHYSFS_sint64 PHYSFS_swapSBE64(PHYSFS_sint64 x) { return x; }
 #endif
 
-
-int PHYSFS_readSLE16(PHYSFS_File *file, PHYSFS_sint16 *val)
+static inline int readAll(PHYSFS_File *file, void *val, const size_t len)
 {
-    PHYSFS_sint16 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapSLE16(in);
-    return 1;
-} /* PHYSFS_readSLE16 */
+    return (PHYSFS_readBytes(file, val, len) == len);
+} /* readAll */
+
+#define PHYSFS_BYTEORDER_READ(datatype, swaptype) \
+    int PHYSFS_read##swaptype(PHYSFS_File *file, PHYSFS_##datatype *val) { \
+        PHYSFS_##datatype in; \
+        BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0); \
+        BAIL_IF_MACRO(!readAll(file, &in, sizeof (in)), NULL, 0); \
+        *val = PHYSFS_swap##swaptype(in); \
+        return 1; \
+    }
+
+PHYSFS_BYTEORDER_READ(sint16, SLE16)
+PHYSFS_BYTEORDER_READ(uint16, ULE16)
+PHYSFS_BYTEORDER_READ(sint16, SBE16)
+PHYSFS_BYTEORDER_READ(uint16, UBE16)
+PHYSFS_BYTEORDER_READ(sint32, SLE32)
+PHYSFS_BYTEORDER_READ(uint32, ULE32)
+PHYSFS_BYTEORDER_READ(sint32, SBE32)
+PHYSFS_BYTEORDER_READ(uint32, UBE32)
+PHYSFS_BYTEORDER_READ(sint64, SLE64)
+PHYSFS_BYTEORDER_READ(uint64, ULE64)
+PHYSFS_BYTEORDER_READ(sint64, SBE64)
+PHYSFS_BYTEORDER_READ(uint64, UBE64)
 
 
-int PHYSFS_readULE16(PHYSFS_File *file, PHYSFS_uint16 *val)
+static inline int writeAll(PHYSFS_File *f, const void *val, const size_t len)
 {
-    PHYSFS_uint16 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapULE16(in);
-    return 1;
-} /* PHYSFS_readULE16 */
+    return (PHYSFS_writeBytes(f, val, len) == len);
+} /* writeAll */
 
+#define PHYSFS_BYTEORDER_WRITE(datatype, swaptype) \
+    int PHYSFS_write##swaptype(PHYSFS_File *file, PHYSFS_##datatype val) { \
+        const PHYSFS_##datatype out = PHYSFS_swap##swaptype(val); \
+        BAIL_IF_MACRO(!writeAll(file, &out, sizeof (out)), NULL, 0); \
+        return 1; \
+    }
 
-int PHYSFS_readSBE16(PHYSFS_File *file, PHYSFS_sint16 *val)
-{
-    PHYSFS_sint16 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapSBE16(in);
-    return 1;
-} /* PHYSFS_readSBE16 */
-
-
-int PHYSFS_readUBE16(PHYSFS_File *file, PHYSFS_uint16 *val)
-{
-    PHYSFS_uint16 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapUBE16(in);
-    return 1;
-} /* PHYSFS_readUBE16 */
-
-
-int PHYSFS_readSLE32(PHYSFS_File *file, PHYSFS_sint32 *val)
-{
-    PHYSFS_sint32 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapSLE32(in);
-    return 1;
-} /* PHYSFS_readSLE32 */
-
-
-int PHYSFS_readULE32(PHYSFS_File *file, PHYSFS_uint32 *val)
-{
-    PHYSFS_uint32 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapULE32(in);
-    return 1;
-} /* PHYSFS_readULE32 */
-
-
-int PHYSFS_readSBE32(PHYSFS_File *file, PHYSFS_sint32 *val)
-{
-    PHYSFS_sint32 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapSBE32(in);
-    return 1;
-} /* PHYSFS_readSBE32 */
-
-
-int PHYSFS_readUBE32(PHYSFS_File *file, PHYSFS_uint32 *val)
-{
-    PHYSFS_uint32 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapUBE32(in);
-    return 1;
-} /* PHYSFS_readUBE32 */
-
-
-int PHYSFS_readSLE64(PHYSFS_File *file, PHYSFS_sint64 *val)
-{
-    PHYSFS_sint64 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapSLE64(in);
-    return 1;
-} /* PHYSFS_readSLE64 */
-
-
-int PHYSFS_readULE64(PHYSFS_File *file, PHYSFS_uint64 *val)
-{
-    PHYSFS_uint64 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapULE64(in);
-    return 1;
-} /* PHYSFS_readULE64 */
-
-
-int PHYSFS_readSBE64(PHYSFS_File *file, PHYSFS_sint64 *val)
-{
-    PHYSFS_sint64 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapSBE64(in);
-    return 1;
-} /* PHYSFS_readSBE64 */
-
-
-int PHYSFS_readUBE64(PHYSFS_File *file, PHYSFS_uint64 *val)
-{
-    PHYSFS_uint64 in;
-    BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF_MACRO(PHYSFS_read(file, &in, sizeof (in), 1) != 1, NULL, 0);
-    *val = PHYSFS_swapUBE64(in);
-    return 1;
-} /* PHYSFS_readUBE64 */
-
-
-
-int PHYSFS_writeSLE16(PHYSFS_File *file, PHYSFS_sint16 val)
-{
-    PHYSFS_sint16 out = PHYSFS_swapSLE16(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeSLE16 */
-
-
-int PHYSFS_writeULE16(PHYSFS_File *file, PHYSFS_uint16 val)
-{
-    PHYSFS_uint16 out = PHYSFS_swapULE16(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeULE16 */
-
-
-int PHYSFS_writeSBE16(PHYSFS_File *file, PHYSFS_sint16 val)
-{
-    PHYSFS_sint16 out = PHYSFS_swapSBE16(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeSBE16 */
-
-
-int PHYSFS_writeUBE16(PHYSFS_File *file, PHYSFS_uint16 val)
-{
-    PHYSFS_uint16 out = PHYSFS_swapUBE16(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeUBE16 */
-
-
-int PHYSFS_writeSLE32(PHYSFS_File *file, PHYSFS_sint32 val)
-{
-    PHYSFS_sint32 out = PHYSFS_swapSLE32(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeSLE32 */
-
-
-int PHYSFS_writeULE32(PHYSFS_File *file, PHYSFS_uint32 val)
-{
-    PHYSFS_uint32 out = PHYSFS_swapULE32(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeULE32 */
-
-
-int PHYSFS_writeSBE32(PHYSFS_File *file, PHYSFS_sint32 val)
-{
-    PHYSFS_sint32 out = PHYSFS_swapSBE32(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeSBE32 */
-
-
-int PHYSFS_writeUBE32(PHYSFS_File *file, PHYSFS_uint32 val)
-{
-    PHYSFS_uint32 out = PHYSFS_swapUBE32(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeUBE32 */
-
-
-int PHYSFS_writeSLE64(PHYSFS_File *file, PHYSFS_sint64 val)
-{
-    PHYSFS_sint64 out = PHYSFS_swapSLE64(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeSLE64 */
-
-
-int PHYSFS_writeULE64(PHYSFS_File *file, PHYSFS_uint64 val)
-{
-    PHYSFS_uint64 out = PHYSFS_swapULE64(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeULE64 */
-
-
-int PHYSFS_writeSBE64(PHYSFS_File *file, PHYSFS_sint64 val)
-{
-    PHYSFS_sint64 out = PHYSFS_swapSBE64(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeSBE64 */
-
-
-int PHYSFS_writeUBE64(PHYSFS_File *file, PHYSFS_uint64 val)
-{
-    PHYSFS_uint64 out = PHYSFS_swapUBE64(val);
-    BAIL_IF_MACRO(PHYSFS_write(file, &out, sizeof (out), 1) != 1, NULL, 0);
-    return 1;
-} /* PHYSFS_writeUBE64 */
+PHYSFS_BYTEORDER_WRITE(sint16, SLE16)
+PHYSFS_BYTEORDER_WRITE(uint16, ULE16)
+PHYSFS_BYTEORDER_WRITE(sint16, SBE16)
+PHYSFS_BYTEORDER_WRITE(uint16, UBE16)
+PHYSFS_BYTEORDER_WRITE(sint32, SLE32)
+PHYSFS_BYTEORDER_WRITE(uint32, ULE32)
+PHYSFS_BYTEORDER_WRITE(sint32, SBE32)
+PHYSFS_BYTEORDER_WRITE(uint32, UBE32)
+PHYSFS_BYTEORDER_WRITE(sint64, SLE64)
+PHYSFS_BYTEORDER_WRITE(uint64, ULE64)
+PHYSFS_BYTEORDER_WRITE(sint64, SBE64)
+PHYSFS_BYTEORDER_WRITE(uint64, UBE64)
 
 /* end of physfs_byteorder.c ... */
 
