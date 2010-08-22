@@ -688,7 +688,7 @@ static int LZMA_mkdir(dvoid *opaque, const char *name)
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* LZMA_mkdir */
 
-static int LZMA_stat(fvoid *opaque, const char *filename, int *exists,
+static int LZMA_stat(dvoid *opaque, const char *filename, int *exists,
                      PHYSFS_Stat *stat)
 {
     const LZMAarchive *archive = (const LZMAarchive *) opaque;

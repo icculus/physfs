@@ -1399,7 +1399,7 @@ static int ZIP_mkdir(dvoid *opaque, const char *name)
 } /* ZIP_mkdir */
 
 
-static int ZIP_stat(fvoid *opaque, const char *filename, int *exists,
+static int ZIP_stat(dvoid *opaque, const char *filename, int *exists,
                     PHYSFS_Stat *stat)
 {
     int isDir = 0;

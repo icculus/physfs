@@ -237,7 +237,7 @@ static void DIR_dirClose(dvoid *opaque)
 } /* DIR_dirClose */
 
 
-static int DIR_stat(fvoid *opaque, const char *name, int *exists,
+static int DIR_stat(dvoid *opaque, const char *name, int *exists,
                     PHYSFS_Stat *stat)
 {
     char *d = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);

@@ -581,7 +581,7 @@ static int QPAK_mkdir(dvoid *opaque, const char *name)
 } /* QPAK_mkdir */
 
 
-static int QPAK_stat(fvoid *opaque, const char *filename, int *exists,
+static int QPAK_stat(dvoid *opaque, const char *filename, int *exists,
                      PHYSFS_Stat *stat)
 {
     int isDir = 0;

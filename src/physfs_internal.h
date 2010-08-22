@@ -890,6 +890,12 @@ typedef struct
          */
     void (*dirClose)(dvoid *opaque);
 
+        /*
+         * Obtain basic file metadata.
+         *  Returns non-zero on success, zero on failure.
+         *  On failure, call __PHYSFS_setError().
+         */
+    int (*stat)(dvoid *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
 
 
     /*
@@ -944,13 +950,6 @@ typedef struct
          *  file. On failure, call __PHYSFS_setError().
          */
     int (*fileClose)(fvoid *opaque);
-
-        /* !!! FIXME: return info (may be|is) wrong.
-         * Obtain basic file metadata.
-         *  Returns non-zero on success, zero if can't close
-         *  file. On failure, call __PHYSFS_setError().
-         */
-    int (*stat)(fvoid *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
 } PHYSFS_Archiver;
 
 

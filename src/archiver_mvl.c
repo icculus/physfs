@@ -428,7 +428,7 @@ static int MVL_mkdir(dvoid *opaque, const char *name)
 } /* MVL_mkdir */
 
 
-static int MVL_stat(fvoid *opaque, const char *filename, int *exists,
+static int MVL_stat(dvoid *opaque, const char *filename, int *exists,
                     PHYSFS_Stat *stat)
 {
     const MVLinfo *info = (const MVLinfo *) opaque;
