@@ -1008,14 +1008,14 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
     ISO9660_remove,             /* remove() method         */
     ISO9660_mkdir,              /* mkdir() method          */
     ISO9660_dirClose,           /* dirClose() method       */
+    ISO9660_stat,               /* stat() method           */
     ISO9660_read,               /* read() method           */
     ISO9660_write,              /* write() method          */
     ISO9660_eof,                /* eof() method            */
     ISO9660_tell,               /* tell() method           */
     ISO9660_seek,               /* seek() method           */
     ISO9660_fileLength,         /* fileLength() method     */
-    ISO9660_fileClose,          /* fileClose() method      */
-    ISO9660_stat                /* stat() method           */
+    ISO9660_fileClose           /* fileClose() method      */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_ISO9660 */

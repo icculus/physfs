@@ -750,14 +750,14 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
     LZMA_remove,             /* remove() method         */
     LZMA_mkdir,              /* mkdir() method          */
     LZMA_dirClose,           /* dirClose() method       */
+    LZMA_stat,               /* stat() method           */
     LZMA_read,               /* read() method           */
     LZMA_write,              /* write() method          */
     LZMA_eof,                /* eof() method            */
     LZMA_tell,               /* tell() method           */
     LZMA_seek,               /* seek() method           */
     LZMA_fileLength,         /* fileLength() method     */
-    LZMA_fileClose,          /* fileClose() method      */
-    LZMA_stat         /* stat() method    */
+    LZMA_fileClose           /* fileClose() method      */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_7Z */

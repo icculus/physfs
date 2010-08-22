@@ -533,14 +533,14 @@ const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
     WAD_remove,             /* remove() method         */
     WAD_mkdir,              /* mkdir() method          */
     WAD_dirClose,           /* dirClose() method       */
+    WAD_stat,               /* stat() method           */
     WAD_read,               /* read() method           */
     WAD_write,              /* write() method          */
     WAD_eof,                /* eof() method            */
     WAD_tell,               /* tell() method           */
     WAD_seek,               /* seek() method           */
     WAD_fileLength,         /* fileLength() method     */
-    WAD_fileClose,          /* fileClose() method      */
-    WAD_stat                /* stat() method           */
+    WAD_fileClose           /* fileClose() method      */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_WAD */

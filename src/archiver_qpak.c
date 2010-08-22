@@ -637,14 +637,14 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
     QPAK_remove,             /* remove() method         */
     QPAK_mkdir,              /* mkdir() method          */
     QPAK_dirClose,           /* dirClose() method       */
+    QPAK_stat,               /* stat() method           */
     QPAK_read,               /* read() method           */
     QPAK_write,              /* write() method          */
     QPAK_eof,                /* eof() method            */
     QPAK_tell,               /* tell() method           */
     QPAK_seek,               /* seek() method           */
     QPAK_fileLength,         /* fileLength() method     */
-    QPAK_fileClose,          /* fileClose() method      */
-    QPAK_stat                /* stat() method           */
+    QPAK_fileClose           /* fileClose() method      */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_QPAK */
