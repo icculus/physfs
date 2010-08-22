@@ -119,7 +119,7 @@ static int cmd_addarchive(char *args)
 
     /*printf("[%s], [%d]\n", args, appending);*/
 
-    if (PHYSFS_addToSearchPath(args, appending))
+    if (PHYSFS_mount(args, NULL, appending))
         printf("Successful.\n");
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
@@ -189,7 +189,7 @@ static int cmd_removearchive(char *args)
         args[strlen(args) - 1] = '\0';
     } /* if */
 
-    if (PHYSFS_removeFromSearchPath(args))
+    if (PHYSFS_unmount(args))
         printf("Successful.\n");
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
@@ -1024,6 +1024,7 @@ static const command_info commands[] =
     { "addarchive",     cmd_addarchive,     2, "<archiveLocation> <append>" },
     { "mount",          cmd_mount,          3, "<archiveLocation> <mntpoint> <append>" },
     { "removearchive",  cmd_removearchive,  1, "<archiveLocation>"          },
+    { "unmount",        cmd_removearchive,  1, "<archiveLocation>"          },
     { "enumerate",      cmd_enumerate,      1, "<dirToEnumerate>"           },
     { "ls",             cmd_enumerate,      1, "<dirToEnumerate>"           },
     { "getlasterror",   cmd_getlasterror,   0, NULL                         },

@@ -88,6 +88,7 @@
 %rename(stat) PHYSFS_stat;
 %rename(readBytes) PHYSFS_readBytes;
 %rename(writeBytes) PHYSFS_writeBytes;
+%rename(unmount) PHYSFS_unmount;
 #endif
 
 %include "../src/physfs.h"
