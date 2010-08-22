@@ -468,7 +468,7 @@ static int HOG_mkdir(dvoid *opaque, const char *name)
 } /* HOG_mkdir */
 
 
-static int HOG_stat(fvoid *opaque, const char *filename, int *exists,
+static int HOG_stat(dvoid *opaque, const char *filename, int *exists,
                     PHYSFS_Stat *stat)
 {
     const HOGinfo *info = (const HOGinfo *) opaque;

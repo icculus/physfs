@@ -433,7 +433,7 @@ static int GRP_mkdir(dvoid *opaque, const char *name)
 } /* GRP_mkdir */
 
 
-static int GRP_stat(fvoid *opaque, const char *filename, int *exists,
+static int GRP_stat(dvoid *opaque, const char *filename, int *exists,
                     PHYSFS_Stat *stat)
 {
     const GRPinfo *info = (const GRPinfo *) opaque;

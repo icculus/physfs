@@ -487,7 +487,7 @@ static int WAD_mkdir(dvoid *opaque, const char *name)
 } /* WAD_mkdir */
 
 
-static int WAD_stat(fvoid *opaque, const char *filename, int *exists,
+static int WAD_stat(dvoid *opaque, const char *filename, int *exists,
                     PHYSFS_Stat *stat)
 {
     const WADinfo *info = (const WADinfo *) opaque;
