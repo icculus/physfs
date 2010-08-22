@@ -479,14 +479,14 @@ const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
     GRP_remove,             /* remove() method         */
     GRP_mkdir,              /* mkdir() method          */
     GRP_dirClose,           /* dirClose() method       */
+    GRP_stat,               /* stat() method           */
     GRP_read,               /* read() method           */
     GRP_write,              /* write() method          */
     GRP_eof,                /* eof() method            */
     GRP_tell,               /* tell() method           */
     GRP_seek,               /* seek() method           */
     GRP_fileLength,         /* fileLength() method     */
-    GRP_fileClose,          /* fileClose() method      */
-    GRP_stat                /* stat() method           */
+    GRP_fileClose           /* fileClose() method      */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_GRP */

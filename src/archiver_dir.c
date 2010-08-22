@@ -275,14 +275,14 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     DIR_remove,             /* remove() method         */
     DIR_mkdir,              /* mkdir() method          */
     DIR_dirClose,           /* dirClose() method       */
+    DIR_stat,               /* stat() method           */
     DIR_read,               /* read() method           */
     DIR_write,              /* write() method          */
     DIR_eof,                /* eof() method            */
     DIR_tell,               /* tell() method           */
     DIR_seek,               /* seek() method           */
     DIR_fileLength,         /* fileLength() method     */
-    DIR_fileClose,          /* fileClose() method      */
-    DIR_stat                /* stat() method           */
+    DIR_fileClose           /* fileClose() method      */
 };
 
 /* end of dir.c ... */

@@ -1462,14 +1462,14 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
     ZIP_remove,             /* remove() method         */
     ZIP_mkdir,              /* mkdir() method          */
     ZIP_dirClose,           /* dirClose() method       */
+    ZIP_stat,               /* stat() method           */
     ZIP_read,               /* read() method           */
     ZIP_write,              /* write() method          */
     ZIP_eof,                /* eof() method            */
     ZIP_tell,               /* tell() method           */
     ZIP_seek,               /* seek() method           */
     ZIP_fileLength,         /* fileLength() method     */
-    ZIP_fileClose,          /* fileClose() method      */
-    ZIP_stat                /* stat() method           */
+    ZIP_fileClose           /* fileClose() method      */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_ZIP */

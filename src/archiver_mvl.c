@@ -474,14 +474,14 @@ const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
     MVL_remove,             /* remove() method         */
     MVL_mkdir,              /* mkdir() method          */
     MVL_dirClose,           /* dirClose() method       */
+    MVL_stat,               /* stat() method           */
     MVL_read,               /* read() method           */
     MVL_write,              /* write() method          */
     MVL_eof,                /* eof() method            */
     MVL_tell,               /* tell() method           */
     MVL_seek,               /* seek() method           */
     MVL_fileLength,         /* fileLength() method     */
-    MVL_fileClose,          /* fileClose() method      */
-    MVL_stat                /* stat() method           */
+    MVL_fileClose           /* fileClose() method      */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_MVL */

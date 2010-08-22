@@ -514,14 +514,14 @@ const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
     HOG_remove,             /* remove() method         */
     HOG_mkdir,              /* mkdir() method          */
     HOG_dirClose,           /* dirClose() method       */
+    HOG_stat,               /* stat() method           */
     HOG_read,               /* read() method           */
     HOG_write,              /* write() method          */
     HOG_eof,                /* eof() method            */
     HOG_tell,               /* tell() method           */
     HOG_seek,               /* seek() method           */
     HOG_fileLength,         /* fileLength() method     */
-    HOG_fileClose,          /* fileClose() method      */
-    HOG_stat                /* stat() method           */
+    HOG_fileClose           /* fileClose() method      */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_HOG */
