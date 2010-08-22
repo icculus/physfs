@@ -1004,6 +1004,12 @@ int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
 
 int PHYSFS_removeFromSearchPath(const char *oldDir)
 {
+    return PHYSFS_unmount(oldDir);
+} /* PHYSFS_removeFromSearchPath */
+
+
+int PHYSFS_unmount(const char *oldDir)
+{
     DirHandle *i;
     DirHandle *prev = NULL;
     DirHandle *next = NULL;
@@ -1030,7 +1036,7 @@ int PHYSFS_removeFromSearchPath(const char *oldDir)
     } /* for */
 
     BAIL_MACRO_MUTEX(ERR_NOT_IN_SEARCH_PATH, stateLock, 0);
-} /* PHYSFS_removeFromSearchPath */
+} /* PHYSFS_unmount */
 
 
 char **PHYSFS_getSearchPath(void)
@@ -1081,7 +1087,7 @@ static void setSaneCfgAddPath(const char *i, const size_t l, const char *dirsep,
     if (str != NULL)
     {
         sprintf(str, "%s%s%s", d, dirsep, i);
-        PHYSFS_addToSearchPath(str, archivesFirst == 0);
+        PHYSFS_mount(str, NULL, archivesFirst == 0);
         __PHYSFS_smallFree(str);
     } /* if */
 } /* setSaneCfgAddPath */
@@ -1133,11 +1139,11 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
     } /* if */
 
     /* Put write dir first in search path... */
-    PHYSFS_addToSearchPath(str, 0);
+    PHYSFS_mount(str, NULL, 0);
     __PHYSFS_smallFree(str);
 
         /* Put base path on search path... */
-    PHYSFS_addToSearchPath(basedir, 1);
+    PHYSFS_mount(basedir, NULL, 1);
 
         /* handle CD-ROMs... */
     if (includeCdRoms)
@@ -1145,7 +1151,7 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
         char **cds = PHYSFS_getCdRomDirs();
         char **i;
         for (i = cds; *i != NULL; i++)
-            PHYSFS_addToSearchPath(*i, 1);
+            PHYSFS_mount(*i, NULL, 1);
 
         PHYSFS_freeList(cds);
     } /* if */

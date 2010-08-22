@@ -800,8 +800,14 @@ PHYSFS_DECL int PHYSFS_setWriteDir(const char *newDir);
  * \fn int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
  * \brief Add an archive or directory to the search path.
  *
- * This is a legacy call in PhysicsFS 2.0, equivalent to:
- *     PHYSFS_mount(newDir, NULL, appendToPath);
+ * \deprecated As of PhysicsFS 2.0, use PHYSFS_mount() instead. This
+ *             function just wraps it anyhow.
+ *
+ * This function is equivalent to:
+ *
+ * \code
+ *  PHYSFS_mount(newDir, NULL, appendToPath);
+ * \endcode
  *
  * You must use this and not PHYSFS_mount if binary compatibility with
  *  PhysicsFS 1.0 is important (which it may not be for many people).
@@ -810,27 +816,35 @@ PHYSFS_DECL int PHYSFS_setWriteDir(const char *newDir);
  * \sa PHYSFS_removeFromSearchPath
  * \sa PHYSFS_getSearchPath
  */
-PHYSFS_DECL int PHYSFS_addToSearchPath(const char *newDir, int appendToPath);
-
+PHYSFS_DECL int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
+                                        PHYSFS_DEPRECATED;
 
 /**
  * \fn int PHYSFS_removeFromSearchPath(const char *oldDir)
  * \brief Remove a directory or archive from the search path.
  *
- * This must be a (case-sensitive) match to a dir or archive already in the
- *  search path, specified in platform-dependent notation.
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_unmount() instead. This
+ *             function just wraps it anyhow. There's no functional difference
+ *             except the vocabulary changed from "adding to the search path"
+ *             to "mounting" when that functionality was extended, and thus
+ *             the preferred way to accomplish this function's work is now
+ *             called "unmounting."
  *
- * This call will fail (and fail to remove from the path) if the element still
- *  has files open in it.
+ * This function is equivalent to:
  *
- *    \param oldDir dir/archive to remove.
- *   \return nonzero on success, zero on failure.
- *            Specifics of the error can be gleaned from PHYSFS_getLastError().
+ * \code
+ *  PHYSFS_unmount(oldDir);
+ * \endcode
+ *
+ * You must use this and not PHYSFS_unmount if binary compatibility with
+ *  PhysicsFS 1.0 is important (which it may not be for many people).
  *
  * \sa PHYSFS_addToSearchPath
  * \sa PHYSFS_getSearchPath
+ * \sa PHYSFS_unmount
  */
-PHYSFS_DECL int PHYSFS_removeFromSearchPath(const char *oldDir);
+PHYSFS_DECL int PHYSFS_removeFromSearchPath(const char *oldDir)
+                                            PHYSFS_DEPRECATED;
 
 
 /**
@@ -2474,6 +2488,28 @@ PHYSFS_DECL void PHYSFS_utf8FromLatin1(const char *src, char *dst,
                                        PHYSFS_uint64 len);
 
 /* Everything above this line is part of the PhysicsFS 2.0 API. */
+
+/**
+ * \fn int PHYSFS_unmount(const char *oldDir)
+ * \brief Remove a directory or archive from the search path.
+ *
+ * This is functionally equivalent to PHYSFS_removeFromSearchPath(), but that
+ *  function is deprecated to keep the vocabulary paired with PHYSFS_mount().
+ *
+ * This must be a (case-sensitive) match to a dir or archive already in the
+ *  search path, specified in platform-dependent notation.
+ *
+ * This call will fail (and fail to remove from the path) if the element still
+ *  has files open in it.
+ *
+ *    \param oldDir dir/archive to remove.
+ *   \return nonzero on success, zero on failure.
+ *            Specifics of the error can be gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_getSearchPath
+ * \sa PHYSFS_mount
+ */
+PHYSFS_DECL int PHYSFS_unmount(const char *oldDir);
 
 /**
  * \fn const PHYSFS_Allocator *PHYSFS_getAllocator(void)
