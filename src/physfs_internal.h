@@ -807,18 +807,6 @@ typedef struct
     int (*isSymLink)(dvoid *opaque, const char *name, int *fileExists);
 
         /*
-         * Retrieve the last modification time (mtime) of a file.
-         *  Returns -1 on failure, or the file's mtime in seconds since
-         *  the epoch (Jan 1, 1970) on success.
-         *  This filename is in platform-independent notation.
-         *
-         * Regardless of success or failure, please set *exists to
-         *  non-zero if the file existed (even if it's a broken symlink!),
-         *  zero if it did not.
-         */
-    PHYSFS_sint64 (*getLastModTime)(dvoid *opaque, const char *fnm, int *exist);
-
-        /*
          * Open file for reading.
          *  This filename is in platform-independent notation.
          * If you can't handle multiple opens of the same file,

@@ -362,21 +362,6 @@ static int MVL_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* MVL_isSymLink */
 
 
-static PHYSFS_sint64 MVL_getLastModTime(dvoid *opaque,
-                                        const char *name,
-                                        int *fileExists)
-{
-    MVLinfo *info = ((MVLinfo *) opaque);
-    PHYSFS_sint64 retval = -1;
-
-    *fileExists = (mvl_find_entry(info, name) != NULL);
-    if (*fileExists)  /* use time of MVL itself in the physical filesystem. */
-        retval = info->last_mod_time;
-
-    return retval;
-} /* MVL_getLastModTime */
-
-
 static fvoid *MVL_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     MVLinfo *info = ((MVLinfo *) opaque);
@@ -467,7 +452,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
     MVL_exists,             /* exists() method         */
     MVL_isDirectory,        /* isDirectory() method    */
     MVL_isSymLink,          /* isSymLink() method      */
-    MVL_getLastModTime,     /* getLastModTime() method */
     MVL_openRead,           /* openRead() method       */
     MVL_openWrite,          /* openWrite() method      */
     MVL_openAppend,         /* openAppend() method     */

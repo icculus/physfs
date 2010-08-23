@@ -402,21 +402,6 @@ static int HOG_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* HOG_isSymLink */
 
 
-static PHYSFS_sint64 HOG_getLastModTime(dvoid *opaque,
-                                        const char *name,
-                                        int *fileExists)
-{
-    HOGinfo *info = ((HOGinfo *) opaque);
-    PHYSFS_sint64 retval = -1;
-
-    *fileExists = (hog_find_entry(info, name) != NULL);
-    if (*fileExists)  /* use time of HOG itself in the physical filesystem. */
-        retval = info->last_mod_time;
-
-    return retval;
-} /* HOG_getLastModTime */
-
-
 static fvoid *HOG_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     HOGinfo *info = ((HOGinfo *) opaque);
@@ -507,7 +492,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
     HOG_exists,             /* exists() method         */
     HOG_isDirectory,        /* isDirectory() method    */
     HOG_isSymLink,          /* isSymLink() method      */
-    HOG_getLastModTime,     /* getLastModTime() method */
     HOG_openRead,           /* openRead() method       */
     HOG_openWrite,          /* openWrite() method      */
     HOG_openAppend,         /* openAppend() method     */

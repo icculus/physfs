@@ -600,22 +600,6 @@ static int LZMA_exists(dvoid *opaque, const char *name)
 } /* LZMA_exists */
 
 
-static PHYSFS_sint64 LZMA_getLastModTime(dvoid *opaque,
-                                         const char *name,
-                                         int *fileExists)
-{
-    LZMAarchive *archive = (LZMAarchive *) opaque;
-    LZMAfile *file = lzma_find_file(archive, name);
-
-    *fileExists = (file != NULL);
-
-    BAIL_IF_MACRO(file == NULL, NULL, -1);
-	BAIL_IF_MACRO(!file->item->IsLastWriteTimeDefined, NULL, -1); /* write-time may not be defined for every file */
-
-    return lzma_filetime_to_unix_timestamp(&file->item->LastWriteTime);
-} /* LZMA_getLastModTime */
-
-
 static int LZMA_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
@@ -743,7 +727,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
     LZMA_exists,             /* exists() method         */
     LZMA_isDirectory,        /* isDirectory() method    */
     LZMA_isSymLink,          /* isSymLink() method      */
-    LZMA_getLastModTime,     /* getLastModTime() method */
     LZMA_openRead,           /* openRead() method       */
     LZMA_openWrite,          /* openWrite() method      */
     LZMA_openAppend,         /* openAppend() method     */
