@@ -421,21 +421,6 @@ static int WAD_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* WAD_isSymLink */
 
 
-static PHYSFS_sint64 WAD_getLastModTime(dvoid *opaque,
-                                        const char *name,
-                                        int *fileExists)
-{
-    WADinfo *info = ((WADinfo *) opaque);
-    PHYSFS_sint64 retval = -1;
-
-    *fileExists = (wad_find_entry(info, name) != NULL);
-    if (*fileExists)  /* use time of WAD itself in the physical filesystem. */
-        retval = info->last_mod_time;
-
-    return retval;
-} /* WAD_getLastModTime */
-
-
 static fvoid *WAD_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     WADinfo *info = ((WADinfo *) opaque);
@@ -526,7 +511,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
     WAD_exists,             /* exists() method         */
     WAD_isDirectory,        /* isDirectory() method    */
     WAD_isSymLink,          /* isSymLink() method      */
-    WAD_getLastModTime,     /* getLastModTime() method */
     WAD_openRead,           /* openRead() method       */
     WAD_openWrite,          /* openWrite() method      */
     WAD_openAppend,         /* openAppend() method     */

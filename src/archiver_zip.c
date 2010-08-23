@@ -1240,23 +1240,6 @@ static int ZIP_exists(dvoid *opaque, const char *name)
 } /* ZIP_exists */
 
 
-static PHYSFS_sint64 ZIP_getLastModTime(dvoid *opaque,
-                                        const char *name,
-                                        int *fileExists)
-{
-    int isDir;
-    ZIPinfo *info = (ZIPinfo *) opaque;
-    ZIPentry *entry = zip_find_entry(info, name, &isDir);
-
-    *fileExists = ((isDir) || (entry != NULL));
-    if (isDir)
-        return 1;  /* Best I can do for a dir... */
-
-    BAIL_IF_MACRO(entry == NULL, NULL, -1);
-    return entry->last_mod_time;
-} /* ZIP_getLastModTime */
-
-
 static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 {
     ZIPinfo *info = (ZIPinfo *) opaque;
@@ -1455,7 +1438,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
     ZIP_exists,             /* exists() method         */
     ZIP_isDirectory,        /* isDirectory() method    */
     ZIP_isSymLink,          /* isSymLink() method      */
-    ZIP_getLastModTime,     /* getLastModTime() method */
     ZIP_openRead,           /* openRead() method       */
     ZIP_openWrite,          /* openWrite() method      */
     ZIP_openAppend,         /* openAppend() method     */

@@ -367,21 +367,6 @@ static int GRP_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* GRP_isSymLink */
 
 
-static PHYSFS_sint64 GRP_getLastModTime(dvoid *opaque,
-                                        const char *name,
-                                        int *fileExists)
-{
-    GRPinfo *info = (GRPinfo *) opaque;
-    PHYSFS_sint64 retval = -1;
-
-    *fileExists = (grp_find_entry(info, name) != NULL);
-    if (*fileExists)  /* use time of GRP itself in the physical filesystem. */
-        retval = info->last_mod_time;
-
-    return retval;
-} /* GRP_getLastModTime */
-
-
 static fvoid *GRP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     GRPinfo *info = (GRPinfo *) opaque;
@@ -472,7 +457,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
     GRP_exists,             /* exists() method         */
     GRP_isDirectory,        /* isDirectory() method    */
     GRP_isSymLink,          /* isSymLink() method      */
-    GRP_getLastModTime,     /* getLastModTime() method */
     GRP_openRead,           /* openRead() method       */
     GRP_openWrite,          /* openWrite() method      */
     GRP_openAppend,         /* openAppend() method     */

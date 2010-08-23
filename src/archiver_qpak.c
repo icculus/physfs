@@ -511,23 +511,6 @@ static int QPAK_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* QPAK_isSymLink */
 
 
-static PHYSFS_sint64 QPAK_getLastModTime(dvoid *opaque,
-                                        const char *name,
-                                        int *fileExists)
-{
-    int isDir;
-    QPAKinfo *info = ((QPAKinfo *) opaque);
-    PHYSFS_sint64 retval = -1;
-    QPAKentry *entry = qpak_find_entry(info, name, &isDir);
-
-    *fileExists = ((isDir) || (entry != NULL));
-    if (*fileExists)  /* use time of QPAK itself in the physical filesystem. */
-        retval = info->last_mod_time;
-
-    return retval;
-} /* QPAK_getLastModTime */
-
-
 static fvoid *QPAK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     QPAKinfo *info = ((QPAKinfo *) opaque);
@@ -630,7 +613,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
     QPAK_exists,             /* exists() method         */
     QPAK_isDirectory,        /* isDirectory() method    */
     QPAK_isSymLink,          /* isSymLink() method      */
-    QPAK_getLastModTime,     /* getLastModTime() method */
     QPAK_openRead,           /* openRead() method       */
     QPAK_openWrite,          /* openWrite() method      */
     QPAK_openAppend,         /* openAppend() method     */

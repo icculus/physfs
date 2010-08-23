@@ -1132,14 +1132,17 @@ PHYSFS_DECL int PHYSFS_isSymbolicLink(const char *fname);
  * \fn PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename)
  * \brief Get the last modification time of a file.
  *
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This
+ *             function just wraps it anyhow.
+ *
  * The modtime is returned as a number of seconds since the Unix epoch
  *  (midnight, Jan 1, 1970). The exact derivation and accuracy of this time
  *  depends on the particular archiver. If there is no reasonable way to
  *  obtain this information for a particular archiver, or there was some sort
  *  of error, this function returns (-1).
  *
- * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This
- *             function just wraps it anyhow.
+ * You must use this and not PHYSFS_stat() if binary compatibility with
+ *  PhysicsFS 2.0 is important (which it may not be for many people).
  *
  *   \param filename filename to check, in platform-independent notation.
  *  \return last modified time of the file. -1 if it can't be determined.

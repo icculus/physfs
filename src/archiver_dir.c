@@ -147,22 +147,6 @@ static int DIR_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* DIR_isSymLink */
 
 
-static PHYSFS_sint64 DIR_getLastModTime(dvoid *opaque,
-                                        const char *name,
-                                        int *fileExists)
-{
-    char *d = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
-    PHYSFS_sint64 retval = -1;
-
-    BAIL_IF_MACRO(d == NULL, NULL, 0);
-    *fileExists = __PHYSFS_platformExists(d);
-    if (*fileExists)
-        retval = __PHYSFS_platformGetLastModTime(d);
-    allocator.Free(d);
-    return retval;
-} /* DIR_getLastModTime */
-
-
 static fvoid *doOpen(dvoid *opaque, const char *name,
                      void *(*openFunc)(const char *filename),
                      int *fileExists)
@@ -268,7 +252,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     DIR_exists,             /* exists() method         */
     DIR_isDirectory,        /* isDirectory() method    */
     DIR_isSymLink,          /* isSymLink() method      */
-    DIR_getLastModTime,     /* getLastModTime() method */
     DIR_openRead,           /* openRead() method       */
     DIR_openWrite,          /* openWrite() method      */
     DIR_openAppend,         /* openAppend() method     */
