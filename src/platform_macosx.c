@@ -324,14 +324,14 @@ static void macosxAllocatorDeinit(void)
 
 static void *macosxAllocatorMalloc(PHYSFS_uint64 s)
 {
-    BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
     return CFAllocatorAllocate(cfallocdef, (CFIndex) s, 0);
 } /* macosxAllocatorMalloc */
 
 
 static void *macosxAllocatorRealloc(void *ptr, PHYSFS_uint64 s)
 {
-    BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
     return CFAllocatorReallocate(cfallocdef, ptr, (CFIndex) s, 0);
 } /* macosxAllocatorRealloc */
 

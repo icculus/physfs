@@ -1046,8 +1046,8 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
  *  size_t, suitable to pass to malloc. This is kinda messy, but effective.
  */
 #define __PHYSFS_ui64FitsAddressSpace(s) ( \
-    (sizeof (PHYSFS_uint64) > sizeof (size_t)) && \
-    ((s) > (__PHYSFS_UI64(0xFFFFFFFFFFFFFFFF) >> (64-(sizeof(size_t)*8)))) \
+    (sizeof (PHYSFS_uint64) <= sizeof (size_t)) || \
+    ((s) < (__PHYSFS_UI64(0xFFFFFFFFFFFFFFFF) >> (64-(sizeof(size_t)*8)))) \
 )
 
 
