@@ -416,7 +416,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
     DWORD rc;
 
     /* Get the high order 32-bits of the position */
-    //HighOrderPos = HIGHORDER_UINT64(pos);
+    /*HighOrderPos = HIGHORDER_UINT64(pos);*/
     HighOrderPos = (unsigned long)(pos>>32);
 
     /*!!! SetFilePointer needs a signed 64-bit value. */
@@ -450,7 +450,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
     {
         /* Combine the high/low order to create the 64-bit position value */
         retval = (((PHYSFS_uint64) HighPos) << 32) | LowPos;
-        //assert(retval >= 0);
+        /*assert(retval >= 0);*/
     } /* else */
 
     return retval;
@@ -473,7 +473,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
     {
         /* Combine the high/low order to create the 64-bit position value */
         retval = (((PHYSFS_uint64) SizeHigh) << 32) | SizeLow;
-        //assert(retval >= 0);
+        /*assert(retval >= 0);*/
     } /* else */
 
     return retval;
