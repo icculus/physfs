@@ -2246,7 +2246,7 @@ const PHYSFS_Allocator *PHYSFS_getAllocator(void)
 
 static void *mallocAllocatorMalloc(PHYSFS_uint64 s)
 {
-    BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
     #undef malloc
     return malloc((size_t) s);
 } /* mallocAllocatorMalloc */
@@ -2254,7 +2254,7 @@ static void *mallocAllocatorMalloc(PHYSFS_uint64 s)
 
 static void *mallocAllocatorRealloc(void *ptr, PHYSFS_uint64 s)
 {
-    BAIL_IF_MACRO(__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(s), ERR_OUT_OF_MEMORY, NULL);
     #undef realloc
     return realloc(ptr, (size_t) s);
 } /* mallocAllocatorRealloc */
