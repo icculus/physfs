@@ -387,7 +387,7 @@ void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len
                 cp = UNICODE_BOGUS_CHAR_CODEPOINT;
             else
             {
-                src++;  // eat the other surrogate.
+                src++;  /* eat the other surrogate. */
                 cp = (((cp - 0xD800) << 10) | (pair - 0xDC00));
             } /* else */
         } /* else if */
