@@ -179,19 +179,6 @@ openGrp_failed:
 } /* grp_open */
 
 
-static int GRP_isArchive(const char *filename, int forWriting)
-{
-    void *fh;
-    PHYSFS_uint32 fileCount;
-    int retval = grp_open(filename, forWriting, &fh, &fileCount);
-
-    if (fh != NULL)
-        __PHYSFS_platformClose(fh);
-
-    return retval;
-} /* GRP_isArchive */
-
-
 static int grp_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
@@ -451,7 +438,6 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
 const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
 {
     &__PHYSFS_ArchiveInfo_GRP,
-    GRP_isArchive,          /* isArchive() method      */
     GRP_openArchive,        /* openArchive() method    */
     GRP_enumerateFiles,     /* enumerateFiles() method */
     GRP_exists,             /* exists() method         */

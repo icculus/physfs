@@ -103,7 +103,6 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
 
 static const PHYSFS_Archiver *archivers[] =
 {
-    &__PHYSFS_Archiver_DIR,
 #if (defined PHYSFS_SUPPORTS_ZIP)
     &__PHYSFS_Archiver_ZIP,
 #endif
@@ -401,22 +400,19 @@ static DirHandle *tryOpenDir(const PHYSFS_Archiver *funcs,
                              const char *d, int forWriting)
 {
     DirHandle *retval = NULL;
-    if (funcs->isArchive(d, forWriting))
+    void *opaque = funcs->openArchive(d, forWriting);
+    if (opaque != NULL)
     {
-        void *opaque = funcs->openArchive(d, forWriting);
-        if (opaque != NULL)
+        retval = (DirHandle *) allocator.Malloc(sizeof (DirHandle));
+        if (retval == NULL)
+            funcs->dirClose(opaque);
+        else
         {
-            retval = (DirHandle *) allocator.Malloc(sizeof (DirHandle));
-            if (retval == NULL)
-                funcs->dirClose(opaque);
-            else
-            {
-                memset(retval, '\0', sizeof (DirHandle));
-                retval->mountPoint = NULL;
-                retval->funcs = funcs;
-                retval->opaque = opaque;
-            } /* else */
-        } /* if */
+            memset(retval, '\0', sizeof (DirHandle));
+            retval->mountPoint = NULL;
+            retval->funcs = funcs;
+            retval->opaque = opaque;
+        } /* else */
     } /* if */
 
     return retval;
@@ -430,6 +426,11 @@ static DirHandle *openDirectory(const char *d, int forWriting)
     const char *ext;
 
     BAIL_IF_MACRO(!__PHYSFS_platformExists(d), ERR_NO_SUCH_FILE, NULL);
+
+    /* DIR gets first shot (unlike the rest, it doesn't deal with files). */
+    retval = tryOpenDir(&__PHYSFS_Archiver_DIR, d, forWriting);
+    if (retval != NULL)
+        return retval;
 
     ext = find_filename_extension(d);
     if (ext != NULL)

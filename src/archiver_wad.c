@@ -203,19 +203,6 @@ openWad_failed:
 } /* wad_open */
 
 
-static int WAD_isArchive(const char *filename, int forWriting)
-{
-    void *fh;
-    PHYSFS_uint32 fileCount,offset;
-    int retval = wad_open(filename, forWriting, &fh, &fileCount,&offset);
-
-    if (fh != NULL)
-        __PHYSFS_platformClose(fh);
-
-    return retval;
-} /* WAD_isArchive */
-
-
 static int wad_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
@@ -505,7 +492,6 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_WAD =
 const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
 {
     &__PHYSFS_ArchiveInfo_WAD,
-    WAD_isArchive,          /* isArchive() method      */
     WAD_openArchive,        /* openArchive() method    */
     WAD_enumerateFiles,     /* enumerateFiles() method */
     WAD_exists,             /* exists() method         */

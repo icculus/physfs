@@ -483,12 +483,11 @@ static int iso_read_ext_attributes(ISO9660Handle *handle, int block,
  * Archive management functions
  ******************************************************************************/
 
-static int ISO9660_isArchive(const char *filename, int forWriting)
+/* !!! FIXME: don't open/close file here, merge with openArchive(). */
+static int isIso(const char *filename)
 {
     char magicnumber[6] = {0,0,0,0,0,0};
     void *in;
-
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
 
     in = __PHYSFS_platformOpenRead(filename);
     BAIL_IF_MACRO(in == NULL, NULL, 0);
@@ -510,7 +509,7 @@ static int ISO9660_isArchive(const char *filename, int forWriting)
     __PHYSFS_platformClose(in);
 
     return (strcmp(magicnumber, "CD001") == 0);
-} /* ISO9660_isArchive */
+} /* isIso */
 
 
 static void *ISO9660_openArchive(const char *filename, int forWriting)
@@ -518,7 +517,9 @@ static void *ISO9660_openArchive(const char *filename, int forWriting)
     ISO9660Handle *handle;
     int founddescriptor = 0;
     int foundjoliet = 0;
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, NULL);
+
+    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
+    BAIL_IF_MACRO(!isIso(filename), ERR_UNSUPPORTED_ARCHIVE, NULL);
 
     handle = allocator.Malloc(sizeof(ISO9660Handle));
     GOTO_IF_MACRO(!handle, ERR_OUT_OF_MEMORY, errorcleanup);
@@ -985,7 +986,6 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ISO9660 =
 const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
 {
     &__PHYSFS_ArchiveInfo_ISO9660,
-    ISO9660_isArchive,          /* isArchive() method      */
     ISO9660_openArchive,        /* openArchive() method    */
     ISO9660_enumerateFiles,     /* enumerateFiles() method */
     ISO9660_exists,             /* exists() method         */

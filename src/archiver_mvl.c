@@ -176,19 +176,6 @@ openMvl_failed:
 } /* mvl_open */
 
 
-static int MVL_isArchive(const char *filename, int forWriting)
-{
-    void *fh;
-    PHYSFS_uint32 fileCount;
-    int retval = mvl_open(filename, forWriting, &fh, &fileCount);
-
-    if (fh != NULL)
-        __PHYSFS_platformClose(fh);
-
-    return retval;
-} /* MVL_isArchive */
-
-
 static int mvl_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
@@ -446,7 +433,6 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MVL =
 const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
 {
     &__PHYSFS_ArchiveInfo_MVL,
-    MVL_isArchive,          /* isArchive() method      */
     MVL_openArchive,        /* openArchive() method    */
     MVL_enumerateFiles,     /* enumerateFiles() method */
     MVL_exists,             /* exists() method         */
