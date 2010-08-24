@@ -216,19 +216,6 @@ openHog_failed:
 } /* hog_open */
 
 
-static int HOG_isArchive(const char *filename, int forWriting)
-{
-    void *fh;
-    PHYSFS_uint32 fileCount;
-    int retval = hog_open(filename, forWriting, &fh, &fileCount);
-
-    if (fh != NULL)
-        __PHYSFS_platformClose(fh);
-
-    return retval;
-} /* HOG_isArchive */
-
-
 static int hog_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
@@ -304,7 +291,7 @@ static void *HOG_openArchive(const char *name, int forWriting)
     PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
     HOGinfo *info = (HOGinfo *) allocator.Malloc(sizeof (HOGinfo));
 
-    BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, 0);
+    BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (HOGinfo));
     info->filename = (char *) allocator.Malloc(strlen(name) + 1);
     GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, HOG_openArchive_failed);
@@ -486,7 +473,6 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_HOG =
 const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
 {
     &__PHYSFS_ArchiveInfo_HOG,
-    HOG_isArchive,          /* isArchive() method      */
     HOG_openArchive,        /* openArchive() method    */
     HOG_enumerateFiles,     /* enumerateFiles() method */
     HOG_exists,             /* exists() method         */

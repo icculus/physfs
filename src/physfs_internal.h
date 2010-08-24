@@ -740,16 +740,6 @@ typedef struct
      *  continue to call other methods based on that.
      */
 
-
-        /*
-         * Returns non-zero if (filename) is a valid archive that this
-         *  driver can handle. This filename is in platform-dependent
-         *  notation. forWriting is non-zero if this is to be used for
-         *  the write directory, and zero if this is to be used for an
-         *  element of the search path.
-         */
-    int (*isArchive)(const char *filename, int forWriting);
-
         /*
          * Open a dirhandle for dir/archive (name).
          *  This filename is in platform-dependent notation.

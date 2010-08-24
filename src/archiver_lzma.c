@@ -430,12 +430,11 @@ static int LZMA_fileClose(fvoid *opaque)
 } /* LZMA_fileClose */
 
 
-static int LZMA_isArchive(const char *filename, int forWriting)
+/* !!! FIXME: don't open/close file here, merge with openArchive(). */
+static int isLzma(const char *filename)
 {
     PHYSFS_uint8 sig[k7zSignatureSize];
     void *in;
-
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
 
     in = __PHYSFS_platformOpenRead(filename);
     BAIL_IF_MACRO(in == NULL, NULL, 0);
@@ -451,7 +450,7 @@ static int LZMA_isArchive(const char *filename, int forWriting)
 
     /* Test whether sig is the 7z signature */
     return TestSignatureCandidate(sig);
-} /* LZMA_isArchive */
+} /* isLzma */
 
 
 static void *LZMA_openArchive(const char *name, int forWriting)
@@ -460,7 +459,7 @@ static void *LZMA_openArchive(const char *name, int forWriting)
     LZMAarchive *archive = NULL;
 
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, NULL);
-    BAIL_IF_MACRO(!LZMA_isArchive(name,forWriting), ERR_UNSUPPORTED_ARCHIVE, 0);
+    BAIL_IF_MACRO(!isLzma(name), ERR_UNSUPPORTED_ARCHIVE, NULL);
 
     archive = (LZMAarchive *) allocator.Malloc(sizeof (LZMAarchive));
     BAIL_IF_MACRO(archive == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -721,7 +720,6 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_LZMA =
 const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
 {
     &__PHYSFS_ArchiveInfo_LZMA,
-    LZMA_isArchive,          /* isArchive() method      */
     LZMA_openArchive,        /* openArchive() method    */
     LZMA_enumerateFiles,     /* enumerateFiles() method */
     LZMA_exists,             /* exists() method         */

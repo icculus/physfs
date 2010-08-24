@@ -63,13 +63,6 @@ static int DIR_fileClose(fvoid *opaque)
 } /* DIR_fileClose */
 
 
-static int DIR_isArchive(const char *filename, int forWriting)
-{
-    /* directories ARE archives in this driver... */
-    return __PHYSFS_platformIsDirectory(filename);
-} /* DIR_isArchive */
-
-
 static void *DIR_openArchive(const char *name, int forWriting)
 {
     const char *dirsep = PHYSFS_getDirSeparator();
@@ -77,9 +70,7 @@ static void *DIR_openArchive(const char *name, int forWriting)
     size_t namelen = strlen(name);
     size_t seplen = strlen(dirsep);
 
-    /* !!! FIXME: when is this not called right before openArchive? */
-    BAIL_IF_MACRO(!DIR_isArchive(name, forWriting),
-                    ERR_UNSUPPORTED_ARCHIVE, 0);
+    BAIL_IF_MACRO(!__PHYSFS_platformIsDirectory(name), ERR_NOT_AN_ARCHIVE, NULL);
 
     retval = allocator.Malloc(namelen + seplen + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -246,7 +237,6 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
 {
     &__PHYSFS_ArchiveInfo_DIR,
-    DIR_isArchive,          /* isArchive() method      */
     DIR_openArchive,        /* openArchive() method    */
     DIR_enumerateFiles,     /* enumerateFiles() method */
     DIR_exists,             /* exists() method         */

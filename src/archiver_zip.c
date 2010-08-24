@@ -450,7 +450,8 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(void *in, PHYSFS_sint64 *len)
 } /* zip_find_end_of_central_dir */
 
 
-static int ZIP_isArchive(const char *filename, int forWriting)
+/* !!! FIXME: don't open/close file here, merge with openArchive(). */
+static int isZip(const char *filename)
 {
     PHYSFS_uint32 sig;
     int retval = 0;
@@ -479,7 +480,7 @@ static int ZIP_isArchive(const char *filename, int forWriting)
 
     __PHYSFS_platformClose(in);
     return retval;
-} /* ZIP_isArchive */
+} /* isZip */
 
 
 static void zip_free_entries(ZIPentry *entries, PHYSFS_uint32 max)
@@ -1084,6 +1085,7 @@ static void *ZIP_openArchive(const char *name, int forWriting)
     PHYSFS_uint32 cent_dir_ofs;
 
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, NULL);
+    BAIL_IF_MACRO(!isZip(name), NULL, NULL);
 
     if ((in = __PHYSFS_platformOpenRead(name)) == NULL)
         goto zip_openarchive_failed;
@@ -1432,7 +1434,6 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
 {
     &__PHYSFS_ArchiveInfo_ZIP,
-    ZIP_isArchive,          /* isArchive() method      */
     ZIP_openArchive,        /* openArchive() method    */
     ZIP_enumerateFiles,     /* enumerateFiles() method */
     ZIP_exists,             /* exists() method         */
