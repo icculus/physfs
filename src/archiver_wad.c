@@ -62,7 +62,6 @@ typedef struct
 typedef struct
 {
     char *filename;
-    PHYSFS_sint64 last_mod_time;
     PHYSFS_uint32 entryCount;
     PHYSFS_uint32 entryOffset;
     WADentry *entries;
@@ -275,7 +274,6 @@ static int wad_load_entries(const char *name, int forWriting, WADinfo *info)
 
 static void *WAD_openArchive(const char *name, int forWriting)
 {
-    PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
     WADinfo *info = (WADinfo *) allocator.Malloc(sizeof (WADinfo));
 
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -288,7 +286,6 @@ static void *WAD_openArchive(const char *name, int forWriting)
         goto WAD_openArchive_failed;
 
     strcpy(info->filename, name);
-    info->last_mod_time = modtime;
     return info;
 
 WAD_openArchive_failed:
@@ -471,9 +468,9 @@ static int WAD_stat(dvoid *opaque, const char *filename, int *exists,
 
     stat->filesize = entry->size;
     stat->filetype = PHYSFS_FILETYPE_REGULAR;
-    stat->accesstime = 0;
-    stat->modtime = ((WADinfo *) opaque)->last_mod_time;
-    stat->createtime = ((WADinfo *) opaque)->last_mod_time;
+    stat->accesstime = -1;
+    stat->modtime = -1;
+    stat->createtime = -1;
     stat->readonly = 1; /* WADs are always readonly */
 
     return 1;

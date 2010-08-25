@@ -58,7 +58,6 @@ typedef struct
 typedef struct
 {
     char *filename;
-    PHYSFS_sint64 last_mod_time;
     PHYSFS_uint32 entryCount;
     QPAKentry *entries;
 } QPAKinfo;
@@ -270,7 +269,6 @@ static int qpak_load_entries(const char *name, int forWriting, QPAKinfo *info)
 static void *QPAK_openArchive(const char *name, int forWriting)
 {
     QPAKinfo *info = (QPAKinfo *) allocator.Malloc(sizeof (QPAKinfo));
-    PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
 
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (QPAKinfo));
@@ -286,7 +284,6 @@ static void *QPAK_openArchive(const char *name, int forWriting)
         goto QPAK_openArchive_failed;
 
     strcpy(info->filename, name);
-    info->last_mod_time = modtime;
     return info;
 
 QPAK_openArchive_failed:
@@ -573,9 +570,9 @@ static int QPAK_stat(dvoid *opaque, const char *filename, int *exists,
         stat->filesize = entry->size;
     } /* else */
 
-    stat->modtime = info->last_mod_time;
-    stat->createtime = info->last_mod_time;
-    stat->accesstime = 0;
+    stat->modtime = -1;
+    stat->createtime = -1;
+    stat->accesstime = -1;
     stat->readonly = 1;
 
     return 1;

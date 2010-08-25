@@ -44,7 +44,6 @@ typedef struct
 typedef struct
 {
     char *filename;
-    PHYSFS_sint64 last_mod_time;
     PHYSFS_uint32 entryCount;
     GRPentry *entries;
 } GRPinfo;
@@ -252,7 +251,6 @@ static int grp_load_entries(const char *name, int forWriting, GRPinfo *info)
 
 static void *GRP_openArchive(const char *name, int forWriting)
 {
-    PHYSFS_sint64 modtime = __PHYSFS_platformGetLastModTime(name);
     GRPinfo *info = (GRPinfo *) allocator.Malloc(sizeof (GRPinfo));
 
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, 0);
@@ -265,7 +263,6 @@ static void *GRP_openArchive(const char *name, int forWriting)
         goto GRP_openArchive_failed;
 
     strcpy(info->filename, name);
-    info->last_mod_time = modtime;
 
     return info;
 
@@ -417,8 +414,8 @@ static int GRP_stat(dvoid *opaque, const char *filename, int *exists,
 
     stat->filesize = entry->size;
     stat->filetype = PHYSFS_FILETYPE_REGULAR;
-    stat->modtime = info->last_mod_time;
-    stat->createtime = info->last_mod_time;
+    stat->modtime = -1;
+    stat->createtime = -1;
     stat->accesstime = -1;
     stat->readonly = 1;
 

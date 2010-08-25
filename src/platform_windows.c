@@ -1305,68 +1305,6 @@ static PHYSFS_sint64 FileTimeToPhysfsTime(const FILETIME *ft)
 } /* FileTimeToPhysfsTime */
 
 
-PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
-{
-    PHYSFS_sint64 retval = -1;
-    WIN32_FILE_ATTRIBUTE_DATA attr;
-    int rc = 0;
-
-    memset(&attr, '\0', sizeof (attr));
-
-    /* GetFileAttributesEx didn't show up until Win98 and NT4. */
-    if ((pGetFileAttributesExW != NULL) || (pGetFileAttributesExA != NULL))
-    {
-        WCHAR *wstr;
-        UTF8_TO_UNICODE_STACK_MACRO(wstr, fname);
-        if (wstr != NULL) /* if NULL, maybe the fallback will work. */
-        {
-            if (pGetFileAttributesExW != NULL)  /* NT/XP/Vista/etc system. */
-                rc = pGetFileAttributesExW(wstr, GetFileExInfoStandard, &attr);
-            else  /* Win98/ME system */
-            {
-                const int len = (int) (wStrLen(wstr) + 1);
-                char *cp = (char *) __PHYSFS_smallAlloc(len);
-                if (cp != NULL)
-                {
-                    WideCharToMultiByte(CP_ACP, 0, wstr, len, cp, len, 0, 0);
-                    rc = pGetFileAttributesExA(cp, GetFileExInfoStandard, &attr);
-                    __PHYSFS_smallFree(cp);
-                } /* if */
-            } /* else */
-            __PHYSFS_smallFree(wstr);
-        } /* if */
-    } /* if */
-
-    if (rc)  /* had API entry point and it worked. */
-    {
-        /* 0 return value indicates an error or not supported */
-        if ( (attr.ftLastWriteTime.dwHighDateTime != 0) ||
-             (attr.ftLastWriteTime.dwLowDateTime != 0) )
-        {
-            retval = FileTimeToPhysfsTime(&attr.ftLastWriteTime);
-        } /* if */
-    } /* if */
-
-    /* GetFileTime() has been in the Win32 API since the start. */
-    if (retval == -1)  /* try a fallback... */
-    {
-        FILETIME ft;
-        BOOL rc;
-        const char *err;
-        WinApiFile *f = (WinApiFile *) __PHYSFS_platformOpenRead(fname);
-        BAIL_IF_MACRO(f == NULL, NULL, -1)
-        rc = GetFileTime(f->handle, NULL, NULL, &ft);
-        err = winApiStrError();
-        CloseHandle(f->handle);
-        allocator.Free(f);
-        BAIL_IF_MACRO(!rc, err, -1);
-        retval = FileTimeToPhysfsTime(&ft);
-    } /* if */
-
-    return retval;
-} /* __PHYSFS_platformGetLastModTime */
-
-
 static int __PHYSFS_platformStatOldWay(const char *filename, int *exists,
                                        PHYSFS_Stat *stat)
 {

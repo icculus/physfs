@@ -664,12 +664,6 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 } /* __PHYSFS_platformReleaseMutex */
 
 
-PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
-{
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, -1);
-} /* __PHYSFS_platformGetLastModTime */
-
-
 /* !!! FIXME: Don't use C runtime for allocators? */
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
