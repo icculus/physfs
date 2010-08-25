@@ -1327,14 +1327,6 @@ void *__PHYSFS_platformGetThreadID(void);
 int __PHYSFS_platformExists(const char *fname);
 
 /*
- * Return the last modified time (in seconds since the epoch) of a file.
- *  Returns -1 on failure. (fname) is in platform-dependent notation.
- *  Symlinks should be followed; if what the symlink points to is missing,
- *  then the retval is -1.
- */
-PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname);
-
-/*
  * Return non-zero if filename (in platform-dependent notation) is a symlink.
  */
 int __PHYSFS_platformIsSymLink(const char *fname);

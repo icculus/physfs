@@ -625,23 +625,6 @@ PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
 } /* os2TimeToUnixTime */
 
 
-PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *_fname)
-{
-    const unsigned char *fname = (const unsigned char *) _fname;
-    PHYSFS_sint64 retval;
-    struct tm tm;
-    FILESTATUS3 fs;
-    APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
-    BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, -1);
-
-    /* Convert to a format PhysicsFS can grok... */
-    retval = os2TimeToUnixTime(&fs.fdateLastWrite, &fs.ftimeLastWrite);
-
-    BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
-    return retval;
-} /* __PHYSFS_platformGetLastModTime */
-
-
 static int __PHYSFS_platformStat(const char *_fname, int *exists,
                                  PHYSFS_Stat *stat)
 {
