@@ -24,7 +24,7 @@
  * - Ambiguities in the standard
  */
 
-#if (defined PHYSFS_SUPPORTS_GRP)
+#if (defined PHYSFS_SUPPORTS_ISO9660)
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
