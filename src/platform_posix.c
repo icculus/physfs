@@ -302,7 +302,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
                                     PHYSFS_uint64 len)
 {
-    int fd = *((int *) opaque);
+    const int fd = *((int *) opaque);
     ssize_t rc = 0;
 
     BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
@@ -318,7 +318,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint64 len)
 {
-    int fd = *((int *) opaque);
+    const int fd = *((int *) opaque);
     ssize_t rc = 0;
 
     BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
@@ -333,7 +333,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
-    int fd = *((int *) opaque);
+    const int fd = *((int *) opaque);
 
     #ifdef PHYSFS_HAVE_LLSEEK
       unsigned long offset_high = ((pos >> 32) & 0xFFFFFFFF);
@@ -351,7 +351,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
-    int fd = *((int *) opaque);
+    const int fd = *((int *) opaque);
     PHYSFS_sint64 retval;
 
     #ifdef PHYSFS_HAVE_LLSEEK
@@ -370,7 +370,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
-    int fd = *((int *) opaque);
+    const int fd = *((int *) opaque);
     struct stat statbuf;
     BAIL_IF_MACRO(fstat(fd, &statbuf) == -1, strerror(errno), -1);
     return ((PHYSFS_sint64) statbuf.st_size);
@@ -379,15 +379,15 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 
 int __PHYSFS_platformEOF(void *opaque)
 {
-    PHYSFS_sint64 pos = __PHYSFS_platformTell(opaque);
-    PHYSFS_sint64 len = __PHYSFS_platformFileLength(opaque);
+    const PHYSFS_sint64 pos = __PHYSFS_platformTell(opaque);
+    const PHYSFS_sint64 len = __PHYSFS_platformFileLength(opaque);
     return (pos >= len);
 } /* __PHYSFS_platformEOF */
 
 
 int __PHYSFS_platformFlush(void *opaque)
 {
-    int fd = *((int *) opaque);
+    const int fd = *((int *) opaque);
     BAIL_IF_MACRO(fsync(fd) == -1, strerror(errno), 0);
     return 1;
 } /* __PHYSFS_platformFlush */
