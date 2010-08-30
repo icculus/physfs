@@ -1033,6 +1033,14 @@ extern PHYSFS_Allocator __PHYSFS_AllocatorHooks;
  */
 PHYSFS_Io *__PHYSFS_createNativeIo(const char *path, const int mode);
 
+/*
+ * Create a PHYSFS_Io for a buffer of memory (READ-ONLY). If you already
+ *  have one of these, just use its duplicate() method, and it'll increment
+ *  its refcount without allocating a copy of the buffer.
+ */
+PHYSFS_Io *__PHYSFS_createMemoryIo(const void *buf, PHYSFS_uint64 len,
+                                   void (*destruct)(void *));
+
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/

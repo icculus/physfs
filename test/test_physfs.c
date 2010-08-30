@@ -128,11 +128,19 @@ static int cmd_addarchive(char *args)
 } /* cmd_addarchive */
 
 
-static int cmd_mount(char *args)
+/* wrap free() to avoid calling convention wankery. */
+static void freeBuf(void *buf)
+{
+    free(buf);
+} /* freeBuf */
+
+
+static int cmd_mount_internal(char *args, const int fromMem)
 {
     char *ptr;
     char *mntpoint = NULL;
     int appending = 0;
+    int rc = 0;
 
     if (*args == '\"')
     {
@@ -172,13 +180,67 @@ static int cmd_mount(char *args)
 
     /*printf("[%s], [%s], [%d]\n", args, mntpoint, appending);*/
 
-    if (PHYSFS_mount(args, mntpoint, appending))
+    if (!fromMem)
+        rc = PHYSFS_mount(args, mntpoint, appending);
+    else
+    {
+        FILE *in = fopen(args, "rb");
+        void *buf = NULL;
+        long len = 0;
+
+        if (in == NULL)
+        {
+            printf("Failed to open %s to read into memory: %s.\n", args, strerror(errno));
+            return 1;
+        } /* if */
+
+        if ( (fseek(in, 0, SEEK_END) != 0) || ((len = ftell(in)) < 0) )
+        {
+            printf("Failed to find size of %s to read into memory: %s.\n", args, strerror(errno));
+            fclose(in);
+            return 1;
+        } /* if */
+
+        buf = malloc(len);
+        if (buf == NULL)
+        {
+            printf("Failed to allocate space to read %s into memory: %s.\n", args, strerror(errno));
+            fclose(in);
+            return 1;
+        } /* if */
+
+        if ((fseek(in, 0, SEEK_SET) != 0) || (fread(buf, len, 1, in) != 1))
+        {
+            printf("Failed to read %s into memory: %s.\n", args, strerror(errno));
+            fclose(in);
+            free(buf);
+            return 1;
+        } /* if */
+
+        fclose(in);
+
+        rc = PHYSFS_mountMemory(buf, len, freeBuf, args, mntpoint, appending);
+    } /* else */
+
+    if (rc)
         printf("Successful.\n");
     else
         printf("Failure. reason: %s.\n", PHYSFS_getLastError());
 
     return 1;
+} /* cmd_mount_internal */
+
+
+static int cmd_mount(char *args)
+{
+    return cmd_mount_internal(args, 0);
 } /* cmd_mount */
+
+
+static int cmd_mount_mem(char *args)
+{
+    return cmd_mount_internal(args, 1);
+} /* cmd_mount_mem */
 
 
 static int cmd_removearchive(char *args)
@@ -1023,6 +1085,7 @@ static const command_info commands[] =
     { "deinit",         cmd_deinit,         0, NULL                         },
     { "addarchive",     cmd_addarchive,     2, "<archiveLocation> <append>" },
     { "mount",          cmd_mount,          3, "<archiveLocation> <mntpoint> <append>" },
+    { "mountmem",       cmd_mount_mem,      3, "<archiveLocation> <mntpoint> <append>" },
     { "removearchive",  cmd_removearchive,  1, "<archiveLocation>"          },
     { "unmount",        cmd_removearchive,  1, "<archiveLocation>"          },
     { "enumerate",      cmd_enumerate,      1, "<dirToEnumerate>"           },
