@@ -1365,7 +1365,7 @@ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
 
 int PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
 {
-    return PHYSFS_mount(newDir, NULL, appendToPath);
+    return doMount(NULL, newDir, NULL, appendToPath);
 } /* PHYSFS_addToSearchPath */
 
 
