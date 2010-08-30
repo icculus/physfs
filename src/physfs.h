@@ -2723,6 +2723,8 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle,
                                             PHYSFS_uint64 len);
 
 
+#ifndef SWIG  /* not available from scripting languages. */
+
 /**
  * \struct PHYSFS_Io
  * \brief An abstract i/o interface.
@@ -2942,6 +2944,7 @@ typedef struct PHYSFS_Io
 PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
                                const char *mountPoint, int appendToPath);
 
+#endif  /* SWIG */
 
 /**
  * \fn int PHYSFS_mountMemory(const void *ptr, PHYSFS_uint64 len, void (*del)(void *), const char *fname, const char *mountPoint, int appendToPath)
