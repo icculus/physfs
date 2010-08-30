@@ -134,8 +134,14 @@ static void freeBuf(void *buf)
     free(buf);
 } /* freeBuf */
 
+typedef enum
+{
+    MNTTYPE_PATH,
+    MNTTYPE_MEMORY,
+    MNTTYPE_HANDLE
+} MountType;
 
-static int cmd_mount_internal(char *args, const int fromMem)
+static int cmd_mount_internal(char *args, const MountType mnttype)
 {
     char *ptr;
     char *mntpoint = NULL;
@@ -180,9 +186,24 @@ static int cmd_mount_internal(char *args, const int fromMem)
 
     /*printf("[%s], [%s], [%d]\n", args, mntpoint, appending);*/
 
-    if (!fromMem)
+    if (mnttype == MNTTYPE_PATH)
         rc = PHYSFS_mount(args, mntpoint, appending);
-    else
+
+    else if (mnttype == MNTTYPE_HANDLE)
+    {
+        PHYSFS_File *f = PHYSFS_openRead(args);
+        if (f == NULL)
+        {
+            printf("PHYSFS_openRead('%s') failed. reason: %s.\n", args, PHYSFS_getLastError());
+            return 1;
+        } /* if */
+
+        rc = PHYSFS_mountHandle(f, args, mntpoint, appending);
+        if (!rc)
+            PHYSFS_close(f);
+    } /* else if */
+
+    else if (mnttype == MNTTYPE_MEMORY)
     {
         FILE *in = fopen(args, "rb");
         void *buf = NULL;
@@ -233,14 +254,20 @@ static int cmd_mount_internal(char *args, const int fromMem)
 
 static int cmd_mount(char *args)
 {
-    return cmd_mount_internal(args, 0);
+    return cmd_mount_internal(args, MNTTYPE_PATH);
 } /* cmd_mount */
 
 
 static int cmd_mount_mem(char *args)
 {
-    return cmd_mount_internal(args, 1);
+    return cmd_mount_internal(args, MNTTYPE_MEMORY);
 } /* cmd_mount_mem */
+
+
+static int cmd_mount_handle(char *args)
+{
+    return cmd_mount_internal(args, MNTTYPE_HANDLE);
+} /* cmd_mount_handle */
 
 
 static int cmd_removearchive(char *args)
@@ -1086,6 +1113,7 @@ static const command_info commands[] =
     { "addarchive",     cmd_addarchive,     2, "<archiveLocation> <append>" },
     { "mount",          cmd_mount,          3, "<archiveLocation> <mntpoint> <append>" },
     { "mountmem",       cmd_mount_mem,      3, "<archiveLocation> <mntpoint> <append>" },
+    { "mounthandle",    cmd_mount_handle,   3, "<archiveLocation> <mntpoint> <append>" },
     { "removearchive",  cmd_removearchive,  1, "<archiveLocation>"          },
     { "unmount",        cmd_removearchive,  1, "<archiveLocation>"          },
     { "enumerate",      cmd_enumerate,      1, "<dirToEnumerate>"           },

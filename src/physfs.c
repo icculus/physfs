@@ -451,6 +451,127 @@ createMemoryIo_failed:
 } /* __PHYSFS_createMemoryIo */
 
 
+/* PHYSFS_Io implementation for i/o to a PHYSFS_File... */
+
+static PHYSFS_sint64 handleIo_read(PHYSFS_Io *io, void *buf, PHYSFS_uint64 len)
+{
+    return PHYSFS_readBytes((PHYSFS_File *) io->opaque, buf, len);
+} /* handleIo_read */
+
+static PHYSFS_sint64 handleIo_write(PHYSFS_Io *io, const void *buffer,
+                                    PHYSFS_uint64 len)
+{
+    return PHYSFS_writeBytes((PHYSFS_File *) io->opaque, buffer, len);
+} /* handleIo_write */
+
+static int handleIo_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
+{
+    return PHYSFS_seek((PHYSFS_File *) io->opaque, offset);
+} /* handleIo_seek */
+
+static PHYSFS_sint64 handleIo_tell(PHYSFS_Io *io)
+{
+    return PHYSFS_tell((PHYSFS_File *) io->opaque);
+} /* handleIo_tell */
+
+static PHYSFS_sint64 handleIo_length(PHYSFS_Io *io)
+{
+    return PHYSFS_fileLength((PHYSFS_File *) io->opaque);
+} /* handleIo_length */
+
+static PHYSFS_Io *handleIo_duplicate(PHYSFS_Io *io)
+{
+    /*
+     * There's no duplicate at the PHYSFS_File level, so we break the
+     *  abstraction. We're allowed to: we're physfs.c!
+     */
+    FileHandle *origfh = (FileHandle *) io->opaque;
+    FileHandle *newfh = (FileHandle *) allocator.Malloc(sizeof (FileHandle));
+    PHYSFS_Io *retval = NULL;
+
+    GOTO_IF_MACRO(newfh == NULL, ERR_OUT_OF_MEMORY, handleIo_dupe_failed);
+    memset(newfh, '\0', sizeof (*newfh));
+
+    retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    GOTO_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, handleIo_dupe_failed);
+
+#if 0  /* we don't buffer the duplicate, at least not at the moment. */
+    if (origfh->buffer != NULL)
+    {
+        newfh->buffer = (PHYSFS_uint8 *) allocator.Malloc(origfh->bufsize);
+        GOTO_IF_MACRO(!newfh->buffer, ERR_OUT_OF_MEMORY, handleIo_dupe_failed);
+        newfh->bufsize = origfh->bufsize;
+    } /* if */
+#endif
+
+    newfh->io = origfh->io->duplicate(origfh->io);
+    GOTO_IF_MACRO(newfh->io == NULL, NULL, handleIo_dupe_failed);
+
+    newfh->forReading = origfh->forReading;
+    newfh->dirHandle = origfh->dirHandle;
+
+    __PHYSFS_platformGrabMutex(stateLock);
+    if (newfh->forReading)
+    {
+        newfh->next = openReadList;
+        openReadList = newfh;
+    } /* if */
+    else
+    {
+        newfh->next = openWriteList;
+        openWriteList = newfh;
+    } /* else */
+    __PHYSFS_platformReleaseMutex(stateLock);
+
+    memcpy(retval, io, sizeof (PHYSFS_Io));
+    retval->opaque = newfh;
+    return retval;
+    
+handleIo_dupe_failed:
+    if (newfh)
+    {
+        if (newfh->io != NULL) newfh->io->destroy(newfh->io);
+        if (newfh->buffer != NULL) allocator.Free(newfh->buffer);
+        allocator.Free(newfh);
+    } /* if */
+
+    return NULL;
+} /* handleIo_duplicate */
+
+static int handleIo_flush(PHYSFS_Io *io)
+{
+    return PHYSFS_flush((PHYSFS_File *) io->opaque);
+} /* handleIo_flush */
+
+static void handleIo_destroy(PHYSFS_Io *io)
+{
+    if (io->opaque != NULL)
+        PHYSFS_close((PHYSFS_File *) io->opaque);
+    allocator.Free(io);
+} /* handleIo_destroy */
+
+static const PHYSFS_Io __PHYSFS_handleIoInterface =
+{
+    handleIo_read,
+    handleIo_write,
+    handleIo_seek,
+    handleIo_tell,
+    handleIo_length,
+    handleIo_duplicate,
+    handleIo_flush,
+    handleIo_destroy,
+    NULL
+};
+
+static PHYSFS_Io *__PHYSFS_createHandleIo(PHYSFS_File *f)
+{
+    PHYSFS_Io *io = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    BAIL_IF_MACRO(io == NULL, ERR_OUT_OF_MEMORY, NULL);
+    memcpy(io, &__PHYSFS_handleIoInterface, sizeof (*io));
+    io->opaque = f;
+    return io;
+} /* __PHYSFS_createHandleIo */
+
 
 /* functions ... */
 
@@ -1354,6 +1475,28 @@ int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len, void (*del)(void *),
 
     return retval;
 } /* PHYSFS_mountMemory */
+
+
+int PHYSFS_mountHandle(PHYSFS_File *file, const char *fname,
+                       const char *mountPoint, int appendToPath)
+{
+    int retval = 0;
+    PHYSFS_Io *io = NULL;
+
+    BAIL_IF_MACRO(file == NULL, ERR_INVALID_ARGUMENT, 0);
+
+    io = __PHYSFS_createHandleIo(file);
+    BAIL_IF_MACRO(io == NULL, NULL, 0);
+    retval = doMount(io, fname, mountPoint, appendToPath);
+    if (!retval)
+    {
+        /* docs say not to destruct in case of failure, so cheat. */
+        io->opaque = NULL;
+        io->destroy(io);
+    } /* if */
+
+    return retval;
+} /* PHYSFS_mountHandle */
 
 
 int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)

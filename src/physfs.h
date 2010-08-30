@@ -2989,6 +2989,60 @@ PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
                                    const char *mountPoint, int appendToPath);
 
 
+/**
+ * \fn int PHYSFS_mountHandle(PHYSFS_File *file, const char *fname, const char *mountPoint, int appendToPath)
+ * \brief Add an archive, contained in a PHYSFS_File handle, to the search path.
+ *
+ * \warning Unless you have some special, low-level need, you should be using
+ *          PHYSFS_mount() instead of this.
+ *
+ * \warning Archives-in-archives may be very slow! While a PHYSFS_File can
+ *          seek even when the data is compressed, it may do so by rewinding
+ *          to the start and decompressing everything before the seek point.
+ *          Normal archive usage may do a lot of seeking behind the scenes.
+ *          As such, you might find normal archive usage extremely painful
+ *          if mounted this way. Plan accordingly: if you, say, have a
+ *          self-extracting .zip file, and want to mount something in it,
+ *          compress the contents of the inner archive and make sure the outer
+ *          .zip file doesn't compress the inner archive too.
+ *
+ * This function operates just like PHYSFS_mount(), but takes a PHYSFS_File
+ *  handle instead of a pathname. This handle contains all the data of the
+ *  archive, and is used instead of a real file in the physical filesystem.
+ *  The PHYSFS_File may be backed by a real file in the physical filesystem,
+ *  but isn't necessarily. The most popular use for this is likely to mount
+ *  archives stored inside other archives.
+ *
+ * (filename) is only used here to optimize archiver selection (if you name it
+ *  XXXXX.zip, we might try the ZIP archiver first, for example). It doesn't
+ *  need to refer to a real file at all, and can even be NULL. If the filename
+ *  isn't helpful, the system will try every archiver until one works or none
+ *  of them do.
+ *
+ * (file) must remain until the archive is unmounted. When the archive is
+ *  unmounted, the system will call PHYSFS_close(file). If you need this
+ *  handle to survive, you will have to wrap this in a PHYSFS_Io and use
+ *  PHYSFS_mountIo() instead.
+ *
+ * If this function fails, PHYSFS_close(file) is not called.
+ *
+ *   \param file The PHYSFS_File handle containing archive data.
+ *   \param fname Filename that can represent this stream. Can be NULL.
+ *   \param mountPoint Location in the interpolated tree that this archive
+ *                     will be "mounted", in platform-independent notation.
+ *                     NULL or "" is equivalent to "/".
+ *   \param appendToPath nonzero to append to search path, zero to prepend.
+ *  \return nonzero if added to path, zero on failure (bogus archive, etc).
+ *                  Specifics of the error can be gleaned from
+ *                  PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_unmount
+ * \sa PHYSFS_getSearchPath
+ * \sa PHYSFS_getMountPoint
+ */
+PHYSFS_DECL int PHYSFS_mountHandle(PHYSFS_File *file, const char *fname,
+                                   const char *mountPoint, int appendToPath);
+
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
 
 
