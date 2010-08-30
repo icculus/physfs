@@ -46,31 +46,37 @@ typedef struct
 
 typedef struct
 {
-    char *filename;
+    PHYSFS_Io *io;
     PHYSFS_uint32 entryCount;
     MVLentry *entries;
 } MVLinfo;
 
 typedef struct
 {
-    void *handle;
+    PHYSFS_Io *io;
     MVLentry *entry;
     PHYSFS_uint32 curPos;
 } MVLfileinfo;
 
 
+static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
+{
+    return (io->read(io, buf, len) == len);
+} /* readAll */
+
+
 static void MVL_dirClose(dvoid *opaque)
 {
     MVLinfo *info = ((MVLinfo *) opaque);
-    allocator.Free(info->filename);
+    info->io->destroy(info->io);
     allocator.Free(info->entries);
     allocator.Free(info);
 } /* MVL_dirClose */
 
 
-static PHYSFS_sint64 MVL_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
+static PHYSFS_sint64 MVL_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 {
-    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
+    MVLfileinfo *finfo = (MVLfileinfo *) io->opaque;
     const MVLentry *entry = finfo->entry;
     const PHYSFS_uint64 bytesLeft = (PHYSFS_uint64)(entry->size-finfo->curPos);
     PHYSFS_sint64 rc;
@@ -78,7 +84,7 @@ static PHYSFS_sint64 MVL_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
     if (bytesLeft < len)
         len = bytesLeft;
 
-    rc = __PHYSFS_platformRead(finfo->handle, buffer, len);
+    rc = finfo->io->read(finfo->io, buffer, len);
     if (rc > 0)
         finfo->curPos += (PHYSFS_uint32) rc;
 
@@ -86,35 +92,26 @@ static PHYSFS_sint64 MVL_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
 } /* MVL_read */
 
 
-static PHYSFS_sint64 MVL_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
+static PHYSFS_sint64 MVL_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* MVL_write */
 
 
-static int MVL_eof(fvoid *opaque)
+static PHYSFS_sint64 MVL_tell(PHYSFS_Io *io)
 {
-    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
-    MVLentry *entry = finfo->entry;
-    return (finfo->curPos >= entry->size);
-} /* MVL_eof */
-
-
-static PHYSFS_sint64 MVL_tell(fvoid *opaque)
-{
-    return ((MVLfileinfo *) opaque)->curPos;
+    return ((MVLfileinfo *) io->opaque)->curPos;
 } /* MVL_tell */
 
 
-static int MVL_seek(fvoid *opaque, PHYSFS_uint64 offset)
+static int MVL_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
 {
-    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
-    MVLentry *entry = finfo->entry;
+    MVLfileinfo *finfo = (MVLfileinfo *) io->opaque;
+    const MVLentry *entry = finfo->entry;
     int rc;
 
-    BAIL_IF_MACRO(offset < 0, ERR_INVALID_ARGUMENT, 0);
     BAIL_IF_MACRO(offset >= entry->size, ERR_PAST_EOF, 0);
-    rc = __PHYSFS_platformSeek(finfo->handle, entry->startPos + offset);
+    rc = finfo->io->seek(finfo->io, entry->startPos + offset);
     if (rc)
         finfo->curPos = (PHYSFS_uint32) offset;
 
@@ -122,72 +119,76 @@ static int MVL_seek(fvoid *opaque, PHYSFS_uint64 offset)
 } /* MVL_seek */
 
 
-static PHYSFS_sint64 MVL_fileLength(fvoid *opaque)
+static PHYSFS_sint64 MVL_length(PHYSFS_Io *io)
 {
-    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
+    const MVLfileinfo *finfo = (MVLfileinfo *) io->opaque;
     return ((PHYSFS_sint64) finfo->entry->size);
-} /* MVL_fileLength */
+} /* MVL_length */
 
 
-static int MVL_fileClose(fvoid *opaque)
+static PHYSFS_Io *MVL_duplicate(PHYSFS_Io *_io)
 {
-    MVLfileinfo *finfo = (MVLfileinfo *) opaque;
-    BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
+    MVLfileinfo *origfinfo = (MVLfileinfo *) _io->opaque;
+    PHYSFS_Io *io = NULL;
+    PHYSFS_Io *retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    MVLfileinfo *finfo = (MVLfileinfo *) allocator.Malloc(sizeof (MVLfileinfo));
+    GOTO_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, MVL_duplicate_failed);
+    GOTO_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, MVL_duplicate_failed);
+
+    io = origfinfo->io->duplicate(origfinfo->io);
+    GOTO_IF_MACRO(io == NULL, NULL, MVL_duplicate_failed);
+    finfo->io = io;
+    finfo->entry = origfinfo->entry;
+    finfo->curPos = 0;
+    memcpy(retval, _io, sizeof (PHYSFS_Io));
+    retval->opaque = finfo;
+    return retval;
+
+MVL_duplicate_failed:
+    if (finfo != NULL) allocator.Free(finfo);
+    if (retval != NULL) allocator.Free(retval);
+    if (io != NULL) io->destroy(io);
+    return NULL;
+} /* MVL_duplicate */
+
+static int MVL_flush(PHYSFS_Io *io) { return 1;  /* no write support. */ }
+
+static void MVL_destroy(PHYSFS_Io *io)
+{
+    MVLfileinfo *finfo = (MVLfileinfo *) io->opaque;
+    finfo->io->destroy(finfo->io);
     allocator.Free(finfo);
-    return 1;
-} /* MVL_fileClose */
+    allocator.Free(io);
+} /* MVL_destroy */
 
 
-static int mvl_open(const char *filename, int forWriting,
-                    void **fh, PHYSFS_uint32 *count)
+static const PHYSFS_Io MVL_Io =
 {
-    PHYSFS_uint8 buf[4];
-
-    *fh = NULL;
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-
-    *fh = __PHYSFS_platformOpenRead(filename);
-    BAIL_IF_MACRO(*fh == NULL, NULL, 0);
-    
-    if (__PHYSFS_platformRead(*fh, buf, 4) != 4)
-        goto openMvl_failed;
-
-    if (memcmp(buf, "DMVL", 4) != 0)
-    {
-        __PHYSFS_setError(ERR_UNSUPPORTED_ARCHIVE);
-        goto openMvl_failed;
-    } /* if */
-
-    if (__PHYSFS_platformRead(*fh, count, 4) != 4)
-        goto openMvl_failed;
-
-    *count = PHYSFS_swapULE32(*count);
-
-    return 1;
-
-openMvl_failed:
-    if (*fh != NULL)
-        __PHYSFS_platformClose(*fh);
-
-    *count = -1;
-    *fh = NULL;
-    return 0;
-} /* mvl_open */
+    MVL_read,
+    MVL_write,
+    MVL_seek,
+    MVL_tell,
+    MVL_length,
+    MVL_duplicate,
+    MVL_flush,
+    MVL_destroy,
+    NULL
+};
 
 
-static int mvl_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static int mvlEntryCmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
     {
         const MVLentry *a = (const MVLentry *) _a;
-        return strcmp(a[one].name, a[two].name);
+        return __PHYSFS_stricmpASCII(a[one].name, a[two].name);
     } /* if */
 
     return 0;
-} /* mvl_entry_cmp */
+} /* mvlEntryCmp */
 
 
-static void mvl_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static void mvlEntrySwap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
     {
@@ -198,74 +199,63 @@ static void mvl_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
         memcpy(first, second, sizeof (MVLentry));
         memcpy(second, &tmp, sizeof (MVLentry));
     } /* if */
-} /* mvl_entry_swap */
+} /* mvlEntrySwap */
 
 
-static int mvl_load_entries(const char *name, int forWriting, MVLinfo *info)
+static int mvl_load_entries(PHYSFS_Io *io, MVLinfo *info)
 {
-    void *fh = NULL;
-    PHYSFS_uint32 fileCount;
+    PHYSFS_uint32 fileCount = info->entryCount;
     PHYSFS_uint32 location = 8;  /* sizeof sig. */
     MVLentry *entry;
 
-    BAIL_IF_MACRO(!mvl_open(name, forWriting, &fh, &fileCount), NULL, 0);
-    info->entryCount = fileCount;
     info->entries = (MVLentry *) allocator.Malloc(sizeof(MVLentry)*fileCount);
-    if (info->entries == NULL)
-    {
-        __PHYSFS_platformClose(fh);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, 0);
-    } /* if */
+    BAIL_IF_MACRO(info->entries == NULL, ERR_OUT_OF_MEMORY, 0);
 
     location += (17 * fileCount);
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
-        if (__PHYSFS_platformRead(fh, &entry->name, 13) != 13)
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
-
-        if (__PHYSFS_platformRead(fh, &entry->size, 4) != 4)
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
-
+        BAIL_IF_MACRO(!readAll(io, &entry->name, 13), NULL, 0);
+        BAIL_IF_MACRO(!readAll(io, &entry->size, 4), NULL, 0);
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = location;
         location += entry->size;
     } /* for */
 
-    __PHYSFS_platformClose(fh);
-
-    __PHYSFS_sort(info->entries, info->entryCount,
-                  mvl_entry_cmp, mvl_entry_swap);
+    __PHYSFS_sort(info->entries, info->entryCount, mvlEntryCmp, mvlEntrySwap);
     return 1;
 } /* mvl_load_entries */
 
 
-static void *MVL_openArchive(const char *name, int forWriting)
+static void *MVL_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
-    MVLinfo *info = (MVLinfo *) allocator.Malloc(sizeof (MVLinfo));
+    PHYSFS_uint8 buf[4];
+    MVLinfo *info = NULL;
+    PHYSFS_uint32 val = 0;
 
-    BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
+    assert(io != NULL);  /* shouldn't ever happen. */
+
+    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
+
+    BAIL_IF_MACRO(!readAll(io, buf, 4), NULL, NULL);
+    if (memcmp(buf, "DMVL", 4) != 0)
+        GOTO_MACRO(ERR_NOT_AN_ARCHIVE, MVL_openArchive_failed);
+
+    info = (MVLinfo *) allocator.Malloc(sizeof (MVLinfo));
+    GOTO_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, MVL_openArchive_failed);
     memset(info, '\0', sizeof (MVLinfo));
+    info->io = io;
 
-    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
-    GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, MVL_openArchive_failed);
-    if (!mvl_load_entries(name, forWriting, info))
-        goto MVL_openArchive_failed;
+    GOTO_IF_MACRO(!readAll(io,&val,sizeof(val)), NULL, MVL_openArchive_failed);
+    info->entryCount = PHYSFS_swapULE32(val);
 
-    strcpy(info->filename, name);
+    GOTO_IF_MACRO(!mvl_load_entries(io, info), NULL, MVL_openArchive_failed);
+
     return info;
 
 MVL_openArchive_failed:
     if (info != NULL)
     {
-        if (info->filename != NULL)
-            allocator.Free(info->filename);
         if (info->entries != NULL)
             allocator.Free(info->entries);
         allocator.Free(info);
@@ -346,40 +336,58 @@ static int MVL_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* MVL_isSymLink */
 
 
-static fvoid *MVL_openRead(dvoid *opaque, const char *fnm, int *fileExists)
+static PHYSFS_Io *MVL_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
-    MVLinfo *info = ((MVLinfo *) opaque);
+    PHYSFS_Io *retval = NULL;
+    MVLinfo *info = (MVLinfo *) opaque;
     MVLfileinfo *finfo;
     MVLentry *entry;
 
     entry = mvl_find_entry(info, fnm);
     *fileExists = (entry != NULL);
-    BAIL_IF_MACRO(entry == NULL, NULL, NULL);
+    GOTO_IF_MACRO(entry == NULL, NULL, MVL_openRead_failed);
+
+    retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    GOTO_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, MVL_openRead_failed);
 
     finfo = (MVLfileinfo *) allocator.Malloc(sizeof (MVLfileinfo));
-    BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
+    GOTO_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, MVL_openRead_failed);
 
-    finfo->handle = __PHYSFS_platformOpenRead(info->filename);
-    if ( (finfo->handle == NULL) ||
-         (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
-    {
-        allocator.Free(finfo);
-        return NULL;
-    } /* if */
+    finfo->io = info->io->duplicate(info->io);
+    GOTO_IF_MACRO(finfo->io == NULL, NULL, MVL_openRead_failed);
+
+    if (!finfo->io->seek(finfo->io, entry->startPos))
+        GOTO_MACRO(NULL, MVL_openRead_failed);
 
     finfo->curPos = 0;
     finfo->entry = entry;
-    return finfo;
+
+    memcpy(retval, &MVL_Io, sizeof (*retval));
+    retval->opaque = finfo;
+    return retval;
+
+MVL_openRead_failed:
+    if (finfo != NULL)
+    {
+        if (finfo->io != NULL)
+            finfo->io->destroy(finfo->io);
+        allocator.Free(finfo);
+    } /* if */
+
+    if (retval != NULL)
+        allocator.Free(retval);
+
+    return NULL;
 } /* MVL_openRead */
 
 
-static fvoid *MVL_openWrite(dvoid *opaque, const char *name)
+static PHYSFS_Io *MVL_openWrite(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* MVL_openWrite */
 
 
-static fvoid *MVL_openAppend(dvoid *opaque, const char *name)
+static PHYSFS_Io *MVL_openAppend(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* MVL_openAppend */
@@ -441,14 +449,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
     MVL_remove,             /* remove() method         */
     MVL_mkdir,              /* mkdir() method          */
     MVL_dirClose,           /* dirClose() method       */
-    MVL_stat,               /* stat() method           */
-    MVL_read,               /* read() method           */
-    MVL_write,              /* write() method          */
-    MVL_eof,                /* eof() method            */
-    MVL_tell,               /* tell() method           */
-    MVL_seek,               /* seek() method           */
-    MVL_fileLength,         /* fileLength() method     */
-    MVL_fileClose           /* fileClose() method      */
+    MVL_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_MVL */

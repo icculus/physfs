@@ -40,7 +40,7 @@ typedef struct _FileInputStream
     ISzAlloc allocImp; /* Allocation implementation, used by 7z */
     ISzAlloc allocTempImp; /* Temporary allocation implementation, used by 7z */
     ISzInStream inStream; /* Input stream with read callbacks, used by 7z */
-    void *file; /* Filehandle, used by read implementation */
+    PHYSFS_Io *io;  /* Filehandle, used by read implementation */
 #ifdef _LZMA_IN_CB
     Byte buffer[BUFFER_SIZE]; /* Buffer, used by read implementation */
 #endif /* _LZMA_IN_CB */
@@ -113,7 +113,7 @@ SZ_RESULT SzFileReadImp(void *object, void **buffer, size_t maxReqSize,
 
     if (maxReqSize > BUFFER_SIZE)
         maxReqSize = BUFFER_SIZE;
-    processedSizeLoc = __PHYSFS_platformRead(s->file, s->buffer, maxReqSize);
+    processedSizeLoc = s->io->read(s->io, s->buffer, maxReqSize);
     *buffer = s->buffer;
     if (processedSize != NULL)
         *processedSize = (size_t) processedSizeLoc;
@@ -131,8 +131,8 @@ SZ_RESULT SzFileReadImp(void *object, void *buffer, size_t size,
                         size_t *processedSize)
 {
     FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); /* HACK! */
-    size_t processedSizeLoc = __PHYSFS_platformRead(s->file, buffer, size);
-    if (processedSize != 0)
+    const size_t processedSizeLoc = s->io->read(s->io, buffer, size);
+    if (processedSize != NULL)
         *processedSize = processedSizeLoc;
     return SZ_OK;
 } /* SzFileReadImp */
@@ -146,7 +146,7 @@ SZ_RESULT SzFileReadImp(void *object, void *buffer, size_t size,
 SZ_RESULT SzFileSeekImp(void *object, CFileSize pos)
 {
     FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); /* HACK! */
-    if (__PHYSFS_platformSeek(s->file, (PHYSFS_uint64) pos))
+    if (s->io->seek(s->io, (PHYSFS_uint64) pos))
         return SZ_OK;
     return SZE_FAIL;
 } /* SzFileSeekImp */
@@ -322,12 +322,12 @@ static int lzma_err(SZ_RESULT rc)
 } /* lzma_err */
 
 
-static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuf, PHYSFS_uint64 len)
+static PHYSFS_sint64 LZMA_read(PHYSFS_Io *io, void *outBuf, PHYSFS_uint64 len)
 {
-    LZMAfile *file = (LZMAfile *) opaque;
+    LZMAfile *file = (LZMAfile *) io->opaque;
 
     size_t wantedSize = (size_t) len;
-    size_t remainingSize = file->item->Size - file->position;
+    const size_t remainingSize = file->item->Size - file->position;
     size_t fileSize = 0;
 
     BAIL_IF_MACRO(wantedSize == 0, NULL, 0); /* quick rejection. */
@@ -336,10 +336,10 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuf, PHYSFS_uint64 len)
     if (wantedSize > remainingSize)
         wantedSize = remainingSize;
 
-    /* Only decompress the folder if it is not allready cached */
+    /* Only decompress the folder if it is not already cached */
     if (file->folder->cache == NULL)
     {
-        int rc = lzma_err(SzExtract(
+        const int rc = lzma_err(SzExtract(
             &file->archive->stream.inStream, /* compressed data */
             &file->archive->db, /* 7z's database, containing everything */
             file->index, /* Index into database arrays */
@@ -360,9 +360,7 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuf, PHYSFS_uint64 len)
     } /* if */
 
     /* Copy wanted bytes over from cache to outBuf */
-    memcpy(outBuf,
-            (file->folder->cache +
-                    file->offset + file->position),
+    memcpy(outBuf, (file->folder->cache + file->offset + file->position),
             wantedSize);
     file->position += wantedSize; /* Increase virtual position */
 
@@ -370,31 +368,23 @@ static PHYSFS_sint64 LZMA_read(fvoid *opaque, void *outBuf, PHYSFS_uint64 len)
 } /* LZMA_read */
 
 
-static PHYSFS_sint64 LZMA_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
+static PHYSFS_sint64 LZMA_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* LZMA_write */
 
 
-static int LZMA_eof(fvoid *opaque)
+static PHYSFS_sint64 LZMA_tell(PHYSFS_Io *io)
 {
-    LZMAfile *file = (LZMAfile *) opaque;
-    return (file->position >= file->item->Size);
-} /* LZMA_eof */
-
-
-static PHYSFS_sint64 LZMA_tell(fvoid *opaque)
-{
-    LZMAfile *file = (LZMAfile *) opaque;
-    return (file->position);
+    LZMAfile *file = (LZMAfile *) io->opaque;
+    return file->position;
 } /* LZMA_tell */
 
 
-static int LZMA_seek(fvoid *opaque, PHYSFS_uint64 offset)
+static int LZMA_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
 {
-    LZMAfile *file = (LZMAfile *) opaque;
+    LZMAfile *file = (LZMAfile *) io->opaque;
 
-    BAIL_IF_MACRO(offset < 0, ERR_SEEK_OUT_OF_RANGE, 0);
     BAIL_IF_MACRO(offset > file->item->Size, ERR_PAST_EOF, 0);
 
     file->position = offset; /* We only use a virtual position... */
@@ -403,75 +393,78 @@ static int LZMA_seek(fvoid *opaque, PHYSFS_uint64 offset)
 } /* LZMA_seek */
 
 
-static PHYSFS_sint64 LZMA_fileLength(fvoid *opaque)
+static PHYSFS_sint64 LZMA_length(PHYSFS_Io *io)
 {
-    LZMAfile *file = (LZMAfile *) opaque;
+    const LZMAfile *file = (LZMAfile *) io->opaque;
     return (file->item->Size);
-} /* LZMA_fileLength */
+} /* LZMA_length */
 
 
-static int LZMA_fileClose(fvoid *opaque)
+static PHYSFS_Io *LZMA_duplicate(PHYSFS_Io *_io)
 {
-    LZMAfile *file = (LZMAfile *) opaque;
+    /* !!! FIXME: this archiver needs to be reworked to allow multiple
+     * !!! FIXME:  opens before we worry about duplication. */
+    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+} /* LZMA_duplicate */
 
-    BAIL_IF_MACRO(file->folder == NULL, ERR_NOT_A_FILE, 0);
 
-	/* Only decrease refcount if someone actually requested this file... Prevents from overflows and close-on-open... */
-    if (file->folder->references > 0)
-        file->folder->references--;
-    if (file->folder->references == 0)
+static int LZMA_flush(PHYSFS_Io *io) { return 1;  /* no write support. */ }
+
+
+static void LZMA_destroy(PHYSFS_Io *io)
+{
+    LZMAfile *file = (LZMAfile *) io->opaque;
+
+    if (file->folder != NULL)
     {
-        /* Free the cache which might have been allocated by LZMA_read() */
-        allocator.Free(file->folder->cache);
-        file->folder->cache = NULL;
-    }
+        /* Only decrease refcount if someone actually requested this file... Prevents from overflows and close-on-open... */
+        if (file->folder->references > 0)
+            file->folder->references--;
+        if (file->folder->references == 0)
+        {
+            /* Free the cache which might have been allocated by LZMA_read() */
+            allocator.Free(file->folder->cache);
+            file->folder->cache = NULL;
+        }
+        /* !!! FIXME: we don't free (file) or (file->folder)?! */
+    } /* if */
+} /* LZMA_destroy */
 
-    return 1;
-} /* LZMA_fileClose */
+
+static const PHYSFS_Io LZMA_Io =
+{
+    LZMA_read,
+    LZMA_write,
+    LZMA_seek,
+    LZMA_tell,
+    LZMA_length,
+    LZMA_duplicate,
+    LZMA_flush,
+    LZMA_destroy,
+    NULL
+};
 
 
-/* !!! FIXME: don't open/close file here, merge with openArchive(). */
-static int isLzma(const char *filename)
+static void *LZMA_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_uint8 sig[k7zSignatureSize];
-    void *in;
-
-    in = __PHYSFS_platformOpenRead(filename);
-    BAIL_IF_MACRO(in == NULL, NULL, 0);
-
-    /* Read signature bytes */
-    if (__PHYSFS_platformRead(in, sig, k7zSignatureSize) != k7zSignatureSize)
-    {
-        __PHYSFS_platformClose(in); /* Don't forget to close the file before returning... */
-        BAIL_MACRO(NULL, 0);
-    }
-
-    __PHYSFS_platformClose(in);
-
-    /* Test whether sig is the 7z signature */
-    return TestSignatureCandidate(sig);
-} /* isLzma */
-
-
-static void *LZMA_openArchive(const char *name, int forWriting)
-{
     size_t len = 0;
     LZMAarchive *archive = NULL;
 
+    assert(io != NULL);  /* shouldn't ever happen. */
+
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, NULL);
-    BAIL_IF_MACRO(!isLzma(name), ERR_UNSUPPORTED_ARCHIVE, NULL);
+
+    if (io->read(io, sig, k7zSignatureSize) != k7zSignatureSize)
+        BAIL_MACRO(NULL, 0);
+    BAIL_IF_MACRO(!TestSignatureCandidate(sig), ERR_NOT_AN_ARCHIVE, NULL);
+    BAIL_IF_MACRO(!io->seek(io, 0), NULL, NULL);
 
     archive = (LZMAarchive *) allocator.Malloc(sizeof (LZMAarchive));
     BAIL_IF_MACRO(archive == NULL, ERR_OUT_OF_MEMORY, NULL);
 
     lzma_archive_init(archive);
-
-    if ( (archive->stream.file = __PHYSFS_platformOpenRead(name)) == NULL )
-    {
-        __PHYSFS_platformClose(archive->stream.file);
-        lzma_archive_exit(archive);
-        return NULL; /* Error is set by platformOpenRead! */
-    }
+    archive->stream.io = io;
 
     CrcGenerateTable();
     SzArDbExInit(&archive->db);
@@ -481,7 +474,6 @@ static void *LZMA_openArchive(const char *name, int forWriting)
                                &archive->stream.allocTempImp)) != SZ_OK)
     {
         SzArDbExFree(&archive->db, SzFreePhysicsFS);
-        __PHYSFS_platformClose(archive->stream.file);
         lzma_archive_exit(archive);
         return NULL; /* Error is set by lzma_err! */
     } /* if */
@@ -491,7 +483,6 @@ static void *LZMA_openArchive(const char *name, int forWriting)
     if (archive->files == NULL)
     {
         SzArDbExFree(&archive->db, SzFreePhysicsFS);
-        __PHYSFS_platformClose(archive->stream.file);
         lzma_archive_exit(archive);
         BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     }
@@ -507,7 +498,6 @@ static void *LZMA_openArchive(const char *name, int forWriting)
     if (archive->folders == NULL)
     {
         SzArDbExFree(&archive->db, SzFreePhysicsFS);
-        __PHYSFS_platformClose(archive->stream.file);
         lzma_archive_exit(archive);
         BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
     }
@@ -521,7 +511,6 @@ static void *LZMA_openArchive(const char *name, int forWriting)
     if(!lzma_files_init(archive))
     {
         SzArDbExFree(&archive->db, SzFreePhysicsFS);
-        __PHYSFS_platformClose(archive->stream.file);
         lzma_archive_exit(archive);
         BAIL_MACRO(ERR_UNKNOWN_ERROR, NULL);
     }
@@ -616,10 +605,11 @@ static int LZMA_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* LZMA_isSymLink */
 
 
-static fvoid *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
+static PHYSFS_Io *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
     LZMAfile *file = lzma_find_file(archive, name);
+    PHYSFS_Io *io = NULL;
 
     *fileExists = (file != NULL);
     BAIL_IF_MACRO(file == NULL, ERR_NO_SUCH_FILE, NULL);
@@ -628,17 +618,22 @@ static fvoid *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
     file->position = 0;
     file->folder->references++; /* Increase refcount for automatic cleanup... */
 
-    return file;
+    io = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    BAIL_IF_MACRO(io == NULL, ERR_OUT_OF_MEMORY, NULL);
+    memcpy(io, &LZMA_Io, sizeof (*io));
+    io->opaque = file;
+
+    return io;
 } /* LZMA_openRead */
 
 
-static fvoid *LZMA_openWrite(dvoid *opaque, const char *filename)
+static PHYSFS_Io *LZMA_openWrite(dvoid *opaque, const char *filename)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* LZMA_openWrite */
 
 
-static fvoid *LZMA_openAppend(dvoid *opaque, const char *filename)
+static PHYSFS_Io *LZMA_openAppend(dvoid *opaque, const char *filename)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* LZMA_openAppend */
@@ -647,15 +642,17 @@ static fvoid *LZMA_openAppend(dvoid *opaque, const char *filename)
 static void LZMA_dirClose(dvoid *opaque)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
-    PHYSFS_uint32 fileIndex = 0, numFiles = archive->db.Database.NumFiles;
 
+#if 0  /* !!! FIXME: you shouldn't have to do this. */
+    PHYSFS_uint32 fileIndex = 0, numFiles = archive->db.Database.NumFiles;
     for (fileIndex = 0; fileIndex < numFiles; fileIndex++)
     {
         LZMA_fileClose(&archive->files[fileIndex]);
     } /* for */
+#endif
 
     SzArDbExFree(&archive->db, SzFreePhysicsFS);
-    __PHYSFS_platformClose(archive->stream.file);
+    archive->stream.io->destroy(archive->stream.io);
     lzma_archive_exit(archive);
 } /* LZMA_dirClose */
 
@@ -731,14 +728,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
     LZMA_remove,             /* remove() method         */
     LZMA_mkdir,              /* mkdir() method          */
     LZMA_dirClose,           /* dirClose() method       */
-    LZMA_stat,               /* stat() method           */
-    LZMA_read,               /* read() method           */
-    LZMA_write,              /* write() method          */
-    LZMA_eof,                /* eof() method            */
-    LZMA_tell,               /* tell() method           */
-    LZMA_seek,               /* seek() method           */
-    LZMA_fileLength,         /* fileLength() method     */
-    LZMA_fileClose           /* fileClose() method      */
+    LZMA_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_7Z */

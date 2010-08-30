@@ -1262,7 +1262,7 @@ PHYSFS_DECL int PHYSFS_close(PHYSFS_File *handle);
  *             function just wraps it anyhow. This function never clarified
  *             what would happen if you managed to read a partial object, so
  *             working at the byte level makes this cleaner for everyone,
- *             especially now that data streams can be supplied by the
+ *             especially now that PHYSFS_Io interfaces can be supplied by the
  *             application.
  *
  *   \param handle handle returned from PHYSFS_openRead().
@@ -1292,7 +1292,7 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
  *             function just wraps it anyhow. This function never clarified
  *             what would happen if you managed to write a partial object, so
  *             working at the byte level makes this cleaner for everyone,
- *             especially now that data streams can be supplied by the
+ *             especially now that PHYSFS_Io interfaces can be supplied by the
  *             application.
  *
  *   \param handle retval from PHYSFS_openWrite() or PHYSFS_openAppend().
@@ -1362,11 +1362,9 @@ PHYSFS_DECL int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos);
  * \fn PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_File *handle)
  * \brief Get total length of a file in bytes.
  *
- * Note that if the file size can't be determined (since the archive is
- *  "streamed" or whatnot) than this will report (-1). Also note that if
- *  another process/thread is writing to this file at the same time, then
- *  the information this function supplies could be incorrect before you
- *  get it. Use with caution, or better yet, don't use at all.
+ * Note that if another process/thread is writing to this file at the same
+ *  time, then the information this function supplies could be incorrect
+ *  before you get it. Use with caution, or better yet, don't use at all.
  *
  *   \param handle handle returned from PHYSFS_open*().
  *  \return size in bytes of the file. -1 if can't be determined.
@@ -2149,6 +2147,7 @@ PHYSFS_DECL int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
  * \sa PHYSFS_removeFromSearchPath
  * \sa PHYSFS_getSearchPath
  * \sa PHYSFS_getMountPoint
+ * \sa PHYSFS_mountIo
  */
 PHYSFS_DECL int PHYSFS_mount(const char *newDir,
                              const char *mountPoint,
@@ -2718,6 +2717,184 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle,
                                             const void *buffer,
                                             PHYSFS_uint64 len);
 
+
+/**
+ * \struct PHYSFS_Io
+ * \brief An abstract i/o interface.
+ *
+ * \warning This is advanced, hardcore stuff. You don't need this unless you
+ *          really know what you're doing. Most apps will not need this.
+ *
+ * Historically, PhysicsFS provided access to the physical filesystem and
+ *  archives within that filesystem. However, sometimes you need more power
+ *  than this. Perhaps you need to provide an archive that is entirely
+ *  contained in RAM, or you need to brige some other file i/o API to
+ *  PhysicsFS, or you need to translate the bits (perhaps you have a
+ *  a standard .zip file that's encrypted, and you need to decrypt on the fly
+ *  for the unsuspecting zip archiver).
+ *
+ * A PHYSFS_Io is the interface that Archivers use to get archive data.
+ *  Historically, this has mapped to file i/o to the physical filesystem, but
+ *  as of PhysicsFS 2.1, applications can provide their own i/o implementations
+ *  at runtime.
+ *
+ * This interface isn't necessarily a good universal fit for i/o. There are a
+ *  few requirements of note:
+ *
+ *  - They only do blocking i/o (at least, for now).
+ *  - They need to be able to duplicate. If you have a file handle from
+ *    fopen(), you need to be able to create a unique clone of it (so we
+ *    have two handles to the same file that can both seek/read/etc without
+ *    stepping on each other).
+ *  - They need to know the size of their entire data set.
+ *  - They need to be able to seek and rewind on demand.
+ *
+ * ...in short, you're probably not going to write an HTTP implementation.
+ *
+ * Thread safety: TO BE DECIDED.  !!! FIXME
+ *
+ * \sa PHYSFS_mountIo
+ */
+typedef struct PHYSFS_Io
+{
+    /**
+     * \brief Read more data.
+     *
+     * Read (len) bytes from the interface, at the current i/o position, and
+     *  store them in (buffer). The current i/o position should move ahead
+     *  by the number of bytes successfully read.
+     *
+     * You don't have to implement this; set it to NULL if not implemented.
+     *  This will only be used if the file is opened for reading. If set to
+     *  NULL, a default implementation that immediately reports failure will
+     *  be used.
+     *
+     *   \param io The i/o instance to read from.
+     *   \param buf The buffer to store data into. It must be at least
+     *                 (len) bytes long and can't be NULL.
+     *   \param len The number of bytes to read from the interface.
+     *  \return number of bytes read from file, 0 on EOF, -1 if complete
+     *          failure.
+     */
+    PHYSFS_sint64 (*read)(struct PHYSFS_Io *io, void *buf, PHYSFS_uint64 len);
+
+    /**
+     * \brief Write more data.
+     *
+     * Write (len) bytes from (buffer) to the interface at the current i/o
+     *  position. The current i/o position should move ahead by the number of
+     *  bytes successfully written.
+     *
+     * You don't have to implement this; set it to NULL if not implemented.
+     *  This will only be used if the file is opened for writing. If set to
+     *  NULL, a default implementation that immediately reports failure will
+     *  be used.
+     *
+     * You are allowed to buffer; a write can succeed here and then later
+     *  fail when flushing. Note that PHYSFS_setBuffer() may be operating a
+     *  level above your i/o, so you should usually not implement your
+     *  own buffering routines.
+     *
+     *   \param io The i/o instance to write to.
+     *   \param buffer The buffer to read data from. It must be at least
+     *                 (len) bytes long and can't be NULL.
+     *   \param len The number of bytes to read from (buffer).
+     *  \return number of bytes written to file, -1 if complete failure.
+     */
+    PHYSFS_sint64 (*write)(struct PHYSFS_Io *io, const void *buffer,
+                           PHYSFS_uint64 len);
+
+    /**
+     * \brief Move i/o position to a given byte offset from start.
+     *
+     * This method moves the i/o position, so the next read/write will
+     *  be of the byte at (offset) offset. Seeks past the end of file should
+     *  be treated as an error condition.
+     *
+     *   \param io The i/o instance to seek.
+     *   \param offset The new byte offset for the i/o position.
+     *  \return non-zero on success, zero on error.
+     */
+    int (*seek)(struct PHYSFS_Io *io, PHYSFS_uint64 offset);
+
+    /**
+     * \brief Report current i/o position.
+     *
+     * Return bytes offset, or -1 if you aren't able to determine. A failure
+     *  will almost certainly be fatal to further use of this stream, so you
+     *  may not leave this unimplemented.
+     *
+     *   \param io The i/o instance to query.
+     *  \return The current byte offset for the i/o position, -1 if unknown.
+     */
+    PHYSFS_sint64 (*tell)(struct PHYSFS_Io *io);
+
+    /**
+     * \brief Determine size of the i/o instance's dataset.
+     *
+     * Return number of bytes available in the file, or -1 if you
+     *  aren't able to determine. A failure will almost certainly be fatal
+     *  to further use of this stream, so you may not leave this unimplemented.
+     *
+     *   \param io The i/o instance to query.
+     *  \return Total size, in bytes, of the dataset.
+     */
+    PHYSFS_sint64 (*length)(struct PHYSFS_Io *io);
+
+    /**
+     * \brief Duplicate this i/o instance.
+     *
+     *  // !!! FIXME: write me.
+     *
+     *   \param io The i/o instance to duplicate.
+     *  \return A new value for a stream's (opaque) field, or NULL on error.
+     */
+    struct PHYSFS_Io *(*duplicate)(struct PHYSFS_Io *io);
+
+    /**
+     * \brief Flush resources to media, or wherever.
+     *
+     * This is the chance to report failure for writes that had claimed
+     *  success earlier, but still had a chance to actually fail. This method
+     *  can be NULL if flushing isn't necessary.
+     *
+     * This function may be called before destroy(), as it can report failure
+     *  and destroy() can not. It may be called at other times, too.
+     *
+     *   \param io The i/o instance to flush.
+     *  \return Zero on error, non-zero on success.
+     */
+    int (*flush)(struct PHYSFS_Io *io);
+
+    /**
+     * \brief Cleanup and deallocate i/o instance.
+     *
+     * Free associated resources, including (opaque) if applicable.
+     *
+     * This function must always succeed: as such, it returns void. The
+     *  system may call your flush() method before this. You may report
+     *  failure there if necessary. This method may still be called if
+     *  flush() fails, in which case you'll have to abandon unflushed data
+     *  and other failing conditions and clean up.
+     *
+     * Once this method is called for a given instance, the system will assume
+     *  it is unsafe to touch that instance again and will discard any
+     *  references to it.
+     *
+     *   \param s The i/o instance to destroy.
+     */
+    void (*destroy)(struct PHYSFS_Io *io);
+
+    /**
+     * \brief Instance data for this struct.
+     *
+     * Each instance has a pointer associated with it that can be used to
+     *  store anything it likes. This pointer is per-instance of the stream,
+     *  so presumably it will change when calling duplicate(). This can be
+     *  deallocated during the destroy() method.
+     */
+    void *opaque;
+} PHYSFS_Io;
 
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
 

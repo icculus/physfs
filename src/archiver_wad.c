@@ -61,32 +61,37 @@ typedef struct
 
 typedef struct
 {
-    char *filename;
+    PHYSFS_Io *io;
     PHYSFS_uint32 entryCount;
-    PHYSFS_uint32 entryOffset;
     WADentry *entries;
 } WADinfo;
 
 typedef struct
 {
-    void *handle;
+    PHYSFS_Io *io;
     WADentry *entry;
     PHYSFS_uint32 curPos;
 } WADfileinfo;
 
 
+static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
+{
+    return (io->read(io, buf, len) == len);
+} /* readAll */
+
+
 static void WAD_dirClose(dvoid *opaque)
 {
     WADinfo *info = ((WADinfo *) opaque);
-    allocator.Free(info->filename);
+    info->io->destroy(info->io);
     allocator.Free(info->entries);
     allocator.Free(info);
 } /* WAD_dirClose */
 
 
-static PHYSFS_sint64 WAD_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
+static PHYSFS_sint64 WAD_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 {
-    WADfileinfo *finfo = (WADfileinfo *) opaque;
+    WADfileinfo *finfo = (WADfileinfo *) io->opaque;
     const WADentry *entry = finfo->entry;
     const PHYSFS_uint64 bytesLeft = (PHYSFS_uint64)(entry->size-finfo->curPos);
     PHYSFS_sint64 rc;
@@ -94,7 +99,7 @@ static PHYSFS_sint64 WAD_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
     if (bytesLeft < len)
         len = bytesLeft;
 
-    rc = __PHYSFS_platformRead(finfo->handle, buffer, len);
+    rc = finfo->io->read(finfo->io, buffer, len);
     if (rc > 0)
         finfo->curPos += (PHYSFS_uint32) rc;
 
@@ -102,35 +107,26 @@ static PHYSFS_sint64 WAD_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
 } /* WAD_read */
 
 
-static PHYSFS_sint64 WAD_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
+static PHYSFS_sint64 WAD_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* WAD_write */
 
 
-static int WAD_eof(fvoid *opaque)
+static PHYSFS_sint64 WAD_tell(PHYSFS_Io *io)
 {
-    WADfileinfo *finfo = (WADfileinfo *) opaque;
-    WADentry *entry = finfo->entry;
-    return (finfo->curPos >= entry->size);
-} /* WAD_eof */
-
-
-static PHYSFS_sint64 WAD_tell(fvoid *opaque)
-{
-    return ((WADfileinfo *) opaque)->curPos;
+    return ((WADfileinfo *) io->opaque)->curPos;
 } /* WAD_tell */
 
 
-static int WAD_seek(fvoid *opaque, PHYSFS_uint64 offset)
+static int WAD_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
 {
-    WADfileinfo *finfo = (WADfileinfo *) opaque;
-    WADentry *entry = finfo->entry;
+    WADfileinfo *finfo = (WADfileinfo *) io->opaque;
+    const WADentry *entry = finfo->entry;
     int rc;
 
-    BAIL_IF_MACRO(offset < 0, ERR_INVALID_ARGUMENT, 0);
     BAIL_IF_MACRO(offset >= entry->size, ERR_PAST_EOF, 0);
-    rc = __PHYSFS_platformSeek(finfo->handle, entry->startPos + offset);
+    rc = finfo->io->seek(finfo->io, entry->startPos + offset);
     if (rc)
         finfo->curPos = (PHYSFS_uint32) offset;
 
@@ -138,83 +134,77 @@ static int WAD_seek(fvoid *opaque, PHYSFS_uint64 offset)
 } /* WAD_seek */
 
 
-static PHYSFS_sint64 WAD_fileLength(fvoid *opaque)
+static PHYSFS_sint64 WAD_length(PHYSFS_Io *io)
 {
-    WADfileinfo *finfo = (WADfileinfo *) opaque;
+    const WADfileinfo *finfo = (WADfileinfo *) io->opaque;
     return ((PHYSFS_sint64) finfo->entry->size);
-} /* WAD_fileLength */
+} /* WAD_length */
 
 
-static int WAD_fileClose(fvoid *opaque)
+static PHYSFS_Io *WAD_duplicate(PHYSFS_Io *_io)
 {
-    WADfileinfo *finfo = (WADfileinfo *) opaque;
-    BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
+    WADfileinfo *origfinfo = (WADfileinfo *) _io->opaque;
+    PHYSFS_Io *io = NULL;
+    PHYSFS_Io *retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    WADfileinfo *finfo = (WADfileinfo *) allocator.Malloc(sizeof (WADfileinfo));
+    GOTO_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, WAD_duplicate_failed);
+    GOTO_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, WAD_duplicate_failed);
+
+    io = origfinfo->io->duplicate(origfinfo->io);
+    GOTO_IF_MACRO(io == NULL, NULL, WAD_duplicate_failed);
+    finfo->io = io;
+    finfo->entry = origfinfo->entry;
+    finfo->curPos = 0;
+    memcpy(retval, _io, sizeof (PHYSFS_Io));
+    retval->opaque = finfo;
+    return retval;
+
+WAD_duplicate_failed:
+    if (finfo != NULL) allocator.Free(finfo);
+    if (retval != NULL) allocator.Free(retval);
+    if (io != NULL) io->destroy(io);
+    return NULL;
+} /* WAD_duplicate */
+
+static int WAD_flush(PHYSFS_Io *io) { return 1;  /* no write support. */ }
+
+static void WAD_destroy(PHYSFS_Io *io)
+{
+    WADfileinfo *finfo = (WADfileinfo *) io->opaque;
+    finfo->io->destroy(finfo->io);
     allocator.Free(finfo);
-    return 1;
-} /* WAD_fileClose */
+    allocator.Free(io);
+} /* WAD_destroy */
 
 
-static inline int readAll(void *fh, void *buf, const PHYSFS_uint64 len)
+static const PHYSFS_Io WAD_Io =
 {
-    return (__PHYSFS_platformRead(fh, buf, len) == len);
-} /* readAll */
+    WAD_read,
+    WAD_write,
+    WAD_seek,
+    WAD_tell,
+    WAD_length,
+    WAD_duplicate,
+    WAD_flush,
+    WAD_destroy,
+    NULL
+};
 
 
-static int wad_open(const char *filename, int forWriting,
-                    void **fh, PHYSFS_uint32 *count,PHYSFS_uint32 *offset)
-{
-    PHYSFS_uint8 buf[4];
 
-    *fh = NULL;
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-
-    *fh = __PHYSFS_platformOpenRead(filename);
-    BAIL_IF_MACRO(*fh == NULL, NULL, 0);
-    
-    if (!readAll(*fh, buf, 4))
-        goto openWad_failed;
-
-    if (memcmp(buf, "IWAD", 4) != 0 && memcmp(buf, "PWAD", 4) != 0)
-    {
-        __PHYSFS_setError(ERR_UNSUPPORTED_ARCHIVE);
-        goto openWad_failed;
-    } /* if */
-
-    if (!readAll(*fh, count, sizeof (PHYSFS_uint32)))
-        goto openWad_failed;
-
-    *count = PHYSFS_swapULE32(*count);
-
-    if (!readAll(*fh, offset, sizeof (PHYSFS_uint32)))
-        goto openWad_failed;
-
-    *offset = PHYSFS_swapULE32(*offset);
-
-    return 1;
-
-openWad_failed:
-    if (*fh != NULL)
-        __PHYSFS_platformClose(*fh);
-
-    *count = -1;
-    *fh = NULL;
-    return 0;
-} /* wad_open */
-
-
-static int wad_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static int wadEntryCmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
     {
         const WADentry *a = (const WADentry *) _a;
-        return strcmp(a[one].name, a[two].name);
+        return __PHYSFS_stricmpASCII(a[one].name, a[two].name);
     } /* if */
 
     return 0;
-} /* wad_entry_cmp */
+} /* wadEntryCmp */
 
 
-static void wad_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static void wadEntrySwap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
     {
@@ -225,74 +215,67 @@ static void wad_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
         memcpy(first, second, sizeof (WADentry));
         memcpy(second, &tmp, sizeof (WADentry));
     } /* if */
-} /* wad_entry_swap */
+} /* wadEntrySwap */
 
 
-static int wad_load_entries(const char *name, int forWriting, WADinfo *info)
+static int wad_load_entries(PHYSFS_Io *io, WADinfo *info)
 {
-    void *fh = NULL;
-    PHYSFS_uint32 fileCount;
+    PHYSFS_uint32 fileCount = info->entryCount;
     PHYSFS_uint32 directoryOffset;
     WADentry *entry;
-    char lastDirectory[9];
 
-    lastDirectory[8] = 0; /* Make sure lastDirectory stays null-terminated. */
+    BAIL_IF_MACRO(!readAll(io, &directoryOffset, 4), NULL, 0);
+    directoryOffset = PHYSFS_swapULE32(directoryOffset);
 
-    BAIL_IF_MACRO(!wad_open(name, forWriting, &fh, &fileCount,&directoryOffset), NULL, 0);
-    info->entryCount = fileCount;
     info->entries = (WADentry *) allocator.Malloc(sizeof(WADentry)*fileCount);
-    if (info->entries == NULL)
-    {
-        __PHYSFS_platformClose(fh);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, 0);
-    } /* if */
-
-    __PHYSFS_platformSeek(fh,directoryOffset);
+    BAIL_IF_MACRO(info->entries == NULL, ERR_OUT_OF_MEMORY, 0);
+    BAIL_IF_MACRO(!io->seek(io, directoryOffset), NULL, 0);
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
-        if ( (!readAll(fh, &entry->startPos, sizeof (PHYSFS_uint32))) ||
-             (!readAll(fh, &entry->size, sizeof (PHYSFS_uint32))) ||
-             (!readAll(fh, &entry->name, 8)) )
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
+        BAIL_IF_MACRO(!readAll(io, &entry->startPos, 4), NULL, 0);
+        BAIL_IF_MACRO(!readAll(io, &entry->size, 4), NULL, 0);
+        BAIL_IF_MACRO(!readAll(io, &entry->name, 8), NULL, 0);
 
         entry->name[8] = '\0'; /* name might not be null-terminated in file. */
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = PHYSFS_swapULE32(entry->startPos);
     } /* for */
 
-    __PHYSFS_platformClose(fh);
-
-    __PHYSFS_sort(info->entries, info->entryCount,
-                  wad_entry_cmp, wad_entry_swap);
+    __PHYSFS_sort(info->entries, info->entryCount, wadEntryCmp, wadEntrySwap);
     return 1;
 } /* wad_load_entries */
 
 
-static void *WAD_openArchive(const char *name, int forWriting)
+static void *WAD_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
-    WADinfo *info = (WADinfo *) allocator.Malloc(sizeof (WADinfo));
+    PHYSFS_uint8 buf[4];
+    WADinfo *info = NULL;
+    PHYSFS_uint32 val = 0;
 
-    BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
+    assert(io != NULL);  /* shouldn't ever happen. */
+
+    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
+
+    BAIL_IF_MACRO(!readAll(io, buf, sizeof (buf)), NULL, NULL);
+    if ((memcmp(buf, "IWAD", 4) != 0) && (memcmp(buf, "PWAD", 4) != 0))
+        GOTO_MACRO(ERR_NOT_AN_ARCHIVE, WAD_openArchive_failed);
+
+    info = (WADinfo *) allocator.Malloc(sizeof (WADinfo));
+    GOTO_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, WAD_openArchive_failed);
     memset(info, '\0', sizeof (WADinfo));
+    info->io = io;
 
-    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
-    GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, WAD_openArchive_failed);
+    GOTO_IF_MACRO(!readAll(io,&val,sizeof(val)), NULL, WAD_openArchive_failed);
+    info->entryCount = PHYSFS_swapULE32(val);
 
-    if (!wad_load_entries(name, forWriting, info))
-        goto WAD_openArchive_failed;
+    GOTO_IF_MACRO(!wad_load_entries(io, info), NULL, WAD_openArchive_failed);
 
-    strcpy(info->filename, name);
     return info;
 
 WAD_openArchive_failed:
     if (info != NULL)
     {
-        if (info->filename != NULL)
-            allocator.Free(info->filename);
         if (info->entries != NULL)
             allocator.Free(info->entries);
         allocator.Free(info);
@@ -306,50 +289,41 @@ static void WAD_enumerateFiles(dvoid *opaque, const char *dname,
                                int omitSymLinks, PHYSFS_EnumFilesCallback cb,
                                const char *origdir, void *callbackdata)
 {
-    WADinfo *info = ((WADinfo *) opaque);
-    WADentry *entry = info->entries;
-    PHYSFS_uint32 max = info->entryCount;
-    PHYSFS_uint32 i;
-    const char *name;
-    char *sep;
+    /* no directories in WAD files. */
+    if (*dname == '\0')
+    {
+        WADinfo *info = (WADinfo *) opaque;
+        WADentry *entry = info->entries;
+        PHYSFS_uint32 max = info->entryCount;
+        PHYSFS_uint32 i;
 
-    if (*dname == '\0')  /* root directory enumeration? */
-    {
         for (i = 0; i < max; i++, entry++)
-        {
-            name = entry->name;
-            if (strchr(name, '/') == NULL)
-                cb(callbackdata, origdir, name);
-        } /* for */
+            cb(callbackdata, origdir, entry->name);
     } /* if */
-    else
-    {
-        for (i = 0; i < max; i++, entry++)
-        {
-            name = entry->name;
-            sep = strchr(name, '/');
-            if (sep != NULL)
-            {
-                if (strncmp(dname, name, (sep - name)) == 0)
-                    cb(callbackdata, origdir, sep + 1);
-            } /* if */
-        } /* for */
-    } /* else */
 } /* WAD_enumerateFiles */
 
 
 static WADentry *wad_find_entry(const WADinfo *info, const char *name)
 {
+    char *ptr = strchr(name, '.');
     WADentry *a = info->entries;
     PHYSFS_sint32 lo = 0;
     PHYSFS_sint32 hi = (PHYSFS_sint32) (info->entryCount - 1);
     PHYSFS_sint32 middle;
     int rc;
 
+    /*
+     * Rule out filenames to avoid unneeded processing...no dirs,
+     *   big filenames, or extensions.
+     */
+    BAIL_IF_MACRO(ptr != NULL, ERR_NO_SUCH_FILE, NULL);
+    BAIL_IF_MACRO(strlen(name) > 8, ERR_NO_SUCH_FILE, NULL);
+    BAIL_IF_MACRO(strchr(name, '/') != NULL, ERR_NO_SUCH_FILE, NULL);
+
     while (lo <= hi)
     {
         middle = lo + ((hi - lo) / 2);
-        rc = strcmp(name, a[middle].name);
+        rc = __PHYSFS_stricmpASCII(name, a[middle].name);
         if (rc == 0)  /* found it! */
             return &a[middle];
         else if (rc > 0)
@@ -371,16 +345,18 @@ static int WAD_exists(dvoid *opaque, const char *name)
 static int WAD_isDirectory(dvoid *opaque, const char *name, int *fileExists)
 {
     WADentry *entry = wad_find_entry(((WADinfo *) opaque), name);
-    if (entry != NULL)
+    const int exists = (entry != NULL);
+    *fileExists = exists;
+    if (exists)
     {
         char *n;
-
-        *fileExists = 1;
 
         /* Can't be a directory if it's a subdirectory. */
         if (strchr(entry->name, '/') != NULL)
             return 0;
 
+        /* !!! FIXME: this isn't really something we should do. */
+        /* !!! FIXME: I probably broke enumeration up there, too. */
         /* Check if it matches "MAP??" or "E?M?" ... */
         n = entry->name;
         if ((n[0] == 'E' && n[2] == 'M') ||
@@ -388,13 +364,9 @@ static int WAD_isDirectory(dvoid *opaque, const char *name, int *fileExists)
         {
             return 1;
         } /* if */
-        return 0;
     } /* if */
-    else
-    {
-        *fileExists = 0;
-        return 0;
-    } /* else */
+
+    return 0;
 } /* WAD_isDirectory */
 
 
@@ -405,40 +377,58 @@ static int WAD_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* WAD_isSymLink */
 
 
-static fvoid *WAD_openRead(dvoid *opaque, const char *fnm, int *fileExists)
+static PHYSFS_Io *WAD_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
-    WADinfo *info = ((WADinfo *) opaque);
+    PHYSFS_Io *retval = NULL;
+    WADinfo *info = (WADinfo *) opaque;
     WADfileinfo *finfo;
     WADentry *entry;
 
     entry = wad_find_entry(info, fnm);
     *fileExists = (entry != NULL);
-    BAIL_IF_MACRO(entry == NULL, NULL, NULL);
+    GOTO_IF_MACRO(entry == NULL, NULL, WAD_openRead_failed);
+
+    retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    GOTO_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, WAD_openRead_failed);
 
     finfo = (WADfileinfo *) allocator.Malloc(sizeof (WADfileinfo));
-    BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
+    GOTO_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, WAD_openRead_failed);
 
-    finfo->handle = __PHYSFS_platformOpenRead(info->filename);
-    if ( (finfo->handle == NULL) ||
-         (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
-    {
-        allocator.Free(finfo);
-        return NULL;
-    } /* if */
+    finfo->io = info->io->duplicate(info->io);
+    GOTO_IF_MACRO(finfo->io == NULL, NULL, WAD_openRead_failed);
+
+    if (!finfo->io->seek(finfo->io, entry->startPos))
+        GOTO_MACRO(NULL, WAD_openRead_failed);
 
     finfo->curPos = 0;
     finfo->entry = entry;
-    return finfo;
+
+    memcpy(retval, &WAD_Io, sizeof (*retval));
+    retval->opaque = finfo;
+    return retval;
+
+WAD_openRead_failed:
+    if (finfo != NULL)
+    {
+        if (finfo->io != NULL)
+            finfo->io->destroy(finfo->io);
+        allocator.Free(finfo);
+    } /* if */
+
+    if (retval != NULL)
+        allocator.Free(retval);
+
+    return NULL;
 } /* WAD_openRead */
 
 
-static fvoid *WAD_openWrite(dvoid *opaque, const char *name)
+static PHYSFS_Io *WAD_openWrite(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* WAD_openWrite */
 
 
-static fvoid *WAD_openAppend(dvoid *opaque, const char *name)
+static PHYSFS_Io *WAD_openAppend(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* WAD_openAppend */
@@ -468,10 +458,10 @@ static int WAD_stat(dvoid *opaque, const char *filename, int *exists,
 
     stat->filesize = entry->size;
     stat->filetype = PHYSFS_FILETYPE_REGULAR;
-    stat->accesstime = -1;
     stat->modtime = -1;
     stat->createtime = -1;
-    stat->readonly = 1; /* WADs are always readonly */
+    stat->accesstime = -1;
+    stat->readonly = 1;
 
     return 1;
 } /* WAD_stat */
@@ -500,14 +490,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
     WAD_remove,             /* remove() method         */
     WAD_mkdir,              /* mkdir() method          */
     WAD_dirClose,           /* dirClose() method       */
-    WAD_stat,               /* stat() method           */
-    WAD_read,               /* read() method           */
-    WAD_write,              /* write() method          */
-    WAD_eof,                /* eof() method            */
-    WAD_tell,               /* tell() method           */
-    WAD_seek,               /* seek() method           */
-    WAD_fileLength,         /* fileLength() method     */
-    WAD_fileClose           /* fileClose() method      */
+    WAD_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_WAD */
