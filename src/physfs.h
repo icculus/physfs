@@ -2896,6 +2896,47 @@ typedef struct PHYSFS_Io
     void *opaque;
 } PHYSFS_Io;
 
+
+/**
+ * \fn int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname, const char *mountPoint, int appendToPath)
+ * \brief Add an archive, built on a PHYSFS_Io, to the search path.
+ *
+ * \warning Unless you have some special, low-level need, you should be using
+ *          PHYSFS_mount() instead of this.
+ *
+ * This function operates just like PHYSFS_mount(), but takes a PHYSFS_Io
+ *  instead of a pathname. Behind the scenes, PHYSFS_mount() calls this
+ *  function with a physical-filesystem-based PHYSFS_Io.
+ *
+ * (filename) is only used here to optimize archiver selection (if you name it
+ *  XXXXX.zip, we might try the ZIP archiver first, for example). It doesn't
+ *  need to refer to a real file at all, and can even be NULL. If the filename
+ *  isn't helpful, the system will try every archiver until one works or none
+ *  of them do.
+ *
+ * (io) must remain until the archive is unmounted. When the archive is
+ *  unmounted, the system will call (io)->destroy(io), which will give you
+ *  a chance to free your resources.
+ *
+ * If this function fails, (io)->destroy(io) is not called.
+ *
+ *   \param io i/o instance for archive to add to the path.
+ *   \param fname Filename that can represent this stream. Can be NULL.
+ *   \param mountPoint Location in the interpolated tree that this archive
+ *                     will be "mounted", in platform-independent notation.
+ *                     NULL or "" is equivalent to "/".
+ *   \param appendToPath nonzero to append to search path, zero to prepend.
+ *  \return nonzero if added to path, zero on failure (bogus archive, stream
+ *                   i/o issue, etc). Specifics of the error can be
+ *                   gleaned from PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_unmount
+ * \sa PHYSFS_getSearchPath
+ * \sa PHYSFS_getMountPoint
+ */
+PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
+                               const char *mountPoint, int appendToPath);
+
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
 
 

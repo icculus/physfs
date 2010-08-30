@@ -1095,27 +1095,30 @@ int PHYSFS_setWriteDir(const char *newDir)
 } /* PHYSFS_setWriteDir */
 
 
-int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
+static int doMount(PHYSFS_Io *io, const char *fname,
+                   const char *mountPoint, int appendToPath)
 {
     DirHandle *dh;
     DirHandle *prev = NULL;
     DirHandle *i;
-
-    BAIL_IF_MACRO(newDir == NULL, ERR_INVALID_ARGUMENT, 0);
 
     if (mountPoint == NULL)
         mountPoint = "/";
 
     __PHYSFS_platformGrabMutex(stateLock);
 
-    for (i = searchPath; i != NULL; i = i->next)
+    if (fname != NULL)
     {
-        /* already in search path? */
-        BAIL_IF_MACRO_MUTEX(strcmp(newDir, i->dirName)==0, NULL, stateLock, 1);
-        prev = i;
-    } /* for */
+        for (i = searchPath; i != NULL; i = i->next)
+        {
+            /* already in search path? */
+            if ((i->dirName != NULL) && (strcmp(fname, i->dirName) == 0))
+                BAIL_MACRO_MUTEX(NULL, stateLock, 1);
+            prev = i;
+        } /* for */
+    } /* if */
 
-    dh = createDirHandle(NULL, newDir, mountPoint, 0);
+    dh = createDirHandle(io, fname, mountPoint, 0);
     BAIL_IF_MACRO_MUTEX(dh == NULL, NULL, stateLock, 0);
 
     if (appendToPath)
@@ -1133,6 +1136,21 @@ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
 
     __PHYSFS_platformReleaseMutex(stateLock);
     return 1;
+} /* doMount */
+
+
+int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
+                   const char *mountPoint, int appendToPath)
+{
+    BAIL_IF_MACRO(io == NULL, ERR_INVALID_ARGUMENT, 0);
+    return doMount(io, fname, mountPoint, appendToPath);
+} /* PHYSFS_mountIo */
+
+
+int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
+{
+    BAIL_IF_MACRO(newDir == NULL, ERR_INVALID_ARGUMENT, 0);
+    return doMount(NULL, newDir, mountPoint, appendToPath);
 } /* PHYSFS_mount */
 
 
