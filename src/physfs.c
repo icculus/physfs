@@ -1828,15 +1828,21 @@ const char *PHYSFS_getRealDir(const char *_fname)
     {
         DirHandle *i;
         __PHYSFS_platformGrabMutex(stateLock);
-        for (i = searchPath; ((i != NULL) && (retval == NULL)); i = i->next)
+        for (i = searchPath; i != NULL; i = i->next)
         {
             char *arcfname = fname;
             if (partOfMountPoint(i, arcfname))
+            {
                 retval = i->dirName;
+                break;
+            } /* if */
             else if (verifyPath(i, &arcfname, 0))
             {
                 if (i->funcs->exists(i->opaque, arcfname))
+                {
                     retval = i->dirName;
+                    break;
+                } /* if */
             } /* if */
         } /* for */
         __PHYSFS_platformReleaseMutex(stateLock);
