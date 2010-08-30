@@ -1182,12 +1182,11 @@ int __PHYSFS_platformFlush(void *opaque)
 } /* __PHYSFS_platformFlush */
 
 
-int __PHYSFS_platformClose(void *opaque)
+void __PHYSFS_platformClose(void *opaque)
 {
     HANDLE Handle = ((WinApiFile *) opaque)->handle;
-    BAIL_IF_MACRO(!CloseHandle(Handle), winApiStrError(), 0);
+    (void) CloseHandle(Handle); /* ignore errors. You should have flushed! */
     allocator.Free(opaque);
-    return 1;
 } /* __PHYSFS_platformClose */
 
 

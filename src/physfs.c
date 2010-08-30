@@ -31,10 +31,9 @@ typedef struct __PHYSFS_DIRHANDLE__
 
 typedef struct __PHYSFS_FILEHANDLE__
 {
-    void *opaque;  /* Instance data unique to the archiver for this file. */
+    PHYSFS_Io *io;  /* Instance data unique to the archiver for this file. */
     PHYSFS_uint8 forReading; /* Non-zero if reading, zero if write/append */
     const DirHandle *dirHandle;  /* Archiver instance that created this */
-    const PHYSFS_Archiver *funcs;  /* Ptr to archiver info for this handle. */
     PHYSFS_uint8 *buffer;  /* Buffer, if set (NULL otherwise). Don't touch! */
     PHYSFS_uint32 bufsize;  /* Bufsize, if set (0 otherwise). Don't touch! */
     PHYSFS_uint32 buffill;  /* Buffer fill size. Don't touch! */
@@ -150,6 +149,122 @@ static void *stateLock = NULL;     /* protects other PhysFS static state. */
 /* allocator ... */
 static int externalAllocator = 0;
 PHYSFS_Allocator allocator;
+
+
+/* PHYSFS_Io implementation for i/o to physical filesystem... */
+
+/* !!! FIXME: maybe refcount the paths in a string pool? */
+typedef struct __PHYSFS_NativeIoInfo
+{
+    void *handle;
+    const char *path;
+    int mode;   /* 'r', 'w', or 'a' */
+} NativeIoInfo;
+
+static PHYSFS_sint64 nativeIo_read(PHYSFS_Io *io, void *buf, PHYSFS_uint64 len)
+{
+    NativeIoInfo *info = (NativeIoInfo *) io->opaque;
+    return __PHYSFS_platformRead(info->handle, buf, len);
+} /* nativeIo_read */
+
+static PHYSFS_sint64 nativeIo_write(PHYSFS_Io *io, const void *buffer,
+                                    PHYSFS_uint64 len)
+{
+    NativeIoInfo *info = (NativeIoInfo *) io->opaque;
+    return __PHYSFS_platformWrite(info->handle, buffer, len);
+} /* nativeIo_write */
+
+static int nativeIo_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
+{
+    NativeIoInfo *info = (NativeIoInfo *) io->opaque;
+    return __PHYSFS_platformSeek(info->handle, offset);
+} /* nativeIo_seek */
+
+static PHYSFS_sint64 nativeIo_tell(PHYSFS_Io *io)
+{
+    NativeIoInfo *info = (NativeIoInfo *) io->opaque;
+    return __PHYSFS_platformTell(info->handle);
+} /* nativeIo_tell */
+
+static PHYSFS_sint64 nativeIo_length(PHYSFS_Io *io)
+{
+    NativeIoInfo *info = (NativeIoInfo *) io->opaque;
+    return __PHYSFS_platformFileLength(info->handle);
+} /* nativeIo_length */
+
+static PHYSFS_Io *nativeIo_duplicate(PHYSFS_Io *io)
+{
+    NativeIoInfo *info = (NativeIoInfo *) io->opaque;
+    return __PHYSFS_createNativeIo(info->path, info->mode);
+} /* nativeIo_duplicate */
+
+static int nativeIo_flush(PHYSFS_Io *io)
+{
+    return __PHYSFS_platformFlush(io->opaque);
+} /* nativeIo_flush */
+
+static void nativeIo_destroy(PHYSFS_Io *io)
+{
+    NativeIoInfo *info = (NativeIoInfo *) io->opaque;
+    __PHYSFS_platformClose(info->handle);
+    allocator.Free((void *) info->path);
+    allocator.Free(info);
+    allocator.Free(io);
+} /* nativeIo_destroy */
+
+static const PHYSFS_Io __PHYSFS_nativeIoInterface =
+{
+    nativeIo_read,
+    nativeIo_write,
+    nativeIo_seek,
+    nativeIo_tell,
+    nativeIo_length,
+    nativeIo_duplicate,
+    nativeIo_flush,
+    nativeIo_destroy,
+    NULL
+};
+
+PHYSFS_Io *__PHYSFS_createNativeIo(const char *path, const int mode)
+{
+    PHYSFS_Io *io = NULL;
+    NativeIoInfo *info = NULL;
+    void *handle = NULL;
+    char *pathdup = NULL;
+
+    assert((mode == 'r') || (mode == 'w') || (mode == 'a'));
+
+    io = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    GOTO_IF_MACRO(io == NULL, ERR_OUT_OF_MEMORY, createNativeIo_failed);
+    info = (NativeIoInfo *) allocator.Malloc(sizeof (NativeIoInfo));
+    GOTO_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, createNativeIo_failed);
+    pathdup = (char *) allocator.Malloc(strlen(path) + 1);
+    GOTO_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, createNativeIo_failed);
+
+    if (mode == 'r')
+        handle = __PHYSFS_platformOpenRead(path);
+    else if (mode == 'w')
+        handle = __PHYSFS_platformOpenWrite(path);
+    else if (mode == 'a')
+        handle = __PHYSFS_platformOpenAppend(path);
+
+    GOTO_IF_MACRO(handle == NULL, NULL, createNativeIo_failed);
+
+    strcpy(pathdup, path);
+    info->handle = handle;
+    info->path = pathdup;
+    info->mode = mode;
+    memcpy(io, &__PHYSFS_nativeIoInterface, sizeof (*io));
+    io->opaque = info;
+    return io;
+
+createNativeIo_failed:
+    if (handle != NULL) __PHYSFS_platformClose(handle);
+    if (pathdup != NULL) allocator.Free(pathdup);
+    if (info != NULL) allocator.Free(info);
+    if (io != NULL) allocator.Free(io);
+    return NULL;
+} /* __PHYSFS_createNativeIo */
 
 
 /* functions ... */
@@ -379,28 +494,37 @@ void PHYSFS_getLinkedVersion(PHYSFS_Version *ver)
 
 static const char *find_filename_extension(const char *fname)
 {
-    const char *retval = strchr(fname, '.');
-    const char *p = retval;
-
-    while (p != NULL)
+    const char *retval = NULL;
+    if (fname != NULL)
     {
-        p = strchr(p + 1, '.');
-        if (p != NULL)
-            retval = p;
-    } /* while */
+        retval = strchr(fname, '.');
+        const char *p = retval;
 
-    if (retval != NULL)
-        retval++;  /* skip '.' */
+        while (p != NULL)
+        {
+            p = strchr(p + 1, '.');
+            if (p != NULL)
+                retval = p;
+        } /* while */
+
+        if (retval != NULL)
+            retval++;  /* skip '.' */
+    } /* if */
 
     return retval;
 } /* find_filename_extension */
 
 
-static DirHandle *tryOpenDir(const PHYSFS_Archiver *funcs,
+static DirHandle *tryOpenDir(PHYSFS_Io *io, const PHYSFS_Archiver *funcs,
                              const char *d, int forWriting)
 {
     DirHandle *retval = NULL;
-    void *opaque = funcs->openArchive(d, forWriting);
+    void *opaque = NULL;
+
+    if (io != NULL)
+        BAIL_IF_MACRO(!io->seek(io, 0), NULL, NULL);
+
+    opaque = funcs->openArchive(io, d, forWriting);
     if (opaque != NULL)
     {
         retval = (DirHandle *) allocator.Malloc(sizeof (DirHandle));
@@ -419,18 +543,26 @@ static DirHandle *tryOpenDir(const PHYSFS_Archiver *funcs,
 } /* tryOpenDir */
 
 
-static DirHandle *openDirectory(const char *d, int forWriting)
+static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
 {
     DirHandle *retval = NULL;
     const PHYSFS_Archiver **i;
     const char *ext;
 
-    BAIL_IF_MACRO(!__PHYSFS_platformExists(d), ERR_NO_SUCH_FILE, NULL);
+    assert((io != NULL) || (d != NULL));
 
-    /* DIR gets first shot (unlike the rest, it doesn't deal with files). */
-    retval = tryOpenDir(&__PHYSFS_Archiver_DIR, d, forWriting);
-    if (retval != NULL)
-        return retval;
+    if (io == NULL)
+    {
+        BAIL_IF_MACRO(!__PHYSFS_platformExists(d), ERR_NO_SUCH_FILE, NULL);
+
+        /* DIR gets first shot (unlike the rest, it doesn't deal with files). */
+        retval = tryOpenDir(io, &__PHYSFS_Archiver_DIR, d, forWriting);
+        if (retval != NULL)
+            return retval;
+
+        io = __PHYSFS_createNativeIo(d, forWriting ? 'w' : 'r');
+        BAIL_IF_MACRO_MUTEX(io == NULL, NULL, stateLock, 0);
+    } /* if */
 
     ext = find_filename_extension(d);
     if (ext != NULL)
@@ -439,21 +571,21 @@ static DirHandle *openDirectory(const char *d, int forWriting)
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
         {
             if (__PHYSFS_stricmpASCII(ext, (*i)->info->extension) == 0)
-                retval = tryOpenDir(*i, d, forWriting);
+                retval = tryOpenDir(io, *i, d, forWriting);
         } /* for */
 
         /* failing an exact file extension match, try all the others... */
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
         {
             if (__PHYSFS_stricmpASCII(ext, (*i)->info->extension) != 0)
-                retval = tryOpenDir(*i, d, forWriting);
+                retval = tryOpenDir(io, *i, d, forWriting);
         } /* for */
     } /* if */
 
     else  /* no extension? Try them all. */
     {
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
-            retval = tryOpenDir(*i, d, forWriting);
+            retval = tryOpenDir(io, *i, d, forWriting);
     } /* else */
 
     BAIL_IF_MACRO(retval == NULL, ERR_UNSUPPORTED_ARCHIVE, NULL);
@@ -545,14 +677,12 @@ static int partOfMountPoint(DirHandle *h, char *fname)
 } /* partOfMountPoint */
 
 
-static DirHandle *createDirHandle(const char *newDir,
-                                  const char *mountPoint,
-                                  int forWriting)
+static DirHandle *createDirHandle(PHYSFS_Io *io, const char *newDir,
+                                  const char *mountPoint, int forWriting)
 {
     DirHandle *dirHandle = NULL;
     char *tmpmntpnt = NULL;
 
-    GOTO_IF_MACRO(!newDir, ERR_INVALID_ARGUMENT, badDirHandle);
     if (mountPoint != NULL)
     {
         const size_t len = strlen(mountPoint) + 1;
@@ -563,12 +693,17 @@ static DirHandle *createDirHandle(const char *newDir,
         mountPoint = tmpmntpnt;  /* sanitized version. */
     } /* if */
 
-    dirHandle = openDirectory(newDir, forWriting);
+    dirHandle = openDirectory(io, newDir, forWriting);
     GOTO_IF_MACRO(!dirHandle, NULL, badDirHandle);
 
-    dirHandle->dirName = (char *) allocator.Malloc(strlen(newDir) + 1);
-    GOTO_IF_MACRO(!dirHandle->dirName, ERR_OUT_OF_MEMORY, badDirHandle);
-    strcpy(dirHandle->dirName, newDir);
+    if (newDir == NULL)
+        dirHandle->dirName = NULL;
+    else
+    {
+        dirHandle->dirName = (char *) allocator.Malloc(strlen(newDir) + 1);
+        GOTO_IF_MACRO(!dirHandle->dirName, ERR_OUT_OF_MEMORY, badDirHandle);
+        strcpy(dirHandle->dirName, newDir);
+    } /* else */
 
     if ((mountPoint != NULL) && (*mountPoint != '\0'))
     {
@@ -791,13 +926,16 @@ static int closeFileHandleList(FileHandle **list)
 
     for (i = *list; i != NULL; i = next)
     {
+        PHYSFS_Io *io = i->io;
         next = i->next;
-        if (!i->funcs->fileClose(i->opaque))
+
+        if (!io->flush(io))
         {
             *list = i;
             return 0;
         } /* if */
 
+        io->destroy(io);
         allocator.Free(i);
     } /* for */
 
@@ -946,7 +1084,8 @@ int PHYSFS_setWriteDir(const char *newDir)
 
     if (newDir != NULL)
     {
-        writeDir = createDirHandle(newDir, NULL, 1);
+        /* !!! FIXME: PHYSFS_Io shouldn't be NULL */
+        writeDir = createDirHandle(NULL, newDir, NULL, 1);
         retval = (writeDir != NULL);
     } /* if */
 
@@ -976,7 +1115,7 @@ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
         prev = i;
     } /* for */
 
-    dh = createDirHandle(newDir, mountPoint, 0);
+    dh = createDirHandle(NULL, newDir, mountPoint, 0);
     BAIL_IF_MACRO_MUTEX(dh == NULL, NULL, stateLock, 0);
 
     if (appendToPath)
@@ -1735,7 +1874,7 @@ static PHYSFS_File *doOpenWrite(const char *_fname, int appending)
 
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
-        void *opaque = NULL;
+        PHYSFS_Io *io = NULL;
         DirHandle *h = NULL;
         const PHYSFS_Archiver *f;
 
@@ -1748,24 +1887,23 @@ static PHYSFS_File *doOpenWrite(const char *_fname, int appending)
 
         f = h->funcs;
         if (appending)
-            opaque = f->openAppend(h->opaque, fname);
+            io = f->openAppend(h->opaque, fname);
         else
-            opaque = f->openWrite(h->opaque, fname);
+            io = f->openWrite(h->opaque, fname);
 
-        GOTO_IF_MACRO(opaque == NULL, NULL, doOpenWriteEnd);
+        GOTO_IF_MACRO(io == NULL, NULL, doOpenWriteEnd);
 
         fh = (FileHandle *) allocator.Malloc(sizeof (FileHandle));
         if (fh == NULL)
         {
-            f->fileClose(opaque);
+            io->destroy(io);
             GOTO_MACRO(ERR_OUT_OF_MEMORY, doOpenWriteEnd);
         } /* if */
         else
         {
             memset(fh, '\0', sizeof (FileHandle));
-            fh->opaque = opaque;
+            fh->io = io;
             fh->dirHandle = h;
-            fh->funcs = h->funcs;
             fh->next = openWriteList;
             openWriteList = fh;
         } /* else */
@@ -1806,7 +1944,7 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
     {
         int fileExists = 0;
         DirHandle *i = NULL;
-        fvoid *opaque = NULL;
+        PHYSFS_Io *io = NULL;
 
         __PHYSFS_platformGrabMutex(stateLock);
 
@@ -1820,28 +1958,27 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
             char *arcfname = fname;
             if (verifyPath(i, &arcfname, 0))
             {
-                opaque = i->funcs->openRead(i->opaque, arcfname, &fileExists);
-                if (opaque)
+                io = i->funcs->openRead(i->opaque, arcfname, &fileExists);
+                if (io)
                     break;
             } /* if */
             i = i->next;
         } while ((i != NULL) && (!fileExists));
 
         /* !!! FIXME: may not set an error if openRead didn't fail. */
-        GOTO_IF_MACRO(opaque == NULL, NULL, openReadEnd);
+        GOTO_IF_MACRO(io == NULL, NULL, openReadEnd);
 
         fh = (FileHandle *) allocator.Malloc(sizeof (FileHandle));
         if (fh == NULL)
         {
-            i->funcs->fileClose(opaque);
+            io->destroy(io);
             GOTO_MACRO(ERR_OUT_OF_MEMORY, openReadEnd);
         } /* if */
 
         memset(fh, '\0', sizeof (FileHandle));
-        fh->opaque = opaque;
+        fh->io = io;
         fh->forReading = 1;
         fh->dirHandle = i;
-        fh->funcs = i->funcs;
         fh->next = openReadList;
         openReadList = fh;
 
@@ -1864,12 +2001,12 @@ static int closeHandleInOpenList(FileHandle **list, FileHandle *handle)
     {
         if (i == handle)  /* handle is in this list? */
         {
+            PHYSFS_Io *io = handle->io;
             PHYSFS_uint8 *tmp = handle->buffer;
             rc = PHYSFS_flush((PHYSFS_File *) handle);
-            if (rc)
-                rc = handle->funcs->fileClose(handle->opaque);
             if (!rc)
                 return -1;
+            io->destroy(io);
 
             if (tmp != NULL)  /* free any associated buffer. */
                 allocator.Free(tmp);
@@ -1914,6 +2051,7 @@ int PHYSFS_close(PHYSFS_File *_handle)
 static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
                                     PHYSFS_uint64 len)
 {
+    PHYSFS_Io *io = NULL;
     PHYSFS_sint64 retval = 0;
     PHYSFS_uint32 buffered = 0;
     PHYSFS_sint64 rc = 0;
@@ -1942,17 +2080,18 @@ static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
     assert(buffered == 0);
     assert(len > 0);
 
+    io = fh->io;
     if (len >= fh->bufsize)  /* need more than the buffer takes. */
     {
         /* leave buffer empty, go right to output instead. */
-        rc = fh->funcs->read(fh->opaque, buffer, len);
+        rc = io->read(io, buffer, len);
         if (rc < 0)
             return ((retval == 0) ? rc : retval);
         return retval + rc;
     } /* if */
 
     /* need less than buffer can take. Fill buffer. */
-    rc = fh->funcs->read(fh->opaque, fh->buffer, fh->bufsize);
+    rc = io->read(io, fh->buffer, fh->bufsize);
     if (rc < 0)
         return ((retval == 0) ? rc : retval);
 
@@ -1993,7 +2132,7 @@ PHYSFS_sint64 PHYSFS_readBytes(PHYSFS_File *handle, void *buffer,
     if (fh->buffer != NULL)
         return doBufferedRead(fh, buffer, len);
 
-    return fh->funcs->read(fh->opaque, buffer, len);
+    return fh->io->read(fh->io, buffer, len);
 } /* PHYSFS_readBytes */
 
 
@@ -2012,7 +2151,7 @@ static PHYSFS_sint64 doBufferedWrite(PHYSFS_File *handle, const void *buffer,
 
     /* would overflow buffer. Flush and then write the new objects, too. */
     BAIL_IF_MACRO(!PHYSFS_flush(handle), NULL, -1);
-    return fh->funcs->write(fh->opaque, buffer, len);
+    return fh->io->write(fh->io, buffer, len);
 } /* doBufferedWrite */
 
 
@@ -2043,7 +2182,7 @@ PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle, const void *buffer,
     if (fh->buffer != NULL)
         return doBufferedWrite(handle, buffer, len);
 
-    return fh->funcs->write(fh->opaque, buffer, len);
+    return fh->io->write(fh->io, buffer, len);
 } /* PHYSFS_write */
 
 
@@ -2054,18 +2193,29 @@ int PHYSFS_eof(PHYSFS_File *handle)
     if (!fh->forReading)  /* never EOF on files opened for write/append. */
         return 0;
 
-    /* eof if buffer is empty and archiver says so. */
-    return (fh->bufpos == fh->buffill && (fh->funcs->eof(fh->opaque)));
+    /* can't be eof if buffer isn't empty */
+    if (fh->bufpos == fh->buffill)
+    {
+        /* check the Io. */
+        PHYSFS_Io *io = fh->io;
+        const PHYSFS_sint64 pos = io->tell(io);
+        const PHYSFS_sint64 len = io->length(io);
+        if ((pos < 0) || (len < 0))
+            return 0;  /* beats me. */
+        return (pos >= len);
+    } /* if */
+
+    return 0;
 } /* PHYSFS_eof */
 
 
 PHYSFS_sint64 PHYSFS_tell(PHYSFS_File *handle)
 {
     FileHandle *fh = (FileHandle *) handle;
-    PHYSFS_sint64 pos = fh->funcs->tell(fh->opaque);
-    PHYSFS_sint64 retval = fh->forReading ?
-                            (pos - fh->buffill) + fh->bufpos :
-                            (pos + fh->buffill);
+    const PHYSFS_sint64 pos = fh->io->tell(fh->io);
+    const PHYSFS_sint64 retval = fh->forReading ?
+                                 (pos - fh->buffill) + fh->bufpos :
+                                 (pos + fh->buffill);
     return retval;
 } /* PHYSFS_tell */
 
@@ -2090,14 +2240,14 @@ int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos)
 
     /* we have to fall back to a 'raw' seek. */
     fh->buffill = fh->bufpos = 0;
-    return fh->funcs->seek(fh->opaque, pos);
+    return fh->io->seek(fh->io, pos);
 } /* PHYSFS_seek */
 
 
 PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_File *handle)
 {
-    FileHandle *fh = (FileHandle *) handle;
-    return fh->funcs->fileLength(fh->opaque);
+    PHYSFS_Io *io = ((FileHandle *) handle)->io;
+    return io->length(io);
 } /* PHYSFS_filelength */
 
 
@@ -2121,10 +2271,10 @@ int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 _bufsize)
     if ((fh->forReading) && (fh->buffill != fh->bufpos))
     {
         PHYSFS_uint64 pos;
-        PHYSFS_sint64 curpos = fh->funcs->tell(fh->opaque);
+        const PHYSFS_sint64 curpos = fh->io->tell(fh->io);
         BAIL_IF_MACRO(curpos == -1, NULL, 0);
         pos = ((curpos - fh->buffill) + fh->bufpos);
-        BAIL_IF_MACRO(!fh->funcs->seek(fh->opaque, pos), NULL, 0);
+        BAIL_IF_MACRO(!fh->io->seek(fh->io, pos), NULL, 0);
     } /* if */
 
     if (bufsize == 0)  /* delete existing buffer. */
@@ -2153,17 +2303,18 @@ int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 _bufsize)
 int PHYSFS_flush(PHYSFS_File *handle)
 {
     FileHandle *fh = (FileHandle *) handle;
+    PHYSFS_Io *io;
     PHYSFS_sint64 rc;
 
     if ((fh->forReading) || (fh->bufpos == fh->buffill))
         return 1;  /* open for read or buffer empty are successful no-ops. */
 
     /* dump buffer to disk. */
-    rc = fh->funcs->write(fh->opaque, fh->buffer + fh->bufpos,
-                          fh->buffill - fh->bufpos);
+    io = fh->io;
+    rc = io->write(io, fh->buffer + fh->bufpos, fh->buffill - fh->bufpos);
     BAIL_IF_MACRO(rc <= 0, NULL, 0);
     fh->bufpos = fh->buffill = 0;
-    return 1;
+    return io->flush(io);
 } /* PHYSFS_flush */
 
 

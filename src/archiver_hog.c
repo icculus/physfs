@@ -54,7 +54,7 @@ typedef struct
  */
 typedef struct
 {
-    char *filename;
+    PHYSFS_Io *io;
     PHYSFS_uint32 entryCount;
     HOGentry *entries;
 } HOGinfo;
@@ -64,30 +64,30 @@ typedef struct
  */
 typedef struct
 {
-    void *handle;
+    PHYSFS_Io *io;
     HOGentry *entry;
     PHYSFS_uint32 curPos;
 } HOGfileinfo;
 
 
-static inline int readAll(void *fh, void *buf, const PHYSFS_uint64 len)
+static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
 {
-    return (__PHYSFS_platformRead(fh, buf, len) == len);
+    return (io->read(io, buf, len) == len);
 } /* readAll */
 
 
 static void HOG_dirClose(dvoid *opaque)
 {
     HOGinfo *info = ((HOGinfo *) opaque);
-    allocator.Free(info->filename);
+    info->io->destroy(info->io);
     allocator.Free(info->entries);
     allocator.Free(info);
 } /* HOG_dirClose */
 
 
-static PHYSFS_sint64 HOG_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
+static PHYSFS_sint64 HOG_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 {
-    HOGfileinfo *finfo = (HOGfileinfo *) opaque;
+    HOGfileinfo *finfo = (HOGfileinfo *) io->opaque;
     const HOGentry *entry = finfo->entry;
     const PHYSFS_uint64 bytesLeft = (PHYSFS_uint64)(entry->size-finfo->curPos);
     PHYSFS_sint64 rc;
@@ -95,7 +95,7 @@ static PHYSFS_sint64 HOG_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
     if (bytesLeft < len)
         len = bytesLeft;
 
-    rc = __PHYSFS_platformRead(finfo->handle, buffer, len);
+    rc = finfo->io->read(finfo->io, buffer, len);
     if (rc > 0)
         finfo->curPos += (PHYSFS_uint32) rc;
 
@@ -103,35 +103,26 @@ static PHYSFS_sint64 HOG_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
 } /* HOG_read */
 
 
-static PHYSFS_sint64 HOG_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
+static PHYSFS_sint64 HOG_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* HOG_write */
 
 
-static int HOG_eof(fvoid *opaque)
+static PHYSFS_sint64 HOG_tell(PHYSFS_Io *io)
 {
-    HOGfileinfo *finfo = (HOGfileinfo *) opaque;
-    HOGentry *entry = finfo->entry;
-    return (finfo->curPos >= entry->size);
-} /* HOG_eof */
-
-
-static PHYSFS_sint64 HOG_tell(fvoid *opaque)
-{
-    return ((HOGfileinfo *) opaque)->curPos;
+    return ((HOGfileinfo *) io->opaque)->curPos;
 } /* HOG_tell */
 
 
-static int HOG_seek(fvoid *opaque, PHYSFS_uint64 offset)
+static int HOG_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
 {
-    HOGfileinfo *finfo = (HOGfileinfo *) opaque;
-    HOGentry *entry = finfo->entry;
+    HOGfileinfo *finfo = (HOGfileinfo *) io->opaque;
+    const HOGentry *entry = finfo->entry;
     int rc;
 
-    BAIL_IF_MACRO(offset < 0, ERR_INVALID_ARGUMENT, 0);
     BAIL_IF_MACRO(offset >= entry->size, ERR_PAST_EOF, 0);
-    rc = __PHYSFS_platformSeek(finfo->handle, entry->startPos + offset);
+    rc = finfo->io->seek(finfo->io, entry->startPos + offset);
     if (rc)
         finfo->curPos = (PHYSFS_uint32) offset;
 
@@ -139,83 +130,65 @@ static int HOG_seek(fvoid *opaque, PHYSFS_uint64 offset)
 } /* HOG_seek */
 
 
-static PHYSFS_sint64 HOG_fileLength(fvoid *opaque)
+static PHYSFS_sint64 HOG_length(PHYSFS_Io *io)
 {
-    HOGfileinfo *finfo = (HOGfileinfo *) opaque;
+    const HOGfileinfo *finfo = (HOGfileinfo *) io->opaque;
     return ((PHYSFS_sint64) finfo->entry->size);
-} /* HOG_fileLength */
+} /* HOG_length */
 
 
-static int HOG_fileClose(fvoid *opaque)
+static PHYSFS_Io *HOG_duplicate(PHYSFS_Io *_io)
 {
-    HOGfileinfo *finfo = (HOGfileinfo *) opaque;
-    BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
+    HOGfileinfo *origfinfo = (HOGfileinfo *) _io->opaque;
+    PHYSFS_Io *io = NULL;
+    PHYSFS_Io *retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    HOGfileinfo *finfo = (HOGfileinfo *) allocator.Malloc(sizeof (HOGfileinfo));
+    GOTO_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, HOG_duplicate_failed);
+    GOTO_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, HOG_duplicate_failed);
+
+    io = origfinfo->io->duplicate(origfinfo->io);
+    GOTO_IF_MACRO(io == NULL, NULL, HOG_duplicate_failed);
+    finfo->io = io;
+    finfo->entry = origfinfo->entry;
+    finfo->curPos = 0;
+    memcpy(retval, _io, sizeof (PHYSFS_Io));
+    retval->opaque = finfo;
+    return retval;
+
+HOG_duplicate_failed:
+    if (finfo != NULL) allocator.Free(finfo);
+    if (retval != NULL) allocator.Free(retval);
+    if (io != NULL) io->destroy(io);
+    return NULL;
+} /* HOG_duplicate */
+
+static int HOG_flush(PHYSFS_Io *io) { return 1;  /* no write support. */ }
+
+static void HOG_destroy(PHYSFS_Io *io)
+{
+    HOGfileinfo *finfo = (HOGfileinfo *) io->opaque;
+    finfo->io->destroy(finfo->io);
     allocator.Free(finfo);
-    return 1;
-} /* HOG_fileClose */
+    allocator.Free(io);
+} /* HOG_destroy */
 
 
-static int hog_open(const char *filename, int forWriting,
-                    void **fh, PHYSFS_uint32 *count)
+static const PHYSFS_Io HOG_Io =
 {
-    PHYSFS_uint8 buf[13];
-    PHYSFS_uint32 size;
-    PHYSFS_sint64 pos;
-
-    *count = 0;
-
-    *fh = NULL;
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-
-    *fh = __PHYSFS_platformOpenRead(filename);
-    BAIL_IF_MACRO(*fh == NULL, NULL, 0);
-
-    if (!readAll(*fh, buf, 3))
-        goto openHog_failed;
-
-    if (memcmp(buf, "DHF", 3) != 0)
-    {
-        __PHYSFS_setError(ERR_UNSUPPORTED_ARCHIVE);
-        goto openHog_failed;
-    } /* if */
-
-    while (1)
-    {
-        if (!readAll(*fh, buf, 13))
-            break; /* eof here is ok */
-
-        if (!readAll(*fh, &size, sizeof (PHYSFS_uint32)))
-            goto openHog_failed;
-
-        size = PHYSFS_swapULE32(size);
-
-        (*count)++;
-
-        /* Skip over entry... */
-        pos = __PHYSFS_platformTell(*fh);
-        if (pos == -1)
-            goto openHog_failed;
-        if (!__PHYSFS_platformSeek(*fh, pos + size))
-            goto openHog_failed;
-    } /* while */
-
-    /* Rewind to start of entries... */
-    if (!__PHYSFS_platformSeek(*fh, 3))
-        goto openHog_failed;
-
-    return 1;
-
-openHog_failed:
-    if (*fh != NULL)
-        __PHYSFS_platformClose(*fh);
-
-    *count = -1;
-    *fh = NULL;
-    return 0;
-} /* hog_open */
+    HOG_read,
+    HOG_write,
+    HOG_seek,
+    HOG_tell,
+    HOG_length,
+    HOG_duplicate,
+    HOG_flush,
+    HOG_destroy,
+    NULL
+};
 
 
-static int hog_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+
+static int hogEntryCmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
     {
@@ -224,10 +197,10 @@ static int hog_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
     } /* if */
 
     return 0;
-} /* hog_entry_cmp */
+} /* hogEntryCmp */
 
 
-static void hog_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static void hogEntrySwap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
     {
@@ -238,74 +211,70 @@ static void hog_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
         memcpy(first, second, sizeof (HOGentry));
         memcpy(second, &tmp, sizeof (HOGentry));
     } /* if */
-} /* hog_entry_swap */
+} /* hogEntrySwap */
 
 
-static int hog_load_entries(const char *name, int forWriting, HOGinfo *info)
+static int hog_load_entries(PHYSFS_Io *io, HOGinfo *info)
 {
-    void *fh = NULL;
-    PHYSFS_uint32 fileCount;
-    HOGentry *entry;
+    const PHYSFS_uint64 iolen = io->length(io);
+    PHYSFS_uint32 entCount = 0;
+    void *ptr = NULL;
+    HOGentry *entry = NULL;
+    PHYSFS_uint32 size = 0;
+    PHYSFS_uint32 pos = 3;
 
-    BAIL_IF_MACRO(!hog_open(name, forWriting, &fh, &fileCount), NULL, 0);
-    info->entryCount = fileCount;
-    info->entries = (HOGentry *) allocator.Malloc(sizeof(HOGentry)*fileCount);
-    if (info->entries == NULL)
+    while (pos < iolen)
     {
-        __PHYSFS_platformClose(fh);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, 0);
-    } /* if */
+        entCount++;
+        ptr = allocator.Realloc(ptr, sizeof (HOGentry) * entCount);
+        BAIL_IF_MACRO(ptr == NULL, ERR_OUT_OF_MEMORY, 0);
+        info->entries = (HOGentry *) ptr;
+        entry = &info->entries[entCount-1];
 
-    for (entry = info->entries; fileCount > 0; fileCount--, entry++)
-    {
-        if ( (!readAll(fh, &entry->name, 13)) ||
-             (!readAll(fh, &entry->size, sizeof (PHYSFS_uint32))) )
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
+        BAIL_IF_MACRO(!readAll(io, &entry->name, 13), NULL, 0);
+        pos += 13;
+        BAIL_IF_MACRO(!readAll(io, &size, 4), NULL, 0);
+        pos += 4;
 
-        entry->size = PHYSFS_swapULE32(entry->size);
-        entry->startPos = (unsigned int) __PHYSFS_platformTell(fh);
+        entry->size = PHYSFS_swapULE32(size);
+        entry->startPos = pos;
+        pos += size;
 
-        /* Skip over entry */
-        if ( (entry->startPos == -1) ||
-             (!__PHYSFS_platformSeek(fh, entry->startPos + entry->size)) )
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
+        BAIL_IF_MACRO(!io->seek(io, pos), NULL, 0);  /* skip over entry */
     } /* for */
 
-    __PHYSFS_platformClose(fh);
+    info->entryCount = entCount;
 
-    __PHYSFS_sort(info->entries, info->entryCount,
-                  hog_entry_cmp, hog_entry_swap);
+    __PHYSFS_sort(info->entries, entCount, hogEntryCmp, hogEntrySwap);
     return 1;
 } /* hog_load_entries */
 
 
-static void *HOG_openArchive(const char *name, int forWriting)
+static void *HOG_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
-    HOGinfo *info = (HOGinfo *) allocator.Malloc(sizeof (HOGinfo));
+    PHYSFS_uint8 buf[3];
+    HOGinfo *info = NULL;
 
-    BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
+    assert(io != NULL);  /* shouldn't ever happen. */
+
+    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
+
+    BAIL_IF_MACRO(!readAll(io, buf, 3), NULL, 0);
+    if (memcmp(buf, "DHF", 3) != 0)
+        GOTO_MACRO(ERR_NOT_AN_ARCHIVE, HOG_openArchive_failed);
+
+    info = (HOGinfo *) allocator.Malloc(sizeof (HOGinfo));
+    GOTO_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, HOG_openArchive_failed);
     memset(info, '\0', sizeof (HOGinfo));
-    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
-    GOTO_IF_MACRO(!info->filename, ERR_OUT_OF_MEMORY, HOG_openArchive_failed);
+    info->io = io;
 
-    if (!hog_load_entries(name, forWriting, info))
-        goto HOG_openArchive_failed;
-
-    strcpy(info->filename, name);
+    GOTO_IF_MACRO(!hog_load_entries(io, info), NULL, HOG_openArchive_failed);
 
     return info;
 
 HOG_openArchive_failed:
     if (info != NULL)
     {
-        if (info->filename != NULL)
-            allocator.Free(info->filename);
         if (info->entries != NULL)
             allocator.Free(info->entries);
         allocator.Free(info);
@@ -368,7 +337,7 @@ static HOGentry *hog_find_entry(const HOGinfo *info, const char *name)
 
 static int HOG_exists(dvoid *opaque, const char *name)
 {
-    return (hog_find_entry(((HOGinfo *) opaque), name) != NULL);
+    return (hog_find_entry((HOGinfo *) opaque, name) != NULL);
 } /* HOG_exists */
 
 
@@ -386,40 +355,58 @@ static int HOG_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* HOG_isSymLink */
 
 
-static fvoid *HOG_openRead(dvoid *opaque, const char *fnm, int *fileExists)
+static PHYSFS_Io *HOG_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
-    HOGinfo *info = ((HOGinfo *) opaque);
+    PHYSFS_Io *retval = NULL;
+    HOGinfo *info = (HOGinfo *) opaque;
     HOGfileinfo *finfo;
     HOGentry *entry;
 
     entry = hog_find_entry(info, fnm);
     *fileExists = (entry != NULL);
-    BAIL_IF_MACRO(entry == NULL, NULL, NULL);
+    GOTO_IF_MACRO(entry == NULL, NULL, HOG_openRead_failed);
+
+    retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    GOTO_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, HOG_openRead_failed);
 
     finfo = (HOGfileinfo *) allocator.Malloc(sizeof (HOGfileinfo));
-    BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
+    GOTO_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, HOG_openRead_failed);
 
-    finfo->handle = __PHYSFS_platformOpenRead(info->filename);
-    if ( (finfo->handle == NULL) ||
-         (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
-    {
-        allocator.Free(finfo);
-        return NULL;
-    } /* if */
+    finfo->io = info->io->duplicate(info->io);
+    GOTO_IF_MACRO(finfo->io == NULL, NULL, HOG_openRead_failed);
+
+    if (!finfo->io->seek(finfo->io, entry->startPos))
+        GOTO_MACRO(NULL, HOG_openRead_failed);
 
     finfo->curPos = 0;
     finfo->entry = entry;
-    return finfo;
+
+    memcpy(retval, &HOG_Io, sizeof (*retval));
+    retval->opaque = finfo;
+    return retval;
+
+HOG_openRead_failed:
+    if (finfo != NULL)
+    {
+        if (finfo->io != NULL)
+            finfo->io->destroy(finfo->io);
+        allocator.Free(finfo);
+    } /* if */
+
+    if (retval != NULL)
+        allocator.Free(retval);
+
+    return NULL;
 } /* HOG_openRead */
 
 
-static fvoid *HOG_openWrite(dvoid *opaque, const char *name)
+static PHYSFS_Io *HOG_openWrite(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* HOG_openWrite */
 
 
-static fvoid *HOG_openAppend(dvoid *opaque, const char *name)
+static PHYSFS_Io *HOG_openAppend(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* HOG_openAppend */
@@ -481,14 +468,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
     HOG_remove,             /* remove() method         */
     HOG_mkdir,              /* mkdir() method          */
     HOG_dirClose,           /* dirClose() method       */
-    HOG_stat,               /* stat() method           */
-    HOG_read,               /* read() method           */
-    HOG_write,              /* write() method          */
-    HOG_eof,                /* eof() method            */
-    HOG_tell,               /* tell() method           */
-    HOG_seek,               /* seek() method           */
-    HOG_fileLength,         /* fileLength() method     */
-    HOG_fileClose           /* fileClose() method      */
+    HOG_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_HOG */

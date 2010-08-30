@@ -393,12 +393,11 @@ int __PHYSFS_platformFlush(void *opaque)
 } /* __PHYSFS_platformFlush */
 
 
-int __PHYSFS_platformClose(void *opaque)
+void __PHYSFS_platformClose(void *opaque)
 {
-    int fd = *((int *) opaque);
-    BAIL_IF_MACRO(close(fd) == -1, strerror(errno), 0);
+    const int fd = *((int *) opaque);
+    (void) close(fd);  /* we don't check this. You should have used flush! */
     allocator.Free(opaque);
-    return 1;
 } /* __PHYSFS_platformClose */
 
 

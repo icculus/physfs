@@ -200,7 +200,7 @@ typedef struct
 
 typedef struct
 {
-    void *fhandle;
+    PHYSFS_Io *io;
     PHYSFS_uint32 rootdirstart;
     PHYSFS_uint32 rootdirsize;
     PHYSFS_uint64 currpos;
@@ -219,12 +219,13 @@ typedef struct __ISO9660FileHandle
     PHYSFS_uint32 (*read) (struct __ISO9660FileHandle *filehandle, void *buffer,
             PHYSFS_uint64 len);
     int (*seek)(struct __ISO9660FileHandle *filehandle,  PHYSFS_sint64 offset);
-    int (*close)(struct __ISO9660FileHandle *filehandle);
+    void (*close)(struct __ISO9660FileHandle *filehandle);
     /* !!! FIXME: anonymouse union is going to cause problems. */
     union
     {
+        /* !!! FIXME: just use a memory PHYSFS_Io here, unify all this code. */
         char *cacheddata; /* data of file when cached */
-        void *filehandle; /* handle to separate opened file */
+        PHYSFS_Io *io; /* handle to separate opened file */
     };
 } ISO9660FileHandle;
 
@@ -349,9 +350,8 @@ static int iso_readimage(ISO9660Handle *handle, PHYSFS_uint64 where,
             ERR_LOCK_VIOLATION, -1);
     int rc = -1;
     if (where != handle->currpos)
-        GOTO_IF_MACRO(!__PHYSFS_platformSeek(handle->fhandle,where), NULL,
-                unlockme);
-    rc = __PHYSFS_platformRead(handle->fhandle, buffer, len);
+        GOTO_IF_MACRO(!handle->io->seek(handle->io,where), NULL, unlockme);
+    rc = handle->io->read(handle->io, buffer, len);
     if (rc == -1)
     {
         handle->currpos = (PHYSFS_uint64) -1;
@@ -479,53 +479,94 @@ static int iso_read_ext_attributes(ISO9660Handle *handle, int block,
 } /* iso_read_ext_attributes */
 
 
+static int ISO9660_flush(PHYSFS_Io *io) { return 1;  /* no write support. */ }
+
+static PHYSFS_Io *ISO9660_duplicate(PHYSFS_Io *_io)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);  /* !!! FIXME: write me. */
+} /* ISO9660_duplicate */
+
+
+static void ISO9660_destroy(PHYSFS_Io *io)
+{
+    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) io->opaque;
+    fhandle->close(fhandle);
+    allocator.Free(io);
+} /* ISO9660_destroy */
+
+
+static PHYSFS_sint64 ISO9660_read(PHYSFS_Io *io, void *buf, PHYSFS_uint64 len)
+{
+    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) io->opaque;
+    return fhandle->read(fhandle, buf, len);
+} /* ISO9660_read */
+
+
+static PHYSFS_sint64 ISO9660_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 l)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
+} /* ISO9660_write */
+
+
+static PHYSFS_sint64 ISO9660_tell(PHYSFS_Io *io)
+{
+    return ((ISO9660FileHandle*) io->opaque)->currpos;
+} /* ISO9660_tell */
+
+
+static int ISO9660_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
+{
+    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) io->opaque;
+    return fhandle->seek(fhandle, offset);
+} /* ISO9660_seek */
+
+
+static PHYSFS_sint64 ISO9660_length(PHYSFS_Io *io)
+{
+    return ((ISO9660FileHandle*) io->opaque)->filesize;
+} /* ISO9660_length */
+
+
+static const PHYSFS_Io ISO9660_Io =
+{
+    ISO9660_read,
+    ISO9660_write,
+    ISO9660_seek,
+    ISO9660_tell,
+    ISO9660_length,
+    ISO9660_duplicate,
+    ISO9660_flush,
+    ISO9660_destroy,
+    NULL
+};
+
+
 /*******************************************************************************
  * Archive management functions
  ******************************************************************************/
 
-/* !!! FIXME: don't open/close file here, merge with openArchive(). */
-static int isIso(const char *filename)
+static void *ISO9660_openArchive(PHYSFS_Io *io, const char *filename, int forWriting)
 {
-    char magicnumber[6] = {0,0,0,0,0,0};
-    void *in;
-
-    in = __PHYSFS_platformOpenRead(filename);
-    BAIL_IF_MACRO(in == NULL, NULL, 0);
-
-    /* Skip system area to magic number in Volume descriptor */
-    if (__PHYSFS_platformSeek(in, 32769) == 0)
-    {
-        __PHYSFS_platformClose(in); /* Don't forget to close the file before returning... */
-        BAIL_MACRO(NULL, 0);
-    } /* if */
-
-    /* Read magic number */
-    if (__PHYSFS_platformRead(in, magicnumber, 5) != 5)
-    {
-        __PHYSFS_platformClose(in); /* Don't forget to close the file before returning... */
-        BAIL_MACRO(NULL, 0);
-    } /* if */
-
-    __PHYSFS_platformClose(in);
-
-    return (strcmp(magicnumber, "CD001") == 0);
-} /* isIso */
-
-
-static void *ISO9660_openArchive(const char *filename, int forWriting)
-{
+    char magicnumber[6];
     ISO9660Handle *handle;
     int founddescriptor = 0;
     int foundjoliet = 0;
 
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-    BAIL_IF_MACRO(!isIso(filename), ERR_UNSUPPORTED_ARCHIVE, NULL);
+    assert(io != NULL);  /* shouldn't ever happen. */
+
+    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, NULL);
+
+    /* Skip system area to magic number in Volume descriptor */
+    BAIL_IF_MACRO(!io->seek(io, 32769), NULL, NULL);
+    BAIL_IF_MACRO(!io->read(io, magicnumber, 5) != 5, NULL, NULL);
+    if (memcmp(magicnumber, "CD001", 6) != 0)
+        BAIL_MACRO(ERR_NOT_AN_ARCHIVE, NULL);
 
     handle = allocator.Malloc(sizeof(ISO9660Handle));
     GOTO_IF_MACRO(!handle, ERR_OUT_OF_MEMORY, errorcleanup);
     handle->path = 0;
     handle->mutex= 0;
-    handle->fhandle = 0;
+    handle->io = NULL;
 
     handle->path = allocator.Malloc(strlen(filename) + 1);
     GOTO_IF_MACRO(!handle->path, ERR_OUT_OF_MEMORY, errorcleanup);
@@ -534,16 +575,15 @@ static void *ISO9660_openArchive(const char *filename, int forWriting)
     handle->mutex = __PHYSFS_platformCreateMutex();
     GOTO_IF_MACRO(!handle->mutex, "Cannot create Mutex", errorcleanup);
 
-    handle->fhandle = __PHYSFS_platformOpenRead(filename);
-    GOTO_IF_MACRO(!handle->fhandle, NULL, errorcleanup);
+    handle->io = io;
 
     /* seek Primary Volume Descriptor */
-    GOTO_IF_MACRO(!__PHYSFS_platformSeek(handle->fhandle, 32768), ERR_SEEK_ERROR, errorcleanup);
+    GOTO_IF_MACRO(!io->seek(io, 32768), ERR_SEEK_ERROR, errorcleanup);
 
     while (1)
     {
         ISO9660VolumeDescriptor descriptor;
-        GOTO_IF_MACRO(__PHYSFS_platformRead(handle->fhandle, &descriptor, sizeof(ISO9660VolumeDescriptor)) != sizeof(ISO9660VolumeDescriptor), "Cannot read from image", errorcleanup);
+        GOTO_IF_MACRO(io->read(io, &descriptor, sizeof(ISO9660VolumeDescriptor)) != sizeof(ISO9660VolumeDescriptor), "Cannot read from image", errorcleanup);
         GOTO_IF_MACRO(strncmp(descriptor.identifier, "CD001", 5) != 0, ERR_NOT_AN_ARCHIVE, errorcleanup);
 
         if (descriptor.type == 255)
@@ -556,7 +596,7 @@ static void *ISO9660_openArchive(const char *filename, int forWriting)
         } /* if */
         if (descriptor.type == 1 && !founddescriptor)
         {
-            handle->currpos = __PHYSFS_platformTell(handle->fhandle);
+            handle->currpos = io->tell(io);
             handle->rootdirstart =
                     descriptor.rootdirectory.extent_location * 2048;
             handle->rootdirsize =
@@ -575,7 +615,7 @@ static void *ISO9660_openArchive(const char *filename, int forWriting)
             if (!joliet)
                 continue;
 
-            handle->currpos = __PHYSFS_platformTell(handle->fhandle);
+            handle->currpos = io->tell(io);
             handle->rootdirstart =
                     descriptor.rootdirectory.extent_location * 2048;
             handle->rootdirsize =
@@ -591,12 +631,11 @@ static void *ISO9660_openArchive(const char *filename, int forWriting)
 errorcleanup:
     if (handle)
     {
-        if (handle->fhandle)
-            __PHYSFS_platformClose(handle->fhandle);
         if (handle->path)
             allocator.Free(handle->path);
         if (handle->mutex)
             __PHYSFS_platformDestroyMutex(handle->mutex);
+        allocator.Free(handle);
     } /* if */
     return NULL;
 } /* ISO9660_openArchive */
@@ -605,7 +644,7 @@ errorcleanup:
 static void ISO9660_dirClose(dvoid *opaque)
 {
     ISO9660Handle *handle = (ISO9660Handle*) opaque;
-    __PHYSFS_platformClose(handle->fhandle);
+    handle->io->destroy(handle->io);
     __PHYSFS_platformDestroyMutex(handle->mutex);
     allocator.Free(handle->path);
     allocator.Free(handle);
@@ -645,12 +684,11 @@ static int iso_file_seek_mem(ISO9660FileHandle *fhandle, PHYSFS_sint64 offset)
 } /* iso_file_seek_mem */
 
 
-static int iso_file_close_mem(ISO9660FileHandle *fhandle)
+static void iso_file_close_mem(ISO9660FileHandle *fhandle)
 {
     allocator.Free(fhandle->cacheddata);
     allocator.Free(fhandle);
-    return -1;
-} /* iso_file_seek_mem */
+} /* iso_file_close_mem */
 
 
 static PHYSFS_uint32 iso_file_read_foreign(ISO9660FileHandle *filehandle,
@@ -661,8 +699,7 @@ static PHYSFS_uint32 iso_file_read_foreign(ISO9660FileHandle *filehandle,
     if (bytesleft < len)
         len = bytesleft;
 
-    PHYSFS_sint64 rc =  __PHYSFS_platformRead(filehandle->filehandle, buffer,
-                                              len);
+    const PHYSFS_sint64 rc = filehandle->io->read(filehandle->io, buffer, len);
     BAIL_IF_MACRO(rc == -1, NULL, -1);
 
     filehandle->currpos += rc; /* i trust my internal book keeping */
@@ -678,19 +715,17 @@ static int iso_file_seek_foreign(ISO9660FileHandle *fhandle,
     BAIL_IF_MACRO(offset >= fhandle->filesize, ERR_PAST_EOF, 0);
 
     PHYSFS_sint64 pos = fhandle->startblock * 2048 + offset;
-    int rc = __PHYSFS_platformSeek(fhandle->filehandle, pos);
-    BAIL_IF_MACRO(rc, NULL, -1);
+    BAIL_IF_MACRO(!fhandle->io->seek(fhandle->io, pos), NULL, -1);
 
     fhandle->currpos = offset;
     return 0;
 } /* iso_file_seek_foreign */
 
 
-static int iso_file_close_foreign(ISO9660FileHandle *fhandle)
+static void iso_file_close_foreign(ISO9660FileHandle *fhandle)
 {
-    void *filehandle = fhandle->filehandle;
+    fhandle->io->destroy(fhandle->io);
     allocator.Free(fhandle);
-    return __PHYSFS_platformClose(filehandle);
 } /* iso_file_close_foreign */
 
 
@@ -717,10 +752,10 @@ freemem:
 static int iso_file_open_foreign(ISO9660Handle *handle,
                                  ISO9660FileHandle *fhandle)
 {
-    fhandle->filehandle = __PHYSFS_platformOpenRead(handle->path);
-    BAIL_IF_MACRO(!fhandle->filehandle, NULL, -1);
-    int rc = __PHYSFS_platformSeek(fhandle->filehandle,
-            fhandle->startblock * 2048);
+    int rc;
+    fhandle->io = __PHYSFS_createNativeIo(handle->path, 'r');
+    BAIL_IF_MACRO(!fhandle->io, NULL, -1);
+    rc = fhandle->io->seek(fhandle->io, fhandle->startblock * 2048);
     GOTO_IF_MACRO(!rc, NULL, closefile);
 
     fhandle->read = iso_file_read_foreign;
@@ -728,14 +763,15 @@ static int iso_file_open_foreign(ISO9660Handle *handle,
     fhandle->close = iso_file_close_foreign;
     return 0;
 
-    closefile:
-    __PHYSFS_platformClose(fhandle->filehandle);
+closefile:
+    fhandle->io->destroy(fhandle->io);
     return -1;
 } /* iso_file_open_foreign */
 
 
-static fvoid *ISO9660_openRead(dvoid *opaque, const char *filename, int *exists)
+static PHYSFS_Io *ISO9660_openRead(dvoid *opaque, const char *filename, int *exists)
 {
+    PHYSFS_Io *retval = NULL;
     ISO9660Handle *handle = (ISO9660Handle*) opaque;
     ISO9660FileHandle *fhandle;
     ISO9660FileDescriptor descriptor;
@@ -744,6 +780,9 @@ static fvoid *ISO9660_openRead(dvoid *opaque, const char *filename, int *exists)
     fhandle = allocator.Malloc(sizeof(ISO9660FileHandle));
     BAIL_IF_MACRO(fhandle == 0, ERR_OUT_OF_MEMORY, NULL);
     fhandle->cacheddata = 0;
+
+    retval = allocator.Malloc(sizeof(PHYSFS_Io));
+    GOTO_IF_MACRO(retval == 0, ERR_OUT_OF_MEMORY, errorhandling);
 
     /* find file descriptor */
     rc = iso_find_dir_entry(handle, filename, &descriptor, exists);
@@ -755,7 +794,7 @@ static fvoid *ISO9660_openRead(dvoid *opaque, const char *filename, int *exists)
     fhandle->currpos = 0;
     fhandle->isohandle = handle;
     fhandle->cacheddata = NULL;
-    fhandle->filehandle = NULL;
+    fhandle->io = NULL;
 
     if (descriptor.datalen <= ISO9660_FULLCACHEMAXSIZE)
         rc = iso_file_open_mem(handle, fhandle);
@@ -763,53 +802,17 @@ static fvoid *ISO9660_openRead(dvoid *opaque, const char *filename, int *exists)
         rc = iso_file_open_foreign(handle, fhandle);
     GOTO_IF_MACRO(rc, NULL, errorhandling);
 
-    return fhandle;
+    memcpy(retval, &ISO9660_Io, sizeof (PHYSFS_Io));
+    retval->opaque = fhandle;
+    return retval;
 
 errorhandling:
-    if (!fhandle)
-        return NULL;
-    allocator.Free(fhandle);
+    if (retval) allocator.Free(retval);
+    if (fhandle) allocator.Free(fhandle);
     return NULL;
 } /* ISO9660_openRead */
 
 
-static int ISO9660_fileClose(fvoid *opaque)
-{
-    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) opaque;
-    return fhandle->close(fhandle);
-} /* ISO9660_fileClose */
-
-static PHYSFS_sint64 ISO9660_read(fvoid *opaque, void *buf, PHYSFS_uint64 len)
-{
-    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) opaque;
-    return fhandle->read(fhandle, buf, len);
-} /* ISO9660_read */
-
-
-static PHYSFS_sint64 ISO9660_tell(fvoid *opaque)
-{
-    return ((ISO9660FileHandle*) opaque)->currpos;
-} /* ISO9660_tell */
-
-
-static int ISO9660_seek(fvoid *opaque, PHYSFS_uint64 offset)
-{
-    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) opaque;
-    return fhandle->seek(fhandle, offset);
-} /* ISO9660_seek */
-
-
-static int ISO9660_eof(fvoid *opaque)
-{
-    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) opaque;
-    return fhandle->currpos >= fhandle->filesize;
-} /* ISO9660_eof */
-
-
-static PHYSFS_sint64 ISO9660_fileLength(fvoid *opaque)
-{
-    return ((ISO9660FileHandle*) opaque)->filesize;
-} /* ISO9660_fileLength */
 
 /*******************************************************************************
  * Information gathering functions
@@ -945,13 +948,13 @@ static int ISO9660_isSymLink(dvoid *opaque, const char *name, int *fileExists)
  * Not supported functions
  ******************************************************************************/
 
-static fvoid* ISO9660_openWrite(dvoid *opaque, const char *name)
+static PHYSFS_Io *ISO9660_openWrite(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* ISO9660_openWrite */
 
 
-static fvoid* ISO9660_openAppend(dvoid *opaque, const char *name)
+static PHYSFS_Io *ISO9660_openAppend(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* ISO9660_openAppend */
@@ -968,11 +971,6 @@ static int ISO9660_mkdir(dvoid *opaque, const char *name)
     BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
 } /* ISO9660_mkdir */
 
-
-static PHYSFS_sint64 ISO9660_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
-{
-    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
-} /* ISO9660_write */
 
 
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ISO9660 =
@@ -997,14 +995,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
     ISO9660_remove,             /* remove() method         */
     ISO9660_mkdir,              /* mkdir() method          */
     ISO9660_dirClose,           /* dirClose() method       */
-    ISO9660_stat,               /* stat() method           */
-    ISO9660_read,               /* read() method           */
-    ISO9660_write,              /* write() method          */
-    ISO9660_eof,                /* eof() method            */
-    ISO9660_tell,               /* tell() method           */
-    ISO9660_seek,               /* seek() method           */
-    ISO9660_fileLength,         /* fileLength() method     */
-    ISO9660_fileClose           /* fileClose() method      */
+    ISO9660_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_ISO9660 */

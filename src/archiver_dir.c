@@ -14,68 +14,23 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-static PHYSFS_sint64 DIR_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
-{
-    return __PHYSFS_platformRead(opaque, buffer, len);
-} /* DIR_read */
+/* There's no PHYSFS_Io interface here. Use __PHYSFS_createNativeIo(). */
 
-
-static PHYSFS_sint64 DIR_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
-{
-    return __PHYSFS_platformWrite(f, buf, len);
-} /* DIR_write */
-
-
-static int DIR_eof(fvoid *opaque)
-{
-    return __PHYSFS_platformEOF(opaque);
-} /* DIR_eof */
-
-
-static PHYSFS_sint64 DIR_tell(fvoid *opaque)
-{
-    return __PHYSFS_platformTell(opaque);
-} /* DIR_tell */
-
-
-static int DIR_seek(fvoid *opaque, PHYSFS_uint64 offset)
-{
-    return __PHYSFS_platformSeek(opaque, offset);
-} /* DIR_seek */
-
-
-static PHYSFS_sint64 DIR_fileLength(fvoid *opaque)
-{
-    return __PHYSFS_platformFileLength(opaque);
-} /* DIR_fileLength */
-
-
-static int DIR_fileClose(fvoid *opaque)
-{
-    /*
-     * we manually flush the buffer, since that's the place a close will
-     *  most likely fail, but that will leave the file handle in an undefined
-     *  state if it fails. Flush failures we can recover from.
-     */
-    BAIL_IF_MACRO(!__PHYSFS_platformFlush(opaque), NULL, 0);
-    BAIL_IF_MACRO(!__PHYSFS_platformClose(opaque), NULL, 0);
-    return 1;
-} /* DIR_fileClose */
-
-
-static void *DIR_openArchive(const char *name, int forWriting)
+static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     const char *dirsep = PHYSFS_getDirSeparator();
     char *retval = NULL;
-    size_t namelen = strlen(name);
-    size_t seplen = strlen(dirsep);
+    const size_t namelen = strlen(name);
+    const size_t seplen = strlen(dirsep);
 
+    assert(io == NULL);  /* shouldn't create an Io for these. */
     BAIL_IF_MACRO(!__PHYSFS_platformIsDirectory(name), ERR_NOT_AN_ARCHIVE, NULL);
 
     retval = allocator.Malloc(namelen + seplen + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
-        /* make sure there's a dir separator at the end of the string */
+    /* make sure there's a dir separator at the end of the string */
+    /* !!! FIXME: is there really any place where (seplen != 1)? */
     strcpy(retval, name);
     if (strcmp((name + namelen) - seplen, dirsep) != 0)
         strcat(retval, dirsep);
@@ -84,11 +39,13 @@ static void *DIR_openArchive(const char *name, int forWriting)
 } /* DIR_openArchive */
 
 
+/* !!! FIXME: I would like to smallAlloc() all these conversions somehow. */
+
 static void DIR_enumerateFiles(dvoid *opaque, const char *dname,
                                int omitSymLinks, PHYSFS_EnumFilesCallback cb,
                                const char *origdir, void *callbackdata)
 {
-    char *d = __PHYSFS_platformCvtToDependent((char *)opaque, dname, NULL);
+    char *d = __PHYSFS_platformCvtToDependent((char *) opaque, dname, NULL);
     if (d != NULL)
     {
         __PHYSFS_platformEnumerateFiles(d, omitSymLinks, cb,
@@ -138,47 +95,48 @@ static int DIR_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* DIR_isSymLink */
 
 
-static fvoid *doOpen(dvoid *opaque, const char *name,
-                     void *(*openFunc)(const char *filename),
-                     int *fileExists)
+static PHYSFS_Io *doOpen(dvoid *opaque, const char *name,
+                         const int mode, int *fileExists)
 {
     char *f = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
-    void *rc = NULL;
+    PHYSFS_Io *io = NULL;
+    int existtmp = 0;
+
+    if (fileExists == NULL)
+        fileExists = &existtmp;
+
+    *fileExists = 0;
 
     BAIL_IF_MACRO(f == NULL, NULL, NULL);
 
-    if (fileExists != NULL)
+    io = __PHYSFS_createNativeIo(f, mode);
+    allocator.Free(f);
+    if (io == NULL)
     {
         *fileExists = __PHYSFS_platformExists(f);
-        if (!(*fileExists))
-        {
-            allocator.Free(f);
-            return NULL;
-        } /* if */
+        return NULL;
     } /* if */
 
-    rc = openFunc(f);
-    allocator.Free(f);
-
-    return ((fvoid *) rc);
+    *fileExists = 1;
+    return io;
 } /* doOpen */
 
 
-static fvoid *DIR_openRead(dvoid *opaque, const char *fnm, int *exist)
+static PHYSFS_Io *DIR_openRead(dvoid *opaque, const char *fnm, int *exist)
 {
-    return doOpen(opaque, fnm, __PHYSFS_platformOpenRead, exist);
+    return doOpen(opaque, fnm, 'r', exist);
 } /* DIR_openRead */
 
 
-static fvoid *DIR_openWrite(dvoid *opaque, const char *filename)
+static PHYSFS_Io *DIR_openWrite(dvoid *opaque, const char *filename)
 {
-    return doOpen(opaque, filename, __PHYSFS_platformOpenWrite, NULL);
+    return doOpen(opaque, filename, 'w', NULL);
 } /* DIR_openWrite */
 
 
-static fvoid *DIR_openAppend(dvoid *opaque, const char *filename)
+static PHYSFS_Io *DIR_openAppend(dvoid *opaque, const char *filename)
 {
-    return doOpen(opaque, filename, __PHYSFS_platformOpenAppend, NULL);
+    return doOpen(opaque, filename, 'a', NULL);
 } /* DIR_openAppend */
 
 
@@ -248,14 +206,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     DIR_remove,             /* remove() method         */
     DIR_mkdir,              /* mkdir() method          */
     DIR_dirClose,           /* dirClose() method       */
-    DIR_stat,               /* stat() method           */
-    DIR_read,               /* read() method           */
-    DIR_write,              /* write() method          */
-    DIR_eof,                /* eof() method            */
-    DIR_tell,               /* tell() method           */
-    DIR_seek,               /* seek() method           */
-    DIR_fileLength,         /* fileLength() method     */
-    DIR_fileClose           /* fileClose() method      */
+    DIR_stat                /* stat() method           */
 };
 
 /* end of dir.c ... */

@@ -39,6 +39,7 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
+/* !!! FIXME: what is this here for? */
 #if 1  /* Make this case insensitive? */
 #define QPAK_strcmp(x, y) __PHYSFS_stricmpASCII(x, y)
 #define QPAK_strncmp(x, y, z) __PHYSFS_strnicmpASCII(x, y, z)
@@ -57,14 +58,14 @@ typedef struct
 
 typedef struct
 {
-    char *filename;
+    PHYSFS_Io *io;
     PHYSFS_uint32 entryCount;
     QPAKentry *entries;
 } QPAKinfo;
 
 typedef struct
 {
-    void *handle;
+    PHYSFS_Io *io;
     QPAKentry *entry;
     PHYSFS_uint32 curPos;
 } QPAKfileinfo;
@@ -73,18 +74,24 @@ typedef struct
 #define QPAK_SIG 0x4b434150   /* "PACK" in ASCII. */
 
 
+static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
+{
+    return (io->read(io, buf, len) == len);
+} /* readAll */
+
+
 static void QPAK_dirClose(dvoid *opaque)
 {
     QPAKinfo *info = ((QPAKinfo *) opaque);
-    allocator.Free(info->filename);
+    info->io->destroy(info->io);
     allocator.Free(info->entries);
     allocator.Free(info);
 } /* QPAK_dirClose */
 
 
-static PHYSFS_sint64 QPAK_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
+static PHYSFS_sint64 QPAK_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 {
-    QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
+    QPAKfileinfo *finfo = (QPAKfileinfo *) io->opaque;
     const QPAKentry *entry = finfo->entry;
     const PHYSFS_uint64 bytesLeft = (PHYSFS_uint64)(entry->size-finfo->curPos);
     PHYSFS_sint64 rc;
@@ -92,7 +99,7 @@ static PHYSFS_sint64 QPAK_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
     if (bytesLeft < len)
         len = bytesLeft;
 
-    rc = __PHYSFS_platformRead(finfo->handle, buffer, len);
+    rc = finfo->io->read(finfo->io, buffer, len);
     if (rc > 0)
         finfo->curPos += (PHYSFS_uint32) rc;
 
@@ -100,35 +107,26 @@ static PHYSFS_sint64 QPAK_read(fvoid *opaque, void *buffer, PHYSFS_uint64 len)
 } /* QPAK_read */
 
 
-static PHYSFS_sint64 QPAK_write(fvoid *f, const void *buf, PHYSFS_uint64 len)
+static PHYSFS_sint64 QPAK_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
 } /* QPAK_write */
 
 
-static int QPAK_eof(fvoid *opaque)
+static PHYSFS_sint64 QPAK_tell(PHYSFS_Io *io)
 {
-    QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
-    QPAKentry *entry = finfo->entry;
-    return (finfo->curPos >= entry->size);
-} /* QPAK_eof */
-
-
-static PHYSFS_sint64 QPAK_tell(fvoid *opaque)
-{
-    return ((QPAKfileinfo *) opaque)->curPos;
+    return ((QPAKfileinfo *) io->opaque)->curPos;
 } /* QPAK_tell */
 
 
-static int QPAK_seek(fvoid *opaque, PHYSFS_uint64 offset)
+static int QPAK_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
 {
-    QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
-    QPAKentry *entry = finfo->entry;
+    QPAKfileinfo *finfo = (QPAKfileinfo *) io->opaque;
+    const QPAKentry *entry = finfo->entry;
     int rc;
 
-    BAIL_IF_MACRO(offset < 0, ERR_INVALID_ARGUMENT, 0);
     BAIL_IF_MACRO(offset >= entry->size, ERR_PAST_EOF, 0);
-    rc = __PHYSFS_platformSeek(finfo->handle, entry->startPos + offset);
+    rc = finfo->io->seek(finfo->io, entry->startPos + offset);
     if (rc)
         finfo->curPos = (PHYSFS_uint32) offset;
 
@@ -136,74 +134,66 @@ static int QPAK_seek(fvoid *opaque, PHYSFS_uint64 offset)
 } /* QPAK_seek */
 
 
-static PHYSFS_sint64 QPAK_fileLength(fvoid *opaque)
+static PHYSFS_sint64 QPAK_length(PHYSFS_Io *io)
 {
-    QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
+    const QPAKfileinfo *finfo = (QPAKfileinfo *) io->opaque;
     return ((PHYSFS_sint64) finfo->entry->size);
-} /* QPAK_fileLength */
+} /* QPAK_length */
 
 
-static int QPAK_fileClose(fvoid *opaque)
+static PHYSFS_Io *QPAK_duplicate(PHYSFS_Io *_io)
 {
-    QPAKfileinfo *finfo = (QPAKfileinfo *) opaque;
-    BAIL_IF_MACRO(!__PHYSFS_platformClose(finfo->handle), NULL, 0);
+    QPAKfileinfo *origfinfo = (QPAKfileinfo *) _io->opaque;
+    PHYSFS_Io *io = NULL;
+    PHYSFS_Io *retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    QPAKfileinfo *finfo = (QPAKfileinfo *) allocator.Malloc(sizeof (QPAKfileinfo));
+    GOTO_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, QPAK_duplicate_failed);
+    GOTO_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, QPAK_duplicate_failed);
+
+    io = origfinfo->io->duplicate(origfinfo->io);
+    GOTO_IF_MACRO(io == NULL, NULL, QPAK_duplicate_failed);
+    finfo->io = io;
+    finfo->entry = origfinfo->entry;
+    finfo->curPos = 0;
+    memcpy(retval, _io, sizeof (PHYSFS_Io));
+    retval->opaque = finfo;
+    return retval;
+
+QPAK_duplicate_failed:
+    if (finfo != NULL) allocator.Free(finfo);
+    if (retval != NULL) allocator.Free(retval);
+    if (io != NULL) io->destroy(io);
+    return NULL;
+} /* QPAK_duplicate */
+
+static int QPAK_flush(PHYSFS_Io *io) { return 1;  /* no write support. */ }
+
+
+static void QPAK_destroy(PHYSFS_Io *io)
+{
+    QPAKfileinfo *finfo = (QPAKfileinfo *) io->opaque;
+    finfo->io->destroy(finfo->io);
     allocator.Free(finfo);
-    return 1;
-} /* QPAK_fileClose */
+    allocator.Free(io);
+} /* QPAK_destroy */
 
 
-static inline int readAll(void *fh, void *buf, const PHYSFS_uint64 len)
+static const PHYSFS_Io QPAK_Io =
 {
-    return (__PHYSFS_platformRead(fh, buf, len) == len);
-} /* readAll */
-
-static int qpak_open(const char *filename, int forWriting,
-                    void **fh, PHYSFS_uint32 *count)
-{
-    PHYSFS_uint32 buf;
-
-    *fh = NULL;
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-
-    *fh = __PHYSFS_platformOpenRead(filename);
-    BAIL_IF_MACRO(*fh == NULL, NULL, 0);
-    
-    if (!readAll(*fh, &buf, sizeof (PHYSFS_uint32)))
-        goto openQpak_failed;
-
-    buf = PHYSFS_swapULE32(buf);
-    GOTO_IF_MACRO(buf != QPAK_SIG, ERR_UNSUPPORTED_ARCHIVE, openQpak_failed);
-
-    if (!readAll(*fh, &buf, sizeof (PHYSFS_uint32)))
-        goto openQpak_failed;
-
-    buf = PHYSFS_swapULE32(buf);  /* directory table offset. */
-
-    if (!readAll(*fh, count, sizeof (PHYSFS_uint32)))
-        goto openQpak_failed;
-
-    *count = PHYSFS_swapULE32(*count);
-
-    /* corrupted archive? */
-    GOTO_IF_MACRO((*count % 64) != 0, ERR_CORRUPTED, openQpak_failed);
-
-    if (!__PHYSFS_platformSeek(*fh, buf))
-        goto openQpak_failed;
-
-    *count /= 64;
-    return 1;
-
-openQpak_failed:
-    if (*fh != NULL)
-        __PHYSFS_platformClose(*fh);
-
-    *count = -1;
-    *fh = NULL;
-    return 0;
-} /* qpak_open */
+    QPAK_read,
+    QPAK_write,
+    QPAK_seek,
+    QPAK_tell,
+    QPAK_length,
+    QPAK_duplicate,
+    QPAK_flush,
+    QPAK_destroy,
+    NULL
+};
 
 
-static int qpak_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+
+static int qpakEntryCmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
     {
@@ -212,10 +202,10 @@ static int qpak_entry_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
     } /* if */
 
     return 0;
-} /* qpak_entry_cmp */
+} /* qpakEntryCmp */
 
 
-static void qpak_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static void qpakEntrySwap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 {
     if (one != two)
     {
@@ -226,77 +216,73 @@ static void qpak_entry_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
         memcpy(first, second, sizeof (QPAKentry));
         memcpy(second, &tmp, sizeof (QPAKentry));
     } /* if */
-} /* qpak_entry_swap */
+} /* qpakEntrySwap */
 
 
-static int qpak_load_entries(const char *name, int forWriting, QPAKinfo *info)
+static int qpak_load_entries(QPAKinfo *info)
 {
-    void *fh = NULL;
-    PHYSFS_uint32 fileCount;
+    PHYSFS_Io *io = info->io;
+    PHYSFS_uint32 fileCount = info->entryCount;
     QPAKentry *entry;
 
-    BAIL_IF_MACRO(!qpak_open(name, forWriting, &fh, &fileCount), NULL, 0);
-    info->entryCount = fileCount;
     info->entries = (QPAKentry*) allocator.Malloc(sizeof(QPAKentry)*fileCount);
-    if (info->entries == NULL)
-    {
-        __PHYSFS_platformClose(fh);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, 0);
-    } /* if */
+    BAIL_IF_MACRO(info->entries == NULL, ERR_OUT_OF_MEMORY, 0);
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
-        if ( (!readAll(fh, &entry->name, sizeof (entry->name))) ||
-             (!readAll(fh, &entry->startPos, sizeof (entry->startPos))) ||
-             (!readAll(fh, &entry->size, sizeof(entry->size))) )
-        {
-            __PHYSFS_platformClose(fh);
-            return 0;
-        } /* if */
-
+        BAIL_IF_MACRO(!readAll(io, &entry->name, 56), NULL, 0);
+        BAIL_IF_MACRO(!readAll(io, &entry->startPos, 4), NULL, 0);
+        BAIL_IF_MACRO(!readAll(io, &entry->size, 4), NULL, 0);
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = PHYSFS_swapULE32(entry->startPos);
     } /* for */
 
-    __PHYSFS_platformClose(fh);
-
-    __PHYSFS_sort(info->entries, info->entryCount,
-                  qpak_entry_cmp, qpak_entry_swap);
+    __PHYSFS_sort(info->entries, info->entryCount, qpakEntryCmp, qpakEntrySwap);
     return 1;
 } /* qpak_load_entries */
 
 
-static void *QPAK_openArchive(const char *name, int forWriting)
+static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
-    QPAKinfo *info = (QPAKinfo *) allocator.Malloc(sizeof (QPAKinfo));
+    QPAKinfo *info = NULL;
+    PHYSFS_uint32 val = 0;
+    PHYSFS_uint32 pos = 0;
+    PHYSFS_uint32 count = 0;
 
+    assert(io != NULL);  /* shouldn't ever happen. */
+
+    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
+
+    BAIL_IF_MACRO(!readAll(io, &val, 4), NULL, NULL);
+    BAIL_IF_MACRO(PHYSFS_swapULE32(val) != QPAK_SIG, ERR_NOT_AN_ARCHIVE, NULL);
+
+    BAIL_IF_MACRO(!readAll(io, &val, 4), NULL, NULL);
+    pos = PHYSFS_swapULE32(val);  /* directory table offset. */
+
+    BAIL_IF_MACRO(!readAll(io, &val, 4), NULL, NULL);
+    count = PHYSFS_swapULE32(val);
+
+    /* corrupted archive? */
+    BAIL_IF_MACRO((count % 64) != 0, ERR_CORRUPTED, NULL);
+    count /= 64;
+
+    BAIL_IF_MACRO(io->seek(io, pos), NULL, NULL);
+
+    info = (QPAKinfo *) allocator.Malloc(sizeof (QPAKinfo));
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (QPAKinfo));
+    info->io = io;
+    info->entryCount = count;
 
-    info->filename = (char *) allocator.Malloc(strlen(name) + 1);
-    if (info->filename == NULL)
+    if (!qpak_load_entries(info))
     {
-        __PHYSFS_setError(ERR_OUT_OF_MEMORY);
-        goto QPAK_openArchive_failed;
-    } /* if */
-
-    if (!qpak_load_entries(name, forWriting, info))
-        goto QPAK_openArchive_failed;
-
-    strcpy(info->filename, name);
-    return info;
-
-QPAK_openArchive_failed:
-    if (info != NULL)
-    {
-        if (info->filename != NULL)
-            allocator.Free(info->filename);
         if (info->entries != NULL)
             allocator.Free(info->entries);
         allocator.Free(info);
+        return NULL;
     } /* if */
 
-    return NULL;
+    return info;
 } /* QPAK_openArchive */
 
 
@@ -495,8 +481,9 @@ static int QPAK_isSymLink(dvoid *opaque, const char *name, int *fileExists)
 } /* QPAK_isSymLink */
 
 
-static fvoid *QPAK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
+static PHYSFS_Io *QPAK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
+    PHYSFS_Io *io = NULL;
     QPAKinfo *info = ((QPAKinfo *) opaque);
     QPAKfileinfo *finfo;
     QPAKentry *entry;
@@ -510,27 +497,42 @@ static fvoid *QPAK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
     finfo = (QPAKfileinfo *) allocator.Malloc(sizeof (QPAKfileinfo));
     BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
 
-    finfo->handle = __PHYSFS_platformOpenRead(info->filename);
-    if ( (finfo->handle == NULL) ||
-         (!__PHYSFS_platformSeek(finfo->handle, entry->startPos)) )
-    {
-        allocator.Free(finfo);
-        return NULL;
-    } /* if */
+    finfo->io = info->io->duplicate(info->io);
+    GOTO_IF_MACRO(finfo->io == NULL, NULL, QPAK_openRead_failed);
+    if (!finfo->io->seek(finfo->io, entry->startPos))
+        GOTO_MACRO(NULL, QPAK_openRead_failed);
 
     finfo->curPos = 0;
     finfo->entry = entry;
-    return finfo;
+    io = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    GOTO_IF_MACRO(io == NULL, ERR_OUT_OF_MEMORY, QPAK_openRead_failed);
+    memcpy(io, &QPAK_Io, sizeof (PHYSFS_Io));
+    io->opaque = finfo;
+
+    return io;
+
+QPAK_openRead_failed:
+    if (finfo != NULL)
+    {
+        if (finfo->io != NULL)
+            finfo->io->destroy(finfo->io);
+        allocator.Free(finfo);
+    } /* if */
+
+    if (io != NULL)
+        allocator.Free(io);
+
+    return NULL;
 } /* QPAK_openRead */
 
 
-static fvoid *QPAK_openWrite(dvoid *opaque, const char *name)
+static PHYSFS_Io *QPAK_openWrite(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* QPAK_openWrite */
 
 
-static fvoid *QPAK_openAppend(dvoid *opaque, const char *name)
+static PHYSFS_Io *QPAK_openAppend(dvoid *opaque, const char *name)
 {
     BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
 } /* QPAK_openAppend */
@@ -602,14 +604,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
     QPAK_remove,             /* remove() method         */
     QPAK_mkdir,              /* mkdir() method          */
     QPAK_dirClose,           /* dirClose() method       */
-    QPAK_stat,               /* stat() method           */
-    QPAK_read,               /* read() method           */
-    QPAK_write,              /* write() method          */
-    QPAK_eof,                /* eof() method            */
-    QPAK_tell,               /* tell() method           */
-    QPAK_seek,               /* seek() method           */
-    QPAK_fileLength,         /* fileLength() method     */
-    QPAK_fileClose           /* fileClose() method      */
+    QPAK_stat                /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_QPAK */

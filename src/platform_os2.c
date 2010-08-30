@@ -590,9 +590,9 @@ int __PHYSFS_platformFlush(void *opaque)
 } /* __PHYSFS_platformFlush */
 
 
-int __PHYSFS_platformClose(void *opaque)
+void __PHYSFS_platformClose(void *opaque)
 {
-    return (os2err(DosClose((HFILE) opaque)) == NO_ERROR);
+    DosClose((HFILE) opaque);  /* ignore errors. You should have flushed! */
 } /* __PHYSFS_platformClose */
 
 
