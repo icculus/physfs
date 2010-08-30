@@ -1020,6 +1020,11 @@ PHYSFS_DECL int PHYSFS_delete(const char *filename);
  *  be associated with the first archive mounted there, even though that
  *  directory isn't necessarily contained in a real archive.
  *
+ * \warning This will return NULL if there is no real directory associated
+ *          with (filename). Specifically, PHYSFS_mountIo(),
+ *          PHYSFS_mountMemory(), and PHYSFS_mountHandle() will return NULL
+ *          even if the filename is found in the search path. Plan accordingly.
+ *
  *     \param filename file to look for.
  *    \return READ ONLY string of element of search path containing the
  *             the file in question. NULL if not found.
