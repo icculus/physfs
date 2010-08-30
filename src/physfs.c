@@ -267,6 +267,191 @@ createNativeIo_failed:
 } /* __PHYSFS_createNativeIo */
 
 
+/* PHYSFS_Io implementation for i/o to a memory buffer... */
+
+typedef struct __PHYSFS_MemoryIoInfo
+{
+    const PHYSFS_uint8 *buf;
+    PHYSFS_uint64 len;
+    PHYSFS_uint64 pos;
+    PHYSFS_Io *parent;
+    volatile PHYSFS_uint32 refcount;
+    void (*destruct)(void *);
+} MemoryIoInfo;
+
+static PHYSFS_sint64 memoryIo_read(PHYSFS_Io *io, void *buf, PHYSFS_uint64 len)
+{
+    MemoryIoInfo *info = (MemoryIoInfo *) io->opaque;
+    const PHYSFS_uint64 avail = info->len - info->pos;
+    assert(avail <= info->len);
+
+    if (avail == 0)
+        return 0;  /* we're at EOF; nothing to do. */
+
+    if (len > avail)
+        len = avail;
+
+    memcpy(buf, info->buf + info->pos, len);
+    info->pos += len;
+    return len;
+} /* memoryIo_read */
+
+static PHYSFS_sint64 memoryIo_write(PHYSFS_Io *io, const void *buffer,
+                                    PHYSFS_uint64 len)
+{
+    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
+} /* memoryIo_write */
+
+static int memoryIo_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
+{
+    MemoryIoInfo *info = (MemoryIoInfo *) io->opaque;
+    BAIL_IF_MACRO(offset > info->len, ERR_PAST_EOF, 0);
+    info->pos = offset;
+    return 1;
+} /* memoryIo_seek */
+
+static PHYSFS_sint64 memoryIo_tell(PHYSFS_Io *io)
+{
+    const MemoryIoInfo *info = (MemoryIoInfo *) io->opaque;
+    return (PHYSFS_sint64) info->pos;
+} /* memoryIo_tell */
+
+static PHYSFS_sint64 memoryIo_length(PHYSFS_Io *io)
+{
+    const MemoryIoInfo *info = (MemoryIoInfo *) io->opaque;
+    return (PHYSFS_sint64) info->len;
+} /* memoryIo_length */
+
+static PHYSFS_Io *memoryIo_duplicate(PHYSFS_Io *io)
+{
+    MemoryIoInfo *info = (MemoryIoInfo *) io->opaque;
+    MemoryIoInfo *newinfo = NULL;
+    PHYSFS_Io *parent = info->parent;
+    PHYSFS_Io *retval = NULL;
+
+    /* avoid deep copies. */
+    assert((!parent) || (!((MemoryIoInfo *) parent->opaque)->parent) );
+
+    /* share the buffer between duplicates. */
+    if (parent != NULL)  /* dup the parent, increment its refcount. */
+        return parent->duplicate(parent);
+
+    /* we're the parent. */
+
+    retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    newinfo = (MemoryIoInfo *) allocator.Malloc(sizeof (MemoryIoInfo));
+    if (!newinfo)
+    {
+        allocator.Free(retval);
+        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+    } /* if */
+
+    /* !!! FIXME: want lockless atomic increment. */
+    __PHYSFS_platformGrabMutex(stateLock);
+    info->refcount++;
+    __PHYSFS_platformReleaseMutex(stateLock);
+
+    memset(newinfo, '\0', sizeof (*info));
+    newinfo->buf = info->buf;
+    newinfo->len = info->len;
+    newinfo->pos = 0;
+    newinfo->parent = io;
+    newinfo->refcount = 0;
+    newinfo->destruct = NULL;
+
+    memcpy(retval, io, sizeof (*retval));
+    retval->opaque = newinfo;
+    return retval;
+} /* memoryIo_duplicate */
+
+static int memoryIo_flush(PHYSFS_Io *io) { return 1;  /* it's read-only. */ }
+
+static void memoryIo_destroy(PHYSFS_Io *io)
+{
+    MemoryIoInfo *info = (MemoryIoInfo *) io->opaque;
+    PHYSFS_Io *parent = info->parent;
+    int should_die = 0;
+
+    if (parent != NULL)
+    {
+        assert(info->buf == ((MemoryIoInfo *) info->parent->opaque)->buf);
+        assert(info->len == ((MemoryIoInfo *) info->parent->opaque)->len);
+        assert(info->refcount == 0);
+        assert(info->destruct == NULL);
+        allocator.Free(info);
+        allocator.Free(io);
+        parent->destroy(parent);  /* decrements refcount. */
+        return;
+    } /* if */
+
+    /* we _are_ the parent. */
+    assert(info->refcount > 0);  /* even in a race, we hold a reference. */
+
+    /* !!! FIXME: want lockless atomic decrement. */
+    __PHYSFS_platformGrabMutex(stateLock);
+    info->refcount--;
+    should_die = (info->refcount == 0);
+    __PHYSFS_platformReleaseMutex(stateLock);
+
+    if (should_die)
+    {
+        void (*destruct)(void *) = info->destruct;
+        void *buf = (void *) info->buf;
+        io->opaque = NULL;  /* kill this here in case of race. */
+        destruct = info->destruct;
+        allocator.Free(info);
+        allocator.Free(io);
+        if (destruct != NULL)
+        destruct(buf);
+    } /* if */
+} /* memoryIo_destroy */
+
+
+static const PHYSFS_Io __PHYSFS_memoryIoInterface =
+{
+    memoryIo_read,
+    memoryIo_write,
+    memoryIo_seek,
+    memoryIo_tell,
+    memoryIo_length,
+    memoryIo_duplicate,
+    memoryIo_flush,
+    memoryIo_destroy,
+    NULL
+};
+
+PHYSFS_Io *__PHYSFS_createMemoryIo(const void *buf, PHYSFS_uint64 len,
+                                   void (*destruct)(void *))
+{
+    PHYSFS_Io *io = NULL;
+    MemoryIoInfo *info = NULL;
+
+    io = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
+    GOTO_IF_MACRO(io == NULL, ERR_OUT_OF_MEMORY, createMemoryIo_failed);
+    info = (MemoryIoInfo *) allocator.Malloc(sizeof (MemoryIoInfo));
+    GOTO_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, createMemoryIo_failed);
+
+    memset(info, '\0', sizeof (*info));
+    info->buf = (const PHYSFS_uint8 *) buf;
+    info->len = len;
+    info->pos = 0;
+    info->parent = NULL;
+    info->refcount = 1;
+    info->destruct = destruct;
+
+    memcpy(io, &__PHYSFS_memoryIoInterface, sizeof (*io));
+    io->opaque = info;
+    return io;
+
+createMemoryIo_failed:
+    if (info != NULL) allocator.Free(info);
+    if (io != NULL) allocator.Free(io);
+    return NULL;
+} /* __PHYSFS_createMemoryIo */
+
+
+
 /* functions ... */
 
 typedef struct
@@ -1145,6 +1330,30 @@ int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
     BAIL_IF_MACRO(io == NULL, ERR_INVALID_ARGUMENT, 0);
     return doMount(io, fname, mountPoint, appendToPath);
 } /* PHYSFS_mountIo */
+
+
+int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len, void (*del)(void *),
+                       const char *fname, const char *mountPoint,
+                       int appendToPath)
+{
+    int retval = 0;
+    PHYSFS_Io *io = NULL;
+
+    BAIL_IF_MACRO(buf == NULL, ERR_INVALID_ARGUMENT, 0);
+
+    io = __PHYSFS_createMemoryIo(buf, len, del);
+    BAIL_IF_MACRO(io == NULL, NULL, 0);
+    retval = doMount(io, fname, mountPoint, appendToPath);
+    if (!retval)
+    {
+        /* docs say not to call (del) in case of failure, so cheat. */
+        MemoryIoInfo *info = (MemoryIoInfo *) io->opaque;
+        info->destruct = NULL;
+        io->destroy(io);
+    } /* if */
+
+    return retval;
+} /* PHYSFS_mountMemory */
 
 
 int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)

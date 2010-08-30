@@ -2937,6 +2937,53 @@ typedef struct PHYSFS_Io
 PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
                                const char *mountPoint, int appendToPath);
 
+
+/**
+ * \fn int PHYSFS_mountMemory(const void *ptr, PHYSFS_uint64 len, void (*del)(void *), const char *fname, const char *mountPoint, int appendToPath)
+ * \brief Add an archive, contained in a memory buffer, to the search path.
+ *
+ * \warning Unless you have some special, low-level need, you should be using
+ *          PHYSFS_mount() instead of this.
+ *
+ * This function operates just like PHYSFS_mount(), but takes a memory buffer
+ *  instead of a pathname. This buffer contains all the data of the archive,
+ *  and is used instead of a real file in the physical filesystem.
+ *
+ * (filename) is only used here to optimize archiver selection (if you name it
+ *  XXXXX.zip, we might try the ZIP archiver first, for example). It doesn't
+ *  need to refer to a real file at all, and can even be NULL. If the filename
+ *  isn't helpful, the system will try every archiver until one works or none
+ *  of them do.
+ *
+ * (ptr) must remain until the archive is unmounted. When the archive is
+ *  unmounted, the system will call (del)(ptr), which will notify you that
+ *  the system is done with the buffer, and give you a chance to free your
+ *  resources. (del) can be NULL, in which case the system will make no
+ *  attempt to free the buffer.
+ *
+ * If this function fails, (del) is not called.
+ *
+ *   \param ptr Address of the memory buffer containing the archive data.
+ *   \param len Size of memory buffer, in bytes.
+ *   \param del A callback that triggers upon unmount. Can be NULL.
+ *   \param fname Filename that can represent this stream. Can be NULL.
+ *   \param mountPoint Location in the interpolated tree that this archive
+ *                     will be "mounted", in platform-independent notation.
+ *                     NULL or "" is equivalent to "/".
+ *   \param appendToPath nonzero to append to search path, zero to prepend.
+ *  \return nonzero if added to path, zero on failure (bogus archive, etc).
+ *                  Specifics of the error can be gleaned from
+ *                  PHYSFS_getLastError().
+ *
+ * \sa PHYSFS_unmount
+ * \sa PHYSFS_getSearchPath
+ * \sa PHYSFS_getMountPoint
+ */
+PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
+                                   void (*del)(void *), const char *fname,
+                                   const char *mountPoint, int appendToPath);
+
+
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
 
 
