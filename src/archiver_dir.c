@@ -18,13 +18,17 @@
 
 static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
+    PHYSFS_Stat statbuf;
     const char *dirsep = PHYSFS_getDirSeparator();
     char *retval = NULL;
     const size_t namelen = strlen(name);
     const size_t seplen = strlen(dirsep);
+    int exists = 0;
 
     assert(io == NULL);  /* shouldn't create an Io for these. */
-    BAIL_IF_MACRO(!__PHYSFS_platformIsDirectory(name), ERR_NOT_AN_ARCHIVE, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_platformStat(name, &exists, &statbuf), NULL, NULL);
+    if ((!exists) || (statbuf.filetype != PHYSFS_FILETYPE_DIRECTORY))
+        BAIL_MACRO(ERR_NOT_AN_ARCHIVE, NULL);
 
     retval = allocator.Malloc(namelen + seplen + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
@@ -55,46 +59,6 @@ static void DIR_enumerateFiles(dvoid *opaque, const char *dname,
 } /* DIR_enumerateFiles */
 
 
-static int DIR_exists(dvoid *opaque, const char *name)
-{
-    char *f = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
-    int retval;
-
-    BAIL_IF_MACRO(f == NULL, NULL, 0);
-    retval = __PHYSFS_platformExists(f);
-    allocator.Free(f);
-    return retval;
-} /* DIR_exists */
-
-
-static int DIR_isDirectory(dvoid *opaque, const char *name, int *fileExists)
-{
-    char *d = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
-    int retval = 0;
-
-    BAIL_IF_MACRO(d == NULL, NULL, 0);
-    *fileExists = __PHYSFS_platformExists(d);
-    if (*fileExists)
-        retval = __PHYSFS_platformIsDirectory(d);
-    allocator.Free(d);
-    return retval;
-} /* DIR_isDirectory */
-
-
-static int DIR_isSymLink(dvoid *opaque, const char *name, int *fileExists)
-{
-    char *f = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
-    int retval = 0;
-
-    BAIL_IF_MACRO(f == NULL, NULL, 0);
-    *fileExists = __PHYSFS_platformExists(f);
-    if (*fileExists)
-        retval = __PHYSFS_platformIsSymLink(f);
-    allocator.Free(f);
-    return retval;
-} /* DIR_isSymLink */
-
-
 static PHYSFS_Io *doOpen(dvoid *opaque, const char *name,
                          const int mode, int *fileExists)
 {
@@ -113,7 +77,8 @@ static PHYSFS_Io *doOpen(dvoid *opaque, const char *name,
     allocator.Free(f);
     if (io == NULL)
     {
-        *fileExists = __PHYSFS_platformExists(f);
+        PHYSFS_Stat statbuf;
+        __PHYSFS_platformStat(f, fileExists, &statbuf);
         return NULL;
     } /* if */
 
@@ -197,9 +162,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     &__PHYSFS_ArchiveInfo_DIR,
     DIR_openArchive,        /* openArchive() method    */
     DIR_enumerateFiles,     /* enumerateFiles() method */
-    DIR_exists,             /* exists() method         */
-    DIR_isDirectory,        /* isDirectory() method    */
-    DIR_isSymLink,          /* isSymLink() method      */
     DIR_openRead,           /* openRead() method       */
     DIR_openWrite,          /* openWrite() method      */
     DIR_openAppend,         /* openAppend() method     */

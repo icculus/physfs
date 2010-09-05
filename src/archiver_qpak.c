@@ -451,36 +451,6 @@ static QPAKentry *qpak_find_entry(const QPAKinfo *info, const char *path,
 } /* qpak_find_entry */
 
 
-static int QPAK_exists(dvoid *opaque, const char *name)
-{
-    int isDir;    
-    QPAKinfo *info = (QPAKinfo *) opaque;
-    QPAKentry *entry = qpak_find_entry(info, name, &isDir);
-    return ((entry != NULL) || (isDir));
-} /* QPAK_exists */
-
-
-static int QPAK_isDirectory(dvoid *opaque, const char *name, int *fileExists)
-{
-    QPAKinfo *info = (QPAKinfo *) opaque;
-    int isDir;
-    QPAKentry *entry = qpak_find_entry(info, name, &isDir);
-
-    *fileExists = ((isDir) || (entry != NULL));
-    if (isDir)
-        return 1; /* definitely a dir. */
-
-    BAIL_MACRO(ERR_NO_SUCH_FILE, 0);
-} /* QPAK_isDirectory */
-
-
-static int QPAK_isSymLink(dvoid *opaque, const char *name, int *fileExists)
-{
-    *fileExists = QPAK_exists(opaque, name);
-    return 0;  /* never symlinks in a quake pak. */
-} /* QPAK_isSymLink */
-
-
 static PHYSFS_Io *QPAK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     PHYSFS_Io *io = NULL;
@@ -595,9 +565,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
     &__PHYSFS_ArchiveInfo_QPAK,
     QPAK_openArchive,        /* openArchive() method    */
     QPAK_enumerateFiles,     /* enumerateFiles() method */
-    QPAK_exists,             /* exists() method         */
-    QPAK_isDirectory,        /* isDirectory() method    */
-    QPAK_isSymLink,          /* isSymLink() method      */
     QPAK_openRead,           /* openRead() method       */
     QPAK_openWrite,          /* openWrite() method      */
     QPAK_openAppend,         /* openAppend() method     */

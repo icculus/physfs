@@ -665,6 +665,11 @@ PHYSFS_DECL const char *PHYSFS_getDirSeparator(void);
  *  in platform-independent notation. That is, when setting up your
  *  search and write paths, etc, symlinks are never checked for.
  *
+ * Please note that PHYSFS_stat() will always check the path specified; if
+ *  that path is a symlink, it will not be followed in any case. If symlinks
+ *  aren't permitted through this function, PHYSFS_stat() ignores them, and
+ *  would treat the query as if the path didn't exist at all.
+ *
  * Symbolic link permission can be enabled or disabled at any time after
  *  you've called PHYSFS_init(), and is disabled by default.
  *
@@ -1086,9 +1091,6 @@ PHYSFS_DECL char **PHYSFS_enumerateFiles(const char *dir);
  *
  *    \param fname filename in platform-independent notation.
  *   \return non-zero if filename exists. zero otherwise.
- *
- * \sa PHYSFS_isDirectory
- * \sa PHYSFS_isSymbolicLink
  */
 PHYSFS_DECL int PHYSFS_exists(const char *fname);
 
@@ -1096,6 +1098,9 @@ PHYSFS_DECL int PHYSFS_exists(const char *fname);
 /**
  * \fn int PHYSFS_isDirectory(const char *fname)
  * \brief Determine if a file in the search path is really a directory.
+ *
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This
+ *             function just wraps it anyhow.
  *
  * Determine if the first occurence of (fname) in the search path is
  *  really a directory entry.
@@ -1107,15 +1112,18 @@ PHYSFS_DECL int PHYSFS_exists(const char *fname);
  *    \param fname filename in platform-independent notation.
  *   \return non-zero if filename exists and is a directory.  zero otherwise.
  *
+ * \sa PHYSFS_stat
  * \sa PHYSFS_exists
- * \sa PHYSFS_isSymbolicLink
  */
-PHYSFS_DECL int PHYSFS_isDirectory(const char *fname);
+PHYSFS_DECL int PHYSFS_isDirectory(const char *fname) PHYSFS_DEPRECATED;
 
 
 /**
  * \fn int PHYSFS_isSymbolicLink(const char *fname)
  * \brief Determine if a file in the search path is really a symbolic link.
+ *
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This
+ *             function just wraps it anyhow.
  *
  * Determine if the first occurence of (fname) in the search path is
  *  really a symbolic link.
@@ -1127,10 +1135,10 @@ PHYSFS_DECL int PHYSFS_isDirectory(const char *fname);
  *    \param fname filename in platform-independent notation.
  *   \return non-zero if filename exists and is a symlink.  zero otherwise.
  *
+ * \sa PHYSFS_stat
  * \sa PHYSFS_exists
- * \sa PHYSFS_isDirectory
  */
-PHYSFS_DECL int PHYSFS_isSymbolicLink(const char *fname);
+PHYSFS_DECL int PHYSFS_isSymbolicLink(const char *fname) PHYSFS_DEPRECATED;
 
 
 /**
@@ -2602,6 +2610,12 @@ typedef struct PHYSFS_Stat
  * \brief Get various information about a directory or a file.
  *
  * Obtain various information about a file or directory from the meta data.
+ *
+ * This function will never follow symbolic links. If you haven't enabled
+ *  symlinks with PHYSFS_permitSymbolicLinks(), stat'ing a symlink will be
+ *  treated like stat'ing a non-existant file. If symlinks are enabled,
+ *  stat'ing a symlink will give you information on the link itself and not
+ *  what it points to.
  *
  *    \param fname filename to check, in platform-indepedent notation.
  *    \param stat pointer to structure to fill in with data about (fname).

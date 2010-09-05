@@ -875,16 +875,6 @@ static void ISO9660_enumerateFiles(dvoid *opaque, const char *dname,
 } /* ISO9660_enumerateFiles */
 
 
-static int ISO9660_exists(dvoid *opaque, const char *name)
-{
-    ISO9660Handle *handle = (ISO9660Handle*) opaque;
-    ISO9660FileDescriptor descriptor;
-    int exists = 0;
-    BAIL_IF_MACRO(iso_find_dir_entry(handle, name, &descriptor, &exists), NULL, -1);
-    return exists;
-} /* ISO9660_exists */
-
-
 static int ISO9660_stat(dvoid *opaque, const char *name, int *exists,
                         PHYSFS_Stat *stat)
 {
@@ -926,22 +916,6 @@ static int ISO9660_stat(dvoid *opaque, const char *name, int *exists,
 
     return 1;
 } /* ISO9660_stat */
-
-
-static int ISO9660_isDirectory(dvoid *opaque, const char *name, int *fileExists)
-{
-    ISO9660Handle *handle = (ISO9660Handle*) opaque;
-    ISO9660FileDescriptor descriptor;
-    BAIL_IF_MACRO(iso_find_dir_entry(handle, name, &descriptor, fileExists), NULL, 0);
-    return descriptor.flags.directory;
-} /* ISO9660_isDirectory */
-
-
-static int ISO9660_isSymLink(dvoid *opaque, const char *name, int *fileExists)
-{
-    *fileExists = ISO9660_exists(opaque, name);
-    return 0;
-} /* ISO9660_isSymLink */
 
 
 /*******************************************************************************
@@ -986,9 +960,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
     &__PHYSFS_ArchiveInfo_ISO9660,
     ISO9660_openArchive,        /* openArchive() method    */
     ISO9660_enumerateFiles,     /* enumerateFiles() method */
-    ISO9660_exists,             /* exists() method         */
-    ISO9660_isDirectory,        /* isDirectory() method    */
-    ISO9660_isSymLink,          /* isSymLink() method      */
     ISO9660_openRead,           /* openRead() method       */
     ISO9660_openWrite,          /* openWrite() method      */
     ISO9660_openAppend,         /* openAppend() method     */

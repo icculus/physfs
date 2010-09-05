@@ -751,6 +751,7 @@ static int cmd_exists(char *args)
 
 static int cmd_isdir(char *args)
 {
+    PHYSFS_Stat statbuf;
     int rc;
 
     if (*args == '\"')
@@ -759,7 +760,9 @@ static int cmd_isdir(char *args)
         args[strlen(args) - 1] = '\0';
     } /* if */
 
-    rc = PHYSFS_isDirectory(args);
+    rc = PHYSFS_stat(args, &statbuf);
+    if (rc)
+        rc = (statbuf.filetype == PHYSFS_FILETYPE_DIRECTORY);
     printf("File %s a directory.\n", rc ? "is" : "is NOT");
     return 1;
 } /* cmd_isdir */
@@ -767,6 +770,7 @@ static int cmd_isdir(char *args)
 
 static int cmd_issymlink(char *args)
 {
+    PHYSFS_Stat statbuf;
     int rc;
 
     if (*args == '\"')
@@ -775,7 +779,9 @@ static int cmd_issymlink(char *args)
         args[strlen(args) - 1] = '\0';
     } /* if */
 
-    rc = PHYSFS_isSymbolicLink(args);
+    rc = PHYSFS_stat(args, &statbuf);
+    if (rc)
+        rc = (statbuf.filetype == PHYSFS_FILETYPE_SYMLINK);
     printf("File %s a symlink.\n", rc ? "is" : "is NOT");
     return 1;
 } /* cmd_issymlink */

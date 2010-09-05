@@ -116,30 +116,6 @@ char *__PHYSFS_platformGetUserDir(void)
 } /* __PHYSFS_platformGetUserDir */
 
 
-int __PHYSFS_platformExists(const char *fname)
-{
-    struct stat statbuf;
-    BAIL_IF_MACRO(lstat(fname, &statbuf) == -1, strerror(errno), 0);
-    return 1;
-} /* __PHYSFS_platformExists */
-
-
-int __PHYSFS_platformIsSymLink(const char *fname)
-{
-    struct stat statbuf;
-    BAIL_IF_MACRO(lstat(fname, &statbuf) == -1, strerror(errno), 0);
-    return ( (S_ISLNK(statbuf.st_mode)) ? 1 : 0 );
-} /* __PHYSFS_platformIsSymlink */
-
-
-int __PHYSFS_platformIsDirectory(const char *fname)
-{
-    struct stat statbuf;
-    BAIL_IF_MACRO(stat(fname, &statbuf) == -1, strerror(errno), 0);
-    return ( (S_ISDIR(statbuf.st_mode)) ? 1 : 0 );
-} /* __PHYSFS_platformIsDirectory */
-
-
 char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,
                                       const char *append)
@@ -213,6 +189,8 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 
         if (omitSymLinks)
         {
+            PHYSFS_Stat statbuf;
+            int exists = 0;
             char *p;
             int len = strlen(ent->d_name) + dlen + 1;
             if (len > bufsize)
@@ -225,8 +203,14 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
             } /* if */
 
             strcpy(buf + dlen, ent->d_name);
-            if (__PHYSFS_platformIsSymLink(buf))
-                continue;
+
+            if (__PHYSFS_platformStat(buf, &exists, &statbuf))
+            {
+                if (!exists)
+                    continue;
+                else if (statbuf.filetype == PHYSFS_FILETYPE_SYMLINK)
+                    continue;
+            } /* if */
         } /* if */
 
         callback(callbackdata, origdir, ent->d_name);

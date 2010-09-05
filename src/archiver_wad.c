@@ -336,47 +336,6 @@ static WADentry *wad_find_entry(const WADinfo *info, const char *name)
 } /* wad_find_entry */
 
 
-static int WAD_exists(dvoid *opaque, const char *name)
-{
-    return (wad_find_entry((WADinfo *) opaque, name) != NULL);
-} /* WAD_exists */
-
-
-static int WAD_isDirectory(dvoid *opaque, const char *name, int *fileExists)
-{
-    WADentry *entry = wad_find_entry(((WADinfo *) opaque), name);
-    const int exists = (entry != NULL);
-    *fileExists = exists;
-    if (exists)
-    {
-        char *n;
-
-        /* Can't be a directory if it's a subdirectory. */
-        if (strchr(entry->name, '/') != NULL)
-            return 0;
-
-        /* !!! FIXME: this isn't really something we should do. */
-        /* !!! FIXME: I probably broke enumeration up there, too. */
-        /* Check if it matches "MAP??" or "E?M?" ... */
-        n = entry->name;
-        if ((n[0] == 'E' && n[2] == 'M') ||
-            (n[0] == 'M' && n[1] == 'A' && n[2] == 'P' && n[6] == 0))
-        {
-            return 1;
-        } /* if */
-    } /* if */
-
-    return 0;
-} /* WAD_isDirectory */
-
-
-static int WAD_isSymLink(dvoid *opaque, const char *name, int *fileExists)
-{
-    *fileExists = WAD_exists(opaque, name);
-    return 0;  /* never symlinks in a wad. */
-} /* WAD_isSymLink */
-
-
 static PHYSFS_Io *WAD_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     PHYSFS_Io *retval = NULL;
@@ -481,9 +440,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
     &__PHYSFS_ArchiveInfo_WAD,
     WAD_openArchive,        /* openArchive() method    */
     WAD_enumerateFiles,     /* enumerateFiles() method */
-    WAD_exists,             /* exists() method         */
-    WAD_isDirectory,        /* isDirectory() method    */
-    WAD_isSymLink,          /* isSymLink() method      */
     WAD_openRead,           /* openRead() method       */
     WAD_openWrite,          /* openWrite() method      */
     WAD_openAppend,         /* openAppend() method     */

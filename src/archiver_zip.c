@@ -1257,51 +1257,6 @@ static void ZIP_enumerateFiles(dvoid *opaque, const char *dname,
 } /* ZIP_enumerateFiles */
 
 
-static int ZIP_exists(dvoid *opaque, const char *name)
-{
-    int isDir;    
-    ZIPinfo *info = (ZIPinfo *) opaque;
-    ZIPentry *entry = zip_find_entry(info, name, &isDir);
-    return ((entry != NULL) || (isDir));
-} /* ZIP_exists */
-
-
-static int ZIP_isDirectory(dvoid *opaque, const char *name, int *fileExists)
-{
-    ZIPinfo *info = (ZIPinfo *) opaque;
-    int isDir;
-    ZIPentry *entry = zip_find_entry(info, name, &isDir);
-
-    *fileExists = ((isDir) || (entry != NULL));
-    if (isDir)
-        return 1; /* definitely a dir. */
-
-    /* Follow symlinks. This means we might need to resolve entries. */
-    BAIL_IF_MACRO(entry == NULL, ERR_NO_SUCH_FILE, 0);
-
-    if (entry->resolved == ZIP_UNRESOLVED_SYMLINK) /* gotta resolve it. */
-    {
-        if (!zip_resolve(info->io, info, entry))
-            return 0;
-    } /* if */
-
-    BAIL_IF_MACRO(entry->resolved == ZIP_BROKEN_SYMLINK, NULL, 0);
-    BAIL_IF_MACRO(entry->symlink == NULL, ERR_NOT_A_DIR, 0);
-
-    return (zip_find_start_of_dir(info, entry->symlink->name, 1) >= 0);
-} /* ZIP_isDirectory */
-
-
-static int ZIP_isSymLink(dvoid *opaque, const char *name, int *fileExists)
-{
-    int isDir;
-    const ZIPentry *entry = zip_find_entry((ZIPinfo *) opaque, name, &isDir);
-    *fileExists = ((isDir) || (entry != NULL));
-    BAIL_IF_MACRO(entry == NULL, NULL, 0);
-    return zip_entry_is_symlink(entry);
-} /* ZIP_isSymLink */
-
-
 static PHYSFS_Io *zip_get_io(PHYSFS_Io *io, ZIPinfo *inf, ZIPentry *entry)
 {
     int success;
@@ -1424,6 +1379,8 @@ static int ZIP_stat(dvoid *opaque, const char *filename, int *exists,
     const ZIPinfo *info = (const ZIPinfo *) opaque;
     const ZIPentry *entry = zip_find_entry(info, filename, &isDir);
 
+    /* !!! FIXME: does this need to resolve entries here? */
+
     *exists = isDir || (entry != 0);
     if (!*exists)
         return 0;
@@ -1469,9 +1426,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
     &__PHYSFS_ArchiveInfo_ZIP,
     ZIP_openArchive,        /* openArchive() method    */
     ZIP_enumerateFiles,     /* enumerateFiles() method */
-    ZIP_exists,             /* exists() method         */
-    ZIP_isDirectory,        /* isDirectory() method    */
-    ZIP_isSymLink,          /* isSymLink() method      */
     ZIP_openRead,           /* openRead() method       */
     ZIP_openWrite,          /* openWrite() method      */
     ZIP_openAppend,         /* openAppend() method     */
