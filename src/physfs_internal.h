@@ -968,6 +968,7 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
  *  algorithms possible, if not entirely sane. Most cases should treat the
  *  return value as "equal" or "not equal".
  */
+/* !!! FIXME: why is this casecmp, when everyone else is icmp? */
 int __PHYSFS_utf8strcasecmp(const char *s1, const char *s2);
 
 /*
