@@ -297,31 +297,6 @@ char *__PHYSFS_platformGetUserDir(void)
 } /* __PHYSFS_platformGetUserDir */
 
 
-int __PHYSFS_platformExists(const char *_fname)
-{
-    const unsigned char *fname = (const unsigned char *) _fname;
-    FILESTATUS3 fs;
-    APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
-    return (os2err(rc) == NO_ERROR);
-} /* __PHYSFS_platformExists */
-
-
-int __PHYSFS_platformIsSymLink(const char *fname)
-{
-    return 0;  /* no symlinks in OS/2. */
-} /* __PHYSFS_platformIsSymlink */
-
-
-int __PHYSFS_platformIsDirectory(const char *_fname)
-{
-    const unsigned char *fname = (const unsigned char *) _fname;
-    FILESTATUS3 fs;
-    APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
-    BAIL_IF_MACRO(os2err(rc) != NO_ERROR, NULL, 0)
-    return ((fs.attrFile & FILE_DIRECTORY) != 0);
-} /* __PHYSFS_platformIsDirectory */
-
-
 /* !!! FIXME: can we lose the malloc here? */
 char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,
@@ -598,8 +573,13 @@ void __PHYSFS_platformClose(void *opaque)
 
 int __PHYSFS_platformDelete(const char *_path)
 {
+    FILESTATUS3 fs;
     const unsigned char *path = (const unsigned char *) _path;
-    if (__PHYSFS_platformIsDirectory(_path))
+    APIRET rc = os2err(DosQueryPathInfo(path, FIL_STANDARD, &fs, sizeof (fs)));
+
+    BAIL_IF_MACRO(rc != NO_ERROR, NULL, 0);
+
+    if (fs.attrFile & FILE_DIRECTORY)
         return (os2err(DosDeleteDir(path)) == NO_ERROR);
 
     return (os2err(DosDelete(path)) == NO_ERROR);

@@ -335,26 +335,6 @@ static HOGentry *hog_find_entry(const HOGinfo *info, const char *name)
 } /* hog_find_entry */
 
 
-static int HOG_exists(dvoid *opaque, const char *name)
-{
-    return (hog_find_entry((HOGinfo *) opaque, name) != NULL);
-} /* HOG_exists */
-
-
-static int HOG_isDirectory(dvoid *opaque, const char *name, int *fileExists)
-{
-    *fileExists = HOG_exists(opaque, name);
-    return 0;  /* never directories in a groupfile. */
-} /* HOG_isDirectory */
-
-
-static int HOG_isSymLink(dvoid *opaque, const char *name, int *fileExists)
-{
-    *fileExists = HOG_exists(opaque, name);
-    return 0;  /* never symlinks in a groupfile. */
-} /* HOG_isSymLink */
-
-
 static PHYSFS_Io *HOG_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     PHYSFS_Io *retval = NULL;
@@ -459,9 +439,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
     &__PHYSFS_ArchiveInfo_HOG,
     HOG_openArchive,        /* openArchive() method    */
     HOG_enumerateFiles,     /* enumerateFiles() method */
-    HOG_exists,             /* exists() method         */
-    HOG_isDirectory,        /* isDirectory() method    */
-    HOG_isSymLink,          /* isSymLink() method      */
     HOG_openRead,           /* openRead() method       */
     HOG_openWrite,          /* openWrite() method      */
     HOG_openAppend,         /* openAppend() method     */

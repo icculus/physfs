@@ -563,79 +563,11 @@ void *__PHYSFS_platformGetThreadID(void)
 } /* __PHYSFS_platformGetThreadID */
 
 
-static int doPlatformExists(LPWSTR wpath)
-{
-    BAIL_IF_MACRO
-    (
-        pGetFileAttributesW(wpath) == PHYSFS_INVALID_FILE_ATTRIBUTES,
-        winApiStrError(), 0
-    );
-    return 1;
-} /* doPlatformExists */
-
-
-int __PHYSFS_platformExists(const char *fname)
-{
-    int retval = 0;
-    LPWSTR wpath;
-    UTF8_TO_UNICODE_STACK_MACRO(wpath, fname);
-    BAIL_IF_MACRO(wpath == NULL, ERR_OUT_OF_MEMORY, 0);
-    retval = doPlatformExists(wpath);
-    __PHYSFS_smallFree(wpath);
-    return retval;
-} /* __PHYSFS_platformExists */
-
-
 static int isSymlinkAttrs(const DWORD attr, const DWORD tag)
 {
     return ( (attr & FILE_ATTRIBUTE_REPARSE_POINT) && 
              (tag == PHYSFS_IO_REPARSE_TAG_SYMLINK) );
 } /* isSymlinkAttrs */
-
-
-int __PHYSFS_platformIsSymLink(const char *fname)
-{
-    /* !!! FIXME:
-     * Windows Vista can have NTFS symlinks. Can older Windows releases have
-     *  them when talking to a network file server? What happens when you
-     *  mount a NTFS partition on XP that was plugged into a Vista install
-     *  that made a symlink?
-     */
-
-    int retval = 0;
-    LPWSTR wpath;
-    HANDLE dir;
-    WIN32_FIND_DATAW entw;
-
-    /* no unicode entry points? Probably no symlinks. */
-    BAIL_IF_MACRO(pFindFirstFileW == NULL, NULL, 0);
-
-    UTF8_TO_UNICODE_STACK_MACRO(wpath, fname);
-    BAIL_IF_MACRO(wpath == NULL, ERR_OUT_OF_MEMORY, 0);
-
-    /* !!! FIXME: filter wildcard chars? */
-    dir = pFindFirstFileW(wpath, &entw);
-    if (dir != INVALID_HANDLE_VALUE)
-    {
-        retval = isSymlinkAttrs(entw.dwFileAttributes, entw.dwReserved0);
-        FindClose(dir);
-    } /* if */
-
-    __PHYSFS_smallFree(wpath);
-    return retval;
-} /* __PHYSFS_platformIsSymlink */
-
-
-int __PHYSFS_platformIsDirectory(const char *fname)
-{
-    int retval = 0;
-    LPWSTR wpath;
-    UTF8_TO_UNICODE_STACK_MACRO(wpath, fname);
-    BAIL_IF_MACRO(wpath == NULL, ERR_OUT_OF_MEMORY, 0);
-    retval = ((pGetFileAttributesW(wpath) & FILE_ATTRIBUTE_DIRECTORY) != 0);
-    __PHYSFS_smallFree(wpath);
-    return retval;
-} /* __PHYSFS_platformIsDirectory */
 
 
 char *__PHYSFS_platformCvtToDependent(const char *prepend,

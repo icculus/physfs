@@ -859,8 +859,6 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
 
     if (io == NULL)
     {
-        BAIL_IF_MACRO(!__PHYSFS_platformExists(d), ERR_NO_SUCH_FILE, NULL);
-
         /* DIR gets first shot (unlike the rest, it doesn't deal with files). */
         retval = tryOpenDir(io, &__PHYSFS_Archiver_DIR, d, forWriting);
         if (retval != NULL)
@@ -1830,11 +1828,14 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
     {
         while (1)
         {
+            PHYSFS_Stat statbuf;
             int rc = 0;
             end = strchr(start, '/');
 
             if (end != NULL) *end = '\0';
-            rc = h->funcs->isSymLink(h->opaque, fname, &retval);
+            rc = h->funcs->stat(h->opaque, fname, &retval, &statbuf);
+            if (rc)
+                rc = (statbuf.filetype == PHYSFS_FILETYPE_SYMLINK);
             if (end != NULL) *end = '/';
 
             BAIL_IF_MACRO(rc, ERR_SYMLINK_DISALLOWED, 0);   /* insecure. */
@@ -1887,7 +1888,11 @@ static int doMkdir(const char *_dname, char *dname)
 
         /* only check for existance if all parent dirs existed, too... */
         if (exists)
-            retval = h->funcs->isDirectory(h->opaque, dname, &exists);
+        {
+            PHYSFS_Stat statbuf;
+            const int rc = h->funcs->stat(h->opaque, dname, &exists, &statbuf);
+            retval = ((rc) && (statbuf.filetype == PHYSFS_FILETYPE_DIRECTORY));
+        } /* if */
 
         if (!exists)
             retval = h->funcs->mkdir(h->opaque, dname);
@@ -1981,9 +1986,12 @@ const char *PHYSFS_getRealDir(const char *_fname)
             } /* if */
             else if (verifyPath(i, &arcfname, 0))
             {
-                if (i->funcs->exists(i->opaque, arcfname))
+                PHYSFS_Stat statbuf;
+                int exists = 0;
+                if (i->funcs->stat(i->opaque, arcfname, &exists, &statbuf))
                 {
-                    retval = i->dirName;
+                    if (exists)
+                        retval = i->dirName;
                     break;
                 } /* if */
             } /* if */
@@ -2157,83 +2165,19 @@ PHYSFS_sint64 PHYSFS_getLastModTime(const char *fname)
 } /* PHYSFS_getLastModTime */
 
 
-int PHYSFS_isDirectory(const char *_fname)
+int PHYSFS_isDirectory(const char *fname)
 {
-    int retval = 0;
-    size_t len;
-    char *fname;
-
-    BAIL_IF_MACRO(_fname == NULL, ERR_INVALID_ARGUMENT, 0);
-    len = strlen(_fname) + 1;
-    fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MACRO(fname == NULL, ERR_OUT_OF_MEMORY, 0);
-
-    if (!sanitizePlatformIndependentPath(_fname, fname))
-        retval = 0;
-
-    else if (*fname == '\0')
-        retval = 1;  /* Root is always a dir.  :) */
-
-    else
-    {
-        DirHandle *i;
-        int exists = 0;
-
-        __PHYSFS_platformGrabMutex(stateLock);
-        for (i = searchPath; ((i != NULL) && (!exists)); i = i->next)
-        {
-            char *arcfname = fname;
-            if ((exists = partOfMountPoint(i, arcfname)) != 0)
-                retval = 1;
-            else if (verifyPath(i, &arcfname, 0))
-                retval = i->funcs->isDirectory(i->opaque, arcfname, &exists);
-        } /* for */
-        __PHYSFS_platformReleaseMutex(stateLock);
-    } /* else */
-
-    __PHYSFS_smallFree(fname);
-    return retval;
+    PHYSFS_Stat statbuf;
+    BAIL_IF_MACRO(!PHYSFS_stat(fname, &statbuf), NULL, 0);
+    return (statbuf.filetype == PHYSFS_FILETYPE_DIRECTORY);
 } /* PHYSFS_isDirectory */
 
 
-int PHYSFS_isSymbolicLink(const char *_fname)
+int PHYSFS_isSymbolicLink(const char *fname)
 {
-    int retval = 0;
-    size_t len;
-    char *fname;
-
-    BAIL_IF_MACRO(!allowSymLinks, ERR_SYMLINK_DISALLOWED, 0);
-
-    BAIL_IF_MACRO(_fname == NULL, ERR_INVALID_ARGUMENT, 0);
-    len = strlen(_fname) + 1;
-    fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MACRO(fname == NULL, ERR_OUT_OF_MEMORY, 0);
-
-    if (!sanitizePlatformIndependentPath(_fname, fname))
-        retval = 0;
-
-    else if (*fname == '\0')
-        retval = 1;  /* Root is never a symlink. */
-
-    else
-    {
-        DirHandle *i;
-        int fileExists = 0;
-
-        __PHYSFS_platformGrabMutex(stateLock);
-        for (i = searchPath; ((i != NULL) && (!fileExists)); i = i->next)
-        {
-            char *arcfname = fname;
-            if ((fileExists = partOfMountPoint(i, arcfname)) != 0)
-                retval = 0;  /* virtual dir...not a symlink. */
-            else if (verifyPath(i, &arcfname, 0))
-                retval = i->funcs->isSymLink(i->opaque, arcfname, &fileExists);
-        } /* for */
-        __PHYSFS_platformReleaseMutex(stateLock);
-    } /* else */
-
-    __PHYSFS_smallFree(fname);
-    return retval;
+    PHYSFS_Stat statbuf;
+    BAIL_IF_MACRO(!PHYSFS_stat(fname, &statbuf), NULL, 0);
+    return (statbuf.filetype == PHYSFS_FILETYPE_SYMLINK);
 } /* PHYSFS_isSymbolicLink */
 
 

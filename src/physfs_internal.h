@@ -731,9 +731,9 @@ typedef struct
      *  openArchive() method, then pass it as the "opaque" dvoid to the
      *  others.
      *
-     * Symlinks should always be followed; PhysicsFS will use the
-     *  isSymLink() method and make a judgement on whether to
-     *  continue to call other methods based on that.
+     * Symlinks should always be followed (except in stat()); PhysicsFS will
+     *  use the stat() method to check for symlinks and make a judgement on
+     *  whether to continue to call other methods based on that.
      */
 
         /*
@@ -764,35 +764,6 @@ typedef struct
                             PHYSFS_EnumFilesCallback callback,
                             const char *origdir,
                             void *callbackdata);
-
-        /*
-         * Returns non-zero if filename can be opened for reading.
-         *  This filename is in platform-independent notation.
-         *  You should not follow symlinks.
-         */
-    int (*exists)(dvoid *opaque, const char *name);
-
-        /*
-         * Returns non-zero if filename is really a directory.
-         *  This filename is in platform-independent notation.
-         *  Symlinks should be followed; if what the symlink points
-         *  to is missing, or isn't a directory, then the retval is zero.
-         *
-         * Regardless of success or failure, please set *fileExists to
-         *  non-zero if the file existed (even if it's a broken symlink!),
-         *  zero if it did not.
-         */
-    int (*isDirectory)(dvoid *opaque, const char *name, int *fileExists);
-
-        /*
-         * Returns non-zero if filename is really a symlink.
-         *  This filename is in platform-independent notation.
-         *
-         * Regardless of success or failure, please set *fileExists to
-         *  non-zero if the file existed (even if it's a broken symlink!),
-         *  zero if it did not.
-         */
-    int (*isSymLink)(dvoid *opaque, const char *name, int *fileExists);
 
         /*
          * Open file for reading.
@@ -1273,28 +1244,6 @@ char *__PHYSFS_platformGetUserDir(void);
  *  pointer.
  */
 void *__PHYSFS_platformGetThreadID(void);
-
-/*
- * Return non-zero if filename (in platform-dependent notation) exists.
- *  Symlinks should NOT be followed; at this stage, we do not care what the
- *  symlink points to. Please call __PHYSFS_SetError() with the details of
- *  why the file does not exist, if it doesn't; you are in a better position
- *  to know (path not found, bogus filename, file itself is missing, etc).
- */
-int __PHYSFS_platformExists(const char *fname);
-
-/*
- * Return non-zero if filename (in platform-dependent notation) is a symlink.
- */
-int __PHYSFS_platformIsSymLink(const char *fname);
-
-/*
- * Return non-zero if filename (in platform-dependent notation) is a symlink.
- *  Symlinks should be followed; if what the symlink points to is missing,
- *  or isn't a directory, then the retval is false.
- */
-int __PHYSFS_platformIsDirectory(const char *fname);
-
 
 /*
  * Convert (dirName) to platform-dependent notation, then prepend (prepend)

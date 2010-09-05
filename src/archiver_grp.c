@@ -319,26 +319,6 @@ static GRPentry *grp_find_entry(const GRPinfo *info, const char *name)
 } /* grp_find_entry */
 
 
-static int GRP_exists(dvoid *opaque, const char *name)
-{
-    return (grp_find_entry((GRPinfo *) opaque, name) != NULL);
-} /* GRP_exists */
-
-
-static int GRP_isDirectory(dvoid *opaque, const char *name, int *fileExists)
-{
-    *fileExists = GRP_exists(opaque, name);
-    return 0;  /* never directories in a groupfile. */
-} /* GRP_isDirectory */
-
-
-static int GRP_isSymLink(dvoid *opaque, const char *name, int *fileExists)
-{
-    *fileExists = GRP_exists(opaque, name);
-    return 0;  /* never symlinks in a groupfile. */
-} /* GRP_isSymLink */
-
-
 static PHYSFS_Io *GRP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     PHYSFS_Io *retval = NULL;
@@ -443,9 +423,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
     &__PHYSFS_ArchiveInfo_GRP,
     GRP_openArchive,        /* openArchive() method    */
     GRP_enumerateFiles,     /* enumerateFiles() method */
-    GRP_exists,             /* exists() method         */
-    GRP_isDirectory,        /* isDirectory() method    */
-    GRP_isSymLink,          /* isSymLink() method      */
     GRP_openRead,           /* openRead() method       */
     GRP_openWrite,          /* openWrite() method      */
     GRP_openAppend,         /* openAppend() method     */

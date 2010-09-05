@@ -316,26 +316,6 @@ static MVLentry *mvl_find_entry(const MVLinfo *info, const char *name)
 } /* mvl_find_entry */
 
 
-static int MVL_exists(dvoid *opaque, const char *name)
-{
-    return (mvl_find_entry((MVLinfo *) opaque, name) != NULL);
-} /* MVL_exists */
-
-
-static int MVL_isDirectory(dvoid *opaque, const char *name, int *fileExists)
-{
-    *fileExists = MVL_exists(opaque, name);
-    return 0;  /* never directories in a groupfile. */
-} /* MVL_isDirectory */
-
-
-static int MVL_isSymLink(dvoid *opaque, const char *name, int *fileExists)
-{
-    *fileExists = MVL_exists(opaque, name);
-    return 0;  /* never symlinks in a groupfile. */
-} /* MVL_isSymLink */
-
-
 static PHYSFS_Io *MVL_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     PHYSFS_Io *retval = NULL;
@@ -440,9 +420,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
     &__PHYSFS_ArchiveInfo_MVL,
     MVL_openArchive,        /* openArchive() method    */
     MVL_enumerateFiles,     /* enumerateFiles() method */
-    MVL_exists,             /* exists() method         */
-    MVL_isDirectory,        /* isDirectory() method    */
-    MVL_isSymLink,          /* isSymLink() method      */
     MVL_openRead,           /* openRead() method       */
     MVL_openWrite,          /* openWrite() method      */
     MVL_openAppend,         /* openAppend() method     */

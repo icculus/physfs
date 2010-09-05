@@ -581,30 +581,6 @@ static void LZMA_enumerateFiles(dvoid *opaque, const char *dname,
 } /* LZMA_enumerateFiles */
 
 
-static int LZMA_exists(dvoid *opaque, const char *name)
-{
-    LZMAarchive *archive = (LZMAarchive *) opaque;
-    return (lzma_find_file(archive, name) != NULL);
-} /* LZMA_exists */
-
-
-static int LZMA_isDirectory(dvoid *opaque, const char *name, int *fileExists)
-{
-    LZMAarchive *archive = (LZMAarchive *) opaque;
-    LZMAfile *file = lzma_find_file(archive, name);
-
-    *fileExists = (file != NULL);
-
-    return ((file == NULL) ? 0 : file->item->IsDirectory);
-} /* LZMA_isDirectory */
-
-
-static int LZMA_isSymLink(dvoid *opaque, const char *name, int *fileExists)
-{
-    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
-} /* LZMA_isSymLink */
-
-
 static PHYSFS_Io *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
@@ -719,9 +695,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
     &__PHYSFS_ArchiveInfo_LZMA,
     LZMA_openArchive,        /* openArchive() method    */
     LZMA_enumerateFiles,     /* enumerateFiles() method */
-    LZMA_exists,             /* exists() method         */
-    LZMA_isDirectory,        /* isDirectory() method    */
-    LZMA_isSymLink,          /* isSymLink() method      */
     LZMA_openRead,           /* openRead() method       */
     LZMA_openWrite,          /* openWrite() method      */
     LZMA_openAppend,         /* openAppend() method     */

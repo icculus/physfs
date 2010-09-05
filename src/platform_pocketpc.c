@@ -167,40 +167,6 @@ void *__PHYSFS_platformGetThreadID(void)
 } /* __PHYSFS_platformGetThreadID */
 
 
-int __PHYSFS_platformExists(const char *fname)
-{
-    int retval = 0;
-    wchar_t *w_fname = NULL;
-
-    UTF8_TO_UNICODE_STACK_MACRO(w_fname, fname);
-    if (w_fname != NULL)
-        retval = (GetFileAttributes(w_fname) != INVALID_FILE_ATTRIBUTES);
-    __PHYSFS_smallFree(w_fname);
-
-    return retval;
-} /* __PHYSFS_platformExists */
-
-
-int __PHYSFS_platformIsSymLink(const char *fname)
-{
-    BAIL_MACRO(ERR_NOT_IMPLEMENTED, 0);
-} /* __PHYSFS_platformIsSymlink */
-
-
-int __PHYSFS_platformIsDirectory(const char *fname)
-{
-    int retval = 0;
-    wchar_t *w_fname = NULL;
-
-    UTF8_TO_UNICODE_STACK_MACRO(w_fname, fname);
-    if (w_fname != NULL)
-        retval = ((GetFileAttributes(w_fname) & FILE_ATTRIBUTE_DIRECTORY) != 0);
-    __PHYSFS_smallFree(w_fname);
-
-    return retval;
-} /* __PHYSFS_platformIsDirectory */
-
-
 char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,
                                       const char *append)
