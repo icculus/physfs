@@ -396,8 +396,7 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
 {
     struct stat statbuf;
 
-    /* !!! FIXME: lstat()? */
-    if (stat(filename, &statbuf))
+    if (lstat(filename, &statbuf))
     {
         if (errno == ENOENT)
         {
