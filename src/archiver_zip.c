@@ -9,14 +9,11 @@
 
 #if (defined PHYSFS_SUPPORTS_ZIP)
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #ifndef _WIN32_WCE
 #include <errno.h>
 #include <time.h>
 #endif
-#include "physfs.h"
+
 #include "zlib.h"
 
 #define __PHYSICSFS_INTERNAL__

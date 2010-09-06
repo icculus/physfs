@@ -1,5 +1,3 @@
-#include "physfs.h"
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
