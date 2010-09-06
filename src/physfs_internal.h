@@ -16,7 +16,10 @@
 
 #include "physfs.h"
 
-#include <stdlib.h>  /* make sure NULL is defined... */
+/* The holy trinity. */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef HAVE_ASSERT_H
 #include <assert.h>
@@ -27,11 +30,6 @@
 /* !!! FIXME: remove this when revamping stack allocation code... */
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
-#endif
-
-/* !!! FIXME: if HAVE_ALLOCA_H would be good, too. */
-#if sun
-#include <alloca.h>
 #endif
 
 #if defined(__sun) || defined(sun)

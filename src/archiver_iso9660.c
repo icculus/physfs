@@ -29,8 +29,6 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-#include <stdio.h>
-#include <string.h>
 #include <time.h>
 
 /* cache files smaller than this completely in memory */

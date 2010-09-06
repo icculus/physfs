@@ -31,11 +31,6 @@
 
 #if (defined PHYSFS_SUPPORTS_QPAK)
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "physfs.h"
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 

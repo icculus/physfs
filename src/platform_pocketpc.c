@@ -11,7 +11,6 @@
 
 #ifdef PHYSFS_PLATFORM_POCKETPC
 
-#include <stdio.h>
 #include <windows.h>
 
 #include "physfs_internal.h"

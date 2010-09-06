@@ -10,11 +10,6 @@
 
 /* !!! FIXME: ERR_PAST_EOF shouldn't trigger for reads. Just return zero. */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "physfs.h"
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
