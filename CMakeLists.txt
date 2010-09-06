@@ -141,6 +141,7 @@ SET(PHYSFS_SRCS
     src/platform_macosx.c
     src/platform_windows.c
     src/archiver_dir.c
+    src/archiver_unpacked.c
     src/archiver_grp.c
     src/archiver_hog.c
     src/archiver_lzma.c

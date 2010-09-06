@@ -1014,6 +1014,30 @@ PHYSFS_Io *__PHYSFS_createMemoryIo(const void *buf, PHYSFS_uint64 len,
                                    void (*destruct)(void *));
 
 
+
+
+/* These are shared between some archivers. */
+
+typedef struct
+{
+    char name[32];
+    PHYSFS_uint32 startPos;
+    PHYSFS_uint32 size;
+} UNPKentry;
+
+void UNPK_dirClose(dvoid *opaque);
+dvoid *UNPK_openArchive(PHYSFS_Io *io, UNPKentry *e, const PHYSFS_uint32 num);
+void UNPK_enumerateFiles(dvoid *opaque, const char *dname,
+                         int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                         const char *origdir, void *callbackdata);
+PHYSFS_Io *UNPK_openRead(dvoid *opaque, const char *fnm, int *fileExists);
+PHYSFS_Io *UNPK_openWrite(dvoid *opaque, const char *name);
+PHYSFS_Io *UNPK_openAppend(dvoid *opaque, const char *name);
+int UNPK_remove(dvoid *opaque, const char *name);
+int UNPK_mkdir(dvoid *opaque, const char *name);
+int UNPK_stat(dvoid *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
+
+
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 /*------------                                              ----------------*/
