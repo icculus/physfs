@@ -234,7 +234,7 @@ PHYSFS_Io *__PHYSFS_createNativeIo(const char *path, const int mode)
     info = (NativeIoInfo *) allocator.Malloc(sizeof (NativeIoInfo));
     GOTO_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, createNativeIo_failed);
     pathdup = (char *) allocator.Malloc(strlen(path) + 1);
-    GOTO_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, createNativeIo_failed);
+    GOTO_IF_MACRO(pathdup == NULL, ERR_OUT_OF_MEMORY, createNativeIo_failed);
 
     if (mode == 'r')
         handle = __PHYSFS_platformOpenRead(path);

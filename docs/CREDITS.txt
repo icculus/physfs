@@ -115,6 +115,9 @@ ISO9660 archiver:
 Bug fixes:
     Steven Fuller
 
+Bug fixes:
+    Tolga Dalman
+
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 
