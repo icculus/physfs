@@ -125,15 +125,16 @@ static void tryDir(const char *d, PHYSFS_StringCallback callback, void *data)
         else
         {
             bool add_it = false;
-            int devfd;
             device_geometry g;
 
             if (strcmp(e.name, "raw") == 0)  /* ignore partitions. */
             {
-                int devfd = open(name, O_RDONLY);
+                const int devfd = open(name, O_RDONLY);
                 if (devfd >= 0)
                 {
-                    if (ioctl(devfd, B_GET_GEOMETRY, &g, sizeof(g)) >= 0)
+                    const int rc = ioctl(devfd, B_GET_GEOMETRY, &g, sizeof(g));
+                    close(devfd);
+                    if (rc >= 0)
                     {
                         if (g.device_type == B_CD)
                         {
@@ -147,8 +148,6 @@ static void tryDir(const char *d, PHYSFS_StringCallback callback, void *data)
                     } /* if */
                 } /* if */
             } /* if */
-
-            close(devfd);
         } /* else */
     } /* while */
 } /* tryDir */
