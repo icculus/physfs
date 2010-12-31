@@ -170,14 +170,18 @@ static team_id getTeamID(void)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    /* in case there isn't a BApplication yet, we'll construct a roster. */
-    BRoster roster; 
-    app_info info;
-    status_t rc = roster.GetRunningAppInfo(getTeamID(), &info);
-    BAIL_IF_MACRO(rc < B_OK, strerror(rc), NULL);
-    BEntry entry(&(info.ref), true);
+    image_info info;
+    int32 cookie = 0;
+
+    while (get_next_image_info(0, &cookie, &info) == B_OK)
+    {
+        if (info.type == B_APP_IMAGE)
+            break;
+    } /* while */
+
+    BEntry entry(info.name, true);
     BPath path;
-    rc = entry.GetPath(&path);  /* (path) now has binary's path. */
+    status_t rc = entry.GetPath(&path);  /* (path) now has binary's path. */
     assert(rc == B_OK);
     rc = path.GetParent(&path); /* chop filename, keep directory. */
     assert(rc == B_OK);

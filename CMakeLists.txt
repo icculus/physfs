@@ -123,7 +123,9 @@ IF(BEOS)
     # We add this explicitly, since we don't want CMake to think this
     #  is a C++ project unless we're on BeOS.
     SET(PHYSFS_BEOS_SRCS src/platform_beos.cpp)
-    SET(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} be root)
+    FIND_LIBRARY(BE_LIBRARY be)
+    FIND_LIBRARY(ROOT_LIBRARY root)
+    SET(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${BE_LIBRARY} ${ROOT_LIBRARY})
 ENDIF(BEOS)
 
 # Almost everything is "compiled" here, but things that don't apply to the
@@ -334,7 +336,8 @@ IF(PHYSFS_BUILD_TEST)
     FIND_PATH(READLINE_H readline/readline.h)
     FIND_PATH(HISTORY_H readline/history.h)
     IF(READLINE_H AND HISTORY_H)
-        SET(CMAKE_REQUIRED_LIBRARIES curses)
+        FIND_LIBRARY(CURSES_LIBRARY NAMES curses ncurses)
+        SET(CMAKE_REQUIRED_LIBRARIES ${CURSES_LIBRARY})
         FIND_LIBRARY(READLINE_LIBRARY readline)
         FIND_LIBRARY(HISTORY_LIBRARY history)
         IF(READLINE_LIBRARY AND HISTORY_LIBRARY)
