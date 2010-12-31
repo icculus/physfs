@@ -118,6 +118,9 @@ Bug fixes:
 Bug fixes:
     Tolga Dalman
 
+Haiku fixes:
+    Chris Roberts
+
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 
