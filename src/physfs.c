@@ -798,8 +798,8 @@ static const char *find_filename_extension(const char *fname)
     const char *retval = NULL;
     if (fname != NULL)
     {
-        retval = strchr(fname, '.');
-        const char *p = retval;
+        const char *p = strchr(fname, '.');
+        retval = p;
 
         while (p != NULL)
         {
