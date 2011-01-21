@@ -971,6 +971,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 } /* __PHYSFS_platformOpenAppend */
 
 
+/* !!! FIXME: this function fails if len > 0xFFFFFFFF. */
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 {
     HANDLE Handle = ((WinApiFile *) opaque)->handle;
@@ -984,8 +985,9 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 } /* __PHYSFS_platformRead */
 
 
+/* !!! FIXME: this function fails if len > 0xFFFFFFFF. */
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
-                                     PHYSFS_uint32 size, PHYSFS_uint32 count)
+                                     PHYSFS_uint64 len)
 {
     HANDLE Handle = ((WinApiFile *) opaque)->handle;
     DWORD CountOfBytesWritten = 0;
