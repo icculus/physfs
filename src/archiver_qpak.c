@@ -261,7 +261,7 @@ static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     BAIL_IF_MACRO((count % 64) != 0, ERR_CORRUPTED, NULL);
     count /= 64;
 
-    BAIL_IF_MACRO(io->seek(io, pos), NULL, NULL);
+    BAIL_IF_MACRO(!io->seek(io, pos), NULL, NULL);
 
     info = (QPAKinfo *) allocator.Malloc(sizeof (QPAKinfo));
     BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
