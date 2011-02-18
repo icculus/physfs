@@ -24,7 +24,7 @@
 
 #define TEST_VER_MAJOR  2
 #define TEST_VER_MINOR  0
-#define TEST_VER_PATCH  1
+#define TEST_VER_PATCH  2
 
 //static PHYSFS_uint32 do_buffer_size = 0;
 
