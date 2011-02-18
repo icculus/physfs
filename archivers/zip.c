@@ -586,8 +586,11 @@ static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path, int *isDir)
 
             if (thispath[pathlen] == '\0') /* found entry? */
                 return(&a[middle]);
+            /* adjust search params, try again. */
+            else if (thispath[pathlen] > '/')
+                hi = middle - 1;
             else
-                hi = middle - 1;  /* adjust search params, try again. */
+                lo = middle + 1;
         } /* if */
     } /* while */
 
