@@ -6,7 +6,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
 PROJECT(PhysicsFS)
-SET(PHYSFS_VERSION 2.0.0)
+SET(PHYSFS_VERSION 2.1.0)
 
 # Increment this if/when we break backwards compatibility.
 SET(PHYSFS_SOVERSION 1)
