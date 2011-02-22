@@ -23,7 +23,8 @@ PROJECT_NAME           = physfs
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = 2.0.0
+# (CMake will set this properly at build time. --ryan.)
+PROJECT_NUMBER         = unknown_version
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 
