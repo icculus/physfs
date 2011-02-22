@@ -358,6 +358,9 @@ ENDIF(PHYSFS_BUILD_TEST)
 #CMake's SWIG support is basically useless.
 #FIND_PACKAGE(SWIG)
 
+OPTION(PHYSFS_BUILD_SWIG "Build ${_LANG} bindings." TRUE)
+MARK_AS_ADVANCED(PHYSFS_BUILD_SWIG)
+
 FIND_PROGRAM(SWIG swig DOC "Path to swig command line app: http://swig.org/")
 IF(NOT SWIG)
     MESSAGE(STATUS "SWIG not found. You won't be able to build scripting language bindings.")
@@ -411,7 +414,11 @@ ELSE(NOT SWIG)
     ENDMACRO(CONFIGURE_SWIG_BINDING)
 
     MACRO(ADD_SCRIPT_BINDING_OPTION _VAR _LANG _DEFVAL)
-        OPTION(${_VAR} "Build ${_LANG} bindings." ${_DEFVAL})
+        SET(BUILDSWIGVAL ${_DEFVAL})
+        IF(NOT PHYSFS_BUILD_SWIG)
+            SET(BUILDSWIGVAL FALSE)
+        ENDIF(NOT PHYSFS_BUILD_SWIG)
+        OPTION(${_VAR} "Build ${_LANG} bindings." ${BUILDSWIGVAL})
         MARK_AS_ADVANCED(${_VAR})
     ENDMACRO(ADD_SCRIPT_BINDING_OPTION)
 
