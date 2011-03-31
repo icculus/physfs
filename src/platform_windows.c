@@ -457,6 +457,7 @@ static int determineUserDir(void)
              */	
     		rc = pGetUserProfileDirectoryW(accessToken, &dummy, &psize);
             assert(!rc);  /* !!! FIXME: handle this gracefully. */
+            (void) rc;
 
             /* Allocate memory for the profile directory */
             wstr = (LPWSTR) __PHYSFS_smallAlloc(psize * sizeof (WCHAR));
