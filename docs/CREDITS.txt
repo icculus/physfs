@@ -118,6 +118,9 @@ Bug fixes:
 Bug fixes:
     Tolga Dalman
 
+Bug fixes:
+    Frank Becker
+
 Haiku fixes:
     Chris Roberts
 
