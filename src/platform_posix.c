@@ -404,6 +404,8 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
         BAIL_MACRO(strerror(errno), 0);
     } /* if */
 
+    *exists = 1;
+
     if (S_ISREG(statbuf.st_mode))
     {
         st->filetype = PHYSFS_FILETYPE_REGULAR;
