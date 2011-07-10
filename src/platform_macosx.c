@@ -16,6 +16,7 @@
 #include <IOKit/storage/IOCDMedia.h>
 #include <IOKit/storage/IODVDMedia.h>
 #include <sys/mount.h>
+#include <sys/stat.h>
 
 /* Seems to get defined in some system header... */
 #ifdef Free
@@ -219,12 +220,15 @@ static char *convertCFString(CFStringRef cfstr)
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
     ProcessSerialNumber psn = { 0, kCurrentProcess };
+    struct stat statbuf;
     FSRef fsref;
     CFRange cfrange;
     CFURLRef cfurl = NULL;
     CFStringRef cfstr = NULL;
     CFMutableStringRef cfmutstr = NULL;
     char *retval = NULL;
+    char *cstr = NULL;
+    int rc = 0;
 
     BAIL_IF_MACRO(GetProcessBundleLocation(&psn, &fsref) != noErr, NULL, NULL);
     cfurl = CFURLCreateFromFSRef(cfallocator, &fsref);
@@ -236,27 +240,46 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     CFRelease(cfstr);
     BAIL_IF_MACRO(cfmutstr == NULL, NULL, NULL);
 
-    /* Find last dirsep so we can chop the binary's filename from the path. */
-    cfrange = CFStringFind(cfmutstr, CFSTR("/"), kCFCompareBackwards);
-    if (cfrange.location == kCFNotFound)
+    /* we have to decide if we got a binary's path, or the .app dir... */
+    cstr = convertCFString(cfmutstr);
+    if (cstr == NULL)
     {
-        assert(0);  /* shouldn't ever hit this... */
         CFRelease(cfmutstr);
         return NULL;
     } /* if */
 
-    /* chop the "/exename" from the end of the path string... */
-    cfrange.length = CFStringGetLength(cfmutstr) - cfrange.location;
-    CFStringDelete(cfmutstr, cfrange);
+    rc = stat(cstr, &statbuf);
+    allocator.Free(cstr);  /* done with this. */
+    if (rc == -1)
+    {
+        CFRelease(cfmutstr);
+        return NULL;  /* maybe default behaviour will work? */
+    } /* if */
 
-    /* If we're an Application Bundle, chop everything but the base. */
-    cfrange = CFStringFind(cfmutstr, CFSTR("/Contents/MacOS"),
-                           kCFCompareCaseInsensitive |
-                           kCFCompareBackwards |
-                           kCFCompareAnchored);
+    if (S_ISREG(statbuf.st_mode))
+    {
+        /* Find last dirsep so we can chop the filename from the path. */
+        cfrange = CFStringFind(cfmutstr, CFSTR("/"), kCFCompareBackwards);
+        if (cfrange.location == kCFNotFound)
+        {
+            assert(0);  /* shouldn't ever hit this... */
+            CFRelease(cfmutstr);
+            return NULL;
+        } /* if */
 
-    if (cfrange.location != kCFNotFound)
-        CFStringDelete(cfmutstr, cfrange);  /* chop that, too. */
+        /* chop the "/exename" from the end of the path string... */
+        cfrange.length = CFStringGetLength(cfmutstr) - cfrange.location;
+        CFStringDelete(cfmutstr, cfrange);
+
+        /* If we're an Application Bundle, chop everything but the base. */
+        cfrange = CFStringFind(cfmutstr, CFSTR("/Contents/MacOS"),
+                               kCFCompareCaseInsensitive |
+                               kCFCompareBackwards |
+                               kCFCompareAnchored);
+
+        if (cfrange.location != kCFNotFound)
+            CFStringDelete(cfmutstr, cfrange);  /* chop that, too. */
+    } /* if */
 
     retval = convertCFString(cfmutstr);
     CFRelease(cfmutstr);
