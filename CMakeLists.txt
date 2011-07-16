@@ -21,6 +21,11 @@ IF(APPLE AND NOT MACOSX)
     SET(MACOSX TRUE)
 ENDIF(APPLE AND NOT MACOSX)
 
+# For now, Haiku and BeOS are the same, as far as the build system cares.
+IF(HAIKU AND NOT BEOS)
+    SET(BEOS TRUE)
+ENDIF(HAIKU AND NOT BEOS)
+
 INCLUDE(CheckIncludeFile)
 INCLUDE(CheckLibraryExists)
 INCLUDE(CheckCSourceCompiles)
@@ -401,4 +406,3 @@ IF(PHYSFS_BUILD_TEST)
 ENDIF(PHYSFS_BUILD_TEST)
 
 # end of CMakeLists.txt ...
-
