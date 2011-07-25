@@ -375,44 +375,6 @@ int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
     return 1;  /* return non-zero: we're supplying custom allocator. */
 } /* __PHYSFS_platformSetDefaultAllocator */
 
-
-void *__PHYSFS_platformGetThreadID(void)
-{
-    return ( (void *) ((size_t) MPCurrentTaskID()) );
-} /* __PHYSFS_platformGetThreadID */
-
-
-void *__PHYSFS_platformCreateMutex(void)
-{
-    MPCriticalRegionID m = NULL;
-    if (osxerr(MPCreateCriticalRegion(&m)) != noErr)
-        return NULL;
-    return m;
-} /* __PHYSFS_platformCreateMutex */
-
-
-void __PHYSFS_platformDestroyMutex(void *mutex)
-{
-    MPCriticalRegionID m = (MPCriticalRegionID) mutex;
-    MPDeleteCriticalRegion(m);
-} /* __PHYSFS_platformDestroyMutex */
-
-
-int __PHYSFS_platformGrabMutex(void *mutex)
-{
-    MPCriticalRegionID m = (MPCriticalRegionID) mutex;
-    if (MPEnterCriticalRegion(m, kDurationForever) != noErr)
-        return 0;
-    return 1;
-} /* __PHYSFS_platformGrabMutex */
-
-
-void __PHYSFS_platformReleaseMutex(void *mutex)
-{
-    MPCriticalRegionID m = (MPCriticalRegionID) mutex;
-    MPExitCriticalRegion(m);
-} /* __PHYSFS_platformReleaseMutex */
-
 #endif /* PHYSFS_PLATFORM_MACOSX */
 
 /* end of macosx.c ... */
