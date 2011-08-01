@@ -362,14 +362,6 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 } /* __PHYSFS_platformFileLength */
 
 
-int __PHYSFS_platformEOF(void *opaque)
-{
-    const PHYSFS_sint64 pos = __PHYSFS_platformTell(opaque);
-    const PHYSFS_sint64 len = __PHYSFS_platformFileLength(opaque);
-    return (pos >= len);
-} /* __PHYSFS_platformEOF */
-
-
 int __PHYSFS_platformFlush(void *opaque)
 {
     const int fd = *((int *) opaque);
