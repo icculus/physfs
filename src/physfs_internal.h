@@ -1176,8 +1176,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos);
  *
  * Not all file types can "tell"; this is to be expected by the caller.
  *
- * On error, call __PHYSFS_setError() and return zero. On success, return
- *  a non-zero value.
+ * On error, call __PHYSFS_setError() and return -1. On success, return >= 0.
  */
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque);
 
