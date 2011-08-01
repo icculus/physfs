@@ -409,7 +409,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
     LowPos = SetFilePointer(Handle, 0, &HighPos, FILE_CURRENT);
     if ((LowPos == INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
     {
-        BAIL_MACRO(win32strerror(), 0);
+        BAIL_MACRO(win32strerror(), -1);
     } /* if */
     else
     {

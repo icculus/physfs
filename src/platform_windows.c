@@ -1051,7 +1051,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
     if ( (LowPos == PHYSFS_INVALID_SET_FILE_POINTER) &&
          (GetLastError() != NO_ERROR) )
     {
-        BAIL_MACRO(winApiStrError(), 0);
+        BAIL_MACRO(winApiStrError(), -1);
     } /* if */
     else
     {
