@@ -505,14 +505,18 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 
 int __PHYSFS_platformEOF(void *opaque)
 {
+    const PHYSFS_sint64 FileLength = __PHYSFS_platformFileLength(opaque);
     PHYSFS_sint64 FilePosition;
     int retval = 0;
+
+    if (FileLength == 0)
+        return 1;  /* we're definitely at EOF. */
 
     /* Get the current position in the file */
     if ((FilePosition = __PHYSFS_platformTell(opaque)) != 0)
     {
         /* Non-zero if EOF is equal to the file length */
-        retval = FilePosition == __PHYSFS_platformFileLength(opaque);
+        retval = (FilePosition == FileLength);
     } /* if */
 
     return(retval);
