@@ -897,7 +897,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
     if ( (LowPos == PHYSFS_INVALID_SET_FILE_POINTER) &&
          (GetLastError() != NO_ERROR) )
     {
-        BAIL_MACRO(win32strerror(), 0);
+        BAIL_MACRO(win32strerror(), -1);
     } /* if */
     else
     {
@@ -944,7 +944,7 @@ int __PHYSFS_platformEOF(void *opaque)
         return 1;  /* we're definitely at EOF. */
 
     /* Get the current position in the file */
-    if ((FilePosition = __PHYSFS_platformTell(opaque)) != 0)
+    if ((FilePosition = __PHYSFS_platformTell(opaque)) != -1
     {
         /* Non-zero if EOF is equal to the file length */
         retval = (FilePosition == FileLength);
