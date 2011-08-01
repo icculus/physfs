@@ -445,22 +445,6 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 } /* __PHYSFS_platformFileLength */
 
 
-int __PHYSFS_platformEOF(void *opaque)
-{
-    PHYSFS_sint64 FilePosition;
-    int retval = 0;
-
-    /* Get the current position in the file */
-    if ((FilePosition = __PHYSFS_platformTell(opaque)) != 0)
-    {
-        /* Non-zero if EOF is equal to the file length */
-        retval = FilePosition == __PHYSFS_platformFileLength(opaque);
-    } /* if */
-
-    return retval;
-} /* __PHYSFS_platformEOF */
-
-
 int __PHYSFS_platformFlush(void *opaque)
 {
     winCEfile *fh = ((winCEfile *) opaque);

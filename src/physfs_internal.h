@@ -1199,17 +1199,6 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle);
  */
 int __PHYSFS_platformStat(const char *fn, int *exists, PHYSFS_Stat *stat);
 
-
-/*
- * Determine if a file is at EOF. (opaque) should be cast to whatever data
- *  type your platform uses.
- *
- * The caller expects that there was a short read before calling this.
- *
- * Return non-zero if EOF, zero if it is _not_ EOF.
- */
-int __PHYSFS_platformEOF(void *opaque);
-
 /*
  * Flush any pending writes to disk. (opaque) should be cast to whatever data
  *  type your platform uses. Be sure to check for errors; the caller expects
