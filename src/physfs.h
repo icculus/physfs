@@ -2749,7 +2749,7 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle,
  * Historically, PhysicsFS provided access to the physical filesystem and
  *  archives within that filesystem. However, sometimes you need more power
  *  than this. Perhaps you need to provide an archive that is entirely
- *  contained in RAM, or you need to brige some other file i/o API to
+ *  contained in RAM, or you need to bridge some other file i/o API to
  *  PhysicsFS, or you need to translate the bits (perhaps you have a
  *  a standard .zip file that's encrypted, and you need to decrypt on the fly
  *  for the unsuspecting zip archiver).
