@@ -1,3 +1,6 @@
+#ifndef INCL_PHYSFSEXT_GLOBBING_H
+#define INCL_PHYSFSEXT_GLOBBING_H
+
 /** \file globbing.h */
 
 /**
@@ -30,6 +33,9 @@
  *  \author Ryan C. Gordon.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * \fn char **PHYSFS_enumerateFilesWildcard(const char *dir, const char *wildcard, int caseSensitive)
@@ -72,6 +78,12 @@
 __EXPORT__ char **PHYSFSEXT_enumerateFilesWildcard(const char *dir,
                                                    const char *wildcard,
                                                    int caseSensitive);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  /* include-once blocker. */
 
 /* end of globbing.h ... */
 
