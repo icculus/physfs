@@ -121,6 +121,9 @@ Bug fixes:
 Bug fixes:
     Frank Becker
 
+Bug fixes:
+    Norfanin
+
 Haiku fixes:
     Chris Roberts
 
