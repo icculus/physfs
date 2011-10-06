@@ -877,7 +877,7 @@ char *__PHYSFS_convertToDependent(const char *prepend,
 #define PHYSFS_BIG_ENDIAN  4321
 
 #if  defined(__i386__) || defined(__ia64__) || \
-     defined(_M_IX86) || defined(_M_IA64) || defined(_M_X64) \
+     defined(_M_IX86) || defined(_M_IA64) || defined(_M_X64) || \
     (defined(__alpha__) || defined(__alpha)) || \
      defined(__arm__) || defined(ARM) || \
     (defined(__mips__) && defined(__MIPSEL__)) || \
