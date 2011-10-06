@@ -383,7 +383,7 @@ int __PHYSFS_platformEOF(void *opaque)
 {
     PHYSFS_sint64 pos = __PHYSFS_platformTell(opaque);
     PHYSFS_sint64 len = __PHYSFS_platformFileLength(opaque);
-    return((tell < 0) || (len < 0) || (pos >= len));
+    return((pos < 0) || (len < 0) || (pos >= len));
 } /* __PHYSFS_platformEOF */
 
 
