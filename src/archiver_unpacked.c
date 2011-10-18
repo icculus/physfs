@@ -216,7 +216,7 @@ PHYSFS_Io *UNPK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 {
     PHYSFS_Io *retval = NULL;
     UNPKinfo *info = (UNPKinfo *) opaque;
-    UNPKfileinfo *finfo;
+    UNPKfileinfo *finfo = NULL;
     UNPKentry *entry;
 
     entry = findEntry(info, fnm);

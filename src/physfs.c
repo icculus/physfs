@@ -394,11 +394,10 @@ static void memoryIo_destroy(PHYSFS_Io *io)
         void (*destruct)(void *) = info->destruct;
         void *buf = (void *) info->buf;
         io->opaque = NULL;  /* kill this here in case of race. */
-        destruct = info->destruct;
         allocator.Free(info);
         allocator.Free(io);
         if (destruct != NULL)
-        destruct(buf);
+            destruct(buf);
     } /* if */
 } /* memoryIo_destroy */
 
@@ -2388,11 +2387,10 @@ static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
         buffer = ((PHYSFS_uint8 *) buffer) + buffered;
         len -= buffered;
         retval = buffered;
-        buffered = fh->buffill = fh->bufpos = 0;
+        fh->buffill = fh->bufpos = 0;
     } /* if */
 
     /* if you got here, the buffer is drained and we still need bytes. */
-    assert(buffered == 0);
     assert(len > 0);
 
     io = fh->io;

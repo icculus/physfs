@@ -525,19 +525,22 @@ static int QPAK_stat(dvoid *opaque, const char *filename, int *exists,
     const QPAKinfo *info = (const QPAKinfo *) opaque;
     const QPAKentry *entry = qpak_find_entry(info, filename, &isDir);
 
-    *exists = ((isDir) || (entry != NULL));
-    if (!exists)
-        return 0;
-
     if (isDir)
     {
+        *exists = 1;
         stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
         stat->filesize = 0;
     } /* if */
-    else
+    else if (entry != NULL)
     {
+        *exists = 1;
         stat->filetype = PHYSFS_FILETYPE_REGULAR;
         stat->filesize = entry->size;
+    } /* else if */
+    else
+    {
+        *exists = 0;
+        return 0;
     } /* else */
 
     stat->modtime = -1;
