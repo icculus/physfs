@@ -98,7 +98,7 @@ int PHYSFSEXT_locateCorrectCase(char *buf)
     if (*ptr == '\0')
         return 0;  /* Uh...I guess that's success. */
 
-    while (ptr = strchr(ptr + 1, '/'))
+    while ( (ptr = strchr(ptr + 1, '/')) != NULL )
     {
         *ptr = '\0';  /* block this path section off */
         rc = locateOneElement(buf);
