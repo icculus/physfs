@@ -21,11 +21,6 @@ IF(APPLE AND NOT MACOSX)
     SET(MACOSX TRUE)
 ENDIF(APPLE AND NOT MACOSX)
 
-# And this might be wrong...
-IF (CMAKE_SYSTEM MATCHES OS2)
-    SET(OS2 TRUE)
-ENDIF (CMAKE_SYSTEM MATCHES OS2)
-
 # For now, Haiku and BeOS are the same, as far as the build system cares.
 IF(HAIKU AND NOT BEOS)
     SET(BEOS TRUE)
@@ -73,9 +68,9 @@ IF(CMAKE_COMPILER_IS_GNUCC)
 
     IF(PHYSFS_IS_GCC4)
         # Not supported on several operating systems at this time.
-        IF(NOT OS2 AND NOT SOLARIS AND NOT WINDOWS) 
+        IF(NOT SOLARIS AND NOT WINDOWS)
             ADD_DEFINITIONS(-fvisibility=hidden)
-        ENDIF(NOT OS2 AND NOT SOLARIS AND NOT WINDOWS)
+        ENDIF(NOT SOLARIS AND NOT WINDOWS)
     ENDIF(PHYSFS_IS_GCC4)
 
     # Don't use -rpath.
@@ -141,7 +136,6 @@ SET(PHYSFS_SRCS
     src/physfs.c
     src/physfs_byteorder.c
     src/physfs_unicode.c
-    src/platform_os2.c
     src/platform_posix.c
     src/platform_unix.c
     src/platform_macosx.c
@@ -203,10 +197,10 @@ IF(UNIX)
     ENDIF(BEOS)
 ENDIF(UNIX)
 
-IF(WINDOWS OR OS2)
+IF(WINDOWS)
     SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
     SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-ENDIF(WINDOWS OR OS2)
+ENDIF(WINDOWS)
 
 IF(NOT PHYSFS_HAVE_CDROM_SUPPORT)
     ADD_DEFINITIONS(-DPHYSFS_NO_CDROM_SUPPORT=1)

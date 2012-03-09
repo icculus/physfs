@@ -190,13 +190,13 @@
  * PhysicsFS offers basic encoding conversion support, but not a whole string
  *  library. Get your stuff into whatever format you can work with.
  *
- * Some platforms and archivers don't offer full Unicode support behind the
- *  scenes. For example, OS/2 only offers "codepages" and the filesystem
- *  itself doesn't support multibyte encodings. We make an earnest effort to
- *  convert to/from the current locale here, but all bets are off if
- *  you want to hand an arbitrary Japanese character through to these systems.
- *  Modern OSes (Mac OS X, Linux, Windows, etc) should all be fine.
- *  Many game-specific archivers are seriously unprepared for Unicode (the
+ * All platforms supported by PhysicsFS 2.1 and later fully support Unicode.
+ *  We have dropped platforms that don't (OS/2, Mac OS 9, Windows 95, etc), as
+ *  even an OS that's over a decade old should be expected to handle this well.
+ *  If you absolutely must support one of these platforms, you should use an
+ *  older release of PhysicsFS.
+ *
+ * Many game-specific archivers are seriously unprepared for Unicode (the
  *  Descent HOG/MVL and Build Engine GRP archivers, for example, only offer a
  *  DOS 8.3 filename, for example). Nothing can be done for these, but they
  *  tend to be legacy formats for existing content that was all ASCII (and
@@ -254,8 +254,6 @@ extern "C" {
 /* do nothing. */
 #elif defined(__WIN32__) && !defined(__GNUC__)
 #define PHYSFS_CALL __cdecl
-#elif defined(__OS2__)  /* use _System, so it works across all compilers. */
-#define PHYSFS_CALL _System
 #else
 #define PHYSFS_CALL
 #endif
