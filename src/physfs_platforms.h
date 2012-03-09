@@ -20,7 +20,7 @@
 #  define PHYSFS_PLATFORM_BEOS
 #  define PHYSFS_PLATFORM_POSIX
 #elif (defined _WIN32_WCE) || (defined _WIN64_WCE)
-#  define PHYSFS_PLATFORM_POCKETPC
+#  error PocketPC support was dropped from PhysicsFS 2.1. Sorry.
 #elif (((defined _WIN32) || (defined _WIN64)) && (!defined __CYGWIN__))
 #  define PHYSFS_PLATFORM_WINDOWS
 #elif (defined OS2)
