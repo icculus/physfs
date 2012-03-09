@@ -2777,5 +2777,11 @@ void __PHYSFS_smallFree(void *ptr)
     } /* if */
 } /* __PHYSFS_smallFree */
 
+
+int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
+{
+    return (io->read(io, buf, len) == len);
+} /* __PHYSFS_readAll */
+
 /* end of physfs.c ... */
 

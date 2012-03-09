@@ -29,11 +29,6 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
-{
-    return (io->read(io, buf, len) == len);
-} /* readAll */
-
 static UNPKentry *grpLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 {
     PHYSFS_uint32 location = 16;  /* sizeof sig. */
@@ -48,8 +43,8 @@ static UNPKentry *grpLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 
     for (entry = entries; fileCount > 0; fileCount--, entry++)
     {
-        GOTO_IF_MACRO(!readAll(io, &entry->name, 12), NULL, grpLoad_failed);
-        GOTO_IF_MACRO(!readAll(io, &entry->size, 4), NULL, grpLoad_failed);
+        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 12), NULL, failed);
+        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), NULL, failed);
         entry->name[12] = '\0';  /* name isn't null-terminated in file. */
         if ((ptr = strchr(entry->name, ' ')) != NULL)
             *ptr = '\0';  /* trim extra spaces. */
@@ -61,7 +56,7 @@ static UNPKentry *grpLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 
     return entries;
 
-grpLoad_failed:
+failed:
     allocator.Free(entries);
     return NULL;
 } /* grpLoadEntries */
@@ -70,23 +65,23 @@ grpLoad_failed:
 static void *GRP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_uint8 buf[12];
-    PHYSFS_uint32 entryCount = 0;
+    PHYSFS_uint32 count = 0;
     UNPKentry *entries = NULL;
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
 
-    BAIL_IF_MACRO(!readAll(io, buf, sizeof (buf)), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, sizeof (buf)), NULL, NULL);
     if (memcmp(buf, "KenSilverman", sizeof (buf)) != 0)
         BAIL_MACRO(ERR_NOT_AN_ARCHIVE, NULL);
 
-    BAIL_IF_MACRO(!readAll(io, &entryCount, sizeof (entryCount)), NULL, NULL);
-    entryCount = PHYSFS_swapULE32(entryCount);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof (count)), NULL, NULL);
+    count = PHYSFS_swapULE32(count);
 
-    entries = grpLoadEntries(io, entryCount);
+    entries = grpLoadEntries(io, count);
     BAIL_IF_MACRO(entries == NULL, NULL, NULL);
-    return UNPK_openArchive(io, entries, entryCount);
+    return UNPK_openArchive(io, entries, count);
 } /* GRP_openArchive */
 
 
