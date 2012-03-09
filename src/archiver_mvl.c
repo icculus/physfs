@@ -32,13 +32,6 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-
-static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
-{
-    return (io->read(io, buf, len) == len);
-} /* readAll */
-
-
 static UNPKentry *mvlLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 {
     PHYSFS_uint32 location = 8;  /* sizeof sig. */
@@ -52,8 +45,8 @@ static UNPKentry *mvlLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 
     for (entry = entries; fileCount > 0; fileCount--, entry++)
     {
-        GOTO_IF_MACRO(!readAll(io, &entry->name, 13), NULL, mvlLoad_failed);
-        GOTO_IF_MACRO(!readAll(io, &entry->size, 4), NULL, mvlLoad_failed);
+        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 13), NULL, failed);
+        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), NULL, failed);
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = location;
         location += entry->size;
@@ -61,7 +54,7 @@ static UNPKentry *mvlLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 
     return entries;
 
-mvlLoad_failed:
+failed:
     allocator.Free(entries);
     return NULL;
 } /* mvlLoadEntries */
@@ -70,19 +63,19 @@ mvlLoad_failed:
 static void *MVL_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_uint8 buf[4];
-    PHYSFS_uint32 entryCount = 0;
+    PHYSFS_uint32 count = 0;
     UNPKentry *entries = NULL;
 
     assert(io != NULL);  /* shouldn't ever happen. */
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-    BAIL_IF_MACRO(!readAll(io, buf, 4), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, 4), NULL, NULL);
     BAIL_IF_MACRO(memcmp(buf, "DMVL", 4) != 0, ERR_NOT_AN_ARCHIVE, NULL);
-    BAIL_IF_MACRO(!readAll(io, &entryCount, sizeof (entryCount)), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof (count)), NULL, NULL);
 
-    entryCount = PHYSFS_swapULE32(entryCount);
-    entries = mvlLoadEntries(io, entryCount);
+    count = PHYSFS_swapULE32(count);
+    entries = mvlLoadEntries(io, count);
     BAIL_IF_MACRO(entries == NULL, NULL, NULL);
-    return UNPK_openArchive(io, entries, entryCount);
+    return UNPK_openArchive(io, entries, count);
 } /* MVL_openArchive */
 
 

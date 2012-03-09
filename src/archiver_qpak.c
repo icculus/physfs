@@ -69,12 +69,6 @@ typedef struct
 #define QPAK_SIG 0x4b434150   /* "PACK" in ASCII. */
 
 
-static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
-{
-    return (io->read(io, buf, len) == len);
-} /* readAll */
-
-
 static void QPAK_dirClose(dvoid *opaque)
 {
     QPAKinfo *info = ((QPAKinfo *) opaque);
@@ -225,9 +219,9 @@ static int qpak_load_entries(QPAKinfo *info)
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
-        BAIL_IF_MACRO(!readAll(io, &entry->name, 56), NULL, 0);
-        BAIL_IF_MACRO(!readAll(io, &entry->startPos, 4), NULL, 0);
-        BAIL_IF_MACRO(!readAll(io, &entry->size, 4), NULL, 0);
+        BAIL_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 56), NULL, 0);
+        BAIL_IF_MACRO(!__PHYSFS_readAll(io, &entry->startPos, 4), NULL, 0);
+        BAIL_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), NULL, 0);
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = PHYSFS_swapULE32(entry->startPos);
     } /* for */
@@ -248,13 +242,13 @@ static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
 
-    BAIL_IF_MACRO(!readAll(io, &val, 4), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), NULL, NULL);
     BAIL_IF_MACRO(PHYSFS_swapULE32(val) != QPAK_SIG, ERR_NOT_AN_ARCHIVE, NULL);
 
-    BAIL_IF_MACRO(!readAll(io, &val, 4), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), NULL, NULL);
     pos = PHYSFS_swapULE32(val);  /* directory table offset. */
 
-    BAIL_IF_MACRO(!readAll(io, &val, 4), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), NULL, NULL);
     count = PHYSFS_swapULE32(val);
 
     /* corrupted archive? */

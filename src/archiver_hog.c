@@ -34,11 +34,6 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
-{
-    return (io->read(io, buf, len) == len);
-} /* readAll */
-
 static UNPKentry *hogLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 *_entCount)
 {
     const PHYSFS_uint64 iolen = io->length(io);
@@ -53,13 +48,13 @@ static UNPKentry *hogLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 *_entCount)
     {
         entCount++;
         ptr = allocator.Realloc(ptr, sizeof (UNPKentry) * entCount);
-        GOTO_IF_MACRO(ptr == NULL, ERR_OUT_OF_MEMORY, hogLoad_failed);
+        GOTO_IF_MACRO(ptr == NULL, ERR_OUT_OF_MEMORY, failed);
         entries = (UNPKentry *) ptr;
         entry = &entries[entCount-1];
 
-        GOTO_IF_MACRO(!readAll(io, &entry->name, 13), NULL, hogLoad_failed);
+        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 13), NULL, failed);
         pos += 13;
-        GOTO_IF_MACRO(!readAll(io, &size, 4), NULL, hogLoad_failed);
+        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &size, 4), NULL, failed);
         pos += 4;
 
         entry->size = PHYSFS_swapULE32(size);
@@ -67,13 +62,13 @@ static UNPKentry *hogLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 *_entCount)
         pos += size;
 
         /* skip over entry */
-        GOTO_IF_MACRO(!io->seek(io, pos), NULL, hogLoad_failed);
+        GOTO_IF_MACRO(!io->seek(io, pos), NULL, failed);
     } /* while */
 
     *_entCount = entCount;
     return entries;
 
-hogLoad_failed:
+failed:
     allocator.Free(entries);
     return NULL;
 } /* hogLoadEntries */
@@ -82,17 +77,17 @@ hogLoad_failed:
 static void *HOG_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_uint8 buf[3];
-    PHYSFS_uint32 entryCount = 0;
+    PHYSFS_uint32 count = 0;
     UNPKentry *entries = NULL;
 
     assert(io != NULL);  /* shouldn't ever happen. */
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-    BAIL_IF_MACRO(!readAll(io, buf, 3), NULL, 0);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, 3), NULL, 0);
     BAIL_IF_MACRO(memcmp(buf, "DHF", 3) != 0, ERR_NOT_AN_ARCHIVE, NULL);
 
-    entries = hogLoadEntries(io, &entryCount);
+    entries = hogLoadEntries(io, &count);
     BAIL_IF_MACRO(entries == NULL, NULL, NULL);
-    return UNPK_openArchive(io, entries, entryCount);
+    return UNPK_openArchive(io, entries, count);
 } /* HOG_openArchive */
 
 

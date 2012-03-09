@@ -169,18 +169,13 @@ static int zlib_err(int rc)
 } /* zlib_err */
 
 
-static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
-{
-    return (io->read(io, buf, len) == len);
-} /* readAll */
-
 /*
  * Read an unsigned 32-bit int and swap to native byte order.
  */
 static int readui32(PHYSFS_Io *io, PHYSFS_uint32 *val)
 {
     PHYSFS_uint32 v;
-    BAIL_IF_MACRO(!readAll(io, &v, sizeof (v)), NULL, 0);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &v, sizeof (v)), NULL, 0);
     *val = PHYSFS_swapULE32(v);
     return 1;
 } /* readui32 */
@@ -192,7 +187,7 @@ static int readui32(PHYSFS_Io *io, PHYSFS_uint32 *val)
 static int readui16(PHYSFS_Io *io, PHYSFS_uint16 *val)
 {
     PHYSFS_uint16 v;
-    BAIL_IF_MACRO(!readAll(io, &v, sizeof (v)), NULL, 0);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &v, sizeof (v)), NULL, 0);
     *val = PHYSFS_swapULE16(v);
     return 1;
 } /* readui16 */
@@ -462,14 +457,14 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(PHYSFS_Io *io, PHYSFS_sint64 *l
         /* make sure we catch a signature between buffers. */
         if (totalread != 0)
         {
-            if (!readAll(io, buf, maxread - 4))
+            if (!__PHYSFS_readAll(io, buf, maxread - 4))
                 return -1;
             memcpy(&buf[maxread - 4], &extra, sizeof (extra));
             totalread += maxread - 4;
         } /* if */
         else
         {
-            if (!readAll(io, buf, maxread))
+            if (!__PHYSFS_readAll(io, buf, maxread))
                 return -1;
             totalread += maxread;
         } /* else */
@@ -724,7 +719,7 @@ static int zip_resolve_symlink(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
     BAIL_IF_MACRO(path == NULL, ERR_OUT_OF_MEMORY, 0);
     
     if (entry->compression_method == COMPMETH_NONE)
-        rc = readAll(io, path, size);
+        rc = __PHYSFS_readAll(io, path, size);
 
     else  /* symlink target path is compressed... */
     {
@@ -733,7 +728,7 @@ static int zip_resolve_symlink(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
         PHYSFS_uint8 *compressed = (PHYSFS_uint8*) __PHYSFS_smallAlloc(complen);
         if (compressed != NULL)
         {
-            if (readAll(io, compressed, complen))
+            if (__PHYSFS_readAll(io, compressed, complen))
             {
                 initializeZStream(&stream);
                 stream.next_in = compressed;
@@ -970,7 +965,7 @@ static int zip_load_entry(PHYSFS_Io *io, ZIPentry *entry, PHYSFS_uint32 ofs_fixu
 
     entry->name = (char *) allocator.Malloc(fnamelen + 1);
     BAIL_IF_MACRO(entry->name == NULL, ERR_OUT_OF_MEMORY, 0);
-    if (!readAll(io, entry->name, fnamelen))
+    if (!__PHYSFS_readAll(io, entry->name, fnamelen))
         goto zip_load_entry_puked;
 
     entry->name[fnamelen] = '\0';  /* null-terminate the filename. */

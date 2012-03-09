@@ -47,19 +47,13 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-static inline int readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
-{
-    return (io->read(io, buf, len) == len);
-} /* readAll */
-
-
 static UNPKentry *wadLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 {
     PHYSFS_uint32 directoryOffset;
     UNPKentry *entries = NULL;
     UNPKentry *entry = NULL;
 
-    BAIL_IF_MACRO(!readAll(io, &directoryOffset, 4), NULL, 0);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &directoryOffset, 4), NULL, 0);
     directoryOffset = PHYSFS_swapULE32(directoryOffset);
 
     BAIL_IF_MACRO(!io->seek(io, directoryOffset), NULL, 0);
@@ -69,9 +63,9 @@ static UNPKentry *wadLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 
     for (entry = entries; fileCount > 0; fileCount--, entry++)
     {
-        GOTO_IF_MACRO(!readAll(io, &entry->startPos, 4), NULL, wadLoad_failed);
-        GOTO_IF_MACRO(!readAll(io, &entry->size, 4), NULL, wadLoad_failed);
-        GOTO_IF_MACRO(!readAll(io, &entry->name, 8), NULL, wadLoad_failed);
+        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->startPos, 4), NULL, failed);
+        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), NULL, failed);
+        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 8), NULL, failed);
 
         entry->name[8] = '\0'; /* name might not be null-terminated in file. */
         entry->size = PHYSFS_swapULE32(entry->size);
@@ -80,7 +74,7 @@ static UNPKentry *wadLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 
     return entries;
 
-wadLoad_failed:
+failed:
     allocator.Free(entries);
     return NULL;
 } /* wadLoadEntries */
@@ -90,21 +84,21 @@ static void *WAD_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_uint8 buf[4];
     UNPKentry *entries = NULL;
-    PHYSFS_uint32 entryCount = 0;
+    PHYSFS_uint32 count = 0;
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
     BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-    BAIL_IF_MACRO(!readAll(io, buf, sizeof (buf)), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, sizeof (buf)), NULL, NULL);
     if ((memcmp(buf, "IWAD", 4) != 0) && (memcmp(buf, "PWAD", 4) != 0))
         BAIL_MACRO(ERR_NOT_AN_ARCHIVE, NULL);
 
-    BAIL_IF_MACRO(!readAll(io, &entryCount, sizeof (entryCount)), NULL, NULL);
-    entryCount = PHYSFS_swapULE32(entryCount);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof (count)), NULL, NULL);
+    count = PHYSFS_swapULE32(count);
 
-    entries = wadLoadEntries(io, entryCount);
+    entries = wadLoadEntries(io, count);
     BAIL_IF_MACRO(entries == NULL, NULL, NULL);
-    return UNPK_openArchive(io, entries, entryCount);
+    return UNPK_openArchive(io, entries, count);
 } /* WAD_openArchive */
 
 
