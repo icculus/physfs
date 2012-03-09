@@ -205,13 +205,12 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 
             strcpy(buf + dlen, ent->d_name);
 
-            if (__PHYSFS_platformStat(buf, &exists, &statbuf))
-            {
-                if (!exists)
-                    continue;
-                else if (statbuf.filetype == PHYSFS_FILETYPE_SYMLINK)
-                    continue;
-            } /* if */
+            if (!__PHYSFS_platformStat(buf, &exists, &statbuf))
+                continue;
+            else if (!exists)
+                continue;  /* probably can't happen, but just in case. */
+            else if (statbuf.filetype == PHYSFS_FILETYPE_SYMLINK)
+                continue;
         } /* if */
 
         callback(callbackdata, origdir, ent->d_name);
@@ -389,14 +388,9 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
 {
     struct stat statbuf;
 
-    if (lstat(filename, &statbuf))
+    if (lstat(filename, &statbuf) == -1)
     {
-        if (errno == ENOENT)
-        {
-            *exists = 0;
-            return 0;
-        } /* if */
-
+        *exists = (errno == ENOENT);
         BAIL_MACRO(strerror(errno), 0);
     } /* if */
 

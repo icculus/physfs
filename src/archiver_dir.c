@@ -72,7 +72,7 @@ static PHYSFS_Io *doOpen(dvoid *opaque, const char *name,
     allocator.Free(f);
     if (io == NULL)
     {
-        PHYSFS_Stat statbuf;
+        PHYSFS_Stat statbuf;  /* !!! FIXME: this changes the error message. */
         __PHYSFS_platformStat(f, fileExists, &statbuf);
         return NULL;
     } /* if */
