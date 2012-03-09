@@ -2095,7 +2095,7 @@ typedef struct PHYSFS_Allocator
  *  for it, you can probably ignore this forever.)
  *
  * By default, PhysicsFS will use whatever is reasonable for a platform
- *  to manage dynamic memory (usually ANSI C malloc/realloc/calloc/free, but
+ *  to manage dynamic memory (usually ANSI C malloc/realloc/free, but
  *  some platforms might use something else), but in some uncommon cases, the
  *  app might want more control over the library's memory management. This
  *  lets you redirect PhysicsFS to use your own allocation routines instead.
