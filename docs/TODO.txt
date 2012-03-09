@@ -3,11 +3,6 @@ Stuff that needs to be done and wishlist:
 These are in no particular order.
 Some might be dupes, some might be done already.
 
-UNICODE:
-- OS/2: Codepages. No full Unicode in the filesystem, but we can probably make
-        a conversion effort.
-
-
 Stuff:
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
   important, since streaming archives aren't of much value to games (which
@@ -39,7 +34,6 @@ Stuff:
 - Write up a simple HOWTO on embedding physicsfs in another project.
 - Archivers need abstracted i/o to read from memory or files (archives in archives?)
 - Probably other stuff. Requests and recommendations are welcome.
-- Dump OS/2?
 
 // end of TODO.txt ...
 

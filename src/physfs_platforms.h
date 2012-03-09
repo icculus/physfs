@@ -24,7 +24,7 @@
 #elif (((defined _WIN32) || (defined _WIN64)) && (!defined __CYGWIN__))
 #  define PHYSFS_PLATFORM_WINDOWS
 #elif (defined OS2)
-#  define PHYSFS_PLATFORM_OS2
+#  error OS/2 support was dropped from PhysicsFS 2.1. Sorry.
 #elif ((defined __MACH__) && (defined __APPLE__))
 /* To check if iphone or not, we need to include this file */
 # include <TargetConditionals.h> 
