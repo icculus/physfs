@@ -1,9 +1,50 @@
 Stuff that needs to be done and wishlist:
 
 These are in no particular order.
-Some might be dupes, some might be done already.
+Some might be dupes, some might be done already, some might be bad ideas.
 
-Stuff:
+
+From http://icculus.org/pipermail/physfs/2009-March/000698.html ...
+
+- Rearrange the source directory.
+- Cleanup FIXMEs.
+- Add an API to find the \"pref path\" ... this is the directory where an app's configuration data is supposed to go...which is usually somewhere under the user directory, but not always. As it is platform-dependent, platform-version dependent and sometimes even user-dependent, this should be handled by the library and not the app.
+- Abstract out the file i/o, and let applications supply implementations. This will allow apps to do things where they control the i/o at the byte level: archives in a memory buffer, archives in archives, encrypted archives, etc.
+- Archives formats provided by the implementation.
+- Write support for various archives. I haven't decided how to do this yet, but I'd like to.
+- New archive types: .tar(.bz2|.gz), maybe .rar, other requests.
+- Implement Unicode support for OS/2.
+- Dump the makeos2.cmd script and use CMake on that platform (OpenWatcom?)
+- Replace the existing error strings with something more flexible...right now, you have to pick a translation at compile time, which isn't too useful. It might be nice to have real error codes for apps instead of just error messages for humans, too.
+- UTF-16 support. 2.0.0 only handles UCS-2, which is most of the work, but leaves out the \"surrogate\" codepoints. UTF-16 is a superset of UCS-2. Older Windows using Unicode used UCS-2, newer Windows platforms use UTF-16.
+- Add an API to expose a file's extended attributes to the application?
+- Deprecate PHYSFS_setSaneConfig(). It really should have been in the extras directory.
+- Clean up the sources to match my ever-changing coding style. :)
+- Remove realpath() for The Hurd, etc.
+- Get current CD list from windows without blocking? Is it possible?
+
+
+From http://icculus.org/pipermail/physfs/2010-January/000821.html ...
+
+- A function PHYSFS_getFileSize() for getting the file size avoiding the need to open a file before.
+- Using error codes instead of error messages
+- Plugin system for the archive handlers
+- Support for ISO images
+
+
+From http://icculus.org/pipermail/physfs/2010-January/000826.html ...
+
+- Lua bindings
+
+
+From http://icculus.org/pipermail/physfs/2010-January/000833.html ...
+
+- SWIG bindings
+
+
+
+From old TODO.txt...
+
 - Other archivers: perhaps tar(.gz|.bz2), RPM, ARJ, etc. These are less
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
@@ -32,8 +73,41 @@ Stuff:
 - Need "getmountpoint" command in test_physfs.c ...
 - Look for calloc() calls that aren't going through the allocation hooks.
 - Write up a simple HOWTO on embedding physicsfs in another project.
-- Archivers need abstracted i/o to read from memory or files (archives in archives?)
-- Probably other stuff. Requests and recommendations are welcome.
+- Archivers need abstracted i/o to read from memory or files
+  (archives in archives?)
+
+
+Other stuff I thought of...
+- PHYSFS_readBytes() and PHYSFS_writeBytes() to ditch shitty stdio semantics.
+- moar asserts!
+- constify!
+- Ditch PocketPC? (what do Windows phones use now?)
+- Does iPhone work?
+- __attribute__((deprecated))
+- Remove cut-and-paste in physfs_byteorder.c ...
+- Deprecate PHYSFS_getLastModTime().
+- Deprecate PHYSFS_addToSearchPath() and PHYSFS_removeFromSearchPath().
+- Add PHYSFS_unmount().
+- Fix CMake vs Doxygen.
+- Doxygen replacement? (manpages suck.)
+- Remove PHYSFS_Archiver::isArchive().
+- Fix coding standards to match.
+- Unifiy all the simple archivers into archiver_unpacked.c or something.
+- See if we can ditch some #include lines...
+- push readAll() to somewhere common.
+- We lost Vista symlink support when removing isSymLink(). Pull it back from revision control.
+- PHYSFS_exists() fails if you mountIo with a NULL filename. We need to decide how this API should work.
+- ZIP64 support?
+- LZMA support in zip archiver?
+- bzip2 support in zip archiver?
+- rewrite 7zip archiver.
+- ryanify iso9660 code.
+- Examine Chris Nelles's errorcode stuff.
+- Move archiver_qpak.c code to archiver_unpacked.c?
+- Increase smallAlloc threshold?
+- Cache basedir/userdir results (do we do this already?)
+
+Probably other stuff. Requests and recommendations are welcome.
 
 // end of TODO.txt ...
 
