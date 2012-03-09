@@ -27,7 +27,6 @@ Stuff:
 - Sanity check byte order at runtime.
 - Memory locking?
 - Find a better name than dvoid and fvoid.
-- Can windows.c and pocketpc.c get merged?
 - There's so much cut-and-paste between archivers...can this be reduced?
 - General code audit.
 - Multiple write dirs with mount points?

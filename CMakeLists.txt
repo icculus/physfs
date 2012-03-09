@@ -142,7 +142,6 @@ SET(PHYSFS_SRCS
     src/physfs_byteorder.c
     src/physfs_unicode.c
     src/platform_os2.c
-    src/platform_pocketpc.c
     src/platform_posix.c
     src/platform_unix.c
     src/platform_macosx.c

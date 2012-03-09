@@ -195,7 +195,7 @@
  *  itself doesn't support multibyte encodings. We make an earnest effort to
  *  convert to/from the current locale here, but all bets are off if
  *  you want to hand an arbitrary Japanese character through to these systems.
- *  Modern OSes (Mac OS X, Linux, Windows, PocketPC, etc) should all be fine.
+ *  Modern OSes (Mac OS X, Linux, Windows, etc) should all be fine.
  *  Many game-specific archivers are seriously unprepared for Unicode (the
  *  Descent HOG/MVL and Build Engine GRP archivers, for example, only offer a
  *  DOS 8.3 filename, for example). Nothing can be done for these, but they

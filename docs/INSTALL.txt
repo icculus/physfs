@@ -86,13 +86,12 @@ If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
 from you; send an email to icculus@icculus.org ...
 
 
-
 PocketPC/WindowsCE:
 
-Code exists for PocketPC support, and there are shipping titles that used
- PhysicsFS 1.0 on PocketPC...but it isn't tested in 2.0, and is probably
- broken with the new build system. Please send patches.
-
+Support for PocketPC was removed in PhysicsFS 2.1.0. This was known to work
+ in the 1.0 releases, but wasn't tested in 2.0 and later. PhysicsFS is not
+ known to work on Windows Phone 7 (the latest Microsoft mobile tech at the
+ time of this writing).
 
 
 MAC OS 8/9:
