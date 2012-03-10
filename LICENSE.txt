@@ -34,10 +34,6 @@ Versions of PhysicsFS prior to 0.1.9 are licensed under the GNU Lesser General
 Optional pieces of PhysicsFS may fall under other licenses, please consult
 your lawyer for legal advice, which this is not...
 
-   zlib: if you enable ZIP archive support, PhysicsFS uses zlib. Its license
-         requirements are identical to PhysicsFS.
-         Please see zlib123/README for details.
-
    lzma: if you enable LZMA (7zip) support, PhysicsFS uses the lzma sdk.
          It uses the LGPL license, with exceptions for closed-source programs.
          Please see lzma/lzma.txt for details.

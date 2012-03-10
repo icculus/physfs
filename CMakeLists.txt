@@ -90,21 +90,6 @@ ENDIF(MSVC)
 
 # Basic chunks of source code ...
 
-SET(ZLIB_SRCS
-    src/zlib123/adler32.c
-    src/zlib123/compress.c
-    src/zlib123/crc32.c
-    src/zlib123/deflate.c
-    src/zlib123/gzio.c
-    src/zlib123/infback.c
-    src/zlib123/inffast.c
-    src/zlib123/inflate.c
-    src/zlib123/inftrees.c
-    src/zlib123/trees.c
-    src/zlib123/uncompr.c
-    src/zlib123/zutil.c
-)
-
 SET(LZMA_SRCS
     src/lzma/C/7zCrc.c
     src/lzma/C/Archive/7z/7zBuffer.c
@@ -238,7 +223,6 @@ ENDIF(HAVE_ASSERT_H)
 OPTION(PHYSFS_ARCHIVE_ZIP "Enable ZIP support" TRUE)
 IF(PHYSFS_ARCHIVE_ZIP)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_ZIP=1)
-    SET(PHYSFS_NEED_ZLIB TRUE)
 ENDIF(PHYSFS_ARCHIVE_ZIP)
 
 OPTION(PHYSFS_ARCHIVE_7Z "Enable 7zip support" TRUE)
@@ -278,27 +262,6 @@ IF(PHYSFS_ARCHIVE_ISO9660)
     ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_ISO9660=1)
 ENDIF(PHYSFS_ARCHIVE_ISO9660)
 
-
-# See if some archiver required zlib, and see about using system version.
-
-IF(PHYSFS_NEED_ZLIB)
-    FIND_PACKAGE(ZLIB)
-
-    IF(ZLIB_FOUND)
-        OPTION(PHYSFS_INTERNAL_ZLIB "Link own zlib instead of system library" FALSE)
-    ELSE(HAVE_SYSTEM_ZLIB)
-        SET(PHYSFS_INTERNAL_ZLIB TRUE)
-    ENDIF(ZLIB_FOUND)
-
-    IF(PHYSFS_INTERNAL_ZLIB)
-        INCLUDE_DIRECTORIES(./src/zlib123)
-        ADD_DEFINITIONS(-DZ_PREFIX=1)
-        SET(PHYSFS_SRCS ${PHYSFS_SRCS} ${ZLIB_SRCS})
-    ELSE(PHYSFS_INTERNAL_ZLIB)
-        SET(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${ZLIB_LIBRARY})
-        INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIR})
-    ENDIF(PHYSFS_INTERNAL_ZLIB)
-ENDIF(PHYSFS_NEED_ZLIB)
 
 OPTION(PHYSFS_BUILD_STATIC "Build static library" TRUE)
 IF(PHYSFS_BUILD_STATIC)
@@ -602,7 +565,6 @@ MESSAGE_BOOL_OPTION("MVL support" PHYSFS_ARCHIVE_MVL)
 MESSAGE_BOOL_OPTION("QPAK support" PHYSFS_ARCHIVE_QPAK)
 MESSAGE_BOOL_OPTION("CD-ROM drive support" PHYSFS_HAVE_CDROM_SUPPORT)
 MESSAGE_BOOL_OPTION("Thread safety" PHYSFS_HAVE_THREAD_SUPPORT)
-MESSAGE_BOOL_OPTION("Build own zlib" PHYSFS_INTERNAL_ZLIB)
 MESSAGE_BOOL_OPTION("Build static library" PHYSFS_BUILD_STATIC)
 MESSAGE_BOOL_OPTION("Build shared library" PHYSFS_BUILD_SHARED)
 MESSAGE_BOOL_OPTION("Build Perl bindings" PHYSFS_BUILD_PERL)

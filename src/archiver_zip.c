@@ -12,10 +12,15 @@
 #include <errno.h>
 #include <time.h>
 
-#include "zlib.h"
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
+
+#define USE_MINIZ 1
+#if USE_MINIZ
+#include "physfs_miniz.h"
+#else
+#include <zlib.h>
+#endif
 
 /*
  * A buffer of ZIP_READBUFSIZE is allocated for each compressed file opened,
@@ -142,7 +147,7 @@ static const char *zlib_error_string(int rc)
     {
         case Z_OK: return NULL;  /* not an error. */
         case Z_STREAM_END: return NULL; /* not an error. */
-        case Z_ERRNO: return strerror(errno);
+        case Z_ERRNO: return ERR_IO_ERROR;
         case Z_NEED_DICT: return ERR_NEED_DICT;
         case Z_DATA_ERROR: return ERR_DATA_ERROR;
         case Z_MEM_ERROR: return ERR_MEMORY_ERROR;
