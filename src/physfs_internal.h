@@ -76,7 +76,7 @@ extern "C" {
  * NEVER forget to use smallFree: it may not be a pointer from the stack.
  * NEVER forget to check for NULL...allocation can fail here, of course!
  */
-#define __PHYSFS_SMALLALLOCTHRESHOLD 128
+#define __PHYSFS_SMALLALLOCTHRESHOLD 256
 void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len);
 
 #define __PHYSFS_smallAlloc(bytes) ( \
