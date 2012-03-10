@@ -334,7 +334,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,
                                       const char *append)
 {
-    const int len = ((prepend) ? strlen(prepend) : 0) +
+    const size_t len = ((prepend) ? strlen(prepend) : 0) +
               ((append) ? strlen(append) : 0) +
               strlen(dirName) + 1;
     char *retval = (char *) allocator.Malloc(len);

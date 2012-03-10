@@ -214,7 +214,7 @@ static PHYSFS_sint64 ZIP_read(PHYSFS_Io *_io, void *buf, PHYSFS_uint64 len)
     else
     {
         finfo->stream.next_out = buf;
-        finfo->stream.avail_out = maxread;
+        finfo->stream.avail_out = (uInt) maxread;
 
         while (retval < maxread)
         {
@@ -551,7 +551,7 @@ static ZIPentry *zip_find_entry(const ZIPinfo *info, const char *path,
                                 int *isDir)
 {
     ZIPentry *a = info->entries;
-    PHYSFS_sint32 pathlen = strlen(path);
+    PHYSFS_sint32 pathlen = (PHYSFS_sint32) strlen(path);
     PHYSFS_sint32 lo = 0;
     PHYSFS_sint32 hi = (PHYSFS_sint32) (info->entryCount - 1);
     PHYSFS_sint32 middle;
@@ -1137,7 +1137,7 @@ static PHYSFS_sint32 zip_find_start_of_dir(ZIPinfo *info, const char *path,
     PHYSFS_sint32 lo = 0;
     PHYSFS_sint32 hi = (PHYSFS_sint32) (info->entryCount - 1);
     PHYSFS_sint32 middle;
-    PHYSFS_uint32 dlen = strlen(path);
+    PHYSFS_uint32 dlen = (PHYSFS_uint32) strlen(path);
     PHYSFS_sint32 retval = -1;
     const char *name;
     int rc;
@@ -1213,7 +1213,7 @@ static void ZIP_enumerateFiles(dvoid *opaque, const char *dname,
     if (i == -1)  /* no such directory. */
         return;
 
-    dlen = strlen(dname);
+    dlen = (PHYSFS_sint32) strlen(dname);
     if ((dlen > 0) && (dname[dlen - 1] == '/')) /* ignore trailing slash. */
         dlen--;
 
