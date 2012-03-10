@@ -281,7 +281,7 @@ static PHYSFS_sint32 qpak_find_start_of_dir(QPAKinfo *info, const char *path,
     PHYSFS_sint32 lo = 0;
     PHYSFS_sint32 hi = (PHYSFS_sint32) (info->entryCount - 1);
     PHYSFS_sint32 middle;
-    PHYSFS_uint32 dlen = strlen(path);
+    PHYSFS_uint32 dlen = (PHYSFS_uint32) strlen(path);
     PHYSFS_sint32 retval = -1;
     const char *name;
     int rc;
@@ -357,7 +357,7 @@ static void QPAK_enumerateFiles(dvoid *opaque, const char *dname,
     if (i == -1)  /* no such directory. */
         return;
 
-    dlen = strlen(dname);
+    dlen = (PHYSFS_sint32) strlen(dname);
     if ((dlen > 0) && (dname[dlen - 1] == '/')) /* ignore trailing slash. */
         dlen--;
 
@@ -398,7 +398,7 @@ static QPAKentry *qpak_find_entry(const QPAKinfo *info, const char *path,
                                   int *isDir)
 {
     QPAKentry *a = info->entries;
-    PHYSFS_sint32 pathlen = strlen(path);
+    PHYSFS_sint32 pathlen = (PHYSFS_sint32) strlen(path);
     PHYSFS_sint32 lo = 0;
     PHYSFS_sint32 hi = (PHYSFS_sint32) (info->entryCount - 1);
     PHYSFS_sint32 middle;

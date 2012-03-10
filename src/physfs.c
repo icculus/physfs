@@ -286,7 +286,7 @@ static PHYSFS_sint64 memoryIo_read(PHYSFS_Io *io, void *buf, PHYSFS_uint64 len)
     if (len > avail)
         len = avail;
 
-    memcpy(buf, info->buf + info->pos, len);
+    memcpy(buf, info->buf + info->pos, (size_t) len);
     info->pos += len;
     return len;
 } /* memoryIo_read */
