@@ -2748,17 +2748,17 @@ static void setDefaultAllocator(void)
 
 void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len)
 {
-    const char useHeap = ((ptr == NULL) ? 1 : 0);
+    void *useHeap = ((ptr == NULL) ? ((void *) 1) : ((void *) 0));
     if (useHeap)  /* too large for stack allocation or alloca() failed. */
-        ptr = allocator.Malloc(len+1);
+        ptr = allocator.Malloc(len+sizeof (void *));
 
     if (ptr != NULL)
     {
-        char *retval = (char *) ptr;
+        void **retval = (void **) ptr;
         /*printf("%s alloc'd (%d) bytes at (%p).\n",
                 useHeap ? "heap" : "stack", (int) len, ptr);*/
         *retval = useHeap;
-        return (retval + 1);
+        return retval + 1;
     } /* if */
 
     return NULL;  /* allocation failed. */
@@ -2769,8 +2769,8 @@ void __PHYSFS_smallFree(void *ptr)
 {
     if (ptr != NULL)
     {
-        char *block = ((char *) ptr) - 1;
-        const char useHeap = *block;
+        void **block = ((void **) ptr) - 1;
+        const int useHeap = (*block != 0);
         if (useHeap)
             allocator.Free(block);
         /*printf("%s free'd (%p).\n", useHeap ? "heap" : "stack", block);*/
