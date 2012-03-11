@@ -444,20 +444,6 @@ char *__PHYSFS_platformCurrentDir(void)
 } /* __PHYSFS_platformCurrentDir */
 
 
-/* this could probably use a cleanup. */
-char *__PHYSFS_platformRealPath(const char *path)
-{
-    /*
-     * At this point, we only use this for the user and base dir,
-     *  and we already know those are RealPath'd by the OS for us.
-     */
-    char *retval = (char *) allocator.Malloc(strlen(path) + 1);
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    strcpy(retval, path);
-    return retval;
-} /* __PHYSFS_platformRealPath */
-
-
 int __PHYSFS_platformMkDir(const char *path)
 {
     WCHAR *wpath;

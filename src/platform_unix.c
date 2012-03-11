@@ -290,21 +290,6 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 } /* __PHYSFS_platformCalcBaseDir */
 
 
-char *__PHYSFS_platformRealPath(const char *path)
-{
-    char resolved_path[MAXPATHLEN];
-    char *retval = NULL;
-
-    errno = 0;
-    BAIL_IF_MACRO(!realpath(path, resolved_path), strerror(errno), NULL);
-    retval = (char *) allocator.Malloc(strlen(resolved_path) + 1);
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    strcpy(retval, resolved_path);
-
-    return retval;
-} /* __PHYSFS_platformRealPath */
-
-
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
     return 0;  /* just use malloc() and friends. */

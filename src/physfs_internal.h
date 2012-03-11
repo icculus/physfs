@@ -1305,19 +1305,6 @@ char *__PHYSFS_platformCurrentDir(void);
 
 
 /*
- * Get the real physical path to a file. (path) is specified in
- *  platform-dependent notation, as should your return value be.
- *  All relative paths should be removed, leaving you with an absolute
- *  path. Symlinks should be resolved, too, so that the returned value is
- *  the most direct path to a file.
- * The return value will be deallocated with the standard C runtime free()
- *  function when the caller is done with it.
- * On error, return NULL and set the error message.
- */
-char *__PHYSFS_platformRealPath(const char *path);
-
-
-/*
  * Make a directory in the actual filesystem. (path) is specified in
  *  platform-dependent notation. On error, return zero and set the error
  *  message. Return non-zero on success.
