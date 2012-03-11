@@ -15,33 +15,33 @@ typedef PHYSFS_uint32 mz_uint32;
 typedef unsigned int mz_uint; 
 typedef PHYSFS_uint64 mz_uint64;
 
-// For more compatibility with zlib, miniz.c uses unsigned long for some parameters/struct members.
+/* For more compatibility with zlib, miniz.c uses unsigned long for some parameters/struct members. */
 typedef unsigned long mz_ulong;
 
-// Heap allocation callbacks.
+/* Heap allocation callbacks. */
 typedef void *(*mz_alloc_func)(void *opaque, unsigned int items, unsigned int size);
 typedef void (*mz_free_func)(void *opaque, void *address);
 
 #if defined(_M_IX86) || defined(_M_X64)
-// Set MINIZ_USE_UNALIGNED_LOADS_AND_STORES to 1 if integer loads and stores to unaligned addresses are acceptable on the target platform (slightly faster).
+/* Set MINIZ_USE_UNALIGNED_LOADS_AND_STORES to 1 if integer loads and stores to unaligned addresses are acceptable on the target platform (slightly faster). */
 #define MINIZ_USE_UNALIGNED_LOADS_AND_STORES 1
-// Set MINIZ_LITTLE_ENDIAN to 1 if the processor is little endian.
+/* Set MINIZ_LITTLE_ENDIAN to 1 if the processor is little endian. */
 #define MINIZ_LITTLE_ENDIAN 1
 #endif
 
 #if defined(_WIN64) || defined(__MINGW64__) || defined(_LP64) || defined(__LP64__)
-// Set MINIZ_HAS_64BIT_REGISTERS to 1 if the processor has 64-bit general purpose registers (enables 64-bit bitbuffer in inflator)
+/* Set MINIZ_HAS_64BIT_REGISTERS to 1 if the processor has 64-bit general purpose registers (enables 64-bit bitbuffer in inflator) */
 #define MINIZ_HAS_64BIT_REGISTERS 1
 #endif
 
-// Works around MSVC's spammy "warning C4127: conditional expression is constant" message.
+/* Works around MSVC's spammy "warning C4127: conditional expression is constant" message. */
 #ifdef _MSC_VER
 #define MZ_MACRO_END while (0, 0)
 #else
 #define MZ_MACRO_END while (0)
 #endif
 
-// Decompression flags.
+/* Decompression flags. */
 enum
 {
   TINFL_FLAG_PARSE_ZLIB_HEADER = 1,
@@ -52,10 +52,10 @@ enum
 
 struct tinfl_decompressor_tag; typedef struct tinfl_decompressor_tag tinfl_decompressor;
 
-// Max size of LZ dictionary.
+/* Max size of LZ dictionary. */
 #define TINFL_LZ_DICT_SIZE 32768
 
-// Return status.
+/* Return status. */
 typedef enum
 {
   TINFL_STATUS_BAD_PARAM = -3,
@@ -66,15 +66,15 @@ typedef enum
   TINFL_STATUS_HAS_MORE_OUTPUT = 2
 } tinfl_status;
 
-// Initializes the decompressor to its initial state.
+/* Initializes the decompressor to its initial state. */
 #define tinfl_init(r) do { (r)->m_state = 0; } MZ_MACRO_END
 #define tinfl_get_adler32(r) (r)->m_check_adler32
 
-// Main low-level decompressor coroutine function. This is the only function actually needed for decompression. All the other functions are just high-level helpers for improved usability.
-// This is a universal API, i.e. it can be used as a building block to build any desired higher level decompression API. In the limit case, it can be called once per every byte input or output.
+/* Main low-level decompressor coroutine function. This is the only function actually needed for decompression. All the other functions are just high-level helpers for improved usability. */
+/* This is a universal API, i.e. it can be used as a building block to build any desired higher level decompression API. In the limit case, it can be called once per every byte input or output. */
 static tinfl_status tinfl_decompress(tinfl_decompressor *r, const mz_uint8 *pIn_buf_next, size_t *pIn_buf_size, mz_uint8 *pOut_buf_start, mz_uint8 *pOut_buf_next, size_t *pOut_buf_size, const mz_uint32 decomp_flags);
 
-// Internal/private bits follow.
+/* Internal/private bits follow. */
 enum
 {
   TINFL_MAX_HUFF_TABLES = 3, TINFL_MAX_HUFF_SYMBOLS_0 = 288, TINFL_MAX_HUFF_SYMBOLS_1 = 32, TINFL_MAX_HUFF_SYMBOLS_2 = 19,
@@ -108,9 +108,9 @@ struct tinfl_decompressor_tag
   mz_uint8 m_raw_header[4], m_len_codes[TINFL_MAX_HUFF_SYMBOLS_0 + TINFL_MAX_HUFF_SYMBOLS_1 + 137];
 };
 
-#endif // #ifdef TINFL_HEADER_INCLUDED
+#endif /* #ifdef TINFL_HEADER_INCLUDED */
 
-// ------------------- End of Header: Implementation follows. (If you only want the header, define MINIZ_HEADER_FILE_ONLY.)
+/* ------------------- End of Header: Implementation follows. (If you only want the header, define MINIZ_HEADER_FILE_ONLY.) */
 
 #ifndef TINFL_HEADER_FILE_ONLY
 
@@ -134,8 +134,8 @@ struct tinfl_decompressor_tag
 #define TINFL_CR_RETURN_FOREVER(state_index, result) do { for ( ; ; ) { TINFL_CR_RETURN(state_index, result); } } MZ_MACRO_END
 #define TINFL_CR_FINISH }
 
-// TODO: If the caller has indicated that there's no more input, and we attempt to read beyond the input buf, then something is wrong with the input because the inflator never
-// reads ahead more than it needs to. Currently TINFL_GET_BYTE() pads the end of the stream with 0's in this scenario.
+/* TODO: If the caller has indicated that there's no more input, and we attempt to read beyond the input buf, then something is wrong with the input because the inflator never */
+/* reads ahead more than it needs to. Currently TINFL_GET_BYTE() pads the end of the stream with 0's in this scenario. */
 #define TINFL_GET_BYTE(state_index, c) do { \
   if (pIn_buf_cur >= pIn_buf_end) { \
     for ( ; ; ) { \
@@ -156,10 +156,10 @@ struct tinfl_decompressor_tag
 #define TINFL_SKIP_BITS(state_index, n) do { if (num_bits < (mz_uint)(n)) { TINFL_NEED_BITS(state_index, n); } bit_buf >>= (n); num_bits -= (n); } MZ_MACRO_END
 #define TINFL_GET_BITS(state_index, b, n) do { if (num_bits < (mz_uint)(n)) { TINFL_NEED_BITS(state_index, n); } b = bit_buf & ((1 << (n)) - 1); bit_buf >>= (n); num_bits -= (n); } MZ_MACRO_END
 
-// TINFL_HUFF_BITBUF_FILL() is only used rarely, when the number of bytes remaining in the input buffer falls below 2.
-// It reads just enough bytes from the input stream that are needed to decode the next Huffman code (and absolutely no more). It works by trying to fully decode a
-// Huffman code by using whatever bits are currently present in the bit buffer. If this fails, it reads another byte, and tries again until it succeeds or until the
-// bit buffer contains >=15 bits (deflate's max. Huffman code size).
+/* TINFL_HUFF_BITBUF_FILL() is only used rarely, when the number of bytes remaining in the input buffer falls below 2. */
+/* It reads just enough bytes from the input stream that are needed to decode the next Huffman code (and absolutely no more). It works by trying to fully decode a */
+/* Huffman code by using whatever bits are currently present in the bit buffer. If this fails, it reads another byte, and tries again until it succeeds or until the */
+/* bit buffer contains >=15 bits (deflate's max. Huffman code size). */
 #define TINFL_HUFF_BITBUF_FILL(state_index, pHuff) \
   do { \
     temp = (pHuff)->m_look_up[bit_buf & (TINFL_FAST_LOOKUP_SIZE - 1)]; \
@@ -175,10 +175,10 @@ struct tinfl_decompressor_tag
     } TINFL_GET_BYTE(state_index, c); bit_buf |= (((tinfl_bit_buf_t)c) << num_bits); num_bits += 8; \
   } while (num_bits < 15);
 
-// TINFL_HUFF_DECODE() decodes the next Huffman coded symbol. It's more complex than you would initially expect because the zlib API expects the decompressor to never read
-// beyond the final byte of the deflate stream. (In other words, when this macro wants to read another byte from the input, it REALLY needs another byte in order to fully
-// decode the next Huffman code.) Handling this properly is particularly important on raw deflate (non-zlib) streams, which aren't followed by a byte aligned adler-32.
-// The slow path is only executed at the very end of the input buffer.
+/* TINFL_HUFF_DECODE() decodes the next Huffman coded symbol. It's more complex than you would initially expect because the zlib API expects the decompressor to never read */
+/* beyond the final byte of the deflate stream. (In other words, when this macro wants to read another byte from the input, it REALLY needs another byte in order to fully */
+/* decode the next Huffman code.) Handling this properly is particularly important on raw deflate (non-zlib) streams, which aren't followed by a byte aligned adler-32. */
+/* The slow path is only executed at the very end of the input buffer. */
 #define TINFL_HUFF_DECODE(state_index, sym, pHuff) do { \
   int temp; mz_uint code_len, c; \
   if (num_bits < 15) { \
@@ -208,7 +208,7 @@ static tinfl_status tinfl_decompress(tinfl_decompressor *r, const mz_uint8 *pIn_
   mz_uint8 *pOut_buf_cur = pOut_buf_next, *const pOut_buf_end = pOut_buf_next + *pOut_buf_size;
   size_t out_buf_size_mask = (decomp_flags & TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF) ? (size_t)-1 : ((pOut_buf_next - pOut_buf_start) + *pOut_buf_size) - 1, dist_from_out_buf_start;
 
-  // Ensure the output buffer's size is a power of 2, unless the output buffer is large enough to hold the entire output file (in which case it doesn't matter).
+  /* Ensure the output buffer's size is a power of 2, unless the output buffer is large enough to hold the entire output file (in which case it doesn't matter). */
   if (((out_buf_size_mask + 1) & out_buf_size_mask) || (pOut_buf_next < pOut_buf_start)) { *pIn_buf_size = *pOut_buf_size = 0; return TINFL_STATUS_BAD_PARAM; }
 
   num_bits = r->m_num_bits; bit_buf = r->m_bit_buf; dist = r->m_dist; counter = r->m_counter; num_extra = r->m_num_extra; dist_from_out_buf_start = r->m_dist_from_out_buf_start;
@@ -466,41 +466,41 @@ common_exit:
   return status;
 }
 
-// Flush values. For typical usage you only need MZ_NO_FLUSH and MZ_FINISH. The other stuff is for advanced use.
+/* Flush values. For typical usage you only need MZ_NO_FLUSH and MZ_FINISH. The other stuff is for advanced use. */
 enum { MZ_NO_FLUSH = 0, MZ_PARTIAL_FLUSH = 1, MZ_SYNC_FLUSH = 2, MZ_FULL_FLUSH = 3, MZ_FINISH = 4, MZ_BLOCK = 5 };
 
-// Return status codes. MZ_PARAM_ERROR is non-standard.
+/* Return status codes. MZ_PARAM_ERROR is non-standard. */
 enum { MZ_OK = 0, MZ_STREAM_END = 1, MZ_NEED_DICT = 2, MZ_ERRNO = -1, MZ_STREAM_ERROR = -2, MZ_DATA_ERROR = -3, MZ_MEM_ERROR = -4, MZ_BUF_ERROR = -5, MZ_VERSION_ERROR = -6, MZ_PARAM_ERROR = -10000 };
 
-// Compression levels.
+/* Compression levels. */
 enum { MZ_NO_COMPRESSION = 0, MZ_BEST_SPEED = 1, MZ_BEST_COMPRESSION = 9, MZ_DEFAULT_COMPRESSION = -1 };
 
-// Window bits
+/* Window bits */
 #define MZ_DEFAULT_WINDOW_BITS 15
 
 struct mz_internal_state;
 
-// Compression/decompression stream struct.
+/* Compression/decompression stream struct. */
 typedef struct mz_stream_s
 {
-  const unsigned char *next_in;     // pointer to next byte to read
-  unsigned int avail_in;            // number of bytes available at next_in
-  mz_ulong total_in;                // total number of bytes consumed so far
+  const unsigned char *next_in;     /* pointer to next byte to read */
+  unsigned int avail_in;            /* number of bytes available at next_in */
+  mz_ulong total_in;                /* total number of bytes consumed so far */
 
-  unsigned char *next_out;          // pointer to next byte to write
-  unsigned int avail_out;           // number of bytes that can be written to next_out
-  mz_ulong total_out;               // total number of bytes produced so far
+  unsigned char *next_out;          /* pointer to next byte to write */
+  unsigned int avail_out;           /* number of bytes that can be written to next_out */
+  mz_ulong total_out;               /* total number of bytes produced so far */
 
-  char *msg;                        // error msg (unused)
-  struct mz_internal_state *state;  // internal state, allocated by zalloc/zfree
+  char *msg;                        /* error msg (unused) */
+  struct mz_internal_state *state;  /* internal state, allocated by zalloc/zfree */
 
-  mz_alloc_func zalloc;             // optional heap allocation function (defaults to malloc)
-  mz_free_func zfree;               // optional heap free function (defaults to free)
-  void *opaque;                     // heap alloc function user pointer
+  mz_alloc_func zalloc;             /* optional heap allocation function (defaults to malloc) */
+  mz_free_func zfree;               /* optional heap free function (defaults to free) */
+  void *opaque;                     /* heap alloc function user pointer */
 
-  int data_type;                    // data_type (unused)
-  mz_ulong adler;                   // adler32 of the source or uncompressed data
-  mz_ulong reserved;                // not used
+  int data_type;                    /* data_type (unused) */
+  mz_ulong adler;                   /* adler32 of the source or uncompressed data */
+  mz_ulong reserved;                /* not used */
 } mz_stream;
 
 typedef mz_stream *mz_streamp;
@@ -526,8 +526,8 @@ static int mz_inflateInit2(mz_streamp pStream, int window_bits)
   pStream->total_in = 0;
   pStream->total_out = 0;
   pStream->reserved = 0;
-  //if (!pStream->zalloc) pStream->zalloc = def_alloc_func;
-  //if (!pStream->zfree) pStream->zfree = def_free_func;
+  /* if (!pStream->zalloc) pStream->zalloc = def_alloc_func; */
+  /* if (!pStream->zfree) pStream->zfree = def_free_func; */
 
   pDecomp = (inflate_state*)pStream->zalloc(pStream->opaque, 1, sizeof(inflate_state));
   if (!pDecomp) return MZ_MEM_ERROR;
@@ -568,7 +568,7 @@ static int mz_inflate(mz_streamp pStream, int flush)
 
   if ((flush == MZ_FINISH) && (first_call))
   {
-    // MZ_FINISH on the first call implies that the input and output buffers are large enough to hold the entire compressed/decompressed file.
+    /* MZ_FINISH on the first call implies that the input and output buffers are large enough to hold the entire compressed/decompressed file. */
     decomp_flags |= TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF;
     in_bytes = pStream->avail_in; out_bytes = pStream->avail_out;
     status = tinfl_decompress(&pState->m_decomp, pStream->next_in, &in_bytes, pStream->next_out, pStream->next_out, &out_bytes, decomp_flags);
@@ -586,7 +586,7 @@ static int mz_inflate(mz_streamp pStream, int flush)
     }
     return MZ_STREAM_END;
   }
-  // flush != MZ_FINISH then we must assume there's more input.
+  /* flush != MZ_FINISH then we must assume there's more input. */
   if (flush != MZ_FINISH) decomp_flags |= TINFL_FLAG_HAS_MORE_INPUT;
 
   if (pState->m_dict_avail)
@@ -617,15 +617,15 @@ static int mz_inflate(mz_streamp pStream, int flush)
     pState->m_dict_avail -= n; pState->m_dict_ofs = (pState->m_dict_ofs + n) & (TINFL_LZ_DICT_SIZE - 1);
 
     if (status < 0)
-       return MZ_DATA_ERROR; // Stream is corrupted (there could be some uncompressed data left in the output dictionary - oh well).
+       return MZ_DATA_ERROR; /* Stream is corrupted (there could be some uncompressed data left in the output dictionary - oh well). */
     else if ((status == TINFL_STATUS_NEEDS_MORE_INPUT) && (!orig_avail_in))
-      return MZ_BUF_ERROR; // Signal caller that we can't make forward progress without supplying more input or by setting flush to MZ_FINISH.
+      return MZ_BUF_ERROR; /* Signal caller that we can't make forward progress without supplying more input or by setting flush to MZ_FINISH. */
     else if (flush == MZ_FINISH)
     {
-       // The output buffer MUST be large to hold the remaining uncompressed data when flush==MZ_FINISH.
+       /* The output buffer MUST be large to hold the remaining uncompressed data when flush==MZ_FINISH. */
        if (status == TINFL_STATUS_DONE)
           return pState->m_dict_avail ? MZ_BUF_ERROR : MZ_STREAM_END;
-       // status here must be TINFL_STATUS_HAS_MORE_OUTPUT, which means there's at least 1 more byte on the way. If there's no more room left in the output buffer then something is wrong.
+       /* status here must be TINFL_STATUS_HAS_MORE_OUTPUT, which means there's at least 1 more byte on the way. If there's no more room left in the output buffer then something is wrong. */
        else if (!pStream->avail_out)
           return MZ_BUF_ERROR;
     }
@@ -668,7 +668,7 @@ static int mz_inflateEnd(mz_streamp pStream)
   #define Z_VERSION_ERROR       MZ_VERSION_ERROR
   #define MAX_WBITS             15
 
-#endif // #ifndef TINFL_HEADER_FILE_ONLY
+#endif /* #ifndef TINFL_HEADER_FILE_ONLY */
 
 /* 
   This is free and unencumbered software released into the public domain.
