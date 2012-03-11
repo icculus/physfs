@@ -22,7 +22,8 @@ From http://icculus.org/pipermail/physfs/2009-March/000698.html ...
 - Deprecate PHYSFS_setSaneConfig(). It really should have been in the extras
   directory.
 - Clean up the sources to match my ever-changing coding style. :)
-- Get current CD list from windows without blocking? Is it possible?
+- Get current CD list from windows without blocking?
+  Read this: http://support.microsoft.com/kb/163503
 
 
 From http://icculus.org/pipermail/physfs/2010-January/000821.html ...

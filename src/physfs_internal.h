@@ -859,7 +859,7 @@ void __PHYSFS_setError(const char *err);
  * This is a convenience function; you might want to hack something out that
  *  is less generic (and therefore more efficient).
  *
- * Be sure to free() the return value when done with it.
+ * Be sure to allocator.Free() the return value when done with it.
  */
 char *__PHYSFS_convertToDependent(const char *prepend,
                                   const char *dirName,
@@ -1230,21 +1230,21 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data);
  * Calculate the base dir, if your platform needs special consideration.
  *  Just return NULL if the standard routines will suffice. (see
  *  calculateBaseDir() in physfs.c ...)
- *  Caller will free() the retval if it's not NULL.
+ *  Caller will allocator.Free() the retval if it's not NULL.
  */
 char *__PHYSFS_platformCalcBaseDir(const char *argv0);
 
 /*
  * Get the platform-specific user name.
- *  Caller will free() the retval if it's not NULL. If it's NULL, the username
- *  will default to "default".
+ *  Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
+ *  the username will default to "default".
  */
 char *__PHYSFS_platformGetUserName(void);
 
 /*
  * Get the platform-specific user dir.
- *  Caller will free() the retval if it's not NULL. If it's NULL, the userdir
- *  will default to basedir/username.
+ *  Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
+ *  the userdir will default to basedir/username.
  */
 char *__PHYSFS_platformGetUserDir(void);
 
@@ -1272,7 +1272,7 @@ void *__PHYSFS_platformGetThreadID(void);
  *  __PHYSFS_convertToDependent() as a passthrough, which may fit the bill
  *  already.
  *
- * Be sure to free() the return value when done with it.
+ * Be sure to allocator.Free() the return value when done with it.
  */
 char *__PHYSFS_platformCvtToDependent(const char *prepend,
                                       const char *dirName,
@@ -1297,8 +1297,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 /*
  * Get the current working directory. The return value should be an
  *  absolute path in platform-dependent notation. The caller will deallocate
- *  the return value with the standard C runtime free() function when it
- *  is done with it.
+ *  the return value with allocator.Free() when it is done with it.
  * On error, return NULL and set the error message.
  */
 char *__PHYSFS_platformCurrentDir(void);
