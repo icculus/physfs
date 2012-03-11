@@ -18,9 +18,6 @@ From http://icculus.org/pipermail/physfs/2009-March/000698.html ...
   you have to pick a translation at compile time, which isn't too useful. It
   might be nice to have real error codes for apps instead of just error
   messages for humans, too.
-- UTF-16 support. 2.0.0 only handles UCS-2, which is most of the work, but
-  leaves out the "surrogate" codepoints. UTF-16 is a superset of UCS-2.
-  Older Windows using Unicode used UCS-2, newer Windows platforms use UTF-16.
 - Add an API to expose a file's extended attributes to the application?
 - Deprecate PHYSFS_setSaneConfig(). It really should have been in the extras
   directory.
