@@ -170,9 +170,9 @@
  *  "UCS-2 encoding"). Any modern Windows uses UTF-16, which is two bytes
  *  per character for most characters, but some characters are four. You
  *  should convert them to UTF-8 before handing them to PhysicsFS with
- *  PHYSFS_utf8FromUcs2() or PHYSFS_utf8FromUtf16(). If you're using Unix or
- *  Mac OS X, your wchar_t strings are four bytes per character ("UCS-4
- *  encoding"). Use PHYSFS_utf8FromUcs4(). Mac OS X can give you UTF-8
+ *  PHYSFS_utf8FromUtf16(), which handles both UTF-16 and UCS-2. If you're
+ *  using Unix or Mac OS X, your wchar_t strings are four bytes per character
+ *  ("UCS-4 encoding"). Use PHYSFS_utf8FromUcs4(). Mac OS X can give you UTF-8
  *  directly from a CFString or NSString, and many Unixes generally give you C
  *  strings in UTF-8 format everywhere. If you have a single-byte high ASCII
  *  charset, like so-many European "codepages" you may be out of luck. We'll
@@ -209,11 +209,11 @@
  *
  * Other stuff:
  *
- * Please see the file LICENSE.txt in the source's root directory for licensing
- *  and redistribution rights.
+ * Please see the file LICENSE.txt in the source's "docs" directory for
+ *  licensing and redistribution rights.
  *
- * Please see the file CREDITS.txt in the source's root directory for a more or
- *  less complete list of who's responsible for this.
+ * Please see the file CREDITS.txt in the source's "docs" directory for
+ *  a more or less complete list of who's responsible for this.
  *
  *  \author Ryan C. Gordon.
  */
@@ -2423,7 +2423,8 @@ PHYSFS_DECL void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst,
  *
  * UCS-2 strings are 16-bits per character: \c TCHAR on Windows, when building
  *  with Unicode support. Please note that modern versions of Windows use
- *  UTF-16, not UCS-2. You almost certainly want PHYSFS_utf8FromUtf16() instead.
+ *  UTF-16, which is an extended form of UCS-2, and not UCS-2 itself. You
+ *  almost certainly want PHYSFS_utf8FromUtf16() instead.
  *
  * To ensure that the destination buffer is large enough for the conversion,
  *  please allocate a buffer that is double the size of the source buffer.
@@ -2452,8 +2453,9 @@ PHYSFS_DECL void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst,
  *
  * UCS-2 strings are 16-bits per character: \c TCHAR on Windows, when building
  *  with Unicode support. Please note that modern versions of Windows use
- *  UTF-16, not UCS-2. You almost certainly want PHYSFS_utf8ToUtf16() instead,
- *  but you need to understand how that changes things, too.
+ *  UTF-16, which is an extended form of UCS-2, and not UCS-2 itself. You
+ *  almost certainly want PHYSFS_utf8ToUtf16() instead, but you need to
+ *  understand how that changes things, too.
  *
  * To ensure that the destination buffer is large enough for the conversion,
  *  please allocate a buffer that is double the size of the source buffer.
@@ -2477,8 +2479,7 @@ PHYSFS_DECL void PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst,
  * \fn void PHYSFS_utf8FromLatin1(const char *src, char *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-8 string to a Latin1 string.
  *
- * Latin1 strings are 8-bits per character: a popular "high ASCII"
- *  encoding.
+ * Latin1 strings are 8-bits per character: a popular "high ASCII" encoding.
  *
  * To ensure that the destination buffer is large enough for the conversion,
  *  please allocate a buffer that is double the size of the source buffer.
