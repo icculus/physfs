@@ -212,12 +212,6 @@ char *__PHYSFS_platformRealPath(const char *path)
 } /* __PHYSFS_platformRealPath */
 
 
-char *__PHYSFS_platformCurrentDir(void)
-{
-    return(__PHYSFS_platformRealPath("."));  /* let BPath sort it out. */
-} /* __PHYSFS_platformCurrentDir */
-
-
 void *__PHYSFS_platformCreateMutex(void)
 {
     return(new BLocker("PhysicsFS lock", true));

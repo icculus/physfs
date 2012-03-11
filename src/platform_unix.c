@@ -305,44 +305,6 @@ char *__PHYSFS_platformRealPath(const char *path)
 } /* __PHYSFS_platformRealPath */
 
 
-char *__PHYSFS_platformCurrentDir(void)
-{
-    int allocSize = 64;
-    char *retval = NULL;
-    char *ptr;
-
-    do
-    {
-        allocSize *= 2;
-        ptr = (char *) allocator.Realloc(retval, allocSize);
-        if (ptr == NULL)
-        {
-            if (retval != NULL)
-                allocator.Free(retval);
-            BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
-        } /* if */
-
-        retval = ptr;
-        ptr = getcwd(retval, allocSize);
-    } while (ptr == NULL && errno == ERANGE);
-
-    if (ptr == NULL && errno)
-    {
-        /* getcwd() failed , for example current directory not existing... */
-        if (retval != NULL)
-            allocator.Free(retval);
-        BAIL_MACRO(ERR_NO_SUCH_FILE, NULL);
-    } /* if */
-
-    /* try to shrink buffer... */
-    ptr = (char *) allocator.Realloc(retval, strlen(retval) + 1);
-    if (ptr != NULL)
-        retval = ptr;  /* oh well if it failed. */
-
-    return retval;
-} /* __PHYSFS_platformCurrentDir */
-
-
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
     return 0;  /* just use malloc() and friends. */
