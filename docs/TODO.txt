@@ -22,7 +22,6 @@ From http://icculus.org/pipermail/physfs/2009-March/000698.html ...
 - Deprecate PHYSFS_setSaneConfig(). It really should have been in the extras
   directory.
 - Clean up the sources to match my ever-changing coding style. :)
-- Remove realpath() for The Hurd, etc.
 - Get current CD list from windows without blocking? Is it possible?
 
 

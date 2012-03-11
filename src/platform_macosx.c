@@ -288,32 +288,6 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 } /* __PHYSFS_platformCalcBaseDir */
 
 
-/* !!! FIXME */
-#define osxerr(x) x
-
-char *__PHYSFS_platformRealPath(const char *path)
-{
-    /* The symlink and relative path resolving happens in FSPathMakeRef() */
-    FSRef fsref;
-    CFURLRef cfurl = NULL;
-    CFStringRef cfstr = NULL;
-    char *retval = NULL;
-    OSStatus rc = osxerr(FSPathMakeRef((UInt8 *) path, &fsref, NULL));
-    BAIL_IF_MACRO(rc != noErr, NULL, NULL);
-
-    /* Now get it to spit out a full path. */
-    cfurl = CFURLCreateFromFSRef(cfallocator, &fsref);
-    BAIL_IF_MACRO(cfurl == NULL, ERR_OUT_OF_MEMORY, NULL);
-    cfstr = CFURLCopyFileSystemPath(cfurl, kCFURLPOSIXPathStyle);
-    CFRelease(cfurl);
-    BAIL_IF_MACRO(cfstr == NULL, ERR_OUT_OF_MEMORY, NULL);
-    retval = convertCFString(cfstr);
-    CFRelease(cfstr);
-
-    return retval;
-} /* __PHYSFS_platformRealPath */
-
-
 /* Platform allocator uses default CFAllocator at PHYSFS_init() time. */
 
 static CFAllocatorRef cfallocdef = NULL;

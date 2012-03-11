@@ -1050,14 +1050,6 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
 static char *calculateUserDir(void)
 {
     char *retval = __PHYSFS_platformGetUserDir();
-    if (retval != NULL)
-    {
-        /* make sure it really exists and is normalized. */
-        char *ptr = __PHYSFS_platformRealPath(retval);
-        allocator.Free(retval);
-        retval = ptr;
-    } /* if */
-
     if (retval == NULL)
     {
         const char *dirsep = PHYSFS_getDirSeparator();
@@ -1174,8 +1166,6 @@ static void setDefaultAllocator(void);
 
 int PHYSFS_init(const char *argv0)
 {
-    char *ptr;
-
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
 
     if (!externalAllocator)
@@ -1190,12 +1180,6 @@ int PHYSFS_init(const char *argv0)
 
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(baseDir == NULL, NULL, 0);
-
-    /* !!! FIXME: only call this if we got this from argv0 (unreliable). */
-    ptr = __PHYSFS_platformRealPath(baseDir);
-    allocator.Free(baseDir);
-    BAIL_IF_MACRO(ptr == NULL, NULL, 0);
-    baseDir = ptr;
 
     BAIL_IF_MACRO(!appendDirSep(&baseDir), NULL, 0);
 

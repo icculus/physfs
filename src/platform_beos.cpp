@@ -200,18 +200,6 @@ void *__PHYSFS_platformGetThreadID(void)
 } /* __PHYSFS_platformGetThreadID */
 
 
-char *__PHYSFS_platformRealPath(const char *path)
-{
-    BPath normalized(path, NULL, true);  /* force normalization of path. */
-    const char *resolved_path = normalized.Path();
-    BAIL_IF_MACRO(resolved_path == NULL, ERR_NO_SUCH_FILE, NULL);
-    char *retval = (char *) allocator.Malloc(strlen(resolved_path) + 1);
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-    strcpy(retval, resolved_path);
-    return(retval);
-} /* __PHYSFS_platformRealPath */
-
-
 void *__PHYSFS_platformCreateMutex(void)
 {
     return(new BLocker("PhysicsFS lock", true));
