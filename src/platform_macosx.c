@@ -314,12 +314,6 @@ char *__PHYSFS_platformRealPath(const char *path)
 } /* __PHYSFS_platformRealPath */
 
 
-char *__PHYSFS_platformCurrentDir(void)
-{
-    return __PHYSFS_platformRealPath(".");  /* let CFURL sort it out. */
-} /* __PHYSFS_platformCurrentDir */
-
-
 /* Platform allocator uses default CFAllocator at PHYSFS_init() time. */
 
 static CFAllocatorRef cfallocdef = NULL;
