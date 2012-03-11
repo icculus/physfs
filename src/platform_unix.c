@@ -307,18 +307,13 @@ char *__PHYSFS_platformRealPath(const char *path)
 
 char *__PHYSFS_platformCurrentDir(void)
 {
-    /*
-     * This can't just do platformRealPath("."), since that would eventually
-     *  just end up calling back into here.
-     */
-
-    int allocSize = 0;
+    int allocSize = 64;
     char *retval = NULL;
     char *ptr;
 
     do
     {
-        allocSize += 100;
+        allocSize *= 2;
         ptr = (char *) allocator.Realloc(retval, allocSize);
         if (ptr == NULL)
         {
@@ -333,14 +328,16 @@ char *__PHYSFS_platformCurrentDir(void)
 
     if (ptr == NULL && errno)
     {
-            /*
-             * getcwd() failed for some reason, for example current
-             * directory not existing.
-             */
+        /* getcwd() failed , for example current directory not existing... */
         if (retval != NULL)
             allocator.Free(retval);
         BAIL_MACRO(ERR_NO_SUCH_FILE, NULL);
     } /* if */
+
+    /* try to shrink buffer... */
+    ptr = (char *) allocator.Realloc(retval, strlen(retval) + 1);
+    if (ptr != NULL)
+        retval = ptr;  /* oh well if it failed. */
 
     return retval;
 } /* __PHYSFS_platformCurrentDir */
