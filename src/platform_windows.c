@@ -19,6 +19,7 @@
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 #include <userenv.h>
+#include <dbt.h>
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
@@ -95,7 +96,10 @@ typedef struct
 const char *__PHYSFS_platformDirSeparator = "\\";
 static char *userDir = NULL;
 static HANDLE libUserEnv = NULL;
-
+static HANDLE detectCDThreadHandle = NULL;
+static HWND detectCDHwnd = 0;
+static volatile int initialDiscDetectionComplete = 0;
+static volatile DWORD drivesWithMediaBitmap = 0;
 
 /*
  * Figure out what the last failing Windows API call was, and
@@ -192,40 +196,174 @@ static int determineUserDir(void)
 } /* determineUserDir */
 
 
-static BOOL mediaInDrive(const char *drive)
+typedef BOOL (WINAPI *fnSTEM)(DWORD, LPDWORD b);
+
+static DWORD pollDiscDrives(void)
 {
-    UINT oldErrorMode;
-    DWORD tmp;
-    BOOL retval;
+    /* Try to use SetThreadErrorMode(), which showed up in Windows 7. */
+    HANDLE lib = LoadLibraryA("kernel32.dll");
+    fnSTEM stem = NULL;
+    char drive[4] = { 'x', ':', '\\', '\0' };
+    DWORD oldErrorMode = 0;
+    DWORD drives = 0;
+    DWORD i;
 
-    /* Prevent windows warning message appearing when checking media size */
-    /* !!! FIXME: Windows 7 offers SetThreadErrorMode(). */
-    oldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    if (lib)
+        stem = (fnSTEM) GetProcAddress(lib, "SetThreadErrorMode");
+
+    if (stem)
+        stem(SEM_FAILCRITICALERRORS, &oldErrorMode);
+    else
+        oldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     
-    /* If this function succeeds, there's media in the drive */
-    retval = GetVolumeInformationA(drive, NULL, 0, NULL, NULL, &tmp, NULL, 0);
+    /* Do detection. This may block if a disc is spinning up. */
+    for (i = 'A'; i <= 'Z'; i++)
+    {
+        DWORD tmp = 0;
+        drive[0] = (char) i;
+        if (GetDriveTypeA(drive) != DRIVE_CDROM)
+            continue;
 
-    /* Revert back to old windows error handler */
-    SetErrorMode(oldErrorMode);
+        /* If this function succeeds, there's media in the drive */
+        if (GetVolumeInformationA(drive, NULL, 0, NULL, NULL, &tmp, NULL, 0))
+            drives |= (1 << (i - 'A'));
+    } /* for */
 
-    return retval;
-} /* mediaInDrive */
+    if (stem)
+        stem(oldErrorMode, NULL);
+    else
+        SetErrorMode(oldErrorMode);
 
-/*
- * !!! FIXME: move this to a thread? This function hangs if you call it while
- * !!! FIXME:  a drive is spinning up right after inserting a disc.
- */
+    if (lib)
+        FreeLibrary(lib);
+
+    return drives;
+} /* pollDiscDrives */
+
+
+static LRESULT CALLBACK detectCDWndProc(HWND hwnd, UINT msg,
+                                        WPARAM wp, LPARAM lparam)
+{
+    PDEV_BROADCAST_HDR lpdb = (PDEV_BROADCAST_HDR) lparam;
+    PDEV_BROADCAST_VOLUME lpdbv = (PDEV_BROADCAST_VOLUME) lparam;
+    const int removed = (wp == DBT_DEVICEREMOVECOMPLETE);
+
+    if (msg == WM_DESTROY)
+        return 0;
+    else if ((msg != WM_DEVICECHANGE) ||
+             ((wp != DBT_DEVICEARRIVAL) && (wp != DBT_DEVICEREMOVECOMPLETE)) ||
+             (lpdb->dbch_devicetype != DBT_DEVTYP_VOLUME) ||
+             ((lpdbv->dbcv_flags & DBTF_MEDIA) == 0))
+    {
+        return DefWindowProcW(hwnd, msg, wp, lparam);
+    } /* else if */
+
+    if (removed)
+        drivesWithMediaBitmap &= ~lpdbv->dbcv_unitmask;
+    else
+        drivesWithMediaBitmap |= lpdbv->dbcv_unitmask;
+
+    return TRUE;
+} /* detectCDWndProc */
+
+
+static DWORD WINAPI detectCDThread(LPVOID lpParameter)
+{
+    const char *classname = "PhysicsFSDetectCDCatcher";
+    const char *winname = "PhysicsFSDetectCDMsgWindow";
+    HINSTANCE hInstance = GetModuleHandleW(NULL);
+    ATOM class_atom = 0;
+    WNDCLASSEXA wce;
+    MSG msg;
+
+    memset(&wce, '\0', sizeof (wce));
+    wce.cbSize = sizeof (wce);
+    wce.lpfnWndProc = detectCDWndProc;
+    wce.lpszClassName = classname;
+    wce.hInstance = hInstance;
+    class_atom = RegisterClassExA(&wce);
+    if (class_atom == 0)
+    {
+        initialDiscDetectionComplete = 1;  /* let main thread go on. */
+        return 0;
+    } /* if */
+
+    detectCDHwnd = CreateWindowExA(0, classname, winname, WS_OVERLAPPEDWINDOW,
+                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                        CW_USEDEFAULT, HWND_DESKTOP, NULL, hInstance, NULL);
+
+    if (detectCDHwnd == NULL)
+    {
+        initialDiscDetectionComplete = 1;  /* let main thread go on. */
+        UnregisterClassA(classname, hInstance);
+        return 0;
+    } /* if */
+
+    /* We'll get events when discs come and go from now on. */
+
+    /* Do initial detection, possibly blocking awhile... */
+    drivesWithMediaBitmap = pollDiscDrives();
+    initialDiscDetectionComplete = 1;  /* let main thread go on. */
+
+    do
+    {
+        const BOOL rc = GetMessageW(&msg, detectCDHwnd, 0, 0);
+        if ((rc == 0) || (rc == -1))
+            break;  /* don't care if WM_QUIT or error break this loop. */
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    } while (1);
+
+    /* we've been asked to quit. */
+    DestroyWindow(detectCDHwnd);
+
+    do
+    {
+        const BOOL rc = GetMessage(&msg, detectCDHwnd, 0, 0);
+        if ((rc == 0) || (rc == -1))
+            break;
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    } while (1);
+
+    UnregisterClassA(classname, hInstance);
+
+    return 0;
+} /* detectCDThread */
+
+
 void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
-    /* !!! FIXME: Can CD drives be non-drive letter paths? */
-    /* !!! FIXME:  (so can they be Unicode paths?) */
-    char drive_str[4] = "x:\\";
-    char ch;
-    for (ch = 'A'; ch <= 'Z'; ch++)
+    char drive_str[4] = { 'x', ':', '\\', '\0' };
+    DWORD drives = 0;
+    DWORD i;
+
+    /*
+     * If you poll a drive while a user is inserting a disc, the OS will
+     *  block this thread until the drive has spun up. So we swallow the risk
+     *  once for initial detection, and spin a thread that will get device
+     *  events thereafter, for apps that use this interface to poll for
+     *  disc insertion.
+     */
+    if (!detectCDThreadHandle)
     {
-        drive_str[0] = ch;
-        if (GetDriveTypeA(drive_str) == DRIVE_CDROM && mediaInDrive(drive_str))
+        initialDiscDetectionComplete = 0;
+        detectCDThreadHandle = CreateThread(NULL,0,detectCDThread,NULL,0,NULL);
+        if (detectCDThreadHandle == NULL)
+            return;  /* oh well. */
+
+        while (!initialDiscDetectionComplete)
+            Sleep(50);
+    } /* if */
+
+    drives = drivesWithMediaBitmap; /* whatever the thread has seen, we take. */
+    for (i = 'A'; i <= 'Z'; i++)
+    {
+        if (drives & (1 << (i - 'A')))
+        {
+            drive_str[0] = (char) i;
             cb(data, drive_str);
+        } /* if */
     } /* for */
 } /* __PHYSFS_platformDetectAvailableCDs */
 
@@ -469,6 +607,16 @@ int __PHYSFS_platformInit(void)
 
 int __PHYSFS_platformDeinit(void)
 {
+    if (detectCDThreadHandle != NULL)
+    {
+        if (detectCDHwnd)
+            PostMessageW(detectCDHwnd, WM_QUIT, 0, 0);
+        CloseHandle(detectCDThreadHandle);
+        detectCDThreadHandle = NULL;
+        initialDiscDetectionComplete = 0;
+        drivesWithMediaBitmap = 0;
+    } /* if */
+
     if (libUserEnv)
         FreeLibrary(libUserEnv);
     libUserEnv = NULL;
