@@ -78,9 +78,9 @@ PhysicsFS will only link directly against system libraries that have existed
  behaviour when we can't find it...this is used for Unicode support and
  locating user-specific directories, etc.
 
-PhysicsFS has not been tested on 64-bit Windows, but probably works. There is
- no 16-bit Windows support at all. Reports of success and problems can go to
- Ryan at icculus@icculus.org ...
+PhysicsFS works on 32-bit and 64-bit Windows. There is  no 16-bit Windows
+ support at all. Reports of success and problems can go to Ryan at
+ icculus@icculus.org ...
 
 If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
 from you; send an email to icculus@icculus.org ...
