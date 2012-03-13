@@ -1294,16 +1294,6 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      const char *origdir,
                                      void *callbackdata);
 
-
-/*
- * Get the current working directory. The return value should be an
- *  absolute path in platform-dependent notation. The caller will deallocate
- *  the return value with allocator.Free() when it is done with it.
- * On error, return NULL and set the error message.
- */
-char *__PHYSFS_platformCurrentDir(void);
-
-
 /*
  * Make a directory in the actual filesystem. (path) is specified in
  *  platform-dependent notation. On error, return zero and set the error

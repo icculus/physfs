@@ -557,31 +557,6 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 } /* __PHYSFS_platformEnumerateFiles */
 
 
-char *__PHYSFS_platformCurrentDir(void)
-{
-    char *retval = NULL;
-    WCHAR *wbuf = NULL;
-    DWORD buflen = 0;
-
-    buflen = GetCurrentDirectoryW(buflen, NULL);
-    wbuf = (WCHAR *) __PHYSFS_smallAlloc((buflen + 2) * sizeof (WCHAR));
-    BAIL_IF_MACRO(wbuf == NULL, ERR_OUT_OF_MEMORY, NULL);
-    GetCurrentDirectoryW(buflen, wbuf);
-
-    if (wbuf[buflen - 2] == '\\')
-        wbuf[buflen - 1] = '\0';  /* just in case... */
-    else
-    {
-        wbuf[buflen - 1] = '\\'; 
-        wbuf[buflen] = '\0'; 
-    } /* else */
-
-    retval = unicodeToUtf8Heap(wbuf);
-    __PHYSFS_smallFree(wbuf);
-    return retval;
-} /* __PHYSFS_platformCurrentDir */
-
-
 int __PHYSFS_platformMkDir(const char *path)
 {
     WCHAR *wpath;
