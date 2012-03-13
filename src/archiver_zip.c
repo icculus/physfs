@@ -425,8 +425,7 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(PHYSFS_Io *io, PHYSFS_sint64 *l
     int found = 0;
 
     filelen = io->length(io);
-    BAIL_IF_MACRO(filelen == -1, NULL, 0);  /* !!! FIXME: unlocalized string */
-    BAIL_IF_MACRO(filelen > 0xFFFFFFFF, "ZIP bigger than 4 gigs?!", 0);
+    BAIL_IF_MACRO(filelen == -1, NULL, 0);
 
     /*
      * Jump to the end of the file and start reading backwards.
