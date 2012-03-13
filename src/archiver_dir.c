@@ -64,20 +64,21 @@ static PHYSFS_Io *doOpen(dvoid *opaque, const char *name,
     if (fileExists == NULL)
         fileExists = &existtmp;
 
-    *fileExists = 0;
-
     BAIL_IF_MACRO(f == NULL, NULL, NULL);
 
     io = __PHYSFS_createNativeIo(f, mode);
-    allocator.Free(f);
     if (io == NULL)
     {
         PHYSFS_Stat statbuf;  /* !!! FIXME: this changes the error message. */
         __PHYSFS_platformStat(f, fileExists, &statbuf);
-        return NULL;
     } /* if */
+    else
+    {
+        *fileExists = 1;
+    } /* else */
 
-    *fileExists = 1;
+    allocator.Free(f);
+
     return io;
 } /* doOpen */
 
