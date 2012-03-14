@@ -124,6 +124,9 @@ Bug fixes:
 Bug fixes:
     Norfanin
 
+Bug fixes:
+    Evgeny Podjachev
+
 Haiku fixes:
     Chris Roberts
 
