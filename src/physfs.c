@@ -2407,7 +2407,7 @@ PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle, void *buffer,
 {
     const PHYSFS_uint64 len = ((PHYSFS_uint64) size) * ((PHYSFS_uint64) count);
     const PHYSFS_sint64 retval = PHYSFS_readBytes(handle, buffer, len);
-    return ( (retval <= 0) ? retval : (retval / ((PHYSFS_sint64) count)) );
+    return ( (retval <= 0) ? retval : (retval / ((PHYSFS_sint64) size)) );
 } /* PHYSFS_read */
 
 
@@ -2457,7 +2457,7 @@ PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle, const void *buffer,
 {
     const PHYSFS_uint64 len = ((PHYSFS_uint64) size) * ((PHYSFS_uint64) count);
     const PHYSFS_sint64 retval = PHYSFS_writeBytes(handle, buffer, len);
-    return ( (retval <= 0) ? retval : (retval / ((PHYSFS_sint64) count)) );
+    return ( (retval <= 0) ? retval : (retval / ((PHYSFS_sint64) size)) );
 } /* PHYSFS_write */
 
 
