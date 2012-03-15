@@ -30,10 +30,6 @@
 
 #include "physfs_internal.h"
 
-
-const char *__PHYSFS_platformDirSeparator = "/";
-
-
 char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
 {
     const char *envr = getenv(varname);

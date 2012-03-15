@@ -14,10 +14,10 @@
 static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_Stat statbuf;
-    const char *dirsep = PHYSFS_getDirSeparator();
+    const char dirsep = __PHYSFS_platformDirSeparator;
     char *retval = NULL;
     const size_t namelen = strlen(name);
-    const size_t seplen = strlen(dirsep);
+    const size_t seplen = 1;
     int exists = 0;
 
     assert(io == NULL);  /* shouldn't create an Io for these. */
@@ -28,11 +28,14 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     retval = allocator.Malloc(namelen + seplen + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
 
-    /* make sure there's a dir separator at the end of the string */
-    /* !!! FIXME: is there really any place where (seplen != 1)? */
     strcpy(retval, name);
-    if (strcmp((name + namelen) - seplen, dirsep) != 0)
-        strcat(retval, dirsep);
+
+    /* make sure there's a dir separator at the end of the string */
+    if (retval[namelen - 1] != dirsep)
+    {
+        retval[namelen] = dirsep;
+        retval[namelen + 1] = '\0';
+    } /* if */
 
     return retval;
 } /* DIR_openArchive */

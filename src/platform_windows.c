@@ -93,7 +93,6 @@ typedef struct
 } WinApiFile;
 
 
-const char *__PHYSFS_platformDirSeparator = "\\";
 static char *userDir = NULL;
 static HANDLE libUserEnv = NULL;
 static HANDLE detectCDThreadHandle = NULL;

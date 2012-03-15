@@ -1052,17 +1052,16 @@ static char *calculateUserDir(void)
     char *retval = __PHYSFS_platformGetUserDir();
     if (retval == NULL)
     {
-        const char *dirsep = PHYSFS_getDirSeparator();
+        const char dirsep = __PHYSFS_platformDirSeparator;
         const char *uname = __PHYSFS_platformGetUserName();
         const char *str = (uname != NULL) ? uname : "default";
+        const size_t len = strlen(baseDir) + strlen(str) + 7;
 
-        retval = (char *) allocator.Malloc(strlen(baseDir) + strlen(str) +
-                                           strlen(dirsep) + 6);
-
+        retval = (char *) allocator.Malloc(len);
         if (retval == NULL)
             __PHYSFS_setError(ERR_OUT_OF_MEMORY);
         else
-            sprintf(retval, "%susers%s%s", baseDir, dirsep, str);
+            sprintf(retval, "%susers%c%s", baseDir, dirsep, str);
 
         allocator.Free((void *) uname);
     } /* else */
@@ -1070,23 +1069,29 @@ static char *calculateUserDir(void)
     return retval;
 } /* calculateUserDir */
 
-
+/*
+ * !!! FIXME: remove this and require userdir and basedir to have dirsep
+ * !!! FIXME:  appended in the platform layer
+ */
 static int appendDirSep(char **dir)
 {
-    const char *dirsep = PHYSFS_getDirSeparator();
-    char *ptr;
+    const char dirsep = __PHYSFS_platformDirSeparator;
+    char *ptr = *dir;
+    const size_t len = strlen(ptr);
 
-    if (strcmp((*dir + strlen(*dir)) - strlen(dirsep), dirsep) == 0)
+    if (ptr[len - 1] == dirsep)
         return 1;
 
-    ptr = (char *) allocator.Realloc(*dir, strlen(*dir) + strlen(dirsep) + 1);
+    ptr = (char *) allocator.Realloc(ptr, len + 2);
     if (!ptr)
     {
         allocator.Free(*dir);
         return 0;
     } /* if */
 
-    strcat(ptr, dirsep);
+    ptr[len] = dirsep;
+    ptr[len+1] = '\0';
+
     *dir = ptr;
     return 1;
 } /* appendDirSep */
@@ -1094,8 +1099,8 @@ static int appendDirSep(char **dir)
 
 static char *calculateBaseDir(const char *argv0)
 {
+    const char dirsep = __PHYSFS_platformDirSeparator;
     char *retval = NULL;
-    const char *dirsep = NULL;
     char *ptr = NULL;
 
     /* Give the platform layer first shot at this. */
@@ -1106,26 +1111,10 @@ static char *calculateBaseDir(const char *argv0)
     /* We need argv0 to go on. */
     BAIL_IF_MACRO(argv0 == NULL, ERR_ARGV0_IS_NULL, NULL);
 
-    dirsep = PHYSFS_getDirSeparator();
-    if (strlen(dirsep) == 1)  /* fast path. */
-        ptr = strrchr(argv0, *dirsep);
-    else
-    {
-        ptr = strstr(argv0, dirsep);
-        if (ptr != NULL)
-        {
-            char *p = ptr;
-            while (p != NULL)
-            {
-                ptr = p;
-                p = strstr(p + 1, dirsep);
-            } /* while */
-        } /* if */
-    } /* else */
-
+    ptr = strrchr(argv0, dirsep);
     if (ptr != NULL)
     {
-        size_t size = (size_t) (ptr - argv0);
+        const size_t size = (size_t) (ptr - argv0);
         retval = (char *) allocator.Malloc(size + 1);
         BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
         memcpy(retval, argv0, size);
@@ -1310,7 +1299,8 @@ void PHYSFS_freeList(void *list)
 
 const char *PHYSFS_getDirSeparator(void)
 {
-    return __PHYSFS_platformDirSeparator;
+    static char retval[2] = { __PHYSFS_platformDirSeparator, '\0' };
+    return retval;
 } /* PHYSFS_getDirSeparator */
 
 
