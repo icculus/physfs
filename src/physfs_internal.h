@@ -849,24 +849,6 @@ typedef struct
 void __PHYSFS_setError(const char *err);
 
 
-/*
- * Convert (dirName) to platform-dependent notation, then prepend (prepend)
- *  and append (append) to the converted string.
- *
- *  So, on Win32, calling:
- *     __PHYSFS_convertToDependent("C:\", "my/files", NULL);
- *  ...will return the string "C:\my\files".
- *
- * This is a convenience function; you might want to hack something out that
- *  is less generic (and therefore more efficient).
- *
- * Be sure to allocator.Free() the return value when done with it.
- */
-char *__PHYSFS_convertToDependent(const char *prepend,
-                                  const char *dirName,
-                                  const char *append);
-
-
 /* This byteorder stuff was lifted from SDL. http://www.libsdl.org/ */
 #define PHYSFS_LIL_ENDIAN  1234
 #define PHYSFS_BIG_ENDIAN  4321
@@ -1264,14 +1246,6 @@ void *__PHYSFS_platformGetThreadID(void);
  *  So, on Win32, calling:
  *     __PHYSFS_platformCvtToDependent("C:\", "my/files", NULL);
  *  ...will return the string "C:\my\files".
- *
- * This can be implemented in a platform-specific manner, so you can get
- *  get a speed boost that the default implementation can't, since
- *  you can make assumptions about the size of strings, etc..
- *
- * Platforms that choose not to implement this may just call
- *  __PHYSFS_convertToDependent() as a passthrough, which may fit the bill
- *  already.
  *
  * Be sure to allocator.Free() the return value when done with it.
  */
