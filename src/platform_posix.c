@@ -113,34 +113,6 @@ char *__PHYSFS_platformGetUserDir(void)
 } /* __PHYSFS_platformGetUserDir */
 
 
-char *__PHYSFS_platformCvtToDependent(const char *prepend,
-                                      const char *dirName,
-                                      const char *append)
-{
-    int len = ((prepend) ? strlen(prepend) : 0) +
-              ((append) ? strlen(append) : 0) +
-              strlen(dirName) + 1;
-    char *retval = (char *) allocator.Malloc(len);
-
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-
-    /* platform-independent notation is Unix-style already.  :)  */
-
-    if (prepend)
-        strcpy(retval, prepend);
-    else
-        retval[0] = '\0';
-
-    strcat(retval, dirName);
-
-    if (append)
-        strcat(retval, append);
-
-    return retval;
-} /* __PHYSFS_platformCvtToDependent */
-
-
-
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      int omitSymLinks,
                                      PHYSFS_EnumFilesCallback callback,

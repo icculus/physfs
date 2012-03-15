@@ -54,10 +54,6 @@
     } \
 } \
 
-#ifndef _MSC_VER
-#define _snprintf snprintf
-#endif
-
 /* !!! FIXME: this is wrong for UTF-16. */
 static PHYSFS_uint64 wStrLen(const WCHAR *wstr)
 {
@@ -465,28 +461,6 @@ static int isSymlinkAttrs(const DWORD attr, const DWORD tag)
     return ( (attr & FILE_ATTRIBUTE_REPARSE_POINT) && 
              (tag == PHYSFS_IO_REPARSE_TAG_SYMLINK) );
 } /* isSymlinkAttrs */
-
-
-char *__PHYSFS_platformCvtToDependent(const char *prepend,
-                                      const char *dirName,
-                                      const char *append)
-{
-    const size_t len = ((prepend) ? strlen(prepend) : 0) +
-              ((append) ? strlen(append) : 0) +
-              strlen(dirName) + 1;
-    char *retval = (char *) allocator.Malloc(len);
-    char *p;
-
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-
-    _snprintf(retval, len, "%s%s%s",
-              prepend ? prepend : "", dirName, append ? append : "");
-
-    for (p = strchr(retval, '/'); p != NULL; p = strchr(p + 1, '/'))
-        *p = '\\';
-
-    return retval;
-} /* __PHYSFS_platformCvtToDependent */
 
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,

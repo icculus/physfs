@@ -11,6 +11,31 @@
 
 /* There's no PHYSFS_Io interface here. Use __PHYSFS_createNativeIo(). */
 
+
+
+static char *cvtToDependent(const char *prepend, const char *path, char *buf)
+{
+    BAIL_IF_MACRO(buf == NULL, ERR_OUT_OF_MEMORY, NULL);
+    sprintf(buf, "%s%s", prepend ? prepend : "", path);
+
+    if (__PHYSFS_platformDirSeparator != '/')
+    {
+        char *p;
+        for (p = strchr(buf, '/'); p != NULL; p = strchr(p + 1, '/'))
+            *p = __PHYSFS_platformDirSeparator;
+    } /* if */
+
+    return buf;
+} /* cvtToDependent */
+
+
+#define CVT_TO_DEPENDENT(buf, pre, dir) { \
+    const size_t len = ((pre) ? strlen((char *) pre) : 0) + strlen(dir) + 1; \
+    buf = cvtToDependent((char*)pre,dir,(char*)__PHYSFS_smallAlloc(len)); \
+}
+
+
+
 static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_Stat statbuf;
@@ -41,18 +66,18 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 } /* DIR_openArchive */
 
 
-/* !!! FIXME: I would like to smallAlloc() all these conversions somehow. */
-
 static void DIR_enumerateFiles(dvoid *opaque, const char *dname,
                                int omitSymLinks, PHYSFS_EnumFilesCallback cb,
                                const char *origdir, void *callbackdata)
 {
-    char *d = __PHYSFS_platformCvtToDependent((char *) opaque, dname, NULL);
+    char *d;
+
+    CVT_TO_DEPENDENT(d, opaque, dname);
     if (d != NULL)
     {
         __PHYSFS_platformEnumerateFiles(d, omitSymLinks, cb,
                                         origdir, callbackdata);
-        allocator.Free(d);
+        __PHYSFS_smallFree(d);
     } /* if */
 } /* DIR_enumerateFiles */
 
@@ -60,14 +85,15 @@ static void DIR_enumerateFiles(dvoid *opaque, const char *dname,
 static PHYSFS_Io *doOpen(dvoid *opaque, const char *name,
                          const int mode, int *fileExists)
 {
-    char *f = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
+    char *f;
     PHYSFS_Io *io = NULL;
     int existtmp = 0;
 
+    CVT_TO_DEPENDENT(f, opaque, name);
+    BAIL_IF_MACRO(f == NULL, NULL, NULL);
+
     if (fileExists == NULL)
         fileExists = &existtmp;
-
-    BAIL_IF_MACRO(f == NULL, NULL, NULL);
 
     io = __PHYSFS_createNativeIo(f, mode);
     if (io == NULL)
@@ -80,7 +106,7 @@ static PHYSFS_Io *doOpen(dvoid *opaque, const char *name,
         *fileExists = 1;
     } /* else */
 
-    allocator.Free(f);
+    __PHYSFS_smallFree(f);
 
     return io;
 } /* doOpen */
@@ -106,24 +132,26 @@ static PHYSFS_Io *DIR_openAppend(dvoid *opaque, const char *filename)
 
 static int DIR_remove(dvoid *opaque, const char *name)
 {
-    char *f = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
     int retval;
+    char *f;
 
+    CVT_TO_DEPENDENT(f, opaque, name);
     BAIL_IF_MACRO(f == NULL, NULL, 0);
     retval = __PHYSFS_platformDelete(f);
-    allocator.Free(f);
+    __PHYSFS_smallFree(f);
     return retval;
 } /* DIR_remove */
 
 
 static int DIR_mkdir(dvoid *opaque, const char *name)
 {
-    char *f = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
     int retval;
+    char *f;
 
+    CVT_TO_DEPENDENT(f, opaque, name);
     BAIL_IF_MACRO(f == NULL, NULL, 0);
     retval = __PHYSFS_platformMkDir(f);
-    allocator.Free(f);
+    __PHYSFS_smallFree(f);
     return retval;
 } /* DIR_mkdir */
 
@@ -137,12 +165,13 @@ static void DIR_dirClose(dvoid *opaque)
 static int DIR_stat(dvoid *opaque, const char *name, int *exists,
                     PHYSFS_Stat *stat)
 {
-    char *d = __PHYSFS_platformCvtToDependent((char *) opaque, name, NULL);
     int retval = 0;
+    char *d;
 
+    CVT_TO_DEPENDENT(d, opaque, name);
     BAIL_IF_MACRO(d == NULL, NULL, 0);
     retval = __PHYSFS_platformStat(d, exists, stat);
-    allocator.Free(d);
+    __PHYSFS_smallFree(d);
     return retval;
 } /* DIR_stat */
 
