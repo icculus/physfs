@@ -9,6 +9,7 @@
  */
 
 /* !!! FIXME: ERR_PAST_EOF shouldn't trigger for reads. Just return zero. */
+/* !!! FIXME: use snprintf(), not sprintf(). */
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"

@@ -1243,20 +1243,6 @@ char *__PHYSFS_platformGetUserDir(void);
  */
 void *__PHYSFS_platformGetThreadID(void);
 
-/*
- * Convert (dirName) to platform-dependent notation, then prepend (prepend)
- *  and append (append) to the converted string.
- *
- *  So, on Win32, calling:
- *     __PHYSFS_platformCvtToDependent("C:\", "my/files", NULL);
- *  ...will return the string "C:\my\files".
- *
- * Be sure to allocator.Free() the return value when done with it.
- */
-char *__PHYSFS_platformCvtToDependent(const char *prepend,
-                                      const char *dirName,
-                                      const char *append);
-
 
 /*
  * Enumerate a directory of files. This follows the rules for the
