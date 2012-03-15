@@ -53,7 +53,7 @@ int __PHYSFS_platformDeinit(void)
 } /* __PHYSFS_platformDeinit */
 
 
-static char *getMountPoint(const char *devname)
+static char *getMountPoint(const char *devname, char *buf, size_t bufsize)
 {
     BVolumeRoster mounts;
     BVolume vol;
@@ -65,33 +65,30 @@ static char *getMountPoint(const char *devname)
         fs_stat_dev(vol.Device(), &fsinfo);
         if (strcmp(devname, fsinfo.device_name) == 0)
         {
-            //char buf[B_FILE_NAME_LENGTH];
             BDirectory directory;
             BEntry entry;
             BPath path;
-            status_t rc;
-            rc = vol.GetRootDirectory(&directory);
-            BAIL_IF_MACRO(rc < B_OK, strerror(rc), NULL);
-            rc = directory.GetEntry(&entry);
-            BAIL_IF_MACRO(rc < B_OK, strerror(rc), NULL);
-            rc = entry.GetPath(&path);
-            BAIL_IF_MACRO(rc < B_OK, strerror(rc), NULL);
-            const char *str = path.Path();
-            BAIL_IF_MACRO(str == NULL, ERR_OS_ERROR, NULL);  /* ?! */
-            char *retval = (char *) allocator.Malloc(strlen(str) + 1);
-            BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-            strcpy(retval, str);
-            return(retval);
+            const char *str;
+
+            if ( (vol.GetRootDirectory(&directory) < B_OK) ||
+                 (directory.GetEntry(&entry) < B_OK) ||
+                 (entry.GetPath(&path) < B_OK) ||
+                 ( (str = path.Path()) == NULL) )
+                return NULL;
+
+            strncpy(buf, str, bufsize-1);
+            buf[bufsize-1] = '\0';
+            return buf;
         } /* if */
     } /* while */
 
-    return(NULL);
+    return NULL;
 } /* getMountPoint */
 
 
     /*
      * This function is lifted from Simple Directmedia Layer (SDL):
-     *  http://www.libsdl.org/
+     *  http://www.libsdl.org/  ... this is zlib-licensed code, too.
      */
 static void tryDir(const char *d, PHYSFS_StringCallback callback, void *data)
 {
@@ -120,35 +117,28 @@ static void tryDir(const char *d, PHYSFS_StringCallback callback, void *data)
         {
             if (strcmp(e.name, "floppy") != 0)
                 tryDir(name, callback, data);
+            continue;
         } /* if */
 
-        else
-        {
-            bool add_it = false;
-            device_geometry g;
+        if (strcmp(e.name, "raw") != 0)  /* ignore partitions. */
+            continue;
 
-            if (strcmp(e.name, "raw") == 0)  /* ignore partitions. */
-            {
-                const int devfd = open(name, O_RDONLY);
-                if (devfd >= 0)
-                {
-                    const int rc = ioctl(devfd, B_GET_GEOMETRY, &g, sizeof(g));
-                    close(devfd);
-                    if (rc >= 0)
-                    {
-                        if (g.device_type == B_CD)
-                        {
-                            char *mntpnt = getMountPoint(name);
-                            if (mntpnt != NULL)
-                            {
-                                callback(data, mntpnt);
-                                allocator.Free(mntpnt);  /* !!! FIXME: lose this malloc! */
-                            } /* if */
-                        } /* if */
-                    } /* if */
-                } /* if */
-            } /* if */
-        } /* else */
+        const int devfd = open(name, O_RDONLY);
+        if (devfd < 0)
+            continue;
+
+        device_geometry g;
+        const int rc = ioctl(devfd, B_GET_GEOMETRY, &g, sizeof (g));
+        close(devfd);
+        if (rc < 0)
+            continue;
+
+        if (g.device_type != B_CD)
+            continue;
+
+        char mntpnt[B_FILE_NAME_LENGTH];
+        if (getMountPoint(name, mntpnt, sizeof (mntpnt)))
+            callback(data, mntpnt);
     } /* while */
 } /* tryDir */
 
