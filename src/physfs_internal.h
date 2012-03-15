@@ -1031,11 +1031,15 @@ int UNPK_stat(dvoid *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
 
 
 /*
- * The dir separator; "/" on unix, "\\" on win32, ":" on MacOS, etc...
- *  Obviously, this isn't a function, but it IS a null-terminated string.
+ * The dir separator; '/' on unix, '\\' on win32, ":" on MacOS, etc...
+ *  Obviously, this isn't a function. If you need more than one char for this,
+ *  you'll need to pull some old pieces of PhysicsFS out of revision control.
  */
-extern const char *__PHYSFS_platformDirSeparator;
-
+#if (((defined _WIN32) || (defined _WIN64)) && (!defined __CYGWIN__))
+#define __PHYSFS_platformDirSeparator '\\'
+#else
+#define __PHYSFS_platformDirSeparator '/'
+#endif
 
 /*
  * Initialize the platform. This is called when PHYSFS_init() is called from
