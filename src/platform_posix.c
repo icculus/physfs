@@ -24,10 +24,6 @@
 #include <pthread.h>
 #endif
 
-#ifdef PHYSFS_HAVE_LLSEEK
-#include <linux/unistd.h>
-#endif
-
 #include "physfs_internal.h"
 
 char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
@@ -286,17 +282,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
     const int fd = *((int *) opaque);
-
-    #ifdef PHYSFS_HAVE_LLSEEK
-      unsigned long offset_high = ((pos >> 32) & 0xFFFFFFFF);
-      unsigned long offset_low = (pos & 0xFFFFFFFF);
-      loff_t retoffset;
-      int rc = llseek(fd, offset_high, offset_low, &retoffset, SEEK_SET);
-      BAIL_IF_MACRO(rc == -1, strerror(errno), 0);
-    #else
-      BAIL_IF_MACRO(lseek(fd, (int) pos, SEEK_SET) == -1, strerror(errno), 0);
-    #endif
-
+    BAIL_IF_MACRO(lseek(fd, (off_t) pos, SEEK_SET) == -1, strerror(errno), 0);
     return 1;
 } /* __PHYSFS_platformSeek */
 
@@ -305,17 +291,8 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
     const int fd = *((int *) opaque);
     PHYSFS_sint64 retval;
-
-    #ifdef PHYSFS_HAVE_LLSEEK
-      loff_t retoffset;
-      int rc = llseek(fd, 0, &retoffset, SEEK_CUR);
-      BAIL_IF_MACRO(rc == -1, strerror(errno), -1);
-      retval = (PHYSFS_sint64) retoffset;
-    #else
-      retval = (PHYSFS_sint64) lseek(fd, 0, SEEK_CUR);
-      BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
-    #endif
-
+    retval = (PHYSFS_sint64) lseek(fd, 0, SEEK_CUR);
+    BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
     return retval;
 } /* __PHYSFS_platformTell */
 
