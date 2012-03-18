@@ -1043,8 +1043,7 @@ int UNPK_stat(dvoid *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
 
 /*
  * Initialize the platform. This is called when PHYSFS_init() is called from
- *  the application. You can use this to (for example) determine what version
- *  of Windows you're running.
+ *  the application.
  *
  * Return zero if there was a catastrophic failure (which prevents you from
  *  functioning at all), and non-zero otherwise.
