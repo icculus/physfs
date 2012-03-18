@@ -147,8 +147,6 @@ IF(UNIX)
         SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
         SET(HAVE_PTHREAD_H TRUE)
     ELSE(BEOS)
-        # !!! FIXME
-        #  AC_DEFINE([PHYSFS_HAVE_LLSEEK], 1, [define if we have llseek])
         CHECK_INCLUDE_FILE(sys/ucred.h HAVE_UCRED_H)
         IF(HAVE_UCRED_H)
             ADD_DEFINITIONS(-DPHYSFS_HAVE_SYS_UCRED_H=1)

@@ -55,6 +55,10 @@ extern "C" {
 #   define inline __inline
 #endif
 
+#if defined(__linux__) && !defined(_FILE_OFFSET_BITS)
+#define _FILE_OFFSET_BITS 64
+#endif
+
 /*
  * Interface for small allocations. If you need a little scratch space for
  *  a throwaway buffer or string, use this. It will make small allocations
