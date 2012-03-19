@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "physfs_platforms.h"
+
 #ifdef HAVE_ASSERT_H
 #include <assert.h>
 #elif (!defined assert)
@@ -55,7 +57,7 @@ extern "C" {
 #   define inline __inline
 #endif
 
-#if defined(__linux__) && !defined(_FILE_OFFSET_BITS)
+#if PHYSFS_PLATFORM_LINUX && !defined(_FILE_OFFSET_BITS)
 #define _FILE_OFFSET_BITS 64
 #endif
 
@@ -1039,7 +1041,7 @@ int UNPK_stat(dvoid *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
  *  Obviously, this isn't a function. If you need more than one char for this,
  *  you'll need to pull some old pieces of PhysicsFS out of revision control.
  */
-#if (((defined _WIN32) || (defined _WIN64)) && (!defined __CYGWIN__))
+#if PHYSFS_PLATFORM_WINDOWS
 #define __PHYSFS_platformDirSeparator '\\'
 #else
 #define __PHYSFS_platformDirSeparator '/'
