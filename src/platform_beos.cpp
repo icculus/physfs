@@ -43,13 +43,13 @@
 
 int __PHYSFS_platformInit(void)
 {
-    return(1);  /* always succeed. */
+    return 1;  /* always succeed. */
 } /* __PHYSFS_platformInit */
 
 
 int __PHYSFS_platformDeinit(void)
 {
-    return(1);  /* always succeed. */
+    return 1;  /* always succeed. */
 } /* __PHYSFS_platformDeinit */
 
 
@@ -154,7 +154,7 @@ static team_id getTeamID(void)
     thread_info info;
     thread_id tid = find_thread(NULL);
     get_thread_info(tid, &info);
-    return(info.team);
+    return info.team;
 } /* getTeamID */
 
 
@@ -180,19 +180,19 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     char *retval = (char *) allocator.Malloc(strlen(str) + 1);
     BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, str);
-    return(retval);
+    return retval;
 } /* __PHYSFS_platformCalcBaseDir */
 
 
 void *__PHYSFS_platformGetThreadID(void)
 {
-    return((void *) find_thread(NULL));
+    return (void *) find_thread(NULL);
 } /* __PHYSFS_platformGetThreadID */
 
 
 void *__PHYSFS_platformCreateMutex(void)
 {
-    return(new BLocker("PhysicsFS lock", true));
+    return new BLocker("PhysicsFS lock", true);
 } /* __PHYSFS_platformCreateMutex */
 
 
@@ -216,7 +216,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
-    return(0);  /* just use malloc() and friends. */
+    return 0;  /* just use malloc() and friends. */
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 #endif  /* PHYSFS_PLATFORM_BEOS */
