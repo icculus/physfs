@@ -47,9 +47,6 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     assert(io == NULL);  /* shouldn't create an Io for these. */
     BAIL_IF_MACRO(!__PHYSFS_platformStat(name, &exists, &st), ERRPASS, NULL);
-    /* !!! FIXME: the failed Stat() call will BAIL before we check (exists) */
-    /* !!! FIXME:  ...should we even be checking for existance here...? */
-    BAIL_IF_MACRO(!exists, PHYSFS_ERR_NO_SUCH_PATH, NULL);
     if (st.filetype != PHYSFS_FILETYPE_DIRECTORY)
         BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 
