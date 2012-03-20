@@ -40,7 +40,6 @@
 
 #include "physfs_internal.h"
 
-
 int __PHYSFS_platformInit(void)
 {
     return 1;  /* always succeed. */
@@ -178,7 +177,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     const char *str = path.Path();
     assert(str != NULL);
     char *retval = (char *) allocator.Malloc(strlen(str) + 1);
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, str);
     return retval;
 } /* __PHYSFS_platformCalcBaseDir */

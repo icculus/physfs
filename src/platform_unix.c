@@ -90,7 +90,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     struct mntent *ent = NULL;
 
     mounts = setmntent("/etc/mtab", "r");
-    BAIL_IF_MACRO(mounts == NULL, ERR_IO_ERROR, /*return void*/);
+    BAIL_IF_MACRO(mounts == NULL, PHYSFS_ERR_IO, /*return void*/);
 
     while ( (ent = getmntent(mounts)) != NULL )
     {
@@ -120,7 +120,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     FILE *mounts = fopen(MNTTAB, "r");
     struct mnttab ent;
 
-    BAIL_IF_MACRO(mounts == NULL, ERR_IO_ERROR, /*return void*/);
+    BAIL_IF_MACRO(mounts == NULL, PHYSFS_ERR_IO, /*return void*/);
     while (getmntent(mounts, &ent) == 0)
     {
         int add_it = 0;
@@ -161,8 +161,8 @@ static char *findBinaryInPath(const char *bin, char *envr)
     char *start = envr;
     char *ptr;
 
-    BAIL_IF_MACRO(bin == NULL, ERR_INVALID_ARGUMENT, NULL);
-    BAIL_IF_MACRO(envr == NULL, ERR_INVALID_ARGUMENT, NULL);
+    assert(bin != NULL);
+    assert(envr != NULL);
 
     do
     {
@@ -175,11 +175,11 @@ static char *findBinaryInPath(const char *bin, char *envr)
         if (size > alloc_size)
         {
             char *x = (char *) allocator.Realloc(exe, size);
-            if (x == NULL)
+            if (!x)
             {
                 if (exe != NULL)
                     allocator.Free(exe);
-                BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+                BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
             } /* if */
 
             alloc_size = size;
@@ -276,7 +276,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     {
         /* If there's no dirsep on argv0, then look through $PATH for it. */
         envr = __PHYSFS_platformCopyEnvironmentVariable("PATH");
-        BAIL_IF_MACRO(!envr, NULL, NULL);
+        BAIL_IF_MACRO(!envr, ERRPASS, NULL);
         retval = findBinaryInPath(argv0, envr);
         allocator.Free(envr);
     } /* if */

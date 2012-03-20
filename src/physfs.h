@@ -127,7 +127,7 @@
  *  utmost importance to some applications.
  *
  * PhysicsFS is mostly thread safe. The error messages returned by
- *  PHYSFS_getLastError are unique by thread, and library-state-setting
+ *  PHYSFS_getLastError() are unique by thread, and library-state-setting
  *  functions are mutex'd. For efficiency, individual file accesses are 
  *  not locked, so you can not safely read/write/seek/close/etc the same 
  *  file from two threads at the same time. Other race conditions are bugs 
@@ -607,19 +607,49 @@ PHYSFS_DECL void PHYSFS_freeList(void *listVar);
  * \fn const char *PHYSFS_getLastError(void)
  * \brief Get human-readable error information.
  *
+ * \warning As of PhysicsFS 2.1, this function has been nerfed.
+ *          Before PhysicsFS 2.1, this function was the only way to get
+ *          error details beyond a given function's basic return value.
+ *          This was meant to be a human-readable string in one of several
+ *          languages, and was not useful for application parsing. This was
+ *          a problem, because the developer and not the user chose the
+ *          language at compile time, and the PhysicsFS maintainers had
+ *          to (poorly) maintain a significant amount of localization work.
+ *          The app couldn't parse the strings, even if they counted on a
+ *          specific language, since some were dynamically generated.
+ *          In 2.1 and later, this always returns a static string in
+ *          English; you may use it as a key string for your own
+ *          localizations if you like, as we'll promise not to change
+ *          existing error strings. Also, if your application wants to
+ *          look at specific errors, we now offer a better option:
+ *          use PHYSFS_getLastErrorCode() instead.
+ *
  * Get the last PhysicsFS error message as a human-readable, null-terminated
- *  string. This will be NULL if there's been no error since the last call to
- *  this function. The pointer returned by this call points to an internal
+ *  string. This will return NULL if there's been no error since the last call
+ *  to this function. The pointer returned by this call points to an internal
  *  buffer. Each thread has a unique error state associated with it, but each
  *  time a new error message is set, it will overwrite the previous one
  *  associated with that thread. It is safe to call this function at anytime,
  *  even before PHYSFS_init().
  *
- * It is not wise to expect a specific string of characters here, since the
- *  error message may be localized into an unfamiliar language. These strings
- *  are meant to be passed on directly to the user.
+ * PHYSFS_getLastError() and PHYSFS_getLastErrorCode() both reset the same
+ *  thread-specific error state. Calling one will wipe out the other's
+ *  data. If you need both, call PHYSFS_getLastErrorCode(), then pass that
+ *  value to PHYSFS_getErrorByCode().
+ *
+ * As of PhysicsFS 2.1, this function only presents text in the English
+ *  language, but the strings are static, so you can use them as keys into
+ *  your own localization dictionary. These strings are meant to be passed on
+ *  directly to the user.
+ *
+ * Generally, applications should only concern themselves with whether a
+ *  given function failed; however, if your code require more specifics, you
+ *  should use PHYSFS_getLastErrorCode() instead of this function.
  *
  *   \return READ ONLY string of last error message.
+ *
+ * \sa PHYSFS_getLastErrorCode
+ * \sa PHYSFS_getErrorByCode
  */
 PHYSFS_DECL const char *PHYSFS_getLastError(void);
 
@@ -3058,6 +3088,147 @@ PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
  */
 PHYSFS_DECL int PHYSFS_mountHandle(PHYSFS_File *file, const char *fname,
                                    const char *mountPoint, int appendToPath);
+
+
+/**
+ * \enum PHYSFS_ErrorCode
+ * \brief Values that represent specific causes of failure.
+ *
+ * Most of the time, you should only concern yourself with whether a given
+ *  operation failed or not, but there may be occasions where you plan to
+ *  handle a specific failure case gracefully, so we provide specific error
+ *  codes.
+ *
+ * Most of these errors are a little vague, and most aren't things you can
+ *  fix...if there's a permission error, for example, all you can really do
+ *  is pass that information on to the user and let them figure out how to
+ *  handle it. In most these cases, your program should only care that it
+ *  failed to accomplish its goals, and not care specifically why.
+ *
+ * \sa PHYSFS_getLastErrorCode
+ * \sa PHYSFS_getErrorByCode
+ */
+typedef enum __PHYSFS_ERRORCODE__
+{
+    PHYSFS_ERR_OK,               /**< Success; no error.                    */
+    PHYSFS_ERR_OTHER_ERROR,      /**< Error not otherwise covered here.     */
+    PHYSFS_ERR_OUT_OF_MEMORY,    /**< Memory allocation failed.             */
+    PHYSFS_ERR_NOT_INITIALIZED,  /**< PhysicsFS is not initialized.         */
+    PHYSFS_ERR_IS_INITIALIZED,   /**< PhysicsFS is already initialized.     */
+    PHYSFS_ERR_ARGV0_IS_NULL,    /**< Needed argv[0], but it is NULL.       */
+    PHYSFS_ERR_UNSUPPORTED,      /**< Operation or feature unsupported.     */
+    PHYSFS_ERR_PAST_EOF,         /**< Attempted to access past end of file. */
+    PHYSFS_ERR_FILES_STILL_OPEN, /**< Files still open.                     */
+    PHYSFS_ERR_INVALID_ARGUMENT, /**< Bad parameter passed to an function.  */
+    PHYSFS_ERR_NOT_MOUNTED,      /**< Requested archive/dir not mounted.    */
+    PHYSFS_ERR_NO_SUCH_PATH,     /**< No such file, directory, or parent.   */
+    PHYSFS_ERR_SYMLINK_FORBIDDEN,/**< Symlink seen when not permitted.      */
+    PHYSFS_ERR_NO_WRITE_DIR,     /**< No write dir has been specified.      */
+    PHYSFS_ERR_OPEN_FOR_READING, /**< Wrote to a file opened for reading.   */
+    PHYSFS_ERR_OPEN_FOR_WRITING, /**< Read from a file opened for writing.  */
+    PHYSFS_ERR_NOT_A_FILE,       /**< Needed a file, got a directory (etc). */
+    PHYSFS_ERR_READ_ONLY,        /**< Wrote to a read-only filesystem.      */
+    PHYSFS_ERR_CORRUPT,          /**< Corrupted data encountered.           */
+    PHYSFS_ERR_SYMLINK_LOOP,     /**< Infinite symbolic link loop.          */
+    PHYSFS_ERR_IO,               /**< i/o error (hardware failure, etc).    */
+    PHYSFS_ERR_PERMISSION,       /**< Permission denied.                    */
+    PHYSFS_ERR_NO_SPACE,         /**< No space (disk full, over quota, etc) */
+    PHYSFS_ERR_BAD_FILENAME,     /**< Filename is bogus/insecure.           */
+    PHYSFS_ERR_BUSY,             /**< Tried to modify a file the OS needs.  */
+    PHYSFS_ERR_DIR_NOT_EMPTY,    /**< Tried to delete dir with files in it. */
+    PHYSFS_ERR_OS_ERROR          /**< Unspecified OS-level error.           */
+} PHYSFS_ErrorCode;
+
+
+/**
+ * \fn PHYSFS_ErrorCode PHYSFS_getLastErrorCode(void)
+ * \brief Get machine-readable error information.
+ *
+ * Get the last PhysicsFS error message as an integer value. This will return
+ *  PHYSFS_ERR_OK if there's been no error since the last call to this
+ *  function. Each thread has a unique error state associated with it, but
+ *  each time a new error message is set, it will overwrite the previous one
+ *  associated with that thread. It is safe to call this function at anytime,
+ *  even before PHYSFS_init().
+ *
+ * PHYSFS_getLastError() and PHYSFS_getLastErrorCode() both reset the same
+ *  thread-specific error state. Calling one will wipe out the other's
+ *  data. If you need both, call PHYSFS_getLastErrorCode(), then pass that
+ *  value to PHYSFS_getErrorByCode().
+ *
+ * Generally, applications should only concern themselves with whether a
+ *  given function failed; however, if you require more specifics, you can
+ *  try this function to glean information, if there's some specific problem
+ *  you're expecting and plan to handle. But with most things that involve
+ *  file systems, the best course of action is usually to give up, report the
+ *  problem to the user, and let them figure out what should be done about it.
+ *  For that, you might prefer PHYSFS_getLastError() instead.
+ *
+ *   \return Enumeration value that represents last reported error.
+ *
+ * \sa PHYSFS_getErrorByCode
+ */
+PHYSFS_DECL PHYSFS_ErrorCode PHYSFS_getLastErrorCode(void);
+
+
+/**
+ * \fn const char *PHYSFS_getErrorByCode(PHYSFS_ErrorCode code)
+ * \brief Get human-readable description string for a given error code.
+ *
+ * Get a static string, in UTF-8 format, that represents an English
+ *  description of a given error code.
+ *
+ * This string is guaranteed to never change (although we may add new strings
+ *  for new error codes in later versions of PhysicsFS), so you can use it
+ *  for keying a localization dictionary.
+ *
+ * It is safe to call this function at anytime, even before PHYSFS_init().
+ *
+ * These strings are meant to be passed on directly to the user.
+ *  Generally, applications should only concern themselves with whether a
+ *  given function failed, but not care about the specifics much.
+ *
+ * Do not attempt to free the returned strings; they are read-only and you
+ *  don't own their memory pages.
+ *
+ *   \param code Error code to convert to a string.
+ *   \return READ ONLY string of requested error message, NULL if this
+ *           is not a valid PhysicsFS error code. Always check for NULL if
+ *           you might be looking up an error code that didn't exist in an
+ *           earlier version of PhysicsFS.
+ *
+ * \sa PHYSFS_getLastErrorCode
+ */
+PHYSFS_DECL const char *PHYSFS_getErrorByCode(PHYSFS_ErrorCode code);
+
+/**
+ * \fn void PHYSFS_setErrorCode(PHYSFS_ErrorCode code)
+ * \brief Set the current thread's error code.
+ *
+ * This lets you set the value that will be returned by the next call to
+ *  PHYSFS_getLastErrorCode(). This will replace any existing error code,
+ *  whether set by your application or internally by PhysicsFS.
+ *
+ * Error codes are stored per-thread; what you set here will not be
+ *  accessible to another thread.
+ *
+ * Any call into PhysicsFS may change the current error code, so any code you
+ *  set here is somewhat fragile, and thus you shouldn't build any serious
+ *  error reporting framework on this function. The primary goal of this
+ *  function is to allow PHYSFS_Io implementations to set the error state,
+ *  which generally will be passed back to your application when PhysicsFS
+ *  makes a PHYSFS_Io call that fails internally.
+ *
+ * This function doesn't care if the error code is a value known to PhysicsFS
+ *  or not (but PHYSFS_getErrorByCode() will return NULL for unknown values).
+ *  The value will be reported unmolested by PHYSFS_getLastErrorCode().
+ *
+ *   \param code Error code to become the current thread's new error state.
+ *
+ * \sa PHYSFS_getLastErrorCode
+ * \sa PHYSFS_getErrorByCode
+ */
+PHYSFS_DECL void PHYSFS_setErrorCode(PHYSFS_ErrorCode code);
 
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
 

@@ -14,10 +14,6 @@ From http://icculus.org/pipermail/physfs/2009-March/000698.html ...
 - Archives formats provided by the implementation.
 - Write support for various archives. I haven't decided how to do this yet,
   but I'd like to.
-- Replace the existing error strings with something more flexible...right now,
-  you have to pick a translation at compile time, which isn't too useful. It
-  might be nice to have real error codes for apps instead of just error
-  messages for humans, too.
 - Add an API to expose a file's extended attributes to the application?
 - Deprecate PHYSFS_setSaneConfig(). It really should have been in the extras
   directory.
@@ -26,7 +22,6 @@ From http://icculus.org/pipermail/physfs/2009-March/000698.html ...
 
 From http://icculus.org/pipermail/physfs/2010-January/000821.html ...
 
-- Using error codes instead of error messages
 - Plugin system for the archive handlers
 
 
@@ -86,9 +81,9 @@ Other stuff I thought of...
 - bzip2 support in zip archiver?
 - rewrite 7zip archiver.
 - ryanify iso9660 code.
-- Examine Chris Nelles's errorcode stuff.
 - Move archiver_qpak.c code to archiver_unpacked.c?
 - Cache basedir/userdir results (do we do this already?)
+- Reduce the BAIL and GOTO macro use. A lot of these don't add anything.
 
 Probably other stuff. Requests and recommendations are welcome.
 

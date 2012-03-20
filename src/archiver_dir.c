@@ -15,7 +15,7 @@
 
 static char *cvtToDependent(const char *prepend, const char *path, char *buf)
 {
-    BAIL_IF_MACRO(buf == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(buf == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     sprintf(buf, "%s%s", prepend ? prepend : "", path);
 
     if (__PHYSFS_platformDirSeparator != '/')
@@ -38,7 +38,7 @@ static char *cvtToDependent(const char *prepend, const char *path, char *buf)
 
 static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
-    PHYSFS_Stat statbuf;
+    PHYSFS_Stat st;
     const char dirsep = __PHYSFS_platformDirSeparator;
     char *retval = NULL;
     const size_t namelen = strlen(name);
@@ -46,12 +46,15 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     int exists = 0;
 
     assert(io == NULL);  /* shouldn't create an Io for these. */
-    BAIL_IF_MACRO(!__PHYSFS_platformStat(name, &exists, &statbuf), NULL, NULL);
-    if ((!exists) || (statbuf.filetype != PHYSFS_FILETYPE_DIRECTORY))
-        BAIL_MACRO(ERR_NOT_AN_ARCHIVE, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_platformStat(name, &exists, &st), ERRPASS, NULL);
+    /* !!! FIXME: the failed Stat() call will BAIL before we check (exists) */
+    /* !!! FIXME:  ...should we even be checking for existance here...? */
+    BAIL_IF_MACRO(!exists, PHYSFS_ERR_NO_SUCH_PATH, NULL);
+    if (st.filetype != PHYSFS_FILETYPE_DIRECTORY)
+        BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 
     retval = allocator.Malloc(namelen + seplen + 1);
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     strcpy(retval, name);
 
@@ -90,7 +93,7 @@ static PHYSFS_Io *doOpen(dvoid *opaque, const char *name,
     int existtmp = 0;
 
     CVT_TO_DEPENDENT(f, opaque, name);
-    BAIL_IF_MACRO(f == NULL, NULL, NULL);
+    BAIL_IF_MACRO(!f, ERRPASS, NULL);
 
     if (fileExists == NULL)
         fileExists = &existtmp;
@@ -136,7 +139,7 @@ static int DIR_remove(dvoid *opaque, const char *name)
     char *f;
 
     CVT_TO_DEPENDENT(f, opaque, name);
-    BAIL_IF_MACRO(f == NULL, NULL, 0);
+    BAIL_IF_MACRO(!f, ERRPASS, 0);
     retval = __PHYSFS_platformDelete(f);
     __PHYSFS_smallFree(f);
     return retval;
@@ -149,7 +152,7 @@ static int DIR_mkdir(dvoid *opaque, const char *name)
     char *f;
 
     CVT_TO_DEPENDENT(f, opaque, name);
-    BAIL_IF_MACRO(f == NULL, NULL, 0);
+    BAIL_IF_MACRO(!f, ERRPASS, 0);
     retval = __PHYSFS_platformMkDir(f);
     __PHYSFS_smallFree(f);
     return retval;
@@ -169,7 +172,7 @@ static int DIR_stat(dvoid *opaque, const char *name, int *exists,
     char *d;
 
     CVT_TO_DEPENDENT(d, opaque, name);
-    BAIL_IF_MACRO(d == NULL, NULL, 0);
+    BAIL_IF_MACRO(!d, ERRPASS, 0);
     retval = __PHYSFS_platformStat(d, exists, stat);
     __PHYSFS_smallFree(d);
     return retval;
