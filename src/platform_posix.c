@@ -444,6 +444,8 @@ int __PHYSFS_platformGrabMutex(void *mutex)
 void __PHYSFS_platformReleaseMutex(void *mutex)
 {
     PthreadMutex *m = (PthreadMutex *) mutex;
+    assert(m->owner == pthread_self());  /* catch programming errors. */
+    assert(m->count > 0);  /* catch programming errors. */
     if (m->owner == pthread_self())
     {
         if (--m->count == 0)
