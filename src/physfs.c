@@ -860,7 +860,7 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
             return retval;
 
         io = __PHYSFS_createNativeIo(d, forWriting ? 'w' : 'r');
-        BAIL_IF_MACRO_MUTEX(io == NULL, NULL, stateLock, 0);
+        BAIL_IF_MACRO(!io, ERRPASS, 0);
     } /* if */
 
     ext = find_filename_extension(d);
