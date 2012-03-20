@@ -30,7 +30,7 @@
 #include <malloc.h>
 #endif
 
-#if defined(__sun) || defined(sun)
+#if PHYSFS_PLATFORM_SOLARIS
 #include <alloca.h>
 #endif
 
