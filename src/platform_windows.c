@@ -50,11 +50,11 @@
         const PHYSFS_uint64 len = (PHYSFS_uint64) ((strlen(str) + 1) * 2); \
         w_assignto = (WCHAR *) __PHYSFS_smallAlloc(len); \
         if (w_assignto != NULL) \
-            PHYSFS_utf8ToUcs2(str, (PHYSFS_uint16 *) w_assignto, len); \
+            PHYSFS_utf8ToUtf16(str, (PHYSFS_uint16 *) w_assignto, len); \
     } \
 } \
 
-/* !!! FIXME: this is wrong for UTF-16. */
+/* Note this counts WCHARs, not codepoints! */
 static PHYSFS_uint64 wStrLen(const WCHAR *wstr)
 {
     PHYSFS_uint64 len = 0;
@@ -72,8 +72,7 @@ static char *unicodeToUtf8Heap(const WCHAR *w_str)
         const PHYSFS_uint64 len = (wStrLen(w_str) * 4) + 1;
         retval = allocator.Malloc(len);
         BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
-        /* !!! FIXME: utf-16. */
-        PHYSFS_utf8FromUcs2((const PHYSFS_uint16 *) w_str, retval, len);
+        PHYSFS_utf8FromUtf16((const PHYSFS_uint16 *) w_str, retval, len);
         ptr = allocator.Realloc(retval, strlen(retval) + 1); /* shrink. */
         if (ptr != NULL)
             retval = (char *) ptr;
