@@ -21,6 +21,14 @@
 #include <time.h>
 #include <errno.h>
 
+#if PHYSFS_PLATFORM_LINUX && !defined(PHYSFS_HAVE_MNTENT_H)
+#define PHYSFS_HAVE_MNTENT_H 1
+#elif PHYSFS_PLATFORM_SOLARIS && !defined(PHYSFS_HAVE_SYS_MNTTAB_H)
+#define PHYSFS_HAVE_SYS_MNTTAB_H 1
+#elif PHYSFS_PLATFORM_BSD && !defined(PHYSFS_HAVE_SYS_UCRED_H)
+#define PHYSFS_HAVE_SYS_UCRED_H 1
+#endif
+
 #ifdef PHYSFS_HAVE_SYS_UCRED_H
 #  ifdef PHYSFS_HAVE_MNTENT_H
 #    undef PHYSFS_HAVE_MNTENT_H /* don't do both... */
