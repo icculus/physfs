@@ -98,7 +98,7 @@ static PHYSFS_sint64 QPAK_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 
 static PHYSFS_sint64 QPAK_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, -1);
 } /* QPAK_write */
 
 
@@ -114,7 +114,7 @@ static int QPAK_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
     const QPAKentry *entry = finfo->entry;
     int rc;
 
-    BAIL_IF_MACRO(offset >= entry->size, ERR_PAST_EOF, 0);
+    BAIL_IF_MACRO(offset >= entry->size, PHYSFS_ERR_PAST_EOF, 0);
     rc = finfo->io->seek(finfo->io, entry->startPos + offset);
     if (rc)
         finfo->curPos = (PHYSFS_uint32) offset;
@@ -136,11 +136,11 @@ static PHYSFS_Io *QPAK_duplicate(PHYSFS_Io *_io)
     PHYSFS_Io *io = NULL;
     PHYSFS_Io *retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
     QPAKfileinfo *finfo = (QPAKfileinfo *) allocator.Malloc(sizeof (QPAKfileinfo));
-    GOTO_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, QPAK_duplicate_failed);
-    GOTO_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, QPAK_duplicate_failed);
+    GOTO_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, QPAK_duplicate_failed);
+    GOTO_IF_MACRO(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, QPAK_duplicate_failed);
 
     io = origfinfo->io->duplicate(origfinfo->io);
-    GOTO_IF_MACRO(io == NULL, NULL, QPAK_duplicate_failed);
+    GOTO_IF_MACRO(!io, ERRPASS, QPAK_duplicate_failed);
     finfo->io = io;
     finfo->entry = origfinfo->entry;
     finfo->curPos = 0;
@@ -215,13 +215,13 @@ static int qpak_load_entries(QPAKinfo *info)
     QPAKentry *entry;
 
     info->entries = (QPAKentry*) allocator.Malloc(sizeof(QPAKentry)*fileCount);
-    BAIL_IF_MACRO(info->entries == NULL, ERR_OUT_OF_MEMORY, 0);
+    BAIL_IF_MACRO(info->entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, 0);
 
     for (entry = info->entries; fileCount > 0; fileCount--, entry++)
     {
-        BAIL_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 56), NULL, 0);
-        BAIL_IF_MACRO(!__PHYSFS_readAll(io, &entry->startPos, 4), NULL, 0);
-        BAIL_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), NULL, 0);
+        BAIL_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 56), ERRPASS, 0);
+        BAIL_IF_MACRO(!__PHYSFS_readAll(io, &entry->startPos, 4), ERRPASS, 0);
+        BAIL_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), ERRPASS, 0);
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = PHYSFS_swapULE32(entry->startPos);
     } /* for */
@@ -240,25 +240,26 @@ static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
+    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), NULL, NULL);
-    BAIL_IF_MACRO(PHYSFS_swapULE32(val) != QPAK_SIG, ERR_NOT_AN_ARCHIVE, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), ERRPASS, NULL);
+    if (PHYSFS_swapULE32(val) != QPAK_SIG)
+        BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), ERRPASS, NULL);
     pos = PHYSFS_swapULE32(val);  /* directory table offset. */
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), ERRPASS, NULL);
     count = PHYSFS_swapULE32(val);
 
     /* corrupted archive? */
-    BAIL_IF_MACRO((count % 64) != 0, ERR_CORRUPTED, NULL);
+    BAIL_IF_MACRO((count % 64) != 0, PHYSFS_ERR_CORRUPT, NULL);
     count /= 64;
 
-    BAIL_IF_MACRO(!io->seek(io, pos), NULL, NULL);
+    BAIL_IF_MACRO(!io->seek(io, pos), ERRPASS, NULL);
 
     info = (QPAKinfo *) allocator.Malloc(sizeof (QPAKinfo));
-    BAIL_IF_MACRO(info == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(info == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (QPAKinfo));
     info->io = io;
     info->entryCount = count;
@@ -439,7 +440,7 @@ static QPAKentry *qpak_find_entry(const QPAKinfo *info, const char *path,
     if (isDir != NULL)
         *isDir = 0;
 
-    BAIL_MACRO(ERR_NO_SUCH_FILE, NULL);
+    BAIL_MACRO(PHYSFS_ERR_NO_SUCH_PATH, NULL);
 } /* qpak_find_entry */
 
 
@@ -453,21 +454,21 @@ static PHYSFS_Io *QPAK_openRead(dvoid *opaque, const char *fnm, int *fileExists)
 
     entry = qpak_find_entry(info, fnm, &isDir);
     *fileExists = ((entry != NULL) || (isDir));
-    BAIL_IF_MACRO(isDir, ERR_NOT_A_FILE, NULL);
-    BAIL_IF_MACRO(entry == NULL, ERR_NO_SUCH_FILE, NULL);
+    BAIL_IF_MACRO(isDir, PHYSFS_ERR_NOT_A_FILE, NULL);
+    BAIL_IF_MACRO(entry == NULL, PHYSFS_ERR_NO_SUCH_PATH, NULL);
 
     finfo = (QPAKfileinfo *) allocator.Malloc(sizeof (QPAKfileinfo));
-    BAIL_IF_MACRO(finfo == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(finfo == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     finfo->io = info->io->duplicate(info->io);
-    GOTO_IF_MACRO(finfo->io == NULL, NULL, QPAK_openRead_failed);
+    GOTO_IF_MACRO(finfo->io == NULL, ERRPASS, QPAK_openRead_failed);
     if (!finfo->io->seek(finfo->io, entry->startPos))
-        GOTO_MACRO(NULL, QPAK_openRead_failed);
+        goto QPAK_openRead_failed;
 
     finfo->curPos = 0;
     finfo->entry = entry;
     io = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
-    GOTO_IF_MACRO(io == NULL, ERR_OUT_OF_MEMORY, QPAK_openRead_failed);
+    GOTO_IF_MACRO(io == NULL, PHYSFS_ERR_OUT_OF_MEMORY, QPAK_openRead_failed);
     memcpy(io, &QPAK_Io, sizeof (PHYSFS_Io));
     io->opaque = finfo;
 
@@ -490,25 +491,25 @@ QPAK_openRead_failed:
 
 static PHYSFS_Io *QPAK_openWrite(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 } /* QPAK_openWrite */
 
 
 static PHYSFS_Io *QPAK_openAppend(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 } /* QPAK_openAppend */
 
 
 static int QPAK_remove(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
 } /* QPAK_remove */
 
 
 static int QPAK_mkdir(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
 } /* QPAK_mkdir */
 
 

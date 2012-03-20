@@ -205,7 +205,7 @@ static LZMAfile * lzma_find_file(const LZMAarchive *archive, const char *name)
 {
     LZMAfile *file = bsearch(name, archive->files, archive->db.Database.NumFiles, sizeof(*archive->files), lzma_file_cmp_stdlib); /* FIXME: Should become __PHYSFS_search!!! */
 
-    BAIL_IF_MACRO(file == NULL, ERR_NO_SUCH_FILE, NULL);
+    BAIL_IF_MACRO(file == NULL, PHYSFS_ERR_NO_SUCH_PATH, NULL);
 
     return file;
 } /* lzma_find_file */
@@ -291,25 +291,25 @@ static int lzma_err(SZ_RESULT rc)
         case SZ_OK: /* Same as LZMA_RESULT_OK */
             break;
         case SZE_DATA_ERROR: /* Same as LZMA_RESULT_DATA_ERROR */
-            __PHYSFS_setError(ERR_DATA_ERROR);
+            __PHYSFS_setError(PHYSFS_ERR_CORRUPT); /*!!!FIXME: was "PHYSFS_ERR_DATA_ERROR" */
             break;
         case SZE_OUTOFMEMORY:
-            __PHYSFS_setError(ERR_OUT_OF_MEMORY);
+            __PHYSFS_setError(PHYSFS_ERR_OUT_OF_MEMORY);
             break;
         case SZE_CRC_ERROR:
-            __PHYSFS_setError(ERR_CORRUPTED);
+            __PHYSFS_setError(PHYSFS_ERR_CORRUPT);
             break;
         case SZE_NOTIMPL:
-            __PHYSFS_setError(ERR_NOT_IMPLEMENTED);
+            __PHYSFS_setError(PHYSFS_ERR_UNSUPPORTED);
             break;
         case SZE_FAIL:
-            __PHYSFS_setError(ERR_UNKNOWN_ERROR);  /* !!! FIXME: right? */
+            __PHYSFS_setError(PHYSFS_ERR_OTHER_ERROR);  /* !!! FIXME: right? */
             break;
         case SZE_ARCHIVE_ERROR:
-            __PHYSFS_setError(ERR_CORRUPTED);  /* !!! FIXME: right? */
+            __PHYSFS_setError(PHYSFS_ERR_CORRUPT);  /* !!! FIXME: right? */
             break;
         default:
-            __PHYSFS_setError(ERR_UNKNOWN_ERROR);
+            __PHYSFS_setError(PHYSFS_ERR_OTHER_ERROR);
     } /* switch */
 
     return rc;
@@ -324,8 +324,8 @@ static PHYSFS_sint64 LZMA_read(PHYSFS_Io *io, void *outBuf, PHYSFS_uint64 len)
     const size_t remainingSize = file->item->Size - file->position;
     size_t fileSize = 0;
 
-    BAIL_IF_MACRO(wantedSize == 0, NULL, 0); /* quick rejection. */
-    BAIL_IF_MACRO(remainingSize == 0, ERR_PAST_EOF, 0);
+    BAIL_IF_MACRO(wantedSize == 0, ERRPASS, 0); /* quick rejection. */
+    BAIL_IF_MACRO(remainingSize == 0, PHYSFS_ERR_PAST_EOF, 0);
 
     if (wantedSize > remainingSize)
         wantedSize = remainingSize;
@@ -364,7 +364,7 @@ static PHYSFS_sint64 LZMA_read(PHYSFS_Io *io, void *outBuf, PHYSFS_uint64 len)
 
 static PHYSFS_sint64 LZMA_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, -1);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, -1);
 } /* LZMA_write */
 
 
@@ -379,7 +379,7 @@ static int LZMA_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
 {
     LZMAfile *file = (LZMAfile *) io->opaque;
 
-    BAIL_IF_MACRO(offset > file->item->Size, ERR_PAST_EOF, 0);
+    BAIL_IF_MACRO(offset > file->item->Size, PHYSFS_ERR_PAST_EOF, 0);
 
     file->position = offset; /* We only use a virtual position... */
 
@@ -398,7 +398,7 @@ static PHYSFS_Io *LZMA_duplicate(PHYSFS_Io *_io)
 {
     /* !!! FIXME: this archiver needs to be reworked to allow multiple
      * !!! FIXME:  opens before we worry about duplication. */
-    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 } /* LZMA_duplicate */
 
 
@@ -447,15 +447,15 @@ static void *LZMA_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, NULL);
+    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
 
     if (io->read(io, sig, k7zSignatureSize) != k7zSignatureSize)
-        BAIL_MACRO(NULL, 0);
-    BAIL_IF_MACRO(!TestSignatureCandidate(sig), ERR_NOT_AN_ARCHIVE, NULL);
-    BAIL_IF_MACRO(!io->seek(io, 0), NULL, NULL);
+        return 0;
+    BAIL_IF_MACRO(!TestSignatureCandidate(sig), PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_IF_MACRO(!io->seek(io, 0), ERRPASS, NULL);
 
     archive = (LZMAarchive *) allocator.Malloc(sizeof (LZMAarchive));
-    BAIL_IF_MACRO(archive == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(archive == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     lzma_archive_init(archive);
     archive->stream.io = io;
@@ -478,7 +478,7 @@ static void *LZMA_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     {
         SzArDbExFree(&archive->db, SzFreePhysicsFS);
         lzma_archive_exit(archive);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+        BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     }
 
     /*
@@ -493,7 +493,7 @@ static void *LZMA_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     {
         SzArDbExFree(&archive->db, SzFreePhysicsFS);
         lzma_archive_exit(archive);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+        BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     }
 
     /*
@@ -506,7 +506,7 @@ static void *LZMA_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     {
         SzArDbExFree(&archive->db, SzFreePhysicsFS);
         lzma_archive_exit(archive);
-        BAIL_MACRO(ERR_UNKNOWN_ERROR, NULL);
+        BAIL_MACRO(PHYSFS_ERR_OTHER_ERROR, NULL);
     }
 
     return archive;
@@ -551,7 +551,7 @@ static void LZMA_enumerateFiles(dvoid *opaque, const char *dname,
             file = archive->files;
         }
 
-    BAIL_IF_MACRO(file == NULL, ERR_NO_SUCH_FILE, );
+    BAIL_IF_MACRO(file == NULL, PHYSFS_ERR_NO_SUCH_PATH, );
 
     while (file < lastFile)
     {
@@ -582,14 +582,14 @@ static PHYSFS_Io *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists
     PHYSFS_Io *io = NULL;
 
     *fileExists = (file != NULL);
-    BAIL_IF_MACRO(file == NULL, ERR_NO_SUCH_FILE, NULL);
-    BAIL_IF_MACRO(file->folder == NULL, ERR_NOT_A_FILE, NULL);
+    BAIL_IF_MACRO(file == NULL, PHYSFS_ERR_NO_SUCH_PATH, NULL);
+    BAIL_IF_MACRO(file->folder == NULL, PHYSFS_ERR_NOT_A_FILE, NULL);
 
     file->position = 0;
     file->folder->references++; /* Increase refcount for automatic cleanup... */
 
     io = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
-    BAIL_IF_MACRO(io == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(io == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     memcpy(io, &LZMA_Io, sizeof (*io));
     io->opaque = file;
 
@@ -599,13 +599,13 @@ static PHYSFS_Io *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists
 
 static PHYSFS_Io *LZMA_openWrite(dvoid *opaque, const char *filename)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 } /* LZMA_openWrite */
 
 
 static PHYSFS_Io *LZMA_openAppend(dvoid *opaque, const char *filename)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 } /* LZMA_openAppend */
 
 
@@ -629,13 +629,13 @@ static void LZMA_dirClose(dvoid *opaque)
 
 static int LZMA_remove(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
 } /* LZMA_remove */
 
 
 static int LZMA_mkdir(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(ERR_NOT_SUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
 } /* LZMA_mkdir */
 
 static int LZMA_stat(dvoid *opaque, const char *filename, int *exists,

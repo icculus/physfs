@@ -88,8 +88,8 @@ static inline int readAll(PHYSFS_File *file, void *val, const size_t len)
 #define PHYSFS_BYTEORDER_READ(datatype, swaptype) \
     int PHYSFS_read##swaptype(PHYSFS_File *file, PHYSFS_##datatype *val) { \
         PHYSFS_##datatype in; \
-        BAIL_IF_MACRO(val == NULL, ERR_INVALID_ARGUMENT, 0); \
-        BAIL_IF_MACRO(!readAll(file, &in, sizeof (in)), NULL, 0); \
+        BAIL_IF_MACRO(val == NULL, PHYSFS_ERR_INVALID_ARGUMENT, 0); \
+        BAIL_IF_MACRO(!readAll(file, &in, sizeof (in)), ERRPASS, 0); \
         *val = PHYSFS_swap##swaptype(in); \
         return 1; \
     }
@@ -116,7 +116,7 @@ static inline int writeAll(PHYSFS_File *f, const void *val, const size_t len)
 #define PHYSFS_BYTEORDER_WRITE(datatype, swaptype) \
     int PHYSFS_write##swaptype(PHYSFS_File *file, PHYSFS_##datatype val) { \
         const PHYSFS_##datatype out = PHYSFS_swap##swaptype(val); \
-        BAIL_IF_MACRO(!writeAll(file, &out, sizeof (out)), NULL, 0); \
+        BAIL_IF_MACRO(!writeAll(file, &out, sizeof (out)), ERRPASS, 0); \
         return 1; \
     }
 

@@ -39,14 +39,14 @@ static UNPKentry *mvlLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
     UNPKentry *entry = NULL;
 
     entries = (UNPKentry *) allocator.Malloc(sizeof (UNPKentry) * fileCount);
-    BAIL_IF_MACRO(entries == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     location += (17 * fileCount);
 
     for (entry = entries; fileCount > 0; fileCount--, entry++)
     {
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 13), NULL, failed);
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), NULL, failed);
+        if (!__PHYSFS_readAll(io, &entry->name, 13)) goto failed;
+        if (!__PHYSFS_readAll(io, &entry->size, 4)) goto failed;
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->startPos = location;
         location += entry->size;
@@ -67,15 +67,14 @@ static void *MVL_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     UNPKentry *entries = NULL;
 
     assert(io != NULL);  /* shouldn't ever happen. */
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, 4), NULL, NULL);
-    BAIL_IF_MACRO(memcmp(buf, "DMVL", 4) != 0, ERR_NOT_AN_ARCHIVE, NULL);
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof (count)), NULL, NULL);
+    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, 4), ERRPASS, NULL);
+    BAIL_IF_MACRO(memcmp(buf, "DMVL", 4) != 0, PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof(count)), ERRPASS, NULL);
 
     count = PHYSFS_swapULE32(count);
     entries = mvlLoadEntries(io, count);
-    BAIL_IF_MACRO(entries == NULL, NULL, NULL);
-    return UNPK_openArchive(io, entries, count);
+    return (!entries) ? NULL : UNPK_openArchive(io, entries, count);
 } /* MVL_openArchive */
 
 

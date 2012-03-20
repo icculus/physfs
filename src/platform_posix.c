@@ -6,6 +6,8 @@
  *  This file written by Ryan C. Gordon.
  */
 
+/* !!! FIXME: check for EINTR? */
+
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_platforms.h"
 
@@ -26,6 +28,40 @@
 
 #include "physfs_internal.h"
 
+
+static PHYSFS_ErrorCode errcodeFromErrnoError(const int err)
+{
+    switch (err)
+    {
+        case 0: return PHYSFS_ERR_OK;
+        case EACCES: return PHYSFS_ERR_PERMISSION;
+        case EPERM: return PHYSFS_ERR_PERMISSION;
+        case EDQUOT: return PHYSFS_ERR_NO_SPACE;
+        case EIO: return PHYSFS_ERR_IO;
+        case ELOOP: return PHYSFS_ERR_SYMLINK_LOOP;
+        case EMLINK: return PHYSFS_ERR_NO_SPACE;
+        case ENAMETOOLONG: return PHYSFS_ERR_BAD_FILENAME;
+        case ENOENT: return PHYSFS_ERR_NO_SUCH_PATH;
+        case ENOSPC: return PHYSFS_ERR_NO_SPACE;
+        case ENOTDIR: return PHYSFS_ERR_NO_SUCH_PATH;
+        case EISDIR: return PHYSFS_ERR_NOT_A_FILE;
+        case EROFS: return PHYSFS_ERR_READ_ONLY;
+        case ETXTBSY: return PHYSFS_ERR_BUSY;
+        case EBUSY: return PHYSFS_ERR_BUSY;
+        case ENOMEM: return PHYSFS_ERR_OUT_OF_MEMORY;
+        case ENOTEMPTY: return PHYSFS_ERR_DIR_NOT_EMPTY;
+        default: return PHYSFS_ERR_OS_ERROR;
+    } /* switch */
+} /* errcodeFromErrnoError */
+
+
+static inline PHYSFS_ErrorCode errcodeFromErrno(void)
+{
+    return errcodeFromErrnoError(errno);
+} /* errcodeFromErrno */
+
+
+
 char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
 {
     const char *envr = getenv(varname);
@@ -34,8 +70,8 @@ char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
     if (envr != NULL)
     {
         retval = (char *) allocator.Malloc(strlen(envr) + 1);
-        if (retval != NULL)
-            strcpy(retval, envr);
+        BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        strcpy(retval, envr);
     } /* if */
 
     return retval;
@@ -187,10 +223,8 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 
 int __PHYSFS_platformMkDir(const char *path)
 {
-    int rc;
-    errno = 0;
-    rc = mkdir(path, S_IRWXU);
-    BAIL_IF_MACRO(rc == -1, strerror(errno), 0);
+    const int rc = mkdir(path, S_IRWXU);
+    BAIL_IF_MACRO(rc == -1, errcodeFromErrno(), 0);
     return 1;
 } /* __PHYSFS_platformMkDir */
 
@@ -206,22 +240,23 @@ static void *doOpen(const char *filename, int mode)
     mode &= ~O_APPEND;
 
     fd = open(filename, mode, S_IRUSR | S_IWUSR);
-    BAIL_IF_MACRO(fd < 0, strerror(errno), NULL);
+    BAIL_IF_MACRO(fd < 0, errcodeFromErrno(), NULL);
 
     if (appending)
     {
         if (lseek(fd, 0, SEEK_END) < 0)
         {
+            const int err = errno;
             close(fd);
-            BAIL_MACRO(strerror(errno), NULL);
+            BAIL_MACRO(errcodeFromErrnoError(err), NULL);
         } /* if */
     } /* if */
 
     retval = (int *) allocator.Malloc(sizeof (int));
-    if (retval == NULL)
+    if (!retval)
     {
         close(fd);
-        BAIL_MACRO(ERR_OUT_OF_MEMORY, NULL);
+        BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
     *retval = fd;
@@ -253,10 +288,11 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     const int fd = *((int *) opaque);
     ssize_t rc = 0;
 
-    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
+    if (!__PHYSFS_ui64FitsAddressSpace(len))
+        BAIL_MACRO(PHYSFS_ERR_INVALID_ARGUMENT, -1);
 
     rc = read(fd, buffer, (size_t) len);
-    BAIL_IF_MACRO(rc == -1, strerror(errno), (PHYSFS_sint64) rc);
+    BAIL_IF_MACRO(rc == -1, errcodeFromErrno(), -1);
     assert(rc >= 0);
     assert(rc <= len);
     return (PHYSFS_sint64) rc;
@@ -269,10 +305,11 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
     const int fd = *((int *) opaque);
     ssize_t rc = 0;
 
-    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
+    if (!__PHYSFS_ui64FitsAddressSpace(len))
+        BAIL_MACRO(PHYSFS_ERR_INVALID_ARGUMENT, -1);
 
     rc = write(fd, (void *) buffer, (size_t) len);
-    BAIL_IF_MACRO(rc == -1, strerror(errno), rc);
+    BAIL_IF_MACRO(rc == -1, errcodeFromErrno(), rc);
     assert(rc >= 0);
     assert(rc <= len);
     return (PHYSFS_sint64) rc;
@@ -282,7 +319,8 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
     const int fd = *((int *) opaque);
-    BAIL_IF_MACRO(lseek(fd, (off_t) pos, SEEK_SET) == -1, strerror(errno), 0);
+    const int rc = lseek(fd, (off_t) pos, SEEK_SET);
+    BAIL_IF_MACRO(rc == -1, errcodeFromErrno(), 0);
     return 1;
 } /* __PHYSFS_platformSeek */
 
@@ -292,7 +330,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
     const int fd = *((int *) opaque);
     PHYSFS_sint64 retval;
     retval = (PHYSFS_sint64) lseek(fd, 0, SEEK_CUR);
-    BAIL_IF_MACRO(retval == -1, strerror(errno), -1);
+    BAIL_IF_MACRO(retval == -1, errcodeFromErrno(), -1);
     return retval;
 } /* __PHYSFS_platformTell */
 
@@ -301,7 +339,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
     const int fd = *((int *) opaque);
     struct stat statbuf;
-    BAIL_IF_MACRO(fstat(fd, &statbuf) == -1, strerror(errno), -1);
+    BAIL_IF_MACRO(fstat(fd, &statbuf) == -1, errcodeFromErrno(), -1);
     return ((PHYSFS_sint64) statbuf.st_size);
 } /* __PHYSFS_platformFileLength */
 
@@ -309,7 +347,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 int __PHYSFS_platformFlush(void *opaque)
 {
     const int fd = *((int *) opaque);
-    BAIL_IF_MACRO(fsync(fd) == -1, strerror(errno), 0);
+    BAIL_IF_MACRO(fsync(fd) == -1, errcodeFromErrno(), 0);
     return 1;
 } /* __PHYSFS_platformFlush */
 
@@ -324,7 +362,7 @@ void __PHYSFS_platformClose(void *opaque)
 
 int __PHYSFS_platformDelete(const char *path)
 {
-    BAIL_IF_MACRO(remove(path) == -1, strerror(errno), 0);
+    BAIL_IF_MACRO(remove(path) == -1, errcodeFromErrno(), 0);
     return 1;
 } /* __PHYSFS_platformDelete */
 
@@ -336,7 +374,7 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
     if (lstat(filename, &statbuf) == -1)
     {
         *exists = (errno == ENOENT);
-        BAIL_MACRO(strerror(errno), 0);
+        BAIL_MACRO(errcodeFromErrno(), 0);
     } /* if */
 
     *exists = 1;
@@ -398,12 +436,12 @@ void *__PHYSFS_platformCreateMutex(void)
 {
     int rc;
     PthreadMutex *m = (PthreadMutex *) allocator.Malloc(sizeof (PthreadMutex));
-    BAIL_IF_MACRO(m == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(!m, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     rc = pthread_mutex_init(&m->mutex, NULL);
     if (rc != 0)
     {
         allocator.Free(m);
-        BAIL_MACRO(strerror(rc), NULL);
+        BAIL_MACRO(PHYSFS_ERR_OS_ERROR, NULL);
     } /* if */
 
     m->count = 0;

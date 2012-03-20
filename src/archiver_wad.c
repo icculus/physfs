@@ -53,19 +53,19 @@ static UNPKentry *wadLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
     UNPKentry *entries = NULL;
     UNPKentry *entry = NULL;
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &directoryOffset, 4), NULL, 0);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &directoryOffset, 4), ERRPASS, 0);
     directoryOffset = PHYSFS_swapULE32(directoryOffset);
 
-    BAIL_IF_MACRO(!io->seek(io, directoryOffset), NULL, 0);
+    BAIL_IF_MACRO(!io->seek(io, directoryOffset), ERRPASS, 0);
 
     entries = (UNPKentry *) allocator.Malloc(sizeof (UNPKentry) * fileCount);
-    BAIL_IF_MACRO(entries == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(!entries, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     for (entry = entries; fileCount > 0; fileCount--, entry++)
     {
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->startPos, 4), NULL, failed);
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), NULL, failed);
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 8), NULL, failed);
+        if (!__PHYSFS_readAll(io, &entry->startPos, 4)) goto failed;
+        if (!__PHYSFS_readAll(io, &entry->size, 4)) goto failed;
+        if (!__PHYSFS_readAll(io, &entry->name, 8)) goto failed;
 
         entry->name[8] = '\0'; /* name might not be null-terminated in file. */
         entry->size = PHYSFS_swapULE32(entry->size);
@@ -88,16 +88,16 @@ static void *WAD_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
-    BAIL_IF_MACRO(forWriting, ERR_ARC_IS_READ_ONLY, 0);
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, sizeof (buf)), NULL, NULL);
+    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, sizeof (buf)), ERRPASS, NULL);
     if ((memcmp(buf, "IWAD", 4) != 0) && (memcmp(buf, "PWAD", 4) != 0))
-        BAIL_MACRO(ERR_NOT_AN_ARCHIVE, NULL);
+        BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof (count)), NULL, NULL);
+    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof (count)), ERRPASS, NULL);
     count = PHYSFS_swapULE32(count);
 
     entries = wadLoadEntries(io, count);
-    BAIL_IF_MACRO(entries == NULL, NULL, NULL);
+    BAIL_IF_MACRO(!entries, ERRPASS, NULL);
     return UNPK_openArchive(io, entries, count);
 } /* WAD_openArchive */
 
