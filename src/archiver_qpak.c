@@ -98,7 +98,7 @@ static PHYSFS_sint64 QPAK_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 
 static PHYSFS_sint64 QPAK_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, -1);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, -1);
 } /* QPAK_write */
 
 
@@ -491,25 +491,25 @@ QPAK_openRead_failed:
 
 static PHYSFS_Io *QPAK_openWrite(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* QPAK_openWrite */
 
 
 static PHYSFS_Io *QPAK_openAppend(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* QPAK_openAppend */
 
 
 static int QPAK_remove(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* QPAK_remove */
 
 
 static int QPAK_mkdir(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* QPAK_mkdir */
 
 

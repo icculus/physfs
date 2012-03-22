@@ -250,11 +250,9 @@ static PHYSFS_sint64 ZIP_read(PHYSFS_Io *_io, void *buf, PHYSFS_uint64 len)
 } /* ZIP_read */
 
 
-/* !!! FIXME: write stuff should be ERR_READ_ONLY, not ERR_UNSUPPORTED */
-/* !!! FIXME:  ... all the archivers do this. */
 static PHYSFS_sint64 ZIP_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, -1);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, -1);
 } /* ZIP_write */
 
 
@@ -1332,13 +1330,13 @@ ZIP_openRead_failed:
 
 static PHYSFS_Io *ZIP_openWrite(dvoid *opaque, const char *filename)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ZIP_openWrite */
 
 
 static PHYSFS_Io *ZIP_openAppend(dvoid *opaque, const char *filename)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ZIP_openAppend */
 
 
@@ -1353,13 +1351,13 @@ static void ZIP_dirClose(dvoid *opaque)
 
 static int ZIP_remove(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ZIP_remove */
 
 
 static int ZIP_mkdir(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ZIP_mkdir */
 
 

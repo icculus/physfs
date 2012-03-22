@@ -62,7 +62,7 @@ static PHYSFS_sint64 UNPK_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 
 static PHYSFS_sint64 UNPK_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, -1);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, -1);
 } /* UNPK_write */
 
 
@@ -259,25 +259,25 @@ UNPK_openRead_failed:
 
 PHYSFS_Io *UNPK_openWrite(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* UNPK_openWrite */
 
 
 PHYSFS_Io *UNPK_openAppend(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* UNPK_openAppend */
 
 
 int UNPK_remove(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* UNPK_remove */
 
 
 int UNPK_mkdir(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* UNPK_mkdir */
 
 
