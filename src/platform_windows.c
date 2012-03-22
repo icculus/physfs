@@ -638,34 +638,52 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 } /* __PHYSFS_platformOpenAppend */
 
 
-/* !!! FIXME: this function fails if len > 0xFFFFFFFF. */
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 {
     HANDLE Handle = ((WinApiFile *) opaque)->handle;
-    DWORD CountOfBytesRead = 0;
+    PHYSFS_sint64 totalRead = 0;
 
     if (!__PHYSFS_ui64FitsAddressSpace(len))
         BAIL_MACRO(PHYSFS_ERR_INVALID_ARGUMENT, -1);
-    else if(!ReadFile(Handle, buf, (DWORD) len, &CountOfBytesRead, NULL))
-        BAIL_MACRO(errcodeFromWinApi(), -1);
 
-    return (PHYSFS_sint64) CountOfBytesRead;
+    while (len > 0)
+    {
+        const DWORD thislen = (len > 0xFFFFFFFF) ? 0xFFFFFFFF : (DWORD) len;
+        DWORD numRead = 0;
+        if (!ReadFile(Handle, buf, thislen, &numRead, NULL))
+            BAIL_MACRO(errcodeFromWinApi(), -1);
+        len -= (PHYSFS_uint64) numRead;
+        totalRead += (PHYSFS_sint64) numRead;
+        if (numRead != thislen)
+            break;
+    } /* while */
+
+    return totalRead;
 } /* __PHYSFS_platformRead */
 
 
-/* !!! FIXME: this function fails if len > 0xFFFFFFFF. */
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint64 len)
 {
     HANDLE Handle = ((WinApiFile *) opaque)->handle;
-    DWORD CountOfBytesWritten = 0;
+    PHYSFS_sint64 totalWritten = 0;
 
     if (!__PHYSFS_ui64FitsAddressSpace(len))
         BAIL_MACRO(PHYSFS_ERR_INVALID_ARGUMENT, -1);
-    else if(!WriteFile(Handle, buffer, (DWORD) len, &CountOfBytesWritten, NULL))
-        BAIL_MACRO(errcodeFromWinApi(), -1);
 
-    return (PHYSFS_sint64) CountOfBytesWritten;
+    while (len > 0)
+    {
+        const DWORD thislen = (len > 0xFFFFFFFF) ? 0xFFFFFFFF : (DWORD) len;
+        DWORD numWritten = 0;
+        if (!WriteFile(Handle, buffer, thislen, &numWritten, NULL))
+            BAIL_MACRO(errcodeFromWinApi(), -1);
+        len -= (PHYSFS_uint64) numWritten;
+        totalWritten += (PHYSFS_sint64) numWritten;
+        if (numWritten != thislen)
+            break;
+    } /* while */
+
+    return totalWritten;
 } /* __PHYSFS_platformWrite */
 
 
