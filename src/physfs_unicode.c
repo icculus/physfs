@@ -455,7 +455,7 @@ static int utf8codepointcmp(const PHYSFS_uint32 cp1, const PHYSFS_uint32 cp2)
 } /* utf8codepointcmp */
 
 
-int __PHYSFS_utf8strcasecmp(const char *str1, const char *str2)
+int __PHYSFS_utf8stricmp(const char *str1, const char *str2)
 {
     while (1)
     {
@@ -466,7 +466,7 @@ int __PHYSFS_utf8strcasecmp(const char *str1, const char *str2)
     } /* while */
 
     return 0;
-} /* __PHYSFS_utf8strcasecmp */
+} /* __PHYSFS_utf8stricmp */
 
 
 int __PHYSFS_utf8strnicmp(const char *str1, const char *str2, PHYSFS_uint32 n)
