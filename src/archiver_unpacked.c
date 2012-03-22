@@ -199,7 +199,7 @@ static UNPKentry *findEntry(const UNPKinfo *info, const char *name)
     while (lo <= hi)
     {
         middle = lo + ((hi - lo) / 2);
-        rc = __PHYSFS_utf8strcasecmp(name, a[middle].name);
+        rc = __PHYSFS_utf8stricmp(name, a[middle].name);
         if (rc == 0)  /* found it! */
             return &a[middle];
         else if (rc > 0)
