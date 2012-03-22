@@ -19,6 +19,7 @@
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 #include <userenv.h>
+#include <shlobj.h>
 #include <dbt.h>
 #include <errno.h>
 #include <ctype.h>
@@ -114,7 +115,6 @@ static PHYSFS_ErrorCode errcodeFromWinApiError(const DWORD err)
         case ERROR_SUCCESS: return PHYSFS_ERR_OK;
         case ERROR_ACCESS_DENIED: return PHYSFS_ERR_PERMISSION;
         case ERROR_NETWORK_ACCESS_DENIED: return PHYSFS_ERR_PERMISSION;
-        case ERROR_DISK_RESOURCES_EXHAUSTED: return PHYSFS_ERR_NO_SPACE;
         case ERROR_NOT_READY: return PHYSFS_ERR_IO;
         case ERROR_CRC: return PHYSFS_ERR_IO;
         case ERROR_SEEK: return PHYSFS_ERR_IO;
@@ -123,7 +123,6 @@ static PHYSFS_ErrorCode errcodeFromWinApiError(const DWORD err)
         case ERROR_WRITE_FAULT: return PHYSFS_ERR_IO;
         case ERROR_READ_FAULT: return PHYSFS_ERR_IO;
         case ERROR_DEV_NOT_EXIST: return PHYSFS_ERR_IO;
-        case ERROR_DATA_CHECKSUM_ERROR: return PHYSFS_ERR_IO;
         /* !!! FIXME: ?? case ELOOP: return PHYSFS_ERR_SYMLINK_LOOP; */
         case ERROR_BUFFER_OVERFLOW: return PHYSFS_ERR_BAD_FILENAME;
         case ERROR_INVALID_NAME: return PHYSFS_ERR_BAD_FILENAME;
@@ -429,7 +428,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
         } /* while */
 
         if ((ptr == modpath) && (*ptr != '\\'))
-            __PHYSFS_setError(ERR_GETMODFN_NO_DIR);
+            __PHYSFS_setError(PHYSFS_ERR_OTHER_ERROR);  /* oh well. */
         else
         {
             *(ptr + 1) = '\0';  /* chop off filename. */
