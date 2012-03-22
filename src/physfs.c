@@ -1679,66 +1679,37 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
                          const char *archiveExt, int includeCdRoms,
                          int archivesFirst)
 {
-    const char *basedir = PHYSFS_getBaseDir();
-    const char *userdir = PHYSFS_getUserDir();
     const char *dirsep = PHYSFS_getDirSeparator();
-    PHYSFS_uint64 len = 0;
-    char *str = NULL;
+    const char *basedir;
+    const char *prefdir;
 
     BAIL_IF_MACRO(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
 
-    /* set write dir... */
-    len = (strlen(userdir) + (strlen(organization) * 2) +
-            (strlen(appName) * 2) + (strlen(dirsep) * 3) + 2);
+    prefdir = PHYSFS_getPrefDir(organization, appName);
+    BAIL_IF_MACRO(!prefdir, ERRPASS, 0);
 
-    str = (char *) __PHYSFS_smallAlloc(len);
+    basedir = PHYSFS_getBaseDir();
+    BAIL_IF_MACRO(!basedir, ERRPASS, 0);
 
-    BAIL_IF_MACRO(!str, PHYSFS_ERR_OUT_OF_MEMORY, 0);
-    sprintf(str, "%s.%s%s%s", userdir, organization, dirsep, appName);
-
-    if (!PHYSFS_setWriteDir(str))
-    {
-        int no_write = 0;
-        sprintf(str, ".%s/%s", organization, appName);
-        if ( (PHYSFS_setWriteDir(userdir)) &&
-             (PHYSFS_mkdir(str)) )
-        {
-            sprintf(str, "%s.%s%s%s", userdir, organization, dirsep, appName);
-            if (!PHYSFS_setWriteDir(str))
-                no_write = 1;
-        } /* if */
-        else
-        {
-            no_write = 1;
-        } /* else */
-
-        if (no_write)
-        {
-            PHYSFS_setWriteDir(NULL);   /* just in case. */
-            __PHYSFS_smallFree(str);
-            BAIL_MACRO(PHYSFS_ERR_NO_WRITE_DIR, 0);
-        } /* if */
-    } /* if */
+    BAIL_IF_MACRO(!PHYSFS_setWriteDir(prefdir), PHYSFS_ERR_NO_WRITE_DIR, 0);
 
     /* Put write dir first in search path... */
-    PHYSFS_mount(str, NULL, 0);
-    __PHYSFS_smallFree(str);
+    PHYSFS_mount(prefdir, NULL, 0);
 
-        /* Put base path on search path... */
+    /* Put base path on search path... */
     PHYSFS_mount(basedir, NULL, 1);
 
-        /* handle CD-ROMs... */
+    /* handle CD-ROMs... */
     if (includeCdRoms)
     {
         char **cds = PHYSFS_getCdRomDirs();
         char **i;
         for (i = cds; *i != NULL; i++)
             PHYSFS_mount(*i, NULL, 1);
-
         PHYSFS_freeList(cds);
     } /* if */
 
-        /* Root out archives, and add them to search path... */
+    /* Root out archives, and add them to search path... */
     if (archiveExt != NULL)
     {
         char **rc = PHYSFS_enumerateFiles("/");
