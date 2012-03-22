@@ -501,7 +501,7 @@ static PHYSFS_sint64 ISO9660_read(PHYSFS_Io *io, void *buf, PHYSFS_uint64 len)
 
 static PHYSFS_sint64 ISO9660_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 l)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, -1);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, -1);
 } /* ISO9660_write */
 
 
@@ -921,25 +921,25 @@ static int ISO9660_stat(dvoid *opaque, const char *name, int *exists,
 
 static PHYSFS_Io *ISO9660_openWrite(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ISO9660_openWrite */
 
 
 static PHYSFS_Io *ISO9660_openAppend(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ISO9660_openAppend */
 
 
 static int ISO9660_remove(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ISO9660_remove */
 
 
 static int ISO9660_mkdir(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ISO9660_mkdir */
 
 

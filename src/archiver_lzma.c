@@ -364,7 +364,7 @@ static PHYSFS_sint64 LZMA_read(PHYSFS_Io *io, void *outBuf, PHYSFS_uint64 len)
 
 static PHYSFS_sint64 LZMA_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, -1);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, -1);
 } /* LZMA_write */
 
 
@@ -599,13 +599,13 @@ static PHYSFS_Io *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists
 
 static PHYSFS_Io *LZMA_openWrite(dvoid *opaque, const char *filename)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* LZMA_openWrite */
 
 
 static PHYSFS_Io *LZMA_openAppend(dvoid *opaque, const char *filename)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* LZMA_openAppend */
 
 
@@ -629,13 +629,13 @@ static void LZMA_dirClose(dvoid *opaque)
 
 static int LZMA_remove(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* LZMA_remove */
 
 
 static int LZMA_mkdir(dvoid *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* LZMA_mkdir */
 
 static int LZMA_stat(dvoid *opaque, const char *filename, int *exists,
