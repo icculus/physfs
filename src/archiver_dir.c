@@ -98,8 +98,10 @@ static PHYSFS_Io *doOpen(dvoid *opaque, const char *name,
     io = __PHYSFS_createNativeIo(f, mode);
     if (io == NULL)
     {
-        PHYSFS_Stat statbuf;  /* !!! FIXME: this changes the error message. */
+        const PHYSFS_ErrorCode err = PHYSFS_getLastErrorCode();
+        PHYSFS_Stat statbuf;
         __PHYSFS_platformStat(f, fileExists, &statbuf);
+        __PHYSFS_setError(err);
     } /* if */
     else
     {

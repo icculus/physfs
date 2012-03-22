@@ -123,7 +123,7 @@ char *__PHYSFS_platformGetUserName(void)
 } /* __PHYSFS_platformGetUserName */
 
 
-char *__PHYSFS_platformGetUserDir(void)
+char *__PHYSFS_platformCalcUserDir(void)
 {
     char *retval = __PHYSFS_platformCopyEnvironmentVariable("HOME");
 
@@ -142,7 +142,7 @@ char *__PHYSFS_platformGetUserDir(void)
         retval = getUserDirByUID();
 
     return retval;
-} /* __PHYSFS_platformGetUserDir */
+} /* __PHYSFS_platformCalcUserDir */
 
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,

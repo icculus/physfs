@@ -633,12 +633,12 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0);
  */
 char *__PHYSFS_platformGetUserName(void);
 
-/* !!! FIXME: should this be CalcUserDir, to match CalcBaseDir?
+/*
  * Get the platform-specific user dir.
  *  Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
  *  the userdir will default to basedir/username.
  */
-char *__PHYSFS_platformGetUserDir(void);
+char *__PHYSFS_platformCalcUserDir(void);
 
 
 /* This is the cached version from PHYSFS_init(). This is a fast call. */

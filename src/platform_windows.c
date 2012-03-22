@@ -88,10 +88,6 @@ typedef struct
     int readonly;
 } WinApiFile;
 
-
-/* !!! FIXME: we cache userDir in physfs.c during PHYSFS_init(), too. */
-static char *userDir = NULL;
-static HANDLE libUserEnv = NULL;
 static HANDLE detectCDThreadHandle = NULL;
 static HWND detectCDHwnd = 0;
 static volatile int initialDiscDetectionComplete = 0;
@@ -154,61 +150,6 @@ static inline PHYSFS_ErrorCode errcodeFromWinApi(void)
 {
     return errcodeFromWinApiError(GetLastError());
 } /* errcodeFromWinApi */
-
-
-
-/*
- * On success, module-scope variable (userDir) will have a pointer to
- *  a malloc()'d string of the user's profile dir, and a non-zero value is
- *  returned. If we can't determine the profile dir, (userDir) will
- *  be NULL, and zero is returned.
- */
-static int determineUserDir(void)
-{
-    typedef BOOL (WINAPI *fnGetUserProfDirW)(HANDLE, LPWSTR, LPDWORD);
-    fnGetUserProfDirW pGetDir = NULL;
-
-    HANDLE accessToken = NULL;       /* Security handle to process */
-
-    if (userDir != NULL)
-        return 1;  /* already good to go. */
-
-    pGetDir = (fnGetUserProfDirW)
-        GetProcAddress(libUserEnv, "GetUserProfileDirectoryW");
-    BAIL_IF_MACRO(pGetDir == NULL, errcodeFromWinApi(), 0);
-
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &accessToken))
-        BAIL_MACRO(errcodeFromWinApi(), 0);
-    else
-    {
-        DWORD psize = 0;
-        WCHAR dummy = 0;
-        LPWSTR wstr = NULL;
-        BOOL rc = 0;
-
-        /*
-         * Should fail. Will write the size of the profile path in
-         *  psize. Also note that the second parameter can't be
-         *  NULL or the function fails.
-         */
-    	rc = pGetDir(accessToken, &dummy, &psize);
-        assert(!rc);  /* !!! FIXME: handle this gracefully. */
-        (void) rc;
-
-        /* Allocate memory for the profile directory */
-        wstr = (LPWSTR) __PHYSFS_smallAlloc(psize * sizeof (WCHAR));
-        if (wstr != NULL)
-        {
-            if (pGetDir(accessToken, wstr, &psize))
-                userDir = unicodeToUtf8Heap(wstr);
-            __PHYSFS_smallFree(wstr);
-        } /* if */
-
-        CloseHandle(accessToken);
-    } /* if */
-
-    return 1;  /* We made it: hit the showers. */
-} /* determineUserDir */
 
 
 typedef BOOL (WINAPI *fnSTEM)(DWORD, LPDWORD b);
@@ -495,13 +436,53 @@ char *__PHYSFS_platformGetUserName(void)
 } /* __PHYSFS_platformGetUserName */
 
 
-char *__PHYSFS_platformGetUserDir(void)
+char *__PHYSFS_platformCalcUserDir(void)
 {
-    char *retval = (char *) allocator.Malloc(strlen(userDir) + 1);
-    BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    strcpy(retval, userDir); /* calculated at init time. */
-    return retval;
-} /* __PHYSFS_platformGetUserDir */
+    typedef BOOL (WINAPI *fnGetUserProfDirW)(HANDLE, LPWSTR, LPDWORD);
+    fnGetUserProfDirW pGetDir = NULL;
+    HANDLE lib = NULL;
+    HANDLE accessToken = NULL;       /* Security handle to process */
+    char *retval = NULL;
+
+    lib = LoadLibraryA("userenv.dll");
+    BAIL_IF_MACRO(!lib, errcodeFromWinApi(), NULL);
+    pGetDir=(fnGetUserProfDirW) GetProcAddress(lib,"GetUserProfileDirectoryW");
+    GOTO_IF_MACRO(!pGetDir, errcodeFromWinApi(), done);
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &accessToken))
+        GOTO_MACRO(errcodeFromWinApi(), done);
+    else
+    {
+        DWORD psize = 0;
+        WCHAR dummy = 0;
+        LPWSTR wstr = NULL;
+        BOOL rc = 0;
+
+        /*
+         * Should fail. Will write the size of the profile path in
+         *  psize. Also note that the second parameter can't be
+         *  NULL or the function fails.
+         */
+    	rc = pGetDir(accessToken, &dummy, &psize);
+        assert(!rc);  /* !!! FIXME: handle this gracefully. */
+        (void) rc;
+
+        /* Allocate memory for the profile directory */
+        wstr = (LPWSTR) __PHYSFS_smallAlloc(psize * sizeof (WCHAR));
+        if (wstr != NULL)
+        {
+            if (pGetDir(accessToken, wstr, &psize))
+                retval = unicodeToUtf8Heap(wstr);
+            __PHYSFS_smallFree(wstr);
+        } /* if */
+
+        CloseHandle(accessToken);
+    } /* if */
+
+done:
+    FreeLibrary(lib);
+    return retval;  /* We made it: hit the showers. */
+} /* __PHYSFS_platformCalcUserDir */
 
 
 void *__PHYSFS_platformGetThreadID(void)
@@ -598,11 +579,6 @@ int __PHYSFS_platformMkDir(const char *path)
 
 int __PHYSFS_platformInit(void)
 {
-    libUserEnv = LoadLibraryA("userenv.dll");
-    BAIL_IF_MACRO(libUserEnv == NULL, errcodeFromWinApi(), 0);
-
-    /* !!! FIXME: why do we precalculate this? */
-    BAIL_IF_MACRO(!determineUserDir(), ERRPASS, 0);
     return 1;  /* It's all good */
 } /* __PHYSFS_platformInit */
 
@@ -619,11 +595,6 @@ int __PHYSFS_platformDeinit(void)
         drivesWithMediaBitmap = 0;
     } /* if */
 
-    if (libUserEnv)
-        FreeLibrary(libUserEnv);
-    libUserEnv = NULL;
-    allocator.Free(userDir);
-    userDir = NULL;
     return 1; /* It's all good */
 } /* __PHYSFS_platformDeinit */
 
