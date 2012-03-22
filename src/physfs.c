@@ -2229,10 +2229,7 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
 
         GOTO_IF_MACRO(!searchPath, PHYSFS_ERR_NO_SUCH_PATH, openReadEnd);
 
-        /* !!! FIXME: Why aren't we using a for loop here? */
-        i = searchPath;
-
-        do
+        for (i = searchPath; (i != NULL) && (!fileExists); i = i->next)
         {
             char *arcfname = fname;
             if (verifyPath(i, &arcfname, 0))
@@ -2241,8 +2238,7 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
                 if (io)
                     break;
             } /* if */
-            i = i->next;
-        } while ((i != NULL) && (!fileExists));
+        } /* for */
 
         /* !!! FIXME: may not set an error if openRead didn't fail. */
         GOTO_IF_MACRO(!io, ERRPASS, openReadEnd);
