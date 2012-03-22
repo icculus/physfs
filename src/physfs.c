@@ -2240,7 +2240,6 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
             } /* if */
         } /* for */
 
-        /* !!! FIXME: may not set an error if openRead didn't fail. */
         GOTO_IF_MACRO(!io, ERRPASS, openReadEnd);
 
         fh = (FileHandle *) allocator.Malloc(sizeof (FileHandle));
