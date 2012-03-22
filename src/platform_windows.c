@@ -685,14 +685,6 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
      */
     pHighOrderPos = (HighOrderPos) ? &HighOrderPos : NULL;
 
-    /*
-     * !!! FIXME: MSDN: "Windows Me/98/95:  If the pointer
-     * !!! FIXME:  lpDistanceToMoveHigh is not NULL, then it must
-     * !!! FIXME:  point to either 0, INVALID_SET_FILE_POINTER, or
-     * !!! FIXME:  the sign extension of the value of lDistanceToMove.
-     * !!! FIXME:  Any other value will be rejected."
-     */
-
     /* Move pointer "pos" count from start of file */
     rc = SetFilePointer(Handle, LOWORDER_UINT64(pos),
                         pHighOrderPos, FILE_BEGIN);
