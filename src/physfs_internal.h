@@ -627,13 +627,6 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data);
 char *__PHYSFS_platformCalcBaseDir(const char *argv0);
 
 /*
- * Get the platform-specific user name.
- *  Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
- *  the username will default to "default".
- */
-char *__PHYSFS_platformGetUserName(void);
-
-/*
  * Get the platform-specific user dir.
  *  Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
  *  the userdir will default to basedir/username.

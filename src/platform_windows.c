@@ -416,26 +416,6 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 } /* __PHYSFS_platformCalcPrefDir */
 
 
-char *__PHYSFS_platformGetUserName(void)
-{
-    DWORD bufsize = 0;
-    char *retval = NULL;
-    
-    if (GetUserNameW(NULL, &bufsize) == 0)  /* This SHOULD fail. */
-    {
-        LPWSTR wbuf = (LPWSTR) __PHYSFS_smallAlloc(bufsize * sizeof (WCHAR));
-        BAIL_IF_MACRO(!wbuf, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-        if (GetUserNameW(wbuf, &bufsize) == 0)  /* ?! */
-            __PHYSFS_setError(errcodeFromWinApi());
-        else
-            retval = unicodeToUtf8Heap(wbuf);
-        __PHYSFS_smallFree(wbuf);
-    } /* if */
-
-    return retval;
-} /* __PHYSFS_platformGetUserName */
-
-
 char *__PHYSFS_platformCalcUserDir(void)
 {
     typedef BOOL (WINAPI *fnGetUserProfDirW)(HANDLE, LPWSTR, LPDWORD);

@@ -1102,28 +1102,6 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
 } /* freeDirHandle */
 
 
-static char *calculateUserDir(void)
-{
-    char *retval = __PHYSFS_platformCalcUserDir();
-    if (retval == NULL)
-    {
-        const char dirsep = __PHYSFS_platformDirSeparator;
-        const char *uname = __PHYSFS_platformGetUserName();
-        const char *str = (uname != NULL) ? uname : "default";
-        const size_t len = strlen(baseDir) + strlen(str) + 7;
-
-        retval = (char *) allocator.Malloc(len);
-        if (retval == NULL)
-            __PHYSFS_setError(PHYSFS_ERR_OUT_OF_MEMORY);
-        else
-            sprintf(retval, "%susers%c%s", baseDir, dirsep, str);
-
-        allocator.Free((void *) uname);
-    } /* else */
-
-    return retval;
-} /* calculateUserDir */
-
 /*
  * !!! FIXME: remove this and require userdir and basedir to have dirsep
  * !!! FIXME:  appended in the platform layer
@@ -1227,7 +1205,7 @@ int PHYSFS_init(const char *argv0)
 
     BAIL_IF_MACRO(!appendDirSep(&baseDir), ERRPASS, 0);
 
-    userDir = calculateUserDir();
+    userDir = __PHYSFS_platformCalcUserDir();
     if ((!userDir) || (!appendDirSep(&userDir)))
     {
         allocator.Free(baseDir);

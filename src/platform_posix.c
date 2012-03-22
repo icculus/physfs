@@ -78,24 +78,6 @@ char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
 } /* __PHYSFS_platformCopyEnvironmentVariable */
 
 
-static char *getUserNameByUID(void)
-{
-    uid_t uid = getuid();
-    struct passwd *pw;
-    char *retval = NULL;
-
-    pw = getpwuid(uid);
-    if ((pw != NULL) && (pw->pw_name != NULL))
-    {
-        retval = (char *) allocator.Malloc(strlen(pw->pw_name) + 1);
-        if (retval != NULL)
-            strcpy(retval, pw->pw_name);
-    } /* if */
-    
-    return retval;
-} /* getUserNameByUID */
-
-
 static char *getUserDirByUID(void)
 {
     uid_t uid = getuid();
@@ -112,15 +94,6 @@ static char *getUserDirByUID(void)
     
     return retval;
 } /* getUserDirByUID */
-
-
-char *__PHYSFS_platformGetUserName(void)
-{
-    char *retval = getUserNameByUID();
-    if (retval == NULL)
-        retval = __PHYSFS_platformCopyEnvironmentVariable("USER");
-    return retval;
-} /* __PHYSFS_platformGetUserName */
 
 
 char *__PHYSFS_platformCalcUserDir(void)
