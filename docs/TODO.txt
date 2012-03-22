@@ -6,11 +6,6 @@ Some might be dupes, some might be done already, some might be bad ideas.
 
 From http://icculus.org/pipermail/physfs/2009-March/000698.html ...
 
-- Add an API to find the "pref path" ... this is the directory where an
-  app's configuration data is supposed to go...which is usually somewhere
-  under the user directory, but not always. As it is platform-dependent,
-  platform-version dependent and sometimes even user-dependent, this should be
-  handled by the library and not the app.
 - Archives formats provided by the implementation.
 - Write support for various archives. I haven't decided how to do this yet,
   but I'd like to.
@@ -50,7 +45,6 @@ From old TODO.txt...
 - Use __cdecl in physfs.h?
 - Look for FIXMEs (many marked with "!!!" in comments).
 - Find some way to relax or remove the security model for external tools.
-- OSX shouldn't use ~/.app for userdir.
 - fscanf and fprintf support in extras dir.
 - Why do we call it openArchive and dirClose?
 - Sanity check byte order at runtime.

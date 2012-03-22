@@ -111,7 +111,7 @@
  *  use the base dir for both searching and writing. There is a helper
  *  function (PHYSFS_setSaneConfig()) that puts together a basic configuration
  *  for you, based on a few parameters. Also see the comments on
- *  PHYSFS_getBaseDir(), and PHYSFS_getUserDir() for info on what those
+ *  PHYSFS_getBaseDir(), and PHYSFS_getPrefDir() for info on what those
  *  are and how they can help you determine an optimal search path.
  *
  * PhysicsFS 2.0 adds the concept of "mounting" archives to arbitrary points
@@ -765,7 +765,7 @@ PHYSFS_DECL char **PHYSFS_getCdRomDirs(void);
  *
  *  \return READ ONLY string of base dir in platform-dependent notation.
  *
- * \sa PHYSFS_getUserDir
+ * \sa PHYSFS_getPrefDir
  */
 PHYSFS_DECL const char *PHYSFS_getBaseDir(void);
 
@@ -773,6 +773,8 @@ PHYSFS_DECL const char *PHYSFS_getBaseDir(void);
 /**
  * \fn const char *PHYSFS_getUserDir(void)
  * \brief Get the path where user's home directory resides.
+ *
+ * \deprecated As of PhysicsFS 2.1, you probably want PHYSFS_getPrefDir().
  *
  * Helper function.
  *
@@ -783,14 +785,12 @@ PHYSFS_DECL const char *PHYSFS_getBaseDir(void);
  *  where "username" will either be the login name, or "default" if the
  *  platform doesn't support multiple users, either.
  *
- * You should probably use the user dir as the basis for your write dir, and
- *  also put it near the beginning of your search path.
- *
  *  \return READ ONLY string of user dir in platform-dependent notation.
  *
  * \sa PHYSFS_getBaseDir
+ * \sa PHYSFS_getPrefDir
  */
-PHYSFS_DECL const char *PHYSFS_getUserDir(void);
+PHYSFS_DECL const char *PHYSFS_getUserDir(void) PHYSFS_DEPRECATED;
 
 
 /**
@@ -3229,6 +3229,75 @@ PHYSFS_DECL const char *PHYSFS_getErrorByCode(PHYSFS_ErrorCode code);
  * \sa PHYSFS_getErrorByCode
  */
 PHYSFS_DECL void PHYSFS_setErrorCode(PHYSFS_ErrorCode code);
+
+
+/**
+ * \fn const char *PHYSFS_getPrefDir(const char *org, const char *app)
+ * \brief Get the user-and-app-specific path where files can be written.
+ *
+ * Helper function.
+ *
+ * Get the "pref dir". This is meant to be where users can write personal
+ *  files (preferences and save games, etc) that are specific to your
+ *  application. This directory is unique per user, per application.
+ *
+ * This function will decide the appropriate location in the native filesystem,
+ *  create the directory if necessary, and return a string in
+ *  platform-dependent notation, suitable for passing to PHYSFS_setWriteDir().
+ *
+ * On Windows, this might look like:
+ *  "C:\\Users\\bob\\AppData\\Roaming\\My Company\\My Program Name"
+ *
+ * On Linux, this might look like:
+ *  "/home/bob/.local/share/My Program Name"
+ *
+ * On Mac OS X, this might look like:
+ *  "/Users/bob/Library/Application Support/My Program Name"
+ *
+ * (etc.)
+ *
+ * You should probably use the pref dir for your write dir, and also put it
+ *  near the beginning of your search path. Older versions of PhysicsFS
+ *  offered only PHYSFS_getUserDir() and left you to figure out where the
+ *  files should go under that tree. This finds the correct location
+ *  for whatever platform, which not only changes between operating systems,
+ *  but also versions of the same operating system.
+ *
+ * You specify the name of your organization (if it's not a real organization,
+ *  your name or an Internet domain you own might do) and the name of your
+ *  application. These should be proper names.
+ *
+ * Both the (org) and (app) strings may become part of a directory name, so
+ *  please follow these rules:
+ *
+ *    - Try to use the same org string (including case-sensitivity) for
+ *      all your applications that use this function.
+ *    - Always use a unique app string for each one, and make sure it never
+ *      changes for an app once you've decided on it.
+ *    - Unicode characters are legal, as long as it's UTF-8 encoded, but...
+ *    - ...only use letters, numbers, and spaces. Avoid punctuation like
+ *      "Game Name 2: Bad Guy's Revenge!" ... "Game Name 2" is sufficient.
+ *
+ * The pointer returned by this function remains valid until you call this
+ *  function again, or call PHYSFS_deinit(). This is not necessarily a fast
+ *  call, though, so you should call this once at startup and copy the string
+ *  if you need it.
+ *
+ * You should assume the path returned by this function is the only safe
+ *  place to write files (and that PHYSFS_getUserDir() and PHYSFS_getBaseDir(),
+ *  while they might be writable, or even parents of the returned path, aren't
+ *  where you should be writing things).
+ *
+ *   \param org The name of your organization.
+ *   \param app The name of your application.
+ *  \return READ ONLY string of user dir in platform-dependent notation. NULL
+ *          if there's a problem (creating directory failed, etc).
+ *
+ * \sa PHYSFS_getBaseDir
+ * \sa PHYSFS_getUserDir
+ */
+PHYSFS_DECL const char *PHYSFS_getPrefDir(const char *org, const char *app);
+
 
 /* Everything above this line is part of the PhysicsFS 2.1 API. */
 

@@ -293,6 +293,36 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 } /* __PHYSFS_platformCalcBaseDir */
 
 
+char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
+{
+    /*
+     * We use XDG's base directory spec, even if you're not on Linux.
+     *  This isn't strictly correct, but the results are relatively sane
+     *  in any case.
+     *
+     * http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+     */
+    const char *envr = getenv("XDG_DATA_HOME");
+    const char *append = "/";
+    char *retval = NULL;
+    size_t len = 0;
+
+    if (!envr)
+    {
+        /* You end up with "$HOME/.local/share/Game Name 2" */
+        envr = __PHYSFS_getUserDir();
+        BAIL_IF_MACRO(!envr, ERRPASS, NULL);  /* oh well. */
+        append = ".local/share/";
+    } /* if */
+
+    len = strlen(envr) + strlen(append) + strlen(app) + 1;
+    retval = (char *) allocator.Malloc(len);
+    BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    snprintf(retval, len, "%s%s%s", envr, append, app);
+    return retval;
+} /* __PHYSFS_platformCalcPrefDir */
+
+
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
     return 0;  /* just use malloc() and friends. */

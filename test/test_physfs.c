@@ -23,6 +23,9 @@
 
 #include <time.h>
 
+/* Define this, so the compiler doesn't complain about using old APIs. */
+#define PHYSFS_DEPRECATED
+
 #include "physfs.h"
 
 #define TEST_VERSION_MAJOR  2
@@ -384,6 +387,19 @@ static int cmd_getuserdir(char *args)
     printf("User dir is [%s].\n", PHYSFS_getUserDir());
     return 1;
 } /* cmd_getuserdir */
+
+
+static int cmd_getprefdir(char *args)
+{
+    char *org;
+    char *appName;
+    char *ptr = args;
+
+    org = ptr;
+    ptr = strchr(ptr, ' '); *ptr = '\0'; ptr++; appName = ptr;
+    printf("Pref dir is [%s].\n", PHYSFS_getPrefDir(org, appName));
+    return 1;
+} /* cmd_getprefdir */
 
 
 static int cmd_getwritedir(char *args)
@@ -1130,6 +1146,7 @@ static const command_info commands[] =
     { "getsearchpath",  cmd_getsearchpath,  0, NULL                         },
     { "getbasedir",     cmd_getbasedir,     0, NULL                         },
     { "getuserdir",     cmd_getuserdir,     0, NULL                         },
+    { "getprefdir",     cmd_getprefdir,     2, "<org> <app>"                },
     { "getwritedir",    cmd_getwritedir,    0, NULL                         },
     { "setwritedir",    cmd_setwritedir,    1, "<newWriteDir>"              },
     { "permitsymlinks", cmd_permitsyms,     1, "<1or0>"                     },

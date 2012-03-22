@@ -289,6 +289,19 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 } /* __PHYSFS_platformCalcBaseDir */
 
 
+char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
+{
+    /* !!! FIXME: there's a real API to determine this */
+    const char *userdir = __PHYSFS_getUserDir();
+    const char *append = "Library/Application Support/";
+    const size_t len = strlen(userdir) + strlen(append) + strlen(app) + 1;
+    char *retval = allocator.Malloc(len);
+    BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    snprintf(retval, len, "%s%s%s", userdir, append, app);
+    return retval;
+} /* __PHYSFS_platformCalcPrefDir */
+
+
 /* Platform allocator uses default CFAllocator at PHYSFS_init() time. */
 
 static CFAllocatorRef cfallocdef = NULL;
