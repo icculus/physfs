@@ -315,10 +315,10 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
         append = ".local/share/";
     } /* if */
 
-    len = strlen(envr) + strlen(append) + strlen(app) + 1;
+    len = strlen(envr) + strlen(append) + strlen(app) + 2;
     retval = (char *) allocator.Malloc(len);
     BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    snprintf(retval, len, "%s%s%s", envr, append, app);
+    snprintf(retval, len, "%s%s%s/", envr, append, app);
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */
 

@@ -462,7 +462,7 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 
     utf8 = unicodeToUtf8Heap(path);
     BAIL_IF_MACRO(!utf8, ERRPASS, NULL);
-    len = strlen(utf8) + strlen(org) + strlen(app) + 3;
+    len = strlen(utf8) + strlen(org) + strlen(app) + 4;
     retval = allocator.Malloc(len);
     if (!retval)
     {
@@ -470,7 +470,7 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
         BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
-    sprintf(retval, "%s\\%s\\%s", utf8, org, app);
+    sprintf(retval, "%s\\%s\\%s\\", utf8, org, app);
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */
 

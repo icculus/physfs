@@ -1382,6 +1382,7 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
     const char dirsep = __PHYSFS_platformDirSeparator;
     PHYSFS_Stat statbuf;
     char *ptr = NULL;
+    char *endstr = NULL;
     int exists = 0;
 
     BAIL_IF_MACRO(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
@@ -1394,21 +1395,28 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
     prefDir = __PHYSFS_platformCalcPrefDir(org, app);
     BAIL_IF_MACRO(!prefDir, ERRPASS, NULL);
 
-    if (__PHYSFS_platformStat(prefDir, &exists, &statbuf))
-        return prefDir;
+    assert(strlen(prefDir) > 0);
+    endstr = prefDir + (strlen(prefDir) - 1);
+    assert(*endstr == dirsep);
+    *endstr = '\0';  /* mask out the final dirsep for now. */
 
-    for (ptr = strchr(prefDir, dirsep); ptr; ptr = strchr(ptr+1, dirsep))
+    if (!__PHYSFS_platformStat(prefDir, &exists, &statbuf))
     {
-        *ptr = '\0';
-        __PHYSFS_platformMkDir(prefDir);
-        *ptr = dirsep;
-    } /* for */
+        for (ptr = strchr(prefDir, dirsep); ptr; ptr = strchr(ptr+1, dirsep))
+        {
+            *ptr = '\0';
+            __PHYSFS_platformMkDir(prefDir);
+            *ptr = dirsep;
+        } /* for */
 
-    if (!__PHYSFS_platformMkDir(prefDir))
-    {
-        allocator.Free(prefDir);
-        prefDir = NULL;
+        if (!__PHYSFS_platformMkDir(prefDir))
+        {
+            allocator.Free(prefDir);
+            prefDir = NULL;
+        } /* if */
     } /* if */
+
+    *endstr = dirsep;  /* readd the final dirsep. */
 
     return prefDir;
 } /* PHYSFS_getPrefDir */

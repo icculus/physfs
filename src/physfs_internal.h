@@ -645,8 +645,9 @@ char *__PHYSFS_platformGetUserDir(void);
 const char *__PHYSFS_getUserDir(void);  /* not deprecated internal version. */
 
 /*
- * Get the platform-specific pref dir.
- *  Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
+ * Get the platform-specific pref dir. You must make sure the string ends
+ *  with a dir separator.
+ * Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
  *  it's a total failure. Caller will make missing directories if necessary;
  *  this just reports the final path.
  */
