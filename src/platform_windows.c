@@ -795,32 +795,33 @@ int __PHYSFS_platformDelete(const char *path)
 } /* __PHYSFS_platformDelete */
 
 
-/*
- * !!! FIXME: why aren't we using Critical Sections instead of Mutexes?
- * !!! FIXME:  mutexes on Windows are for cross-process sync. CritSects are
- * !!! FIXME:  mutexes for threads in a single process and are faster.
- */
 void *__PHYSFS_platformCreateMutex(void)
 {
-    return ((void *) CreateMutex(NULL, FALSE, NULL));
+    LPCRITICAL_SECTION lpcs;
+    lpcs = (LPCRITICAL_SECTION) allocator.Malloc(sizeof (CRITICAL_SECTION));
+    BAIL_IF_MACRO(!lpcs, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    InitializeCriticalSection(lpcs);
+    return lpcs;
 } /* __PHYSFS_platformCreateMutex */
 
 
 void __PHYSFS_platformDestroyMutex(void *mutex)
 {
-    CloseHandle((HANDLE) mutex);
+    DeleteCriticalSection((LPCRITICAL_SECTION) mutex);
+    allocator.Free(mutex);
 } /* __PHYSFS_platformDestroyMutex */
 
 
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
-    return (WaitForSingleObject((HANDLE) mutex, INFINITE) != WAIT_FAILED);
+    EnterCriticalSection((LPCRITICAL_SECTION) mutex);
+    return 1;
 } /* __PHYSFS_platformGrabMutex */
 
 
 void __PHYSFS_platformReleaseMutex(void *mutex)
 {
-    ReleaseMutex((HANDLE) mutex);
+    LeaveCriticalSection((LPCRITICAL_SECTION) mutex);
 } /* __PHYSFS_platformReleaseMutex */
 
 
