@@ -88,6 +88,7 @@ typedef struct
 } WinApiFile;
 
 
+/* !!! FIXME: we cache userDir in physfs.c during PHYSFS_init(), too. */
 static char *userDir = NULL;
 static HANDLE libUserEnv = NULL;
 static HANDLE detectCDThreadHandle = NULL;
@@ -439,6 +440,22 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 
     return retval;   /* w00t. */
 } /* __PHYSFS_platformCalcBaseDir */
+
+
+char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
+{
+    // Vista and later has a new API for this, but SHGetFolderPath works there,
+    //  and apparently just wraps the new API. This is the new way to do it:
+    // SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_CREATE,
+    //                      NULL, &wszPath);
+
+    WCHAR path[MAX_PATH];
+    if (!SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                   NULL, 0, path)))
+        BAIL_MACRO(PHYSFS_ERR_OS_ERROR, NULL);
+
+    return unicodeToUtf8Heap(path);
+} /* __PHYSFS_platformCalcPrefDir */
 
 
 char *__PHYSFS_platformGetUserName(void)

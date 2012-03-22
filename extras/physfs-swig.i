@@ -91,6 +91,7 @@
 %rename(unmount) PHYSFS_unmount;
 %rename(mountMemory) PHYSFS_mountMemory;
 %rename(mountHandle) PHYSFS_mountHandle;
+%rename(getPrefDir) PHYSFS_getPrefDir;
 #endif
 
 %include "../src/physfs.h"

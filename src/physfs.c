@@ -135,6 +135,7 @@ static FileHandle *openWriteList = NULL;
 static FileHandle *openReadList = NULL;
 static char *baseDir = NULL;
 static char *userDir = NULL;
+static char *prefDir = NULL;
 static int allowSymLinks = 0;
 
 /* mutexes ... */
@@ -1312,6 +1313,12 @@ int PHYSFS_deinit(void)
         userDir = NULL;
     } /* if */
 
+    if (prefDir != NULL)
+    {
+        allocator.Free(prefDir);
+        prefDir = NULL;
+    } /* if */
+
     allowSymLinks = 0;
     initialized = 0;
 
@@ -1370,15 +1377,60 @@ void PHYSFS_getCdRomDirsCallback(PHYSFS_StringCallback callback, void *data)
 } /* PHYSFS_getCdRomDirsCallback */
 
 
+const char *PHYSFS_getPrefDir(const char *org, const char *app)
+{
+    const char dirsep = __PHYSFS_platformDirSeparator;
+    char *ptr = NULL;
+    PHYSFS_Stat statbuf;
+    int exists = 0;
+
+    BAIL_IF_MACRO(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    BAIL_IF_MACRO(!org, PHYSFS_ERR_INVALID_ARGUMENT, NULL);
+    BAIL_IF_MACRO(*org == '\0', PHYSFS_ERR_INVALID_ARGUMENT, NULL);
+    BAIL_IF_MACRO(!app, PHYSFS_ERR_INVALID_ARGUMENT, NULL);
+    BAIL_IF_MACRO(*app == '\0', PHYSFS_ERR_INVALID_ARGUMENT, NULL);
+
+    allocator.Free(prefDir);
+    prefDir = __PHYSFS_platformCalcPrefDir(org, app);
+    BAIL_IF_MACRO(!prefDir, ERRPASS, NULL);
+
+    #if !PHYSFS_PLATFORM_WINDOWS  /* Windows guarantees the dir exists here. */
+    if (__PHYSFS_platformStat(prefDir, &exists, &statbuf))
+        return prefDir;
+
+    for (ptr = strchr(prefDir, dirsep); ptr; ptr = strchr(ptr+1, dirsep))
+    {
+        *ptr = '\0';
+        __PHYSFS_platformMkDir(prefDir);
+        *ptr = dirsep;
+    } /* for */
+
+    if (!__PHYSFS_platformMkDir(prefDir))
+    {
+        allocator.Free(prefDir);
+        prefDir = NULL;
+    } /* if */
+    #endif
+
+    return prefDir;
+} /* PHYSFS_getPrefDir */
+
+
 const char *PHYSFS_getBaseDir(void)
 {
     return baseDir;   /* this is calculated in PHYSFS_init()... */
 } /* PHYSFS_getBaseDir */
 
 
-const char *PHYSFS_getUserDir(void)
+const char *__PHYSFS_getUserDir(void)  /* not deprecated internal version. */
 {
     return userDir;   /* this is calculated in PHYSFS_init()... */
+} /* __PHYSFS_getUserDir */
+
+
+const char *PHYSFS_getUserDir(void)
+{
+    return __PHYSFS_getUserDir();
 } /* PHYSFS_getUserDir */
 
 

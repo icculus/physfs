@@ -633,12 +633,25 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0);
  */
 char *__PHYSFS_platformGetUserName(void);
 
-/*
+/* !!! FIXME: should this be CalcUserDir, to match CalcBaseDir?
  * Get the platform-specific user dir.
  *  Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
  *  the userdir will default to basedir/username.
  */
 char *__PHYSFS_platformGetUserDir(void);
+
+
+/* This is the cached version from PHYSFS_init(). This is a fast call. */
+const char *__PHYSFS_getUserDir(void);  /* not deprecated internal version. */
+
+/*
+ * Get the platform-specific pref dir.
+ *  Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
+ *  it's a total failure. Caller will make missing directories if necessary;
+ *  this just reports the final path.
+ */
+char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app);
+
 
 /*
  * Return a pointer that uniquely identifies the current thread.
