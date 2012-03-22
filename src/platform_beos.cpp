@@ -185,7 +185,6 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 
 char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 {
-    /* !!! FIXME: there's a real API to determine this */
     const char *userdir = __PHYSFS_getUserDir();
     const char *append = "config/settings/";
     const size_t len = strlen(userdir) + strlen(append) + strlen(app) + 2;
