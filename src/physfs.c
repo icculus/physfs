@@ -1104,7 +1104,7 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
 
 static char *calculateUserDir(void)
 {
-    char *retval = __PHYSFS_platformGetUserDir();
+    char *retval = __PHYSFS_platformCalcUserDir();
     if (retval == NULL)
     {
         const char dirsep = __PHYSFS_platformDirSeparator;
