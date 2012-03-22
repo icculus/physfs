@@ -2615,7 +2615,7 @@ typedef enum PHYSFS_FileType
  * Container for various meta data about a file in the virtual file system.
  *  PHYSFS_stat() uses this structure for returning the information. The time
  *  data will be either the number of seconds since the Unix epoch (midnight,
- *  Jan 1, 1970), or -1 if there the information isn't available or applicable.
+ *  Jan 1, 1970), or -1 if the information isn't available or applicable.
  *  The (filesize) field is measured in bytes.
  *  The (readonly) field tells you whether when you open a file for writing you
  *  are writing to the same file as if you were opening it, given you have
