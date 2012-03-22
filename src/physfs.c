@@ -1380,8 +1380,8 @@ void PHYSFS_getCdRomDirsCallback(PHYSFS_StringCallback callback, void *data)
 const char *PHYSFS_getPrefDir(const char *org, const char *app)
 {
     const char dirsep = __PHYSFS_platformDirSeparator;
-    char *ptr = NULL;
     PHYSFS_Stat statbuf;
+    char *ptr = NULL;
     int exists = 0;
 
     BAIL_IF_MACRO(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
@@ -1394,7 +1394,6 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
     prefDir = __PHYSFS_platformCalcPrefDir(org, app);
     BAIL_IF_MACRO(!prefDir, ERRPASS, NULL);
 
-    #if !PHYSFS_PLATFORM_WINDOWS  /* Windows guarantees the dir exists here. */
     if (__PHYSFS_platformStat(prefDir, &exists, &statbuf))
         return prefDir;
 
@@ -1410,7 +1409,6 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
         allocator.Free(prefDir);
         prefDir = NULL;
     } /* if */
-    #endif
 
     return prefDir;
 } /* PHYSFS_getPrefDir */
