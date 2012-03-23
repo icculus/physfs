@@ -248,10 +248,6 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     char *retval = NULL;
     char *envr = NULL;
 
-    /* fast path: default behaviour can handle this. */
-    if ( (argv0 != NULL) && (strchr(argv0, '/') != NULL) )
-        return NULL;  /* higher level will parse out real path from argv0. */
-
     /*
      * Try to avoid using argv0 unless forced to. If there's a Linux-like
      *  /proc filesystem, you can get the full path to the current process from
@@ -275,8 +271,13 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
             *(ptr+1) = '\0';
     } /* if */
 
+    /* No /proc/self/exe, but we have an argv[0] we can parse? */
     if ((retval == NULL) && (argv0 != NULL))
     {
+        /* fast path: default behaviour can handle this. */
+        if (strchr(argv0, '/') != NULL)
+            return NULL;  /* higher level parses out real path from argv0. */
+
         /* If there's no dirsep on argv0, then look through $PATH for it. */
         /* !!! FIXME: smallAlloc? */
         envr = __PHYSFS_platformCopyEnvironmentVariable("PATH");
