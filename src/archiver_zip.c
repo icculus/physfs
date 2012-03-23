@@ -1404,7 +1404,7 @@ static int ZIP_stat(dvoid *opaque, const char *filename, int *exists,
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
 {
     "ZIP",
-    ZIP_ARCHIVE_DESCRIPTION,
+    "PkZip/WinZip/Info-Zip compatible",
     "Ryan C. Gordon <icculus@icculus.org>",
     "http://icculus.org/physfs/",
 };

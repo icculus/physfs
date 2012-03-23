@@ -118,15 +118,6 @@ void __PHYSFS_smallFree(void *ptr);
 #define PHYSFS_SUPPORTS_ISO9660 0
 #endif
 
-#define DIR_ARCHIVE_DESCRIPTION  "Non-archive, direct filesystem I/O"
-#define GRP_ARCHIVE_DESCRIPTION  "Build engine Groupfile format"
-#define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"
-#define MVL_ARCHIVE_DESCRIPTION  "Descent II Movielib format"
-#define QPAK_ARCHIVE_DESCRIPTION "Quake I/II format"
-#define ZIP_ARCHIVE_DESCRIPTION  "PkZip/WinZip/Info-Zip compatible"
-#define WAD_ARCHIVE_DESCRIPTION  "DOOM engine format"
-#define LZMA_ARCHIVE_DESCRIPTION "LZMA (7zip) format"
-
 
 /* !!! FIXME: find something better than "dvoid" and "fvoid" ... */
 /* Opaque data for file and dir handlers... */

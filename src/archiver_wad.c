@@ -105,7 +105,7 @@ static void *WAD_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_WAD =
 {
     "WAD",
-    WAD_ARCHIVE_DESCRIPTION,
+    "DOOM engine format",
     "Travis Wells <traviswells@mchsi.com>",
     "http://www.3dmm2.com/doom/",
 };

@@ -678,7 +678,7 @@ static int LZMA_stat(dvoid *opaque, const char *filename, int *exists,
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_LZMA =
 {
     "7Z",
-    LZMA_ARCHIVE_DESCRIPTION,
+    "LZMA (7zip) format",
     "Dennis Schridde <devurandom@gmx.net>",
     "http://icculus.org/physfs/",
 };

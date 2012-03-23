@@ -81,7 +81,7 @@ static void *MVL_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MVL =
 {
     "MVL",
-    MVL_ARCHIVE_DESCRIPTION,
+    "Descent II Movielib format",
     "Bradley Bell <btb@icculus.org>",
     "http://icculus.org/physfs/",
 };
