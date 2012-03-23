@@ -268,18 +268,23 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
             return NULL;
         } /* if */
 
-        /* chop the "/exename" from the end of the path string... */
+        /* chop the "exename" from the end of the path string (leave '/')... */
+        cfrange.location++;
         cfrange.length = CFStringGetLength(cfmutstr) - cfrange.location;
         CFStringDelete(cfmutstr, cfrange);
 
         /* If we're an Application Bundle, chop everything but the base. */
-        cfrange = CFStringFind(cfmutstr, CFSTR("/Contents/MacOS"),
+        cfrange = CFStringFind(cfmutstr, CFSTR("/Contents/MacOS/"),
                                kCFCompareCaseInsensitive |
                                kCFCompareBackwards |
                                kCFCompareAnchored);
 
         if (cfrange.location != kCFNotFound)
+        {
+            cfrange.location++;  /* leave the trailing '/' char ... */
+            cfrange.length--;
             CFStringDelete(cfmutstr, cfrange);  /* chop that, too. */
+        } /* if */
     } /* if */
 
     retval = convertCFString(cfmutstr);

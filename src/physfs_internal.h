@@ -634,6 +634,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data);
  * Calculate the base dir, if your platform needs special consideration.
  *  Just return NULL if the standard routines will suffice. (see
  *  calculateBaseDir() in physfs.c ...)
+ * Your string must end with a dir separator if you don't return NULL.
  *  Caller will allocator.Free() the retval if it's not NULL.
  */
 char *__PHYSFS_platformCalcBaseDir(const char *argv0);

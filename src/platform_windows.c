@@ -372,7 +372,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
             __PHYSFS_setError(PHYSFS_ERR_OTHER_ERROR);  /* oh well. */
         else
         {
-            *(ptr + 1) = '\0';  /* chop off filename. */
+            *(ptr+1) = '\0';  /* chop off filename. */
             retval = unicodeToUtf8Heap(modpath);
         } /* else */
     } /* else */
@@ -448,11 +448,19 @@ char *__PHYSFS_platformCalcUserDir(void)
         (void) rc;
 
         /* Allocate memory for the profile directory */
-        wstr = (LPWSTR) __PHYSFS_smallAlloc(psize * sizeof (WCHAR));
+        wstr = (LPWSTR) __PHYSFS_smallAlloc((psize + 1) * sizeof (WCHAR));
         if (wstr != NULL)
         {
             if (pGetDir(accessToken, wstr, &psize))
+            {
+                /* Make sure it ends in a dirsep. We allocated +1 for this. */
+                if (wstr[psize - 2] != '\\')
+                {
+                    wstr[psize - 1] = '\\';
+                    wstr[psize - 0] = '\0';
+                } /* if */
                 retval = unicodeToUtf8Heap(wstr);
+            } /* if */
             __PHYSFS_smallFree(wstr);
         } /* if */
 

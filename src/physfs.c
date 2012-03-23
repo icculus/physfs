@@ -1147,7 +1147,7 @@ static char *calculateBaseDir(const char *argv0)
     ptr = strrchr(argv0, dirsep);
     if (ptr != NULL)
     {
-        const size_t size = (size_t) (ptr - argv0);
+        const size_t size = ((size_t) (ptr - argv0)) + 1;
         retval = (char *) allocator.Malloc(size + 1);
         BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
         memcpy(retval, argv0, size);
@@ -1203,7 +1203,8 @@ int PHYSFS_init(const char *argv0)
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(!baseDir, ERRPASS, 0);
 
-    BAIL_IF_MACRO(!appendDirSep(&baseDir), ERRPASS, 0);
+    /* Platform layer is required to append a dirsep. */
+    assert(baseDir[strlen(baseDir) - 1] == __PHYSFS_platformDirSeparator);
 
     userDir = __PHYSFS_platformCalcUserDir();
     if ((!userDir) || (!appendDirSep(&userDir)))
