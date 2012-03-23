@@ -96,6 +96,28 @@ void __PHYSFS_smallFree(void *ptr);
 #define free(x) Do not use free() directly.
 /* !!! FIXME: add alloca check here. */
 
+#ifndef PHYSFS_SUPPORTS_ZIP
+#define PHYSFS_SUPPORTS_ZIP 1
+#endif
+#ifndef PHYSFS_SUPPORTS_7Z
+#define PHYSFS_SUPPORTS_7Z 0
+#endif
+#ifndef PHYSFS_SUPPORTS_GRP
+#define PHYSFS_SUPPORTS_GRP 0
+#endif
+#ifndef PHYSFS_SUPPORTS_HOG
+#define PHYSFS_SUPPORTS_HOG 0
+#endif
+#ifndef PHYSFS_SUPPORTS_MVL
+#define PHYSFS_SUPPORTS_MVL 0
+#endif
+#ifndef PHYSFS_SUPPORTS_WAD
+#define PHYSFS_SUPPORTS_WAD 0
+#endif
+#ifndef PHYSFS_SUPPORTS_ISO9660
+#define PHYSFS_SUPPORTS_ISO9660 0
+#endif
+
 #define DIR_ARCHIVE_DESCRIPTION  "Non-archive, direct filesystem I/O"
 #define GRP_ARCHIVE_DESCRIPTION  "Build engine Groupfile format"
 #define HOG_ARCHIVE_DESCRIPTION  "Descent I/II HOG file format"

@@ -29,10 +29,10 @@
  *  Based on grp.c by Ryan C. Gordon.
  */
 
-#if (defined PHYSFS_SUPPORTS_HOG)
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
+
+#if PHYSFS_SUPPORTS_HOG
 
 static UNPKentry *hogLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 *_entCount)
 {

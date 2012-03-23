@@ -29,10 +29,10 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#if (defined PHYSFS_SUPPORTS_QPAK)
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
+
+#if PHYSFS_SUPPORTS_QPAK
 
 /* !!! FIXME: what is this here for? */
 #if 1  /* Make this case insensitive? */

@@ -7,10 +7,10 @@
  *   by Igor Pavlov.
  */
 
-#if (defined PHYSFS_SUPPORTS_7Z)
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
+
+#if PHYSFS_SUPPORTS_7Z
 
 #include "lzma/C/7zCrc.h"
 #include "lzma/C/Archive/7z/7zIn.h"

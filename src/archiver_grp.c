@@ -24,10 +24,10 @@
  *  This file written by Ryan C. Gordon.
  */
 
-#if (defined PHYSFS_SUPPORTS_GRP)
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
+
+#if PHYSFS_SUPPORTS_GRP
 
 static UNPKentry *grpLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 {

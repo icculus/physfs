@@ -68,28 +68,28 @@ extern const PHYSFS_Archiver       __PHYSFS_Archiver_ISO9660;
 
 static const PHYSFS_ArchiveInfo *supported_types[] =
 {
-#if (defined PHYSFS_SUPPORTS_ZIP)
+#if PHYSFS_SUPPORTS_ZIP
     &__PHYSFS_ArchiveInfo_ZIP,
 #endif
-#if (defined PHYSFS_SUPPORTS_7Z)
+#if PHYSFS_SUPPORTS_7Z
     &__PHYSFS_ArchiveInfo_LZMA,
 #endif
-#if (defined PHYSFS_SUPPORTS_GRP)
+#if PHYSFS_SUPPORTS_GRP
     &__PHYSFS_ArchiveInfo_GRP,
 #endif
-#if (defined PHYSFS_SUPPORTS_QPAK)
+#if PHYSFS_SUPPORTS_QPAK
     &__PHYSFS_ArchiveInfo_QPAK,
 #endif
-#if (defined PHYSFS_SUPPORTS_HOG)
+#if PHYSFS_SUPPORTS_HOG
     &__PHYSFS_ArchiveInfo_HOG,
 #endif
-#if (defined PHYSFS_SUPPORTS_MVL)
+#if PHYSFS_SUPPORTS_MVL
     &__PHYSFS_ArchiveInfo_MVL,
 #endif
-#if (defined PHYSFS_SUPPORTS_WAD)
+#if PHYSFS_SUPPORTS_WAD
     &__PHYSFS_ArchiveInfo_WAD,
 #endif
-#if (defined PHYSFS_SUPPORTS_ISO9660)
+#if PHYSFS_SUPPORTS_ISO9660
     &__PHYSFS_ArchiveInfo_ISO9660,
 #endif
     NULL
@@ -97,28 +97,28 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
 
 static const PHYSFS_Archiver *archivers[] =
 {
-#if (defined PHYSFS_SUPPORTS_ZIP)
+#if PHYSFS_SUPPORTS_ZIP
     &__PHYSFS_Archiver_ZIP,
 #endif
-#if (defined PHYSFS_SUPPORTS_7Z)
+#if PHYSFS_SUPPORTS_7Z
     &__PHYSFS_Archiver_LZMA,
 #endif
-#if (defined PHYSFS_SUPPORTS_GRP)
+#if PHYSFS_SUPPORTS_GRP
     &__PHYSFS_Archiver_GRP,
 #endif
-#if (defined PHYSFS_SUPPORTS_QPAK)
+#if PHYSFS_SUPPORTS_QPAK
     &__PHYSFS_Archiver_QPAK,
 #endif
-#if (defined PHYSFS_SUPPORTS_HOG)
+#if PHYSFS_SUPPORTS_HOG
     &__PHYSFS_Archiver_HOG,
 #endif
-#if (defined PHYSFS_SUPPORTS_MVL)
+#if PHYSFS_SUPPORTS_MVL
     &__PHYSFS_Archiver_MVL,
 #endif
-#if (defined PHYSFS_SUPPORTS_WAD)
+#if PHYSFS_SUPPORTS_WAD
     &__PHYSFS_Archiver_WAD,
 #endif
-#if (defined PHYSFS_SUPPORTS_ISO9660)
+#if PHYSFS_SUPPORTS_ISO9660
     &__PHYSFS_Archiver_ISO9660,
 #endif
     NULL
