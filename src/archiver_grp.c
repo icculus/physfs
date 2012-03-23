@@ -88,7 +88,7 @@ static void *GRP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
 {
     "GRP",
-    GRP_ARCHIVE_DESCRIPTION,
+    "Build engine Groupfile format",
     "Ryan C. Gordon <icculus@icculus.org>",
     "http://icculus.org/physfs/",
 };

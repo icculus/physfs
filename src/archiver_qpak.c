@@ -550,7 +550,7 @@ static int QPAK_stat(dvoid *opaque, const char *filename, int *exists,
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_QPAK =
 {
     "PAK",
-    QPAK_ARCHIVE_DESCRIPTION,
+    "Quake I/II format",
     "Ryan C. Gordon <icculus@icculus.org>",
     "http://icculus.org/physfs/",
 };

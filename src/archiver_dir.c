@@ -181,7 +181,7 @@ static int DIR_stat(dvoid *opaque, const char *name, int *exists,
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
 {
     "",
-    DIR_ARCHIVE_DESCRIPTION,
+    "Non-archive, direct filesystem I/O",
     "Ryan C. Gordon <icculus@icculus.org>",
     "http://icculus.org/physfs/",
 };

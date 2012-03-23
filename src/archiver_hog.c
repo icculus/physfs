@@ -94,7 +94,7 @@ static void *HOG_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_HOG =
 {
     "HOG",
-    HOG_ARCHIVE_DESCRIPTION,
+    "Descent I/II HOG file format",
     "Bradley Bell <btb@icculus.org>",
     "http://icculus.org/physfs/",
 };
