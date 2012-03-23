@@ -7,13 +7,13 @@
  *   by Gilles Vollant.
  */
 
-#if (defined PHYSFS_SUPPORTS_ZIP)
+#define __PHYSICSFS_INTERNAL__
+#include "physfs_internal.h"
+
+#if PHYSFS_SUPPORTS_ZIP
 
 #include <errno.h>
 #include <time.h>
-
-#define __PHYSICSFS_INTERNAL__
-#include "physfs_internal.h"
 
 #define USE_MINIZ 1
 #if USE_MINIZ

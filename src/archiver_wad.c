@@ -42,10 +42,10 @@
  *  Ryan C. Gordon.
  */
 
-#if (defined PHYSFS_SUPPORTS_WAD)
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
+
+#if PHYSFS_SUPPORTS_WAD
 
 static UNPKentry *wadLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 {

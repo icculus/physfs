@@ -27,10 +27,10 @@
  *  Based on grp.c by Ryan C. Gordon.
  */
 
-#if (defined PHYSFS_SUPPORTS_MVL)
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
+
+#if PHYSFS_SUPPORTS_MVL
 
 static UNPKentry *mvlLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 {

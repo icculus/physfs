@@ -24,10 +24,10 @@
  * - Ambiguities in the standard
  */
 
-#if (defined PHYSFS_SUPPORTS_ISO9660)
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
+
+#if PHYSFS_SUPPORTS_ISO9660
 
 #include <time.h>
 
