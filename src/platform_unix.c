@@ -167,11 +167,14 @@ static char *findBinaryInPath(const char *bin, char *envr)
     do
     {
         size_t size;
+        size_t binlen;
+
         ptr = strchr(start, ':');  /* find next $PATH separator. */
         if (ptr)
             *ptr = '\0';
 
-        size = strlen(start) + strlen(bin) + 2;
+        binlen = strlen(bin);
+        size = strlen(start) + binlen + 2;
         if (size > alloc_size)
         {
             char *x = (char *) allocator.Realloc(exe, size);
@@ -194,7 +197,7 @@ static char *findBinaryInPath(const char *bin, char *envr)
 
         if (access(exe, X_OK) == 0)  /* Exists as executable? We're done. */
         {
-            strcpy(exe, start);  /* i'm lazy. piss off. */
+            exe[size - binlen] = '\0'; /* chop off filename, leave '/' */
             return exe;
         } /* if */
 
@@ -269,12 +272,13 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     {
         char *ptr = strrchr(retval, '/');
         if (ptr != NULL)
-            *ptr = '\0';
+            *(ptr+1) = '\0';
     } /* if */
 
     if ((retval == NULL) && (argv0 != NULL))
     {
         /* If there's no dirsep on argv0, then look through $PATH for it. */
+        /* !!! FIXME: smallAlloc? */
         envr = __PHYSFS_platformCopyEnvironmentVariable("PATH");
         BAIL_IF_MACRO(!envr, ERRPASS, NULL);
         retval = findBinaryInPath(argv0, envr);

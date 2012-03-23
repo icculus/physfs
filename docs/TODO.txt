@@ -75,7 +75,6 @@ Other stuff I thought of...
 - bzip2 support in zip archiver?
 - rewrite 7zip archiver.
 - ryanify iso9660 code.
-- Cache basedir/userdir results (do we do this already?)
 - Reduce the BAIL and GOTO macro use. A lot of these don't add anything.
 
 Probably other stuff. Requests and recommendations are welcome.

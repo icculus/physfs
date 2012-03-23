@@ -176,9 +176,10 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     assert(rc == B_OK);
     const char *str = path.Path();
     assert(str != NULL);
-    char *retval = (char *) allocator.Malloc(strlen(str) + 1);
+    char *retval = (char *) allocator.Malloc(strlen(str) + 2);
     BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, str);
+    strcat(retval, "/");
     return retval;
 } /* __PHYSFS_platformCalcBaseDir */
 
