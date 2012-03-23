@@ -419,7 +419,7 @@ int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len);
 
 typedef struct
 {
-    char name[32];
+    char name[56];
     PHYSFS_uint32 startPos;
     PHYSFS_uint32 size;
 } UNPKentry;
