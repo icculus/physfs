@@ -1031,9 +1031,15 @@ static int cmd_write(char *args)
 
 static char* modTimeToStr(PHYSFS_sint64 modtime, char *modstr, size_t strsize)
 {
-    time_t t = (time_t) modtime;
-    char *str = ctime(&t);
-    strncpy(modstr, str, strsize);
+    if (modtime < 0)
+        strncpy(modstr, "Unknown\n", strsize);
+    else
+    {
+        time_t t = (time_t) modtime;
+        char *str = ctime(&t);
+        strncpy(modstr, str, strsize);
+    } /* else */
+
     modstr[strsize-1] = '\0';
     return modstr;
 } /* modTimeToStr */
