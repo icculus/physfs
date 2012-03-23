@@ -70,7 +70,7 @@ static void *GRP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
-    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, 0);
+    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
 
     BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, sizeof (buf)), ERRPASS, NULL);
     if (memcmp(buf, "KenSilverman", sizeof (buf)) != 0)
