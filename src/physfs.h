@@ -2741,7 +2741,7 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_readBytes(PHYSFS_File *handle, void *buffer,
                                            PHYSFS_uint64 len);
 
 /**
- * \fn PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle, const void *buffer, PHYSFS_uint64 len)
+ * \fn PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle, const void *buffer, PHYSFS_uint64 len)
  * \brief Write data to a PhysicsFS filehandle
  *
  * The file must be opened for writing.
