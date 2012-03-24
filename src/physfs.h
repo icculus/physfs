@@ -209,7 +209,7 @@
  *
  * Other stuff:
  *
- * Please see the file LICENSE.txt in the source's "docs" directory for
+ * Please see the file LICENSE.txt in the source's root directory for
  *  licensing and redistribution rights.
  *
  * Please see the file CREDITS.txt in the source's "docs" directory for
