@@ -333,28 +333,27 @@ static PHYSFS_Io *ZIP_duplicate(PHYSFS_Io *io)
     ZIPfileinfo *origfinfo = (ZIPfileinfo *) io->opaque;
     PHYSFS_Io *retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
     ZIPfileinfo *finfo = (ZIPfileinfo *) allocator.Malloc(sizeof (ZIPfileinfo));
-    GOTO_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, ZIP_duplicate_failed);
-    GOTO_IF_MACRO(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, ZIP_duplicate_failed);
+    GOTO_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+    GOTO_IF_MACRO(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, failed);
     memset(finfo, '\0', sizeof (*finfo));
 
     finfo->entry = origfinfo->entry;
     finfo->io = zip_get_io(origfinfo->io, NULL, finfo->entry);
-    GOTO_IF_MACRO(!finfo->io, ERRPASS, ZIP_duplicate_failed);
+    GOTO_IF_MACRO(!finfo->io, ERRPASS, failed);
 
     if (finfo->entry->compression_method != COMPMETH_NONE)
     {
         finfo->buffer = (PHYSFS_uint8 *) allocator.Malloc(ZIP_READBUFSIZE);
-        if (!finfo->buffer)
-            GOTO_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, ZIP_duplicate_failed);
-        else if (zlib_err(inflateInit2(&finfo->stream, -MAX_WBITS)) != Z_OK)
-            goto ZIP_duplicate_failed;
+        GOTO_IF_MACRO(!finfo->buffer, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+        if (zlib_err(inflateInit2(&finfo->stream, -MAX_WBITS)) != Z_OK)
+            goto failed;
     } /* if */
 
     memcpy(retval, io, sizeof (PHYSFS_Io));
     retval->opaque = finfo;
     return retval;
 
-ZIP_duplicate_failed:
+failed:
     if (finfo != NULL)
     {
         if (finfo->io != NULL)
@@ -671,8 +670,7 @@ static int zip_resolve(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry);
  * Look for the entry named by (path). If it exists, resolve it, and return
  *  a pointer to that entry. If it's another symlink, keep resolving until you
  *  hit a real file and then return a pointer to the final non-symlink entry.
- *  If there's a problem, return NULL. (path) is always free()'d by this
- *  function.
+ *  If there's a problem, return NULL.
  */
 static ZIPentry *zip_follow_symlink(PHYSFS_Io *io, ZIPinfo *info, char *path)
 {
@@ -691,15 +689,14 @@ static ZIPentry *zip_follow_symlink(PHYSFS_Io *io, ZIPinfo *info, char *path)
         } /* else */
     } /* if */
 
-    allocator.Free(path);
     return entry;
 } /* zip_follow_symlink */
 
 
 static int zip_resolve_symlink(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
 {
-    char *path;
     const PHYSFS_uint32 size = entry->uncompressed_size;
+    char *path = NULL;
     int rc = 0;
 
     /*
@@ -710,8 +707,8 @@ static int zip_resolve_symlink(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
 
     BAIL_IF_MACRO(!io->seek(io, entry->offset), ERRPASS, 0);
 
-    path = (char *) allocator.Malloc(size + 1);
-    BAIL_IF_MACRO(path == NULL, PHYSFS_ERR_OUT_OF_MEMORY, 0);
+    path = (char *) __PHYSFS_smallAlloc(size + 1);
+    BAIL_IF_MACRO(!path, PHYSFS_ERR_OUT_OF_MEMORY, 0);
     
     if (entry->compression_method == COMPMETH_NONE)
         rc = __PHYSFS_readAll(io, path, size);
@@ -743,14 +740,14 @@ static int zip_resolve_symlink(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
         } /* if */
     } /* else */
 
-    if (!rc)
-        allocator.Free(path);
-    else
+    if (rc)
     {
         path[entry->uncompressed_size] = '\0';    /* null-terminate it. */
         zip_convert_dos_path(entry, path);
         entry->symlink = zip_follow_symlink(io, info, path);
     } /* else */
+
+    __PHYSFS_smallFree(path);
 
     return (entry->symlink != NULL);
 } /* zip_resolve_symlink */

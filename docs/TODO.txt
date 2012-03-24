@@ -37,7 +37,6 @@ From old TODO.txt...
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
   an installer/updater.
-- Reduce malloc() pressure all over the place. We fragment memory like mad.
 - profile string list interpolation.
 - We have two different ways to find dir entries in zip.c.
 - Do symlinks in zip archiver work when they point to dirs?
