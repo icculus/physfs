@@ -61,23 +61,6 @@ static inline PHYSFS_ErrorCode errcodeFromErrno(void)
 } /* errcodeFromErrno */
 
 
-
-char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname)
-{
-    const char *envr = getenv(varname);
-    char *retval = NULL;
-
-    if (envr != NULL)
-    {
-        retval = (char *) allocator.Malloc(strlen(envr) + 1);
-        BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-        strcpy(retval, envr);
-    } /* if */
-
-    return retval;
-} /* __PHYSFS_platformCopyEnvironmentVariable */
-
-
 static char *getUserDirByUID(void)
 {
     uid_t uid = getuid();
@@ -85,11 +68,20 @@ static char *getUserDirByUID(void)
     char *retval = NULL;
 
     pw = getpwuid(uid);
-    if ((pw != NULL) && (pw->pw_dir != NULL))
+    if ((pw != NULL) && (pw->pw_dir != NULL) && (*pw->pw_dir != '\0'))
     {
-        retval = (char *) allocator.Malloc(strlen(pw->pw_dir) + 1);
+        const size_t dlen = strlen(pw->pw_dir);
+        const size_t add_dirsep = (pw->pw_dir[dlen-1] != '/') ? 1 : 0;
+        retval = (char *) allocator.Malloc(dlen + 1 + add_dirsep);
         if (retval != NULL)
+        {
             strcpy(retval, pw->pw_dir);
+            if (add_dirsep)
+            {
+                retval[dlen] = '/';
+                retval[dlen+1] = '\0';
+            } /* if */
+        } /* if */
     } /* if */
     
     return retval;
@@ -98,16 +90,27 @@ static char *getUserDirByUID(void)
 
 char *__PHYSFS_platformCalcUserDir(void)
 {
-    char *retval = __PHYSFS_platformCopyEnvironmentVariable("HOME");
+    char *retval = NULL;
+    char *envr = getenv("HOME");
 
     /* if the environment variable was set, make sure it's really a dir. */
-    if (retval != NULL)
+    if (envr != NULL)
     {
         struct stat statbuf;
-        if ((stat(retval, &statbuf) == -1) || (S_ISDIR(statbuf.st_mode) == 0))
+        if ((stat(envr, &statbuf) != -1) && (S_ISDIR(statbuf.st_mode)))
         {
-            allocator.Free(retval);
-            retval = NULL;
+            const size_t envrlen = strlen(envr);
+            const size_t add_dirsep = (envr[envrlen-1] != '/') ? 1 : 0;
+            retval = allocator.Malloc(envrlen + 1 + add_dirsep);
+            if (retval)
+            {
+                strcpy(retval, envr);
+                if (add_dirsep)
+                {
+                    retval[envrlen] = '/';
+                    retval[envrlen+1] = '\0';
+                } /* if */
+            } /* if */
         } /* if */
     } /* if */
 

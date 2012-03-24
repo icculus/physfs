@@ -641,8 +641,9 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0);
 
 /*
  * Get the platform-specific user dir.
- *  Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
- *  the userdir will default to basedir/username.
+ * As of PhysicsFS 2.1, returning NULL means fatal error.
+ * Your string must end with a dir separator if you don't return NULL.
+ *  Caller will allocator.Free() the retval if it's not NULL.
  */
 char *__PHYSFS_platformCalcUserDir(void);
 
@@ -650,12 +651,14 @@ char *__PHYSFS_platformCalcUserDir(void);
 /* This is the cached version from PHYSFS_init(). This is a fast call. */
 const char *__PHYSFS_getUserDir(void);  /* not deprecated internal version. */
 
+
 /*
- * Get the platform-specific pref dir. You must make sure the string ends
- *  with a dir separator.
- * Caller will allocator.Free() the retval if it's not NULL. If it's NULL,
- *  it's a total failure. Caller will make missing directories if necessary;
- *  this just reports the final path.
+ * Get the platform-specific pref dir.
+ * Returning NULL means fatal error.
+ * Your string must end with a dir separator if you don't return NULL.
+ *  Caller will allocator.Free() the retval if it's not NULL.
+ *  Caller will make missing directories if necessary; this just reports
+ *   the final path.
  */
 char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app);
 

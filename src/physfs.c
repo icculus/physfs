@@ -1102,34 +1102,6 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
 } /* freeDirHandle */
 
 
-/*
- * !!! FIXME: remove this and require userdir and basedir to have dirsep
- * !!! FIXME:  appended in the platform layer
- */
-static int appendDirSep(char **dir)
-{
-    const char dirsep = __PHYSFS_platformDirSeparator;
-    char *ptr = *dir;
-    const size_t len = strlen(ptr);
-
-    if (ptr[len - 1] == dirsep)
-        return 1;
-
-    ptr = (char *) allocator.Realloc(ptr, len + 2);
-    if (!ptr)
-    {
-        allocator.Free(*dir);
-        return 0;
-    } /* if */
-
-    ptr[len] = dirsep;
-    ptr[len+1] = '\0';
-
-    *dir = ptr;
-    return 1;
-} /* appendDirSep */
-
-
 static char *calculateBaseDir(const char *argv0)
 {
     const char dirsep = __PHYSFS_platformDirSeparator;
@@ -1203,16 +1175,17 @@ int PHYSFS_init(const char *argv0)
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(!baseDir, ERRPASS, 0);
 
-    /* Platform layer is required to append a dirsep. */
-    assert(baseDir[strlen(baseDir) - 1] == __PHYSFS_platformDirSeparator);
-
     userDir = __PHYSFS_platformCalcUserDir();
-    if ((!userDir) || (!appendDirSep(&userDir)))
+    if (!userDir)
     {
         allocator.Free(baseDir);
         baseDir = NULL;
         return 0;
     } /* if */
+
+    /* Platform layer is required to append a dirsep. */
+    assert(baseDir[strlen(baseDir) - 1] == __PHYSFS_platformDirSeparator);
+    assert(userDir[strlen(userDir) - 1] == __PHYSFS_platformDirSeparator);
 
     initialized = 1;
 
