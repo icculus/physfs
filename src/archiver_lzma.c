@@ -609,7 +609,7 @@ static PHYSFS_Io *LZMA_openAppend(dvoid *opaque, const char *filename)
 } /* LZMA_openAppend */
 
 
-static void LZMA_dirClose(dvoid *opaque)
+static void LZMA_closeArchive(dvoid *opaque)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
 
@@ -624,7 +624,7 @@ static void LZMA_dirClose(dvoid *opaque)
     SzArDbExFree(&archive->db, SzFreePhysicsFS);
     archive->stream.io->destroy(archive->stream.io);
     lzma_archive_exit(archive);
-} /* LZMA_dirClose */
+} /* LZMA_closeArchive */
 
 
 static int LZMA_remove(dvoid *opaque, const char *name)
@@ -694,7 +694,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
     LZMA_openAppend,         /* openAppend() method     */
     LZMA_remove,             /* remove() method         */
     LZMA_mkdir,              /* mkdir() method          */
-    LZMA_dirClose,           /* dirClose() method       */
+    LZMA_closeArchive,       /* closeArchive() method   */
     LZMA_stat                /* stat() method           */
 };
 

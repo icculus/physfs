@@ -638,14 +638,14 @@ errorcleanup:
 } /* ISO9660_openArchive */
 
 
-static void ISO9660_dirClose(dvoid *opaque)
+static void ISO9660_closeArchive(dvoid *opaque)
 {
     ISO9660Handle *handle = (ISO9660Handle*) opaque;
     handle->io->destroy(handle->io);
     __PHYSFS_platformDestroyMutex(handle->mutex);
     allocator.Free(handle->path);
     allocator.Free(handle);
-} /* ISO9660_dirClose */
+} /* ISO9660_closeArchive */
 
 
 /*******************************************************************************
@@ -962,7 +962,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
     ISO9660_openAppend,         /* openAppend() method     */
     ISO9660_remove,             /* remove() method         */
     ISO9660_mkdir,              /* mkdir() method          */
-    ISO9660_dirClose,           /* dirClose() method       */
+    ISO9660_closeArchive,       /* closeArchive() method   */
     ISO9660_stat                /* stat() method           */
 };
 

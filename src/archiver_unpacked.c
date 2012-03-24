@@ -34,13 +34,13 @@ typedef struct
 } UNPKfileinfo;
 
 
-void UNPK_dirClose(dvoid *opaque)
+void UNPK_closeArchive(dvoid *opaque)
 {
     UNPKinfo *info = ((UNPKinfo *) opaque);
     info->io->destroy(info->io);
     allocator.Free(info->entries);
     allocator.Free(info);
-} /* UNPK_dirClose */
+} /* UNPK_closeArchive */
 
 
 static PHYSFS_sint64 UNPK_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)

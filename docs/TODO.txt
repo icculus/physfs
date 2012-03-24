@@ -45,7 +45,6 @@ From old TODO.txt...
 - Look for FIXMEs (many marked with "!!!" in comments).
 - Find some way to relax or remove the security model for external tools.
 - fscanf and fprintf support in extras dir.
-- Why do we call it openArchive and dirClose?
 - Sanity check byte order at runtime.
 - Memory locking?
 - Find a better name than dvoid and fvoid.

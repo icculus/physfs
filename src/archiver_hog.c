@@ -103,14 +103,14 @@ const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_HOG =
 const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
 {
     &__PHYSFS_ArchiveInfo_HOG,
-    HOG_openArchive,        /* openArchive() method    */
+    HOG_openArchive,         /* openArchive() method    */
     UNPK_enumerateFiles,     /* enumerateFiles() method */
     UNPK_openRead,           /* openRead() method       */
     UNPK_openWrite,          /* openWrite() method      */
     UNPK_openAppend,         /* openAppend() method     */
     UNPK_remove,             /* remove() method         */
     UNPK_mkdir,              /* mkdir() method          */
-    UNPK_dirClose,           /* dirClose() method       */
+    UNPK_closeArchive,       /* closeArchive() method   */
     UNPK_stat                /* stat() method           */
 };
 

@@ -242,7 +242,7 @@ typedef struct
          *  applicable. Implementation can assume that it won't be called if
          *  there are still files open from this archive.
          */
-    void (*dirClose)(dvoid *opaque);
+    void (*closeArchive)(dvoid *opaque);
 
         /*
          * Obtain basic file metadata.
@@ -424,7 +424,7 @@ typedef struct
     PHYSFS_uint32 size;
 } UNPKentry;
 
-void UNPK_dirClose(dvoid *opaque);
+void UNPK_closeArchive(dvoid *opaque);
 dvoid *UNPK_openArchive(PHYSFS_Io *io, UNPKentry *e, const PHYSFS_uint32 num);
 void UNPK_enumerateFiles(dvoid *opaque, const char *dname,
                          int omitSymLinks, PHYSFS_EnumFilesCallback cb,
