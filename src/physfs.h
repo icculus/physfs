@@ -915,12 +915,12 @@ PHYSFS_DECL char **PHYSFS_getSearchPath(void);
  *
  * Helper function.
  *
- * The write dir will be set to "userdir/.organization/appName", which is
+ * The write dir will be set to the pref dir returned by
+ *  \code PHYSFS_getPrefDir(organization, appName) \endcode, which is
  *  created if it doesn't exist.
  *
  * The above is sufficient to make sure your program's configuration directory
- *  is separated from other clutter, and platform-independent. The period
- *  before "mygame" even hides the directory on Unix systems.
+ *  is separated from other clutter, and platform-independent.
  *
  *  The search path will be:
  *
@@ -933,7 +933,8 @@ PHYSFS_DECL char **PHYSFS_getSearchPath(void);
  *  be added to the search path. If you specified "PKG" for (archiveExt), and
  *  there's a file named data.PKG in the base dir, it'll be checked. Archives
  *  can either be appended or prepended to the search path in alphabetical
- *  order, regardless of which directories they were found in.
+ *  order, regardless of which directories they were found in. All archives
+ *  are mounted in the root of the virtual file system ("/").
  *
  * All of this can be accomplished from the application, but this just does it
  *  all for you. Feel free to add more to the search path manually, too.
