@@ -158,10 +158,10 @@ static int DIR_mkdir(dvoid *opaque, const char *name)
 } /* DIR_mkdir */
 
 
-static void DIR_dirClose(dvoid *opaque)
+static void DIR_closeArchive(dvoid *opaque)
 {
     allocator.Free(opaque);
-} /* DIR_dirClose */
+} /* DIR_closeArchive */
 
 
 static int DIR_stat(dvoid *opaque, const char *name, int *exists,
@@ -197,7 +197,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     DIR_openAppend,         /* openAppend() method     */
     DIR_remove,             /* remove() method         */
     DIR_mkdir,              /* mkdir() method          */
-    DIR_dirClose,           /* dirClose() method       */
+    DIR_closeArchive,       /* closeArchive() method   */
     DIR_stat                /* stat() method           */
 };
 

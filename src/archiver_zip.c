@@ -1335,13 +1335,13 @@ static PHYSFS_Io *ZIP_openAppend(dvoid *opaque, const char *filename)
 } /* ZIP_openAppend */
 
 
-static void ZIP_dirClose(dvoid *opaque)
+static void ZIP_closeArchive(dvoid *opaque)
 {
     ZIPinfo *zi = (ZIPinfo *) (opaque);
     zi->io->destroy(zi->io);
     zip_free_entries(zi->entries, zi->entryCount);
     allocator.Free(zi);
-} /* ZIP_dirClose */
+} /* ZIP_closeArchive */
 
 
 static int ZIP_remove(dvoid *opaque, const char *name)
@@ -1415,7 +1415,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
     ZIP_openAppend,         /* openAppend() method     */
     ZIP_remove,             /* remove() method         */
     ZIP_mkdir,              /* mkdir() method          */
-    ZIP_dirClose,           /* dirClose() method       */
+    ZIP_closeArchive,       /* closeArchive() method   */
     ZIP_stat                /* stat() method           */
 };
 

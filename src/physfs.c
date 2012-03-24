@@ -882,7 +882,7 @@ static DirHandle *tryOpenDir(PHYSFS_Io *io, const PHYSFS_Archiver *funcs,
     {
         retval = (DirHandle *) allocator.Malloc(sizeof (DirHandle));
         if (retval == NULL)
-            funcs->dirClose(opaque);
+            funcs->closeArchive(opaque);
         else
         {
             memset(retval, '\0', sizeof (DirHandle));
@@ -1072,7 +1072,7 @@ static DirHandle *createDirHandle(PHYSFS_Io *io, const char *newDir,
 badDirHandle:
     if (dirHandle != NULL)
     {
-        dirHandle->funcs->dirClose(dirHandle->opaque);
+        dirHandle->funcs->closeArchive(dirHandle->opaque);
         allocator.Free(dirHandle->dirName);
         allocator.Free(dirHandle->mountPoint);
         allocator.Free(dirHandle);
@@ -1094,7 +1094,7 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
     for (i = openList; i != NULL; i = i->next)
         BAIL_IF_MACRO(i->dirHandle == dh, PHYSFS_ERR_FILES_STILL_OPEN, 0);
 
-    dh->funcs->dirClose(dh->opaque);
+    dh->funcs->closeArchive(dh->opaque);
     allocator.Free(dh->dirName);
     allocator.Free(dh->mountPoint);
     allocator.Free(dh);
