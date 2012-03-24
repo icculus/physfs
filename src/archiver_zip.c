@@ -1035,8 +1035,6 @@ static int zip_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
     PHYSFS_sint64 len;
     PHYSFS_sint64 pos;
 
-    /* !!! FIXME: ERR_UNSUPPORTED should be ERR_CORRUPT...right? */
-
     /* find the end-of-central-dir record, and seek to it. */
     pos = zip_find_end_of_central_dir(io, &len);
     BAIL_IF_MACRO(pos == -1, ERRPASS, 0);
@@ -1044,29 +1042,29 @@ static int zip_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
 
     /* check signature again, just in case. */
     BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
-    BAIL_IF_MACRO(ui32 != ZIP_END_OF_CENTRAL_DIR_SIG, PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_IF_MACRO(ui32 != ZIP_END_OF_CENTRAL_DIR_SIG, PHYSFS_ERR_CORRUPT, 0);
 
     /* number of this disk */
     BAIL_IF_MACRO(!readui16(io, &ui16), ERRPASS, 0);
-    BAIL_IF_MACRO(ui16 != 0, PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_IF_MACRO(ui16 != 0, PHYSFS_ERR_CORRUPT, 0);
 
     /* number of the disk with the start of the central directory */
     BAIL_IF_MACRO(!readui16(io, &ui16), ERRPASS, 0);
-    BAIL_IF_MACRO(ui16 != 0, PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_IF_MACRO(ui16 != 0, PHYSFS_ERR_CORRUPT, 0);
 
     /* total number of entries in the central dir on this disk */
     BAIL_IF_MACRO(!readui16(io, &ui16), ERRPASS, 0);
 
     /* total number of entries in the central dir */
     BAIL_IF_MACRO(!readui16(io, &info->entryCount), ERRPASS, 0);
-    BAIL_IF_MACRO(ui16 != info->entryCount, PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_IF_MACRO(ui16 != info->entryCount, PHYSFS_ERR_CORRUPT, 0);
 
     /* size of the central directory */
     BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
 
     /* offset of central directory */
     BAIL_IF_MACRO(!readui32(io, central_dir_ofs), ERRPASS, 0);
-    BAIL_IF_MACRO(pos < *central_dir_ofs + ui32, PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_IF_MACRO(pos < *central_dir_ofs + ui32, PHYSFS_ERR_CORRUPT, 0);
 
     /*
      * For self-extracting archives, etc, there's crapola in the file
@@ -1089,7 +1087,7 @@ static int zip_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
      *  If it doesn't, we're either in the wrong part of the file, or the
      *  file is corrupted, but we give up either way.
      */
-    BAIL_IF_MACRO((pos + 22 + ui16) != len, PHYSFS_ERR_UNSUPPORTED, 0);
+    BAIL_IF_MACRO((pos + 22 + ui16) != len, PHYSFS_ERR_CORRUPT, 0);
 
     return 1;  /* made it. */
 } /* zip_parse_end_of_central_dir */
