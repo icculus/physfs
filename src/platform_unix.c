@@ -141,10 +141,6 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
-/* this is in posix.c ... */
-extern char *__PHYSFS_platformCopyEnvironmentVariable(const char *varname);
-
-
 /*
  * See where program (bin) resides in the $PATH specified by (envr).
  *  returns a copy of the first element in envr that contains it, or NULL
@@ -246,7 +242,7 @@ static char *readSymLink(const char *path)
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
     char *retval = NULL;
-    char *envr = NULL;
+    const char *envr = NULL;
 
     /*
      * Try to avoid using argv0 unless forced to. If there's a Linux-like
@@ -269,6 +265,11 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
         char *ptr = strrchr(retval, '/');
         if (ptr != NULL)
             *(ptr+1) = '\0';
+        else  /* shouldn't happen, but just in case... */
+        {
+            allocator.Free(retval);
+            retval = NULL;
+        } /* else */
     } /* if */
 
     /* No /proc/self/exe, but we have an argv[0] we can parse? */
@@ -279,11 +280,15 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
             return NULL;  /* higher level parses out real path from argv0. */
 
         /* If there's no dirsep on argv0, then look through $PATH for it. */
-        /* !!! FIXME: smallAlloc? */
-        envr = __PHYSFS_platformCopyEnvironmentVariable("PATH");
-        BAIL_IF_MACRO(!envr, ERRPASS, NULL);
-        retval = findBinaryInPath(argv0, envr);
-        allocator.Free(envr);
+        envr = getenv("PATH");
+        if (envr != NULL)
+        {
+            char *path = (char *) __PHYSFS_smallAlloc(strlen(envr) + 1);
+            BAIL_IF_MACRO(!path, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+            strcpy(path, envr);
+            retval = findBinaryInPath(argv0, path);
+            __PHYSFS_smallFree(path);
+        } /* if */
     } /* if */
 
     if (retval != NULL)
