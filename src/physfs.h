@@ -575,8 +575,9 @@ PHYSFS_DECL int PHYSFS_deinit(void);
  * }
  * \endcode
  *
- * The return values are pointers to static internal memory, and should
- *  be considered READ ONLY, and never freed.
+ * The return values are pointers to internal memory, and should
+ *  be considered READ ONLY, and never freed. The returned values are
+ *  valid until the next call to PHYSFS_deinit().
  *
  *   \return READ ONLY Null-terminated array of READ ONLY structures.
  */
