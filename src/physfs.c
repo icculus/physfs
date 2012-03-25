@@ -2644,6 +2644,44 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
 } /* PHYSFS_stat */
 
 
+int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
+{
+    return (io->read(io, buf, len) == len);
+} /* __PHYSFS_readAll */
+
+
+void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len)
+{
+    void *useHeap = ((ptr == NULL) ? ((void *) 1) : ((void *) 0));
+    if (useHeap)  /* too large for stack allocation or alloca() failed. */
+        ptr = allocator.Malloc(len+sizeof (void *));
+
+    if (ptr != NULL)
+    {
+        void **retval = (void **) ptr;
+        /*printf("%s alloc'd (%d) bytes at (%p).\n",
+                useHeap ? "heap" : "stack", (int) len, ptr);*/
+        *retval = useHeap;
+        return retval + 1;
+    } /* if */
+
+    return NULL;  /* allocation failed. */
+} /* __PHYSFS_initSmallAlloc */
+
+
+void __PHYSFS_smallFree(void *ptr)
+{
+    if (ptr != NULL)
+    {
+        void **block = ((void **) ptr) - 1;
+        const int useHeap = (*block != 0);
+        if (useHeap)
+            allocator.Free(block);
+        /*printf("%s free'd (%p).\n", useHeap ? "heap" : "stack", block);*/
+    } /* if */
+} /* __PHYSFS_smallFree */
+
+
 int PHYSFS_setAllocator(const PHYSFS_Allocator *a)
 {
     BAIL_IF_MACRO(initialized, PHYSFS_ERR_IS_INITIALIZED, 0);
@@ -2699,44 +2737,6 @@ static void setDefaultAllocator(void)
         allocator.Free = mallocAllocatorFree;
     } /* if */
 } /* setDefaultAllocator */
-
-
-void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len)
-{
-    void *useHeap = ((ptr == NULL) ? ((void *) 1) : ((void *) 0));
-    if (useHeap)  /* too large for stack allocation or alloca() failed. */
-        ptr = allocator.Malloc(len+sizeof (void *));
-
-    if (ptr != NULL)
-    {
-        void **retval = (void **) ptr;
-        /*printf("%s alloc'd (%d) bytes at (%p).\n",
-                useHeap ? "heap" : "stack", (int) len, ptr);*/
-        *retval = useHeap;
-        return retval + 1;
-    } /* if */
-
-    return NULL;  /* allocation failed. */
-} /* __PHYSFS_initSmallAlloc */
-
-
-void __PHYSFS_smallFree(void *ptr)
-{
-    if (ptr != NULL)
-    {
-        void **block = ((void **) ptr) - 1;
-        const int useHeap = (*block != 0);
-        if (useHeap)
-            allocator.Free(block);
-        /*printf("%s free'd (%p).\n", useHeap ? "heap" : "stack", block);*/
-    } /* if */
-} /* __PHYSFS_smallFree */
-
-
-int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
-{
-    return (io->read(io, buf, len) == len);
-} /* __PHYSFS_readAll */
 
 /* end of physfs.c ... */
 
