@@ -118,6 +118,8 @@ void __PHYSFS_smallFree(void *ptr);
 #define PHYSFS_SUPPORTS_ISO9660 0
 #endif
 
+/* The latest supported PHYSFS_Io::version value. */
+#define CURRENT_PHYSFS_IO_API_VERSION 0
 
 /* Opaque data for file and dir handlers... */
 typedef void PHYSFS_Dir;

@@ -174,6 +174,7 @@ static void nativeIo_destroy(PHYSFS_Io *io)
 
 static const PHYSFS_Io __PHYSFS_nativeIoInterface =
 {
+    CURRENT_PHYSFS_IO_API_VERSION, NULL,
     nativeIo_read,
     nativeIo_write,
     nativeIo_seek,
@@ -181,8 +182,7 @@ static const PHYSFS_Io __PHYSFS_nativeIoInterface =
     nativeIo_length,
     nativeIo_duplicate,
     nativeIo_flush,
-    nativeIo_destroy,
-    NULL
+    nativeIo_destroy
 };
 
 PHYSFS_Io *__PHYSFS_createNativeIo(const char *path, const int mode)
@@ -369,6 +369,7 @@ static void memoryIo_destroy(PHYSFS_Io *io)
 
 static const PHYSFS_Io __PHYSFS_memoryIoInterface =
 {
+    CURRENT_PHYSFS_IO_API_VERSION, NULL,
     memoryIo_read,
     memoryIo_write,
     memoryIo_seek,
@@ -376,8 +377,7 @@ static const PHYSFS_Io __PHYSFS_memoryIoInterface =
     memoryIo_length,
     memoryIo_duplicate,
     memoryIo_flush,
-    memoryIo_destroy,
-    NULL
+    memoryIo_destroy
 };
 
 PHYSFS_Io *__PHYSFS_createMemoryIo(const void *buf, PHYSFS_uint64 len,
@@ -512,6 +512,7 @@ static void handleIo_destroy(PHYSFS_Io *io)
 
 static const PHYSFS_Io __PHYSFS_handleIoInterface =
 {
+    CURRENT_PHYSFS_IO_API_VERSION, NULL,
     handleIo_read,
     handleIo_write,
     handleIo_seek,
@@ -519,8 +520,7 @@ static const PHYSFS_Io __PHYSFS_handleIoInterface =
     handleIo_length,
     handleIo_duplicate,
     handleIo_flush,
-    handleIo_destroy,
-    NULL
+    handleIo_destroy
 };
 
 static PHYSFS_Io *__PHYSFS_createHandleIo(PHYSFS_File *f)
@@ -1494,6 +1494,7 @@ int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
                    const char *mountPoint, int appendToPath)
 {
     BAIL_IF_MACRO(!io, PHYSFS_ERR_INVALID_ARGUMENT, 0);
+    BAIL_IF_MACRO(io->version != 0, PHYSFS_ERR_UNSUPPORTED, 0);
     return doMount(io, fname, mountPoint, appendToPath);
 } /* PHYSFS_mountIo */
 

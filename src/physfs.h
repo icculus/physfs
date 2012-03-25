@@ -2810,6 +2810,26 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle,
 typedef struct PHYSFS_Io
 {
     /**
+     * \brief Binary compatibility information.
+     *
+     * This must be set to zero at this time. Future versions of this
+     *  struct will increment this field, so we know what a given
+     *  implementation supports. We'll presumably keep supporting older
+     *  versions as we offer new features, though.
+     */
+    PHYSFS_uint32 version;
+
+    /**
+     * \brief Instance data for this struct.
+     *
+     * Each instance has a pointer associated with it that can be used to
+     *  store anything it likes. This pointer is per-instance of the stream,
+     *  so presumably it will change when calling duplicate(). This can be
+     *  deallocated during the destroy() method.
+     */
+    void *opaque;
+
+    /**
      * \brief Read more data.
      *
      * Read (len) bytes from the interface, at the current i/o position, and
@@ -2936,16 +2956,6 @@ typedef struct PHYSFS_Io
      *   \param s The i/o instance to destroy.
      */
     void (*destroy)(struct PHYSFS_Io *io);
-
-    /**
-     * \brief Instance data for this struct.
-     *
-     * Each instance has a pointer associated with it that can be used to
-     *  store anything it likes. This pointer is per-instance of the stream,
-     *  so presumably it will change when calling duplicate(). This can be
-     *  deallocated during the destroy() method.
-     */
-    void *opaque;
 } PHYSFS_Io;
 
 

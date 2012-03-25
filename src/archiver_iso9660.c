@@ -526,6 +526,7 @@ static PHYSFS_sint64 ISO9660_length(PHYSFS_Io *io)
 
 static const PHYSFS_Io ISO9660_Io =
 {
+    CURRENT_PHYSFS_IO_API_VERSION, NULL,
     ISO9660_read,
     ISO9660_write,
     ISO9660_seek,
@@ -533,8 +534,7 @@ static const PHYSFS_Io ISO9660_Io =
     ISO9660_length,
     ISO9660_duplicate,
     ISO9660_flush,
-    ISO9660_destroy,
-    NULL
+    ISO9660_destroy
 };
 
 
