@@ -1132,9 +1132,9 @@ static int initStaticArchivers(void)
     assert(staticArchivers[numStaticArchivers - 1] == NULL);
 
     archiveInfo = (const PHYSFS_ArchiveInfo **) allocator.Malloc(len);
-    GOTO_IF_MACRO(!archiveInfo, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+    BAIL_IF_MACRO(!archiveInfo, PHYSFS_ERR_OUT_OF_MEMORY, 0);
     archivers = (const PHYSFS_Archiver **) allocator.Malloc(len);
-    GOTO_IF_MACRO(!archivers, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+    BAIL_IF_MACRO(!archivers, PHYSFS_ERR_OUT_OF_MEMORY, 0);
 
     for (i = 0; i < numStaticArchivers - 1; i++)
         archiveInfo[i] = staticArchivers[i]->info;
@@ -1143,15 +1143,10 @@ static int initStaticArchivers(void)
     memcpy(archivers, staticArchivers, len);
 
     return 1;
-
-failed:
-    allocator.Free(archiveInfo);
-    allocator.Free(archivers);
-    archivers = NULL;
-    archiveInfo = NULL;
-    return 0;
 } /* initStaticArchivers */
 
+
+static int doDeinit(void);
 
 int PHYSFS_init(const char *argv0)
 {
@@ -1160,31 +1155,29 @@ int PHYSFS_init(const char *argv0)
     if (!externalAllocator)
         setDefaultAllocator();
 
-    if (allocator.Init != NULL)
-        BAIL_IF_MACRO(!allocator.Init(), ERRPASS, 0);
+    if ((allocator.Init != NULL) && (!allocator.Init())) return 0;
 
-    BAIL_IF_MACRO(!__PHYSFS_platformInit(), ERRPASS, 0);
-
-    BAIL_IF_MACRO(!initializeMutexes(), ERRPASS, 0);
-
-    baseDir = calculateBaseDir(argv0);
-    BAIL_IF_MACRO(!baseDir, ERRPASS, 0);
-
-    /* !!! FIXME: we have to clean up all the half-initialized state if something fails. */
-
-    userDir = __PHYSFS_platformCalcUserDir();
-    if (!userDir)
+    if (!__PHYSFS_platformInit())
     {
-        allocator.Free(baseDir);
-        baseDir = NULL;
+        if (allocator.Deinit != NULL) allocator.Deinit();
         return 0;
     } /* if */
+
+    /* everything below here can be cleaned up safely by doDeinit(). */
+
+    if (!initializeMutexes()) goto initFailed;
+
+    baseDir = calculateBaseDir(argv0);
+    if (!baseDir) goto initFailed;
+
+    userDir = __PHYSFS_platformCalcUserDir();
+    if (!userDir) goto initFailed;
 
     /* Platform layer is required to append a dirsep. */
     assert(baseDir[strlen(baseDir) - 1] == __PHYSFS_platformDirSeparator);
     assert(userDir[strlen(userDir) - 1] == __PHYSFS_platformDirSeparator);
 
-    BAIL_IF_MACRO(!initStaticArchivers(), ERRPASS, 0);
+    if (!initStaticArchivers()) goto initFailed;
 
     initialized = 1;
 
@@ -1192,6 +1185,10 @@ int PHYSFS_init(const char *argv0)
     __PHYSFS_setError(PHYSFS_getLastErrorCode());
 
     return 1;
+
+initFailed:
+    doDeinit();
+    return 0;
 } /* PHYSFS_init */
 
 
@@ -1241,9 +1238,8 @@ static void freeSearchPath(void)
 } /* freeSearchPath */
 
 
-int PHYSFS_deinit(void)
+static int doDeinit(void)
 {
-    BAIL_IF_MACRO(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
     BAIL_IF_MACRO(!__PHYSFS_platformDeinit(), ERRPASS, 0);
 
     closeFileHandleList(&openWriteList);
@@ -1285,14 +1281,21 @@ int PHYSFS_deinit(void)
     allowSymLinks = 0;
     initialized = 0;
 
-    __PHYSFS_platformDestroyMutex(errorLock);
-    __PHYSFS_platformDestroyMutex(stateLock);
+    if (errorLock) __PHYSFS_platformDestroyMutex(errorLock);
+    if (stateLock) __PHYSFS_platformDestroyMutex(stateLock);
 
     if (allocator.Deinit != NULL)
         allocator.Deinit();
 
     errorLock = stateLock = NULL;
     return 1;
+} /* doDeinit */
+
+
+int PHYSFS_deinit(void)
+{
+    BAIL_IF_MACRO(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    return doDeinit();
 } /* PHYSFS_deinit */
 
 
