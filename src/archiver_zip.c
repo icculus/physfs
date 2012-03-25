@@ -1193,7 +1193,7 @@ static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
 } /* doEnumCallback */
 
 
-static void ZIP_enumerateFiles(dvoid *opaque, const char *dname,
+static void ZIP_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
                                int omitSymLinks, PHYSFS_EnumFilesCallback cb,
                                const char *origdir, void *callbackdata)
 {
@@ -1265,7 +1265,8 @@ static PHYSFS_Io *zip_get_io(PHYSFS_Io *io, ZIPinfo *inf, ZIPentry *entry)
 } /* zip_get_io */
 
 
-static PHYSFS_Io *ZIP_openRead(dvoid *opaque, const char *fnm, int *fileExists)
+static PHYSFS_Io *ZIP_openRead(PHYSFS_Dir *opaque, const char *fnm,
+                               int *fileExists)
 {
     PHYSFS_Io *retval = NULL;
     ZIPinfo *info = (ZIPinfo *) opaque;
@@ -1323,19 +1324,19 @@ ZIP_openRead_failed:
 } /* ZIP_openRead */
 
 
-static PHYSFS_Io *ZIP_openWrite(dvoid *opaque, const char *filename)
+static PHYSFS_Io *ZIP_openWrite(PHYSFS_Dir *opaque, const char *filename)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ZIP_openWrite */
 
 
-static PHYSFS_Io *ZIP_openAppend(dvoid *opaque, const char *filename)
+static PHYSFS_Io *ZIP_openAppend(PHYSFS_Dir *opaque, const char *filename)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ZIP_openAppend */
 
 
-static void ZIP_closeArchive(dvoid *opaque)
+static void ZIP_closeArchive(PHYSFS_Dir *opaque)
 {
     ZIPinfo *zi = (ZIPinfo *) (opaque);
     zi->io->destroy(zi->io);
@@ -1344,19 +1345,19 @@ static void ZIP_closeArchive(dvoid *opaque)
 } /* ZIP_closeArchive */
 
 
-static int ZIP_remove(dvoid *opaque, const char *name)
+static int ZIP_remove(PHYSFS_Dir *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ZIP_remove */
 
 
-static int ZIP_mkdir(dvoid *opaque, const char *name)
+static int ZIP_mkdir(PHYSFS_Dir *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ZIP_mkdir */
 
 
-static int ZIP_stat(dvoid *opaque, const char *filename, int *exists,
+static int ZIP_stat(PHYSFS_Dir *opaque, const char *filename, int *exists,
                     PHYSFS_Stat *stat)
 {
     int isDir = 0;

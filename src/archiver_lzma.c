@@ -531,7 +531,7 @@ static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
 } /* doEnumCallback */
 
 
-static void LZMA_enumerateFiles(dvoid *opaque, const char *dname,
+static void LZMA_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
                                 int omitSymLinks, PHYSFS_EnumFilesCallback cb,
                                 const char *origdir, void *callbackdata)
 {
@@ -575,7 +575,8 @@ static void LZMA_enumerateFiles(dvoid *opaque, const char *dname,
 } /* LZMA_enumerateFiles */
 
 
-static PHYSFS_Io *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists)
+static PHYSFS_Io *LZMA_openRead(PHYSFS_Dir *opaque, const char *name,
+                                int *fileExists)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
     LZMAfile *file = lzma_find_file(archive, name);
@@ -597,19 +598,19 @@ static PHYSFS_Io *LZMA_openRead(dvoid *opaque, const char *name, int *fileExists
 } /* LZMA_openRead */
 
 
-static PHYSFS_Io *LZMA_openWrite(dvoid *opaque, const char *filename)
+static PHYSFS_Io *LZMA_openWrite(PHYSFS_Dir *opaque, const char *filename)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* LZMA_openWrite */
 
 
-static PHYSFS_Io *LZMA_openAppend(dvoid *opaque, const char *filename)
+static PHYSFS_Io *LZMA_openAppend(PHYSFS_Dir *opaque, const char *filename)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* LZMA_openAppend */
 
 
-static void LZMA_closeArchive(dvoid *opaque)
+static void LZMA_closeArchive(PHYSFS_Dir *opaque)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
 
@@ -627,19 +628,19 @@ static void LZMA_closeArchive(dvoid *opaque)
 } /* LZMA_closeArchive */
 
 
-static int LZMA_remove(dvoid *opaque, const char *name)
+static int LZMA_remove(PHYSFS_Dir *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* LZMA_remove */
 
 
-static int LZMA_mkdir(dvoid *opaque, const char *name)
+static int LZMA_mkdir(PHYSFS_Dir *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* LZMA_mkdir */
 
-static int LZMA_stat(dvoid *opaque, const char *filename, int *exists,
-                     PHYSFS_Stat *stat)
+static int LZMA_stat(PHYSFS_Dir *opaque, const char *filename,
+                     int *exists, PHYSFS_Stat *stat)
 {
     const LZMAarchive *archive = (const LZMAarchive *) opaque;
     const LZMAfile *file = lzma_find_file(archive, filename);

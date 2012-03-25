@@ -47,7 +47,6 @@ From old TODO.txt...
 - fscanf and fprintf support in extras dir.
 - Sanity check byte order at runtime.
 - Memory locking?
-- Find a better name than dvoid and fvoid.
 - General code audit.
 - Multiple write dirs with mount points?
 - Replace code from SDL...

@@ -119,10 +119,8 @@ void __PHYSFS_smallFree(void *ptr);
 #endif
 
 
-/* !!! FIXME: find something better than "dvoid" and "fvoid" ... */
 /* Opaque data for file and dir handlers... */
-typedef void dvoid;
-
+typedef void PHYSFS_Dir;
 
 typedef struct
 {
@@ -135,7 +133,7 @@ typedef struct
     /*
      * DIRECTORY ROUTINES:
      * These functions are for dir handles. Generate a handle with the
-     *  openArchive() method, then pass it as the "opaque" dvoid to the
+     *  openArchive() method, then pass it as the "opaque" PHYSFS_Dir to the
      *  others.
      *
      * Symlinks should always be followed (except in stat()); PhysicsFS will
@@ -148,33 +146,30 @@ typedef struct
          *  (name) is a filename associated with (io), but doesn't necessarily
          *  map to anything, let alone a real filename. This possibly-
          *  meaningless name is in platform-dependent notation.
-         * (forWriting) is non-zero if this is to be used for
+         * (forWrite) is non-zero if this is to be used for
          *  the write directory, and zero if this is to be used for an
          *  element of the search path.
          * Returns NULL on failure. We ignore any error code you set here.
          *  Returns non-NULL on success. The pointer returned will be
          *  passed as the "opaque" parameter for later calls.
          */
-    dvoid *(*openArchive)(PHYSFS_Io *io, const char *name, int forWriting);
+    PHYSFS_Dir *(*openArchive)(PHYSFS_Io *io, const char *name, int forWrite);
 
         /*
-         * List all files in (dirname). Each file is passed to (callback),
+         * List all files in (dirname). Each file is passed to (cb),
          *  where a copy is made if appropriate, so you should dispose of
          *  it properly upon return from the callback.
          * You should omit symlinks if (omitSymLinks) is non-zero.
          * If you have a failure, report as much as you can.
          *  (dirname) is in platform-independent notation.
          */
-    void (*enumerateFiles)(dvoid *opaque,
-                            const char *dirname,
-                            int omitSymLinks,
-                            PHYSFS_EnumFilesCallback callback,
-                            const char *origdir,
-                            void *callbackdata);
+    void (*enumerateFiles)(PHYSFS_Dir *opaque, const char *dirname,
+                           int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                           const char *origdir, void *callbackdata);
 
         /*
          * Open file for reading.
-         *  This filename is in platform-independent notation.
+         *  This filename, (fnm), is in platform-independent notation.
          * If you can't handle multiple opens of the same file,
          *  you can opt to fail for the second call.
          * Fail if the file does not exist.
@@ -182,11 +177,11 @@ typedef struct
          *  Returns non-NULL on success. The pointer returned will be
          *  passed as the "opaque" parameter for later file calls.
          *
-         * Regardless of success or failure, please set *fileExists to
+         * Regardless of success or failure, please set *exists to
          *  non-zero if the file existed (even if it's a broken symlink!),
          *  zero if it did not.
          */
-    PHYSFS_Io *(*openRead)(dvoid *opaque, const char *fname, int *fileExists);
+    PHYSFS_Io *(*openRead)(PHYSFS_Dir *opaque, const char *fnm, int *exists);
 
         /*
          * Open file for writing.
@@ -200,7 +195,7 @@ typedef struct
          *  Returns non-NULL on success. The pointer returned will be
          *  passed as the "opaque" parameter for later file calls.
          */
-    PHYSFS_Io *(*openWrite)(dvoid *opaque, const char *filename);
+    PHYSFS_Io *(*openWrite)(PHYSFS_Dir *opaque, const char *filename);
 
         /*
          * Open file for appending.
@@ -213,7 +208,7 @@ typedef struct
          *  Returns non-NULL on success. The pointer returned will be
          *  passed as the "opaque" parameter for later file calls.
          */
-    PHYSFS_Io *(*openAppend)(dvoid *opaque, const char *filename);
+    PHYSFS_Io *(*openAppend)(PHYSFS_Dir *opaque, const char *filename);
 
         /*
          * Delete a file in the archive/directory.
@@ -222,7 +217,7 @@ typedef struct
          *  This method may be NULL.
          * On failure, call __PHYSFS_setError().
          */
-    int (*remove)(dvoid *opaque, const char *filename);
+    int (*remove)(PHYSFS_Dir *opaque, const char *filename);
 
         /*
          * Create a directory in the archive/directory.
@@ -234,7 +229,7 @@ typedef struct
          *  This method may be NULL.
          * On failure, call __PHYSFS_setError().
          */
-    int (*mkdir)(dvoid *opaque, const char *filename);
+    int (*mkdir)(PHYSFS_Dir *opaque, const char *filename);
 
         /*
          * Close directories/archives, and free any associated memory,
@@ -242,14 +237,15 @@ typedef struct
          *  applicable. Implementation can assume that it won't be called if
          *  there are still files open from this archive.
          */
-    void (*closeArchive)(dvoid *opaque);
+    void (*closeArchive)(PHYSFS_Dir *opaque);
 
         /*
          * Obtain basic file metadata.
          *  Returns non-zero on success, zero on failure.
          *  On failure, call __PHYSFS_setError().
          */
-    int (*stat)(dvoid *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
+    int (*stat)(PHYSFS_Dir *opaque, const char *fn,
+                int *exists, PHYSFS_Stat *stat);
 } PHYSFS_Archiver;
 
 
@@ -424,17 +420,17 @@ typedef struct
     PHYSFS_uint32 size;
 } UNPKentry;
 
-void UNPK_closeArchive(dvoid *opaque);
-dvoid *UNPK_openArchive(PHYSFS_Io *io, UNPKentry *e, const PHYSFS_uint32 num);
-void UNPK_enumerateFiles(dvoid *opaque, const char *dname,
+void UNPK_closeArchive(PHYSFS_Dir *opaque);
+PHYSFS_Dir *UNPK_openArchive(PHYSFS_Io *io,UNPKentry *e,const PHYSFS_uint32 n);
+void UNPK_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
                          int omitSymLinks, PHYSFS_EnumFilesCallback cb,
                          const char *origdir, void *callbackdata);
-PHYSFS_Io *UNPK_openRead(dvoid *opaque, const char *fnm, int *fileExists);
-PHYSFS_Io *UNPK_openWrite(dvoid *opaque, const char *name);
-PHYSFS_Io *UNPK_openAppend(dvoid *opaque, const char *name);
-int UNPK_remove(dvoid *opaque, const char *name);
-int UNPK_mkdir(dvoid *opaque, const char *name);
-int UNPK_stat(dvoid *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
+PHYSFS_Io *UNPK_openRead(PHYSFS_Dir *opaque, const char *fnm, int *fileExists);
+PHYSFS_Io *UNPK_openWrite(PHYSFS_Dir *opaque, const char *name);
+PHYSFS_Io *UNPK_openAppend(PHYSFS_Dir *opaque, const char *name);
+int UNPK_remove(PHYSFS_Dir *opaque, const char *name);
+int UNPK_mkdir(PHYSFS_Dir *opaque, const char *name);
+int UNPK_stat(PHYSFS_Dir *opaque, const char *fn, int *exist, PHYSFS_Stat *st);
 
 
 /*--------------------------------------------------------------------------*/
