@@ -126,10 +126,10 @@ typedef void PHYSFS_Dir;
 
 typedef struct
 {
-        /*
-         * Basic info about this archiver...
-         */
-    const PHYSFS_ArchiveInfo *info;
+    /*
+     * Basic info about this archiver...
+     */
+    const PHYSFS_ArchiveInfo info;
 
 
     /*

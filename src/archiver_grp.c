@@ -85,18 +85,14 @@ static void *GRP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 } /* GRP_openArchive */
 
 
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_GRP =
-{
-    "GRP",
-    "Build engine Groupfile format",
-    "Ryan C. Gordon <icculus@icculus.org>",
-    "http://icculus.org/physfs/",
-};
-
-
 const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
 {
-    &__PHYSFS_ArchiveInfo_GRP,
+    {
+        "GRP",
+        "Build engine Groupfile format",
+        "Ryan C. Gordon <icculus@icculus.org>",
+        "http://icculus.org/physfs/",
+    },
     GRP_openArchive,        /* openArchive() method    */
     UNPK_enumerateFiles,    /* enumerateFiles() method */
     UNPK_openRead,          /* openRead() method       */

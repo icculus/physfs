@@ -78,18 +78,14 @@ static void *MVL_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 } /* MVL_openArchive */
 
 
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_MVL =
-{
-    "MVL",
-    "Descent II Movielib format",
-    "Bradley Bell <btb@icculus.org>",
-    "http://icculus.org/physfs/",
-};
-
-
 const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
 {
-    &__PHYSFS_ArchiveInfo_MVL,
+    {
+        "MVL",
+        "Descent II Movielib format",
+        "Bradley Bell <btb@icculus.org>",
+        "http://icculus.org/physfs/",
+    },
     MVL_openArchive,        /* openArchive() method    */
     UNPK_enumerateFiles,     /* enumerateFiles() method */
     UNPK_openRead,           /* openRead() method       */

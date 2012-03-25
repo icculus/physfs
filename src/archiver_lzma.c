@@ -676,18 +676,14 @@ static int LZMA_stat(PHYSFS_Dir *opaque, const char *filename,
 } /* LZMA_stat */
 
 
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_LZMA =
-{
-    "7Z",
-    "LZMA (7zip) format",
-    "Dennis Schridde <devurandom@gmx.net>",
-    "http://icculus.org/physfs/",
-};
-
-
 const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
 {
-    &__PHYSFS_ArchiveInfo_LZMA,
+    {
+        "7Z",
+        "LZMA (7zip) format",
+        "Dennis Schridde <devurandom@gmx.net>",
+        "http://icculus.org/physfs/",
+    },
     LZMA_openArchive,        /* openArchive() method    */
     LZMA_enumerateFiles,     /* enumerateFiles() method */
     LZMA_openRead,           /* openRead() method       */
