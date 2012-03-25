@@ -133,6 +133,7 @@ static void UNPK_destroy(PHYSFS_Io *io)
 
 static const PHYSFS_Io UNPK_Io =
 {
+    CURRENT_PHYSFS_IO_API_VERSION, NULL,
     UNPK_read,
     UNPK_write,
     UNPK_seek,
@@ -140,8 +141,7 @@ static const PHYSFS_Io UNPK_Io =
     UNPK_length,
     UNPK_duplicate,
     UNPK_flush,
-    UNPK_destroy,
-    NULL
+    UNPK_destroy
 };
 
 

@@ -394,6 +394,7 @@ static void ZIP_destroy(PHYSFS_Io *io)
 
 static const PHYSFS_Io ZIP_Io =
 {
+    CURRENT_PHYSFS_IO_API_VERSION, NULL,
     ZIP_read,
     ZIP_write,
     ZIP_seek,
@@ -401,8 +402,7 @@ static const PHYSFS_Io ZIP_Io =
     ZIP_length,
     ZIP_duplicate,
     ZIP_flush,
-    ZIP_destroy,
-    NULL
+    ZIP_destroy
 };
 
 

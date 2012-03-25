@@ -427,6 +427,7 @@ static void LZMA_destroy(PHYSFS_Io *io)
 
 static const PHYSFS_Io LZMA_Io =
 {
+    CURRENT_PHYSFS_IO_API_VERSION, NULL,
     LZMA_read,
     LZMA_write,
     LZMA_seek,
@@ -434,8 +435,7 @@ static const PHYSFS_Io LZMA_Io =
     LZMA_length,
     LZMA_duplicate,
     LZMA_flush,
-    LZMA_destroy,
-    NULL
+    LZMA_destroy
 };
 
 
