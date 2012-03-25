@@ -885,14 +885,14 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
         /* Look for archivers with matching file extensions first... */
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
         {
-            if (__PHYSFS_stricmpASCII(ext, (*i)->info->extension) == 0)
+            if (__PHYSFS_stricmpASCII(ext, (*i)->info.extension) == 0)
                 retval = tryOpenDir(io, *i, d, forWriting);
         } /* for */
 
         /* failing an exact file extension match, try all the others... */
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
         {
-            if (__PHYSFS_stricmpASCII(ext, (*i)->info->extension) != 0)
+            if (__PHYSFS_stricmpASCII(ext, (*i)->info.extension) != 0)
                 retval = tryOpenDir(io, *i, d, forWriting);
         } /* for */
     } /* if */
@@ -1137,7 +1137,7 @@ static int initStaticArchivers(void)
     BAIL_IF_MACRO(!archivers, PHYSFS_ERR_OUT_OF_MEMORY, 0);
 
     for (i = 0; i < numStaticArchivers - 1; i++)
-        archiveInfo[i] = staticArchivers[i]->info;
+        archiveInfo[i] = &staticArchivers[i]->info;
     archiveInfo[numStaticArchivers - 1] = NULL;
 
     memcpy(archivers, staticArchivers, len);

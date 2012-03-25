@@ -94,17 +94,14 @@ static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 } /* QPAK_openArchive */
 
 
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_QPAK =
-{
-    "PAK",
-    "Quake I/II format",
-    "Ryan C. Gordon <icculus@icculus.org>",
-    "http://icculus.org/physfs/",
-};
-
 const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
 {
-    &__PHYSFS_ArchiveInfo_QPAK,
+    {
+        "PAK",
+        "Quake I/II format",
+        "Ryan C. Gordon <icculus@icculus.org>",
+        "http://icculus.org/physfs/",
+    },
     QPAK_openArchive,       /* openArchive() method    */
     UNPK_enumerateFiles,    /* enumerateFiles() method */
     UNPK_openRead,          /* openRead() method       */

@@ -944,18 +944,14 @@ static int ISO9660_mkdir(PHYSFS_Dir *opaque, const char *name)
 } /* ISO9660_mkdir */
 
 
-
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ISO9660 =
-{
-    "ISO",
-    "ISO9660 image file",
-    "Christoph Nelles <evilazrael@evilazrael.de>",
-    "http://www.evilazrael.de",
-};
-
 const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
 {
-    &__PHYSFS_ArchiveInfo_ISO9660,
+    {
+        "ISO",
+        "ISO9660 image file",
+        "Christoph Nelles <evilazrael@evilazrael.de>",
+        "http://www.evilazrael.de/",
+    },
     ISO9660_openArchive,        /* openArchive() method    */
     ISO9660_enumerateFiles,     /* enumerateFiles() method */
     ISO9660_openRead,           /* openRead() method       */

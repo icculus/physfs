@@ -1397,18 +1397,14 @@ static int ZIP_stat(PHYSFS_Dir *opaque, const char *filename, int *exists,
 } /* ZIP_stat */
 
 
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_ZIP =
-{
-    "ZIP",
-    "PkZip/WinZip/Info-Zip compatible",
-    "Ryan C. Gordon <icculus@icculus.org>",
-    "http://icculus.org/physfs/",
-};
-
-
 const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
 {
-    &__PHYSFS_ArchiveInfo_ZIP,
+    {
+        "ZIP",
+        "PkZip/WinZip/Info-Zip compatible",
+        "Ryan C. Gordon <icculus@icculus.org>",
+        "http://icculus.org/physfs/",
+    },
     ZIP_openArchive,        /* openArchive() method    */
     ZIP_enumerateFiles,     /* enumerateFiles() method */
     ZIP_openRead,           /* openRead() method       */

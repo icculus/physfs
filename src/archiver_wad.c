@@ -102,18 +102,14 @@ static void *WAD_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 } /* WAD_openArchive */
 
 
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_WAD =
-{
-    "WAD",
-    "DOOM engine format",
-    "Travis Wells <traviswells@mchsi.com>",
-    "http://www.3dmm2.com/doom/",
-};
-
-
 const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
 {
-    &__PHYSFS_ArchiveInfo_WAD,
+    {
+        "WAD",
+        "DOOM engine format",
+        "Travis Wells <traviswells@mchsi.com>",
+        "http://www.3dmm2.com/doom/",
+    },
     WAD_openArchive,        /* openArchive() method    */
     UNPK_enumerateFiles,     /* enumerateFiles() method */
     UNPK_openRead,           /* openRead() method       */

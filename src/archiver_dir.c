@@ -178,18 +178,14 @@ static int DIR_stat(PHYSFS_Dir *opaque, const char *name,
 } /* DIR_stat */
 
 
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_DIR =
-{
-    "",
-    "Non-archive, direct filesystem I/O",
-    "Ryan C. Gordon <icculus@icculus.org>",
-    "http://icculus.org/physfs/",
-};
-
-
 const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
 {
-    &__PHYSFS_ArchiveInfo_DIR,
+    {
+        "",
+        "Non-archive, direct filesystem I/O",
+        "Ryan C. Gordon <icculus@icculus.org>",
+        "http://icculus.org/physfs/",
+    },
     DIR_openArchive,        /* openArchive() method    */
     DIR_enumerateFiles,     /* enumerateFiles() method */
     DIR_openRead,           /* openRead() method       */

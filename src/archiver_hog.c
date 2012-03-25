@@ -91,18 +91,14 @@ static void *HOG_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 } /* HOG_openArchive */
 
 
-const PHYSFS_ArchiveInfo __PHYSFS_ArchiveInfo_HOG =
-{
-    "HOG",
-    "Descent I/II HOG file format",
-    "Bradley Bell <btb@icculus.org>",
-    "http://icculus.org/physfs/",
-};
-
-
 const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
 {
-    &__PHYSFS_ArchiveInfo_HOG,
+    {
+        "HOG",
+        "Descent I/II HOG file format",
+        "Bradley Bell <btb@icculus.org>",
+        "http://icculus.org/physfs/",
+    },
     HOG_openArchive,         /* openArchive() method    */
     UNPK_enumerateFiles,     /* enumerateFiles() method */
     UNPK_openRead,           /* openRead() method       */
