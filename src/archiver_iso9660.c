@@ -638,7 +638,7 @@ errorcleanup:
 } /* ISO9660_openArchive */
 
 
-static void ISO9660_closeArchive(dvoid *opaque)
+static void ISO9660_closeArchive(PHYSFS_Dir *opaque)
 {
     ISO9660Handle *handle = (ISO9660Handle*) opaque;
     handle->io->destroy(handle->io);
@@ -766,7 +766,8 @@ closefile:
 } /* iso_file_open_foreign */
 
 
-static PHYSFS_Io *ISO9660_openRead(dvoid *opaque, const char *filename, int *exists)
+static PHYSFS_Io *ISO9660_openRead(PHYSFS_Dir *opaque, const char *filename,
+                                   int *exists)
 {
     PHYSFS_Io *retval = NULL;
     ISO9660Handle *handle = (ISO9660Handle*) opaque;
@@ -815,7 +816,7 @@ errorhandling:
  * Information gathering functions
  ******************************************************************************/
 
-static void ISO9660_enumerateFiles(dvoid *opaque, const char *dname,
+static void ISO9660_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
                                    int omitSymLinks,
                                    PHYSFS_EnumFilesCallback cb,
                                    const char *origdir, void *callbackdata)
@@ -872,7 +873,7 @@ static void ISO9660_enumerateFiles(dvoid *opaque, const char *dname,
 } /* ISO9660_enumerateFiles */
 
 
-static int ISO9660_stat(dvoid *opaque, const char *name, int *exists,
+static int ISO9660_stat(PHYSFS_Dir *opaque, const char *name, int *exists,
                         PHYSFS_Stat *stat)
 {
     ISO9660Handle *handle = (ISO9660Handle*) opaque;
@@ -919,25 +920,25 @@ static int ISO9660_stat(dvoid *opaque, const char *name, int *exists,
  * Not supported functions
  ******************************************************************************/
 
-static PHYSFS_Io *ISO9660_openWrite(dvoid *opaque, const char *name)
+static PHYSFS_Io *ISO9660_openWrite(PHYSFS_Dir *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ISO9660_openWrite */
 
 
-static PHYSFS_Io *ISO9660_openAppend(dvoid *opaque, const char *name)
+static PHYSFS_Io *ISO9660_openAppend(PHYSFS_Dir *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ISO9660_openAppend */
 
 
-static int ISO9660_remove(dvoid *opaque, const char *name)
+static int ISO9660_remove(PHYSFS_Dir *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ISO9660_remove */
 
 
-static int ISO9660_mkdir(dvoid *opaque, const char *name)
+static int ISO9660_mkdir(PHYSFS_Dir *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ISO9660_mkdir */
