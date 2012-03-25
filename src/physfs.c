@@ -47,55 +47,17 @@ typedef struct __PHYSFS_ERRSTATETYPE__
 
 
 /* The various i/o drivers...some of these may not be compiled in. */
-extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_ZIP;
-extern const PHYSFS_Archiver       __PHYSFS_Archiver_ZIP;
-extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_LZMA;
-extern const PHYSFS_Archiver       __PHYSFS_Archiver_LZMA;
-extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_GRP;
-extern const PHYSFS_Archiver       __PHYSFS_Archiver_GRP;
-extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_QPAK;
-extern const PHYSFS_Archiver       __PHYSFS_Archiver_QPAK;
-extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_HOG;
-extern const PHYSFS_Archiver       __PHYSFS_Archiver_HOG;
-extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_MVL;
-extern const PHYSFS_Archiver       __PHYSFS_Archiver_MVL;
-extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_WAD;
-extern const PHYSFS_Archiver       __PHYSFS_Archiver_WAD;
-extern const PHYSFS_Archiver       __PHYSFS_Archiver_DIR;
-extern const PHYSFS_ArchiveInfo    __PHYSFS_ArchiveInfo_ISO9660;
-extern const PHYSFS_Archiver       __PHYSFS_Archiver_ISO9660;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_ZIP;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_LZMA;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_GRP;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_QPAK;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_HOG;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_MVL;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_WAD;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_DIR;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660;
 
-
-static const PHYSFS_ArchiveInfo *supported_types[] =
-{
-#if PHYSFS_SUPPORTS_ZIP
-    &__PHYSFS_ArchiveInfo_ZIP,
-#endif
-#if PHYSFS_SUPPORTS_7Z
-    &__PHYSFS_ArchiveInfo_LZMA,
-#endif
-#if PHYSFS_SUPPORTS_GRP
-    &__PHYSFS_ArchiveInfo_GRP,
-#endif
-#if PHYSFS_SUPPORTS_QPAK
-    &__PHYSFS_ArchiveInfo_QPAK,
-#endif
-#if PHYSFS_SUPPORTS_HOG
-    &__PHYSFS_ArchiveInfo_HOG,
-#endif
-#if PHYSFS_SUPPORTS_MVL
-    &__PHYSFS_ArchiveInfo_MVL,
-#endif
-#if PHYSFS_SUPPORTS_WAD
-    &__PHYSFS_ArchiveInfo_WAD,
-#endif
-#if PHYSFS_SUPPORTS_ISO9660
-    &__PHYSFS_ArchiveInfo_ISO9660,
-#endif
-    NULL
-};
-
-static const PHYSFS_Archiver *archivers[] =
+static const PHYSFS_Archiver *staticArchivers[] =
 {
 #if PHYSFS_SUPPORTS_ZIP
     &__PHYSFS_Archiver_ZIP,
@@ -137,6 +99,8 @@ static char *baseDir = NULL;
 static char *userDir = NULL;
 static char *prefDir = NULL;
 static int allowSymLinks = 0;
+static const PHYSFS_Archiver **archivers = NULL;
+static const PHYSFS_ArchiveInfo **archiveInfo = NULL;
 
 /* mutexes ... */
 static void *errorLock = NULL;     /* protects error message list.        */
@@ -1158,6 +1122,37 @@ initializeMutexes_failed:
 
 static void setDefaultAllocator(void);
 
+static int initStaticArchivers(void)
+{
+    const size_t numStaticArchivers = __PHYSFS_ARRAYLEN(staticArchivers);
+    const size_t len = numStaticArchivers * sizeof (void *);
+    size_t i;
+
+    assert(numStaticArchivers > 0);  /* seriously, none at all?! */
+    assert(staticArchivers[numStaticArchivers - 1] == NULL);
+
+    archiveInfo = (const PHYSFS_ArchiveInfo **) allocator.Malloc(len);
+    GOTO_IF_MACRO(!archiveInfo, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+    archivers = (const PHYSFS_Archiver **) allocator.Malloc(len);
+    GOTO_IF_MACRO(!archivers, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+
+    for (i = 0; i < numStaticArchivers - 1; i++)
+        archiveInfo[i] = staticArchivers[i]->info;
+    archiveInfo[numStaticArchivers - 1] = NULL;
+
+    memcpy(archivers, staticArchivers, len);
+
+    return 1;
+
+failed:
+    allocator.Free(archiveInfo);
+    allocator.Free(archivers);
+    archivers = NULL;
+    archiveInfo = NULL;
+    return 0;
+} /* initStaticArchivers */
+
+
 int PHYSFS_init(const char *argv0)
 {
     BAIL_IF_MACRO(initialized, PHYSFS_ERR_IS_INITIALIZED, 0);
@@ -1175,6 +1170,8 @@ int PHYSFS_init(const char *argv0)
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(!baseDir, ERRPASS, 0);
 
+    /* !!! FIXME: we have to clean up all the half-initialized state if something fails. */
+
     userDir = __PHYSFS_platformCalcUserDir();
     if (!userDir)
     {
@@ -1186,6 +1183,8 @@ int PHYSFS_init(const char *argv0)
     /* Platform layer is required to append a dirsep. */
     assert(baseDir[strlen(baseDir) - 1] == __PHYSFS_platformDirSeparator);
     assert(userDir[strlen(userDir) - 1] == __PHYSFS_platformDirSeparator);
+
+    BAIL_IF_MACRO(!initStaticArchivers(), ERRPASS, 0);
 
     initialized = 1;
 
@@ -1271,6 +1270,18 @@ int PHYSFS_deinit(void)
         prefDir = NULL;
     } /* if */
 
+    if (archiveInfo != NULL)
+    {
+        allocator.Free(archiveInfo);
+        archiveInfo = NULL;
+    } /* if */
+
+    if (archivers != NULL)
+    {
+        allocator.Free(archivers);
+        archivers = NULL;
+    } /* if */
+
     allowSymLinks = 0;
     initialized = 0;
 
@@ -1293,7 +1304,8 @@ int PHYSFS_isInit(void)
 
 const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void)
 {
-    return supported_types;
+    BAIL_IF_MACRO(!initialized, PHYSFS_ERR_NOT_INITIALIZED, NULL);
+    return archiveInfo;
 } /* PHYSFS_supportedArchiveTypes */
 
 
