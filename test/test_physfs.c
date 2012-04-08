@@ -272,6 +272,17 @@ static int cmd_mount_handle(char *args)
     return cmd_mount_internal(args, MNTTYPE_HANDLE);
 } /* cmd_mount_handle */
 
+static int cmd_getmountpoint(char *args)
+{
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    printf("Dir [%s] is mounted at [%s].\n", args, PHYSFS_getMountPoint(args));
+    return 1;
+} /* cmd_getmountpoint */
 
 static int cmd_removearchive(char *args)
 {
@@ -1172,6 +1183,7 @@ static const command_info commands[] =
     { "setbuffer",      cmd_setbuffer,      1, "<bufferSize>"               },
     { "stressbuffer",   cmd_stressbuffer,   1, "<bufferSize>"               },
     { "crc32",          cmd_crc32,          1, "<fileToHash>"               },
+    { "getmountpoint",  cmd_getmountpoint,  1, "<dir>"                      },
     { NULL,             NULL,              -1, NULL                         }
 };
 
