@@ -177,7 +177,7 @@ static int lzma_file_cmp_stdlib(const void *key, const void *object)
  * Compare two files with each other based on the name
  * Used for sorting
  */
-static int lzma_file_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static int lzma_file_cmp(void *_a, size_t one, size_t two)
 {
     LZMAfile *files = (LZMAfile *) _a;
     return strcmp(files[one].item->Name, files[two].item->Name);
@@ -187,7 +187,7 @@ static int lzma_file_cmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 /*
  * Swap two entries in the file array
  */
-static void lzma_file_swap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static void lzma_file_swap(void *_a, size_t one, size_t two)
 {
     LZMAfile tmp;
     LZMAfile *first = &(((LZMAfile *) _a)[one]);
@@ -245,7 +245,7 @@ static int lzma_files_init(LZMAarchive *archive)
         }
     } /* for */
 
-   __PHYSFS_sort(archive->files, numFiles, lzma_file_cmp, lzma_file_swap);
+   __PHYSFS_sort(archive->files, (size_t) numFiles, lzma_file_cmp, lzma_file_swap);
 
     return 1;
 } /* lzma_load_files */

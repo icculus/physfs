@@ -299,9 +299,9 @@ void __PHYSFS_setError(const PHYSFS_ErrorCode err);
  *
  *  See zip.c for an example.
  */
-void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
-                   int (*cmpfn)(void *, PHYSFS_uint32, PHYSFS_uint32),
-                   void (*swapfn)(void *, PHYSFS_uint32, PHYSFS_uint32));
+void __PHYSFS_sort(void *entries, size_t max,
+                   int (*cmpfn)(void *, size_t, size_t),
+                   void (*swapfn)(void *, size_t, size_t));
 
 /*
  * This isn't a formal error code, it's just for BAIL_MACRO.
