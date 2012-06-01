@@ -589,11 +589,11 @@ static char **doEnumStringList(void (*func)(PHYSFS_StringCallback, void *))
 } /* doEnumStringList */
 
 
-static void __PHYSFS_bubble_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
-                         int (*cmpfn)(void *, PHYSFS_uint32, PHYSFS_uint32),
-                         void (*swapfn)(void *, PHYSFS_uint32, PHYSFS_uint32))
+static void __PHYSFS_bubble_sort(void *a, size_t lo, size_t hi,
+                                 int (*cmpfn)(void *, size_t, size_t),
+                                 void (*swapfn)(void *, size_t, size_t))
 {
-    PHYSFS_uint32 i;
+    size_t i;
     int sorted;
 
     do
@@ -611,13 +611,13 @@ static void __PHYSFS_bubble_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
 } /* __PHYSFS_bubble_sort */
 
 
-static void __PHYSFS_quick_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
-                         int (*cmpfn)(void *, PHYSFS_uint32, PHYSFS_uint32),
-                         void (*swapfn)(void *, PHYSFS_uint32, PHYSFS_uint32))
+static void __PHYSFS_quick_sort(void *a, size_t lo, size_t hi,
+                         int (*cmpfn)(void *, size_t, size_t),
+                         void (*swapfn)(void *, size_t, size_t))
 {
-    PHYSFS_uint32 i;
-    PHYSFS_uint32 j;
-    PHYSFS_uint32 v;
+    size_t i;
+    size_t j;
+    size_t v;
 
     if ((hi - lo) <= PHYSFS_QUICKSORT_THRESHOLD)
         __PHYSFS_bubble_sort(a, lo, hi, cmpfn, swapfn);
@@ -649,9 +649,9 @@ static void __PHYSFS_quick_sort(void *a, PHYSFS_uint32 lo, PHYSFS_uint32 hi,
 } /* __PHYSFS_quick_sort */
 
 
-void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
-                   int (*cmpfn)(void *, PHYSFS_uint32, PHYSFS_uint32),
-                   void (*swapfn)(void *, PHYSFS_uint32, PHYSFS_uint32))
+void __PHYSFS_sort(void *entries, size_t max,
+                   int (*cmpfn)(void *, size_t, size_t),
+                   void (*swapfn)(void *, size_t, size_t))
 {
     /*
      * Quicksort w/ Bubblesort fallback algorithm inspired by code from here:

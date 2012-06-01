@@ -145,7 +145,7 @@ static const PHYSFS_Io UNPK_Io =
 };
 
 
-static int entryCmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static int entryCmp(void *_a, size_t one, size_t two)
 {
     if (one != two)
     {
@@ -157,7 +157,7 @@ static int entryCmp(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
 } /* entryCmp */
 
 
-static void entrySwap(void *_a, PHYSFS_uint32 one, PHYSFS_uint32 two)
+static void entrySwap(void *_a, size_t one, size_t two)
 {
     if (one != two)
     {
@@ -458,7 +458,7 @@ PHYSFS_Dir *UNPK_openArchive(PHYSFS_Io *io, UNPKentry *e,
         BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
-    __PHYSFS_sort(e, num, entryCmp, entrySwap);
+    __PHYSFS_sort(e, (size_t) num, entryCmp, entrySwap);
     info->io = io;
     info->entryCount = num;
     info->entries = e;
