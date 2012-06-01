@@ -1419,7 +1419,7 @@ static PHYSFS_sint64 zip_find_start_of_dir(ZIPinfo *info, const char *path,
 {
     PHYSFS_sint64 lo = 0;
     PHYSFS_sint64 hi = (PHYSFS_sint64) (info->entryCount - 1);
-    PHYSFS_sint32 middle;
+    PHYSFS_sint64 middle;
     PHYSFS_uint32 dlen = (PHYSFS_uint32) strlen(path);
     PHYSFS_sint64 retval = -1;
     const char *name;
