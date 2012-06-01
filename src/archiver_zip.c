@@ -1214,7 +1214,6 @@ static int zip64_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
     PHYSFS_uint64 ui64;
     PHYSFS_uint32 ui32;
     PHYSFS_uint16 ui16;
-    //PHYSFS_sint64 len;
 
     /* We should be positioned right past the locator signature. */
 
