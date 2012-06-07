@@ -230,7 +230,8 @@ void __PHYSFS_sort(void *entries, PHYSFS_uint32 max,
      * Quicksort w/ Bubblesort fallback algorithm inspired by code from here:
      *   http://www.cs.ubc.ca/spider/harrison/Java/sorting-demo.html
      */
-    __PHYSFS_quick_sort(entries, 0, max - 1, cmpfn, swapfn);
+    if (max > 0)
+        __PHYSFS_quick_sort(entries, 0, max - 1, cmpfn, swapfn);
 } /* __PHYSFS_sort */
 
 
