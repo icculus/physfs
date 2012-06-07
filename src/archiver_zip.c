@@ -1347,6 +1347,8 @@ static int zip_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
     BAIL_IF_MACRO(!readui16(io, &entryCount16), ERRPASS, 0);
     BAIL_IF_MACRO(ui16 != entryCount16, PHYSFS_ERR_CORRUPT, 0);
 
+    info->entryCount = entryCount16;
+
     /* size of the central directory */
     BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
 
