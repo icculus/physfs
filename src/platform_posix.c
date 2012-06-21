@@ -349,7 +349,7 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
 
     if (lstat(filename, &statbuf) == -1)
     {
-        *exists = (errno == ENOENT);
+        *exists = (errno != ENOENT);
         BAIL_MACRO(errcodeFromErrno(), 0);
     } /* if */
 
