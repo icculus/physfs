@@ -14,6 +14,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 #if !defined(PHYSFS_NO_CDROM_SUPPORT)
+#include <Carbon/Carbon.h>  /* !!! FIXME */
 #include <IOKit/storage/IOMedia.h>
 #include <IOKit/storage/IOCDMedia.h>
 #include <IOKit/storage/IODVDMedia.h>
