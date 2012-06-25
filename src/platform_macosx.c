@@ -11,11 +11,15 @@
 
 #ifdef PHYSFS_PLATFORM_MACOSX
 
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+
+#if !defined(PHYSFS_NO_CDROM_SUPPORT)
 #include <IOKit/storage/IOMedia.h>
 #include <IOKit/storage/IOCDMedia.h>
 #include <IOKit/storage/IODVDMedia.h>
 #include <sys/mount.h>
+#endif
+
 #include <sys/stat.h>
 
 /* Seems to get defined in some system header... */
@@ -80,12 +84,15 @@ int __PHYSFS_platformDeinit(void)
 } /* __PHYSFS_platformDeinit */
 
 
+
 /* CD-ROM detection code... */
 
 /*
  * Code based on sample from Apple Developer Connection:
  *  http://developer.apple.com/samplecode/Sample_Code/Devices_and_Hardware/Disks/VolumeToBSDNode/VolumeToBSDNode.c.htm
  */
+
+#if !defined(PHYSFS_NO_CDROM_SUPPORT)
 
 static int darwinIsWholeMedia(io_service_t service)
 {
@@ -161,9 +168,12 @@ static int darwinIsMountedDisc(char *bsdName, mach_port_t masterPort)
     return retval;
 } /* darwinIsMountedDisc */
 
+#endif /* !defined(PHYSFS_NO_CDROM_SUPPORT) */
+
 
 void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
+#if !defined(PHYSFS_NO_CDROM_SUPPORT)
     const char *devPrefix = "/dev/";
     const int prefixLen = strlen(devPrefix);
     mach_port_t masterPort = 0;
@@ -185,6 +195,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
         if (darwinIsMountedDisc(dev, masterPort))
             cb(data, mnt);
     } /* for */
+#endif /* !defined(PHYSFS_NO_CDROM_SUPPORT) */
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
@@ -219,9 +230,7 @@ static char *convertCFString(CFStringRef cfstr)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    ProcessSerialNumber psn = { 0, kCurrentProcess };
     struct stat statbuf;
-    FSRef fsref;
     CFRange cfrange;
     CFURLRef cfurl = NULL;
     CFStringRef cfstr = NULL;
@@ -230,9 +239,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     char *cstr = NULL;
     int rc = 0;
 
-    if (GetProcessBundleLocation(&psn, &fsref) != noErr)
-        BAIL_MACRO(PHYSFS_ERR_OS_ERROR, NULL);
-    cfurl = CFURLCreateFromFSRef(cfallocator, &fsref);
+    cfurl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
     BAIL_IF_MACRO(cfurl == NULL, PHYSFS_ERR_OS_ERROR, NULL);
     cfstr = CFURLCopyFileSystemPath(cfurl, kCFURLPOSIXPathStyle);
     CFRelease(cfurl);
