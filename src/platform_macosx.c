@@ -21,8 +21,6 @@
 #include <sys/mount.h>
 #endif
 
-#include <sys/stat.h>
-
 /* Seems to get defined in some system header... */
 #ifdef Free
 #undef Free
@@ -231,14 +229,10 @@ static char *convertCFString(CFStringRef cfstr)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    struct stat statbuf;
-    CFRange cfrange;
     CFURLRef cfurl = NULL;
     CFStringRef cfstr = NULL;
     CFMutableStringRef cfmutstr = NULL;
     char *retval = NULL;
-    char *cstr = NULL;
-    int rc = 0;
 
     cfurl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
     BAIL_IF_MACRO(cfurl == NULL, PHYSFS_ERR_OS_ERROR, NULL);
@@ -248,53 +242,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     cfmutstr = CFStringCreateMutableCopy(cfallocator, 0, cfstr);
     CFRelease(cfstr);
     BAIL_IF_MACRO(!cfmutstr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-
-    /* we have to decide if we got a binary's path, or the .app dir... */
-    cstr = convertCFString(cfmutstr);
-    if (cstr == NULL)
-    {
-        CFRelease(cfmutstr);
-        return NULL;
-    } /* if */
-
-    rc = stat(cstr, &statbuf);
-    allocator.Free(cstr);  /* done with this. */
-    if (rc == -1)
-    {
-        CFRelease(cfmutstr);
-        return NULL;  /* maybe default behaviour will work? */
-    } /* if */
-
-    if (S_ISREG(statbuf.st_mode))
-    {
-        /* Find last dirsep so we can chop the filename from the path. */
-        cfrange = CFStringFind(cfmutstr, CFSTR("/"), kCFCompareBackwards);
-        if (cfrange.location == kCFNotFound)
-        {
-            assert(0);  /* shouldn't ever hit this... */
-            CFRelease(cfmutstr);
-            return NULL;
-        } /* if */
-
-        /* chop the "exename" from the end of the path string (leave '/')... */
-        cfrange.location++;
-        cfrange.length = CFStringGetLength(cfmutstr) - cfrange.location;
-        CFStringDelete(cfmutstr, cfrange);
-
-        /* If we're an Application Bundle, chop everything but the base. */
-        cfrange = CFStringFind(cfmutstr, CFSTR("/Contents/MacOS/"),
-                               kCFCompareCaseInsensitive |
-                               kCFCompareBackwards |
-                               kCFCompareAnchored);
-
-        if (cfrange.location != kCFNotFound)
-        {
-            cfrange.location++;  /* leave the trailing '/' char ... */
-            cfrange.length--;
-            CFStringDelete(cfmutstr, cfrange);  /* chop that, too. */
-        } /* if */
-    } /* if */
-
+    CFStringAppendCString(cfmutstr, "/", kCFStringEncodingUTF8);
     retval = convertCFString(cfmutstr);
     CFRelease(cfmutstr);
 
