@@ -197,9 +197,9 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 } /* __PHYSFS_platformCalcBaseDir */
 
 
-PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
+void *__PHYSFS_platformGetThreadID(void)
 {
-    return((PHYSFS_uint64) find_thread(NULL));
+    return((void *) find_thread(NULL));
 } /* __PHYSFS_platformGetThreadID */
 
 
