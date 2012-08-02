@@ -649,7 +649,7 @@ PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
 } /* __PHYSFS_platformGetLastModTime */
 
 
-PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
+void *__PHYSFS_platformGetThreadID(void)
 {
     PTIB ptib;
     PPIB ppib;
@@ -659,7 +659,7 @@ PHYSFS_uint64 __PHYSFS_platformGetThreadID(void)
      *  default value (zero might as well do) if it does.
      */
     BAIL_IF_MACRO(os2err(DosGetInfoBlocks(&ptib, &ppib)) != NO_ERROR, 0, 0);
-    return((PHYSFS_uint64) ptib->tib_ordinal);
+    return((void *) ptib->tib_ordinal);
 } /* __PHYSFS_platformGetThreadID */
 
 
