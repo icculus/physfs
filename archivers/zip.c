@@ -535,6 +535,8 @@ static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path, int *isDir)
 
         else /* substring match...might be dir or entry or nothing. */
         {
+            int i;
+
             if (isDir != NULL)
             {
                 *isDir = (thispath[pathlen] == '/');
@@ -544,12 +546,27 @@ static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path, int *isDir)
 
             if (thispath[pathlen] == '\0') /* found entry? */
                 return(&a[middle]);
-            /* adjust search params, try again. */
-            else if (thispath[pathlen] > '/')
-                hi = middle - 1;
-            else
-                lo = middle + 1;
-        } /* if */
+
+            /* substring match; search remaining space to find it... */
+            for (i = lo; i < hi; i++)
+            {
+                thispath = a[i].name;
+                if (strncmp(path, thispath, pathlen) == 0)
+                {
+                    if (isDir != NULL)
+                    {
+                        *isDir = (thispath[pathlen] == '/');
+                        if (*isDir)
+                            return(NULL);
+                    } /* if */
+
+                    if (thispath[pathlen] == '\0') /* found entry? */
+                        return(&a[i]);
+                } /* if */
+            } /* for */
+            break;
+
+        } /* else */
     } /* while */
 
     if (isDir != NULL)
