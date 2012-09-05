@@ -32,7 +32,7 @@
 /* Wrap PHYSFS_Allocator in a CFAllocator... */
 static CFAllocatorRef cfallocator = NULL;
 
-CFStringRef cfallocDesc(const void *info)
+static CFStringRef cfallocDesc(const void *info)
 {
     return CFStringCreateWithCString(cfallocator, "PhysicsFS",
                                      kCFStringEncodingASCII);
