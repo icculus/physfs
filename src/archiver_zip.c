@@ -1184,14 +1184,14 @@ static PHYSFS_sint64 zip64_find_end_of_central_dir(PHYSFS_Io *io,
         /* we assume you can eat this stack if you handle Zip64 files. */
         PHYSFS_uint8 buf[256 * 1024];
         PHYSFS_uint64 len = pos - offset;
-        PHYSFS_uint32 i;
+        PHYSFS_sint32 i;
 
         if (len > sizeof (buf))
             len = sizeof (buf);
 
         BAIL_IF_MACRO(!io->seek(io, pos - len), ERRPASS, -1);
         BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, len), ERRPASS, -1);
-        for (i = len - 4; i >= 0; i--)
+        for (i = (PHYSFS_sint32) (len - 4); i >= 0; i--)
         {
             if (buf[i] != 0x50)
                 continue;
