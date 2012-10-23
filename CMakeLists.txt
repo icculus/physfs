@@ -1,64 +1,63 @@
 # PhysicsFS; a portable, flexible file i/o abstraction.
-# Copyright (C) 2007  Ryan C. Gordon.
 #
 # Please see the file LICENSE.txt in the source's root directory.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
+cmake_minimum_required(VERSION 2.8.4)
 
-PROJECT(PhysicsFS)
-SET(PHYSFS_VERSION 2.1.0)
+project(PhysicsFS)
+set(PHYSFS_VERSION 2.1.0)
 
 # Increment this if/when we break backwards compatibility.
-SET(PHYSFS_SOVERSION 1)
+set(PHYSFS_SOVERSION 1)
 
 # I hate that they define "WIN32" ... we're about to move to Win64...I hope!
-IF(WIN32 AND NOT WINDOWS)
-    SET(WINDOWS TRUE)
-ENDIF(WIN32 AND NOT WINDOWS)
+if(WIN32 AND NOT WINDOWS)
+    set(WINDOWS TRUE)
+endif()
 
 # Bleh, let's do it for "APPLE" too.
-IF(APPLE AND NOT MACOSX)
-    SET(MACOSX TRUE)
-ENDIF(APPLE AND NOT MACOSX)
+if(APPLE AND NOT MACOSX)
+    set(MACOSX TRUE)
+endif()
 
 # For now, Haiku and BeOS are the same, as far as the build system cares.
-IF(HAIKU AND NOT BEOS)
-    SET(BEOS TRUE)
-ENDIF(HAIKU AND NOT BEOS)
+if(HAIKU AND NOT BEOS)
+    set(BEOS TRUE)
+endif()
 
-IF(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
-    SET(SOLARIS TRUE)
-ENDIF(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
+if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
+    set(SOLARIS TRUE)
+endif()
 
-INCLUDE(CheckIncludeFile)
-INCLUDE(CheckLibraryExists)
-INCLUDE(CheckCSourceCompiles)
+include(CheckIncludeFile)
+include(CheckLibraryExists)
+include(CheckCSourceCompiles)
 
-INCLUDE_DIRECTORIES(./src)
+include_directories(./src)
 
-IF(MACOSX)
+if(MACOSX)
     # Fallback to older OS X on PowerPC to support wider range of systems...
-    IF(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
-        ADD_DEFINITIONS(-DMAC_OS_X_VERSION_MIN_REQUIRED=1020)
-        SET(OTHER_LDFLAGS ${OTHER_LDFLAGS} " -mmacosx-version-min=10.2")
-    ENDIF(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
+    if(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
+        add_definitions(-DMAC_OS_X_VERSION_MIN_REQUIRED=1020)
+        set(OTHER_LDFLAGS ${OTHER_LDFLAGS} " -mmacosx-version-min=10.2")
+    endif()
 
     # Need these everywhere...
-    ADD_DEFINITIONS(-fno-common)
-    SET(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework Carbon -framework IOKit")
-ENDIF(MACOSX)
+    add_definitions(-fno-common)
+    set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework Carbon -framework IOKit")
+endif()
 
 # Add some gcc-specific command lines.
-IF(CMAKE_COMPILER_IS_GNUCC)
+if(CMAKE_COMPILER_IS_GNUCC)
     # Always build with debug symbols...you can strip it later.
-    ADD_DEFINITIONS(-g -pipe -Werror -fsigned-char)
+    add_definitions(-g -pipe -Werror -fsigned-char)
 
     # Stupid BeOS generates warnings in the system headers.
-    IF(NOT BEOS)
-        ADD_DEFINITIONS(-Wall)
-    ENDIF(NOT BEOS)
+    if(NOT BEOS)
+        add_definitions(-Wall)
+    endif()
 
-    CHECK_C_SOURCE_COMPILES("
+    check_c_source_compiles("
         #if ((defined(__GNUC__)) && (__GNUC__ >= 4))
         int main(int argc, char **argv) { int is_gcc4 = 1; return 0; }
         #else
@@ -66,31 +65,31 @@ IF(CMAKE_COMPILER_IS_GNUCC)
         #endif
     " PHYSFS_IS_GCC4)
 
-    IF(PHYSFS_IS_GCC4)
+    if(PHYSFS_IS_GCC4)
         # Not supported on several operating systems at this time.
-        IF(NOT SOLARIS AND NOT WINDOWS)
-            ADD_DEFINITIONS(-fvisibility=hidden)
-        ENDIF(NOT SOLARIS AND NOT WINDOWS)
-    ENDIF(PHYSFS_IS_GCC4)
+        if(NOT SOLARIS AND NOT WINDOWS)
+            add_definitions(-fvisibility=hidden)
+        endif()
+    endif()
 
     # Don't use -rpath.
-    SET(CMAKE_SKIP_RPATH ON CACHE BOOL "Skip RPATH" FORCE)
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_SKIP_RPATH ON CACHE BOOL "Skip RPATH" FORCE)
+endif()
 
-IF(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
-    ADD_DEFINITIONS(-erroff=E_EMPTY_TRANSLATION_UNIT)
-    ADD_DEFINITIONS(-xldscope=hidden)
-ENDIF(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
+if(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
+    add_definitions(-erroff=E_EMPTY_TRANSLATION_UNIT)
+    add_definitions(-xldscope=hidden)
+endif()
 
-IF(MSVC)
+if(MSVC)
     # VS.NET 8.0 got really really anal about strcpy, etc, which even if we
     #  cleaned up our code, zlib, etc still use...so disable the warning.
-    ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS=1)
-ENDIF(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
+endif()
 
 # Basic chunks of source code ...
 
-SET(LZMA_SRCS
+set(LZMA_SRCS
     src/lzma/C/7zCrc.c
     src/lzma/C/Archive/7z/7zBuffer.c
     src/lzma/C/Archive/7z/7zDecode.c
@@ -104,20 +103,20 @@ SET(LZMA_SRCS
     src/lzma/C/Compress/Lzma/LzmaDecode.c
 )
 
-IF(BEOS)
+if(BEOS)
     # We add this explicitly, since we don't want CMake to think this
     #  is a C++ project unless we're on BeOS.
-    SET(PHYSFS_BEOS_SRCS src/platform_beos.cpp)
-    FIND_LIBRARY(BE_LIBRARY be)
-    FIND_LIBRARY(ROOT_LIBRARY root)
-    SET(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${BE_LIBRARY} ${ROOT_LIBRARY})
-ENDIF(BEOS)
+    set(PHYSFS_BEOS_SRCS src/platform_beos.cpp)
+    find_library(BE_LIBRARY be)
+    find_library(ROOT_LIBRARY root)
+    set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${BE_LIBRARY} ${ROOT_LIBRARY})
+endif()
 
 # Almost everything is "compiled" here, but things that don't apply to the
 #  build are #ifdef'd out. This is to make it easy to embed PhysicsFS into
 #  another project or bring up a new build system: just compile all the source
 #  code and #define the things you want.
-SET(PHYSFS_SRCS
+set(PHYSFS_SRCS
     src/physfs.c
     src/physfs_byteorder.c
     src/physfs_unicode.c
@@ -141,207 +140,207 @@ SET(PHYSFS_SRCS
 
 # platform layers ...
 
-IF(UNIX)
-    IF(BEOS)
-        SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-        SET(HAVE_PTHREAD_H TRUE)
-    ELSE(BEOS)
-        CHECK_INCLUDE_FILE(sys/ucred.h HAVE_UCRED_H)
-        IF(HAVE_UCRED_H)
-            ADD_DEFINITIONS(-DPHYSFS_HAVE_SYS_UCRED_H=1)
-            SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        ENDIF(HAVE_UCRED_H)
+if(UNIX)
+    if(BEOS)
+        set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
+        set(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
+        set(HAVE_PTHREAD_H TRUE)
+    else()
+        check_include_file(sys/ucred.h HAVE_UCRED_H)
+        if(HAVE_UCRED_H)
+            add_definitions(-DPHYSFS_HAVE_SYS_UCRED_H=1)
+            set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
+        endif()
 
-        CHECK_INCLUDE_FILE(mntent.h HAVE_MNTENT_H)
-        IF(HAVE_MNTENT_H)
-            ADD_DEFINITIONS(-DPHYSFS_HAVE_MNTENT_H=1)
-            SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        ENDIF(HAVE_MNTENT_H)
+        check_include_file(mntent.h HAVE_MNTENT_H)
+        if(HAVE_MNTENT_H)
+            add_definitions(-DPHYSFS_HAVE_MNTENT_H=1)
+            set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
+        endif()
 
         # !!! FIXME: Solaris fails this, because mnttab.h implicitly
         # !!! FIXME:  depends on other system headers.  :(
-        #CHECK_INCLUDE_FILE(sys/mnttab.h HAVE_SYS_MNTTAB_H)
-        CHECK_C_SOURCE_COMPILES("
+        #check_include_file(sys/mnttab.h HAVE_SYS_MNTTAB_H)
+        check_c_source_compiles("
             #include <stdio.h>
             #include <sys/mnttab.h>
             int main(int argc, char **argv) { return 0; }
         " HAVE_SYS_MNTTAB_H)
 
-        IF(HAVE_SYS_MNTTAB_H)
-            ADD_DEFINITIONS(-DPHYSFS_HAVE_SYS_MNTTAB_H=1)
-            SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        ENDIF(HAVE_SYS_MNTTAB_H)
+        if(HAVE_SYS_MNTTAB_H)
+            add_definitions(-DPHYSFS_HAVE_SYS_MNTTAB_H=1)
+            set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
+        endif()
 
-        CHECK_INCLUDE_FILE(pthread.h HAVE_PTHREAD_H)
-        IF(HAVE_PTHREAD_H)
-            SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-        ENDIF(HAVE_PTHREAD_H)
-    ENDIF(BEOS)
-ENDIF(UNIX)
+        check_include_file(pthread.h HAVE_PTHREAD_H)
+        if(HAVE_PTHREAD_H)
+            set(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
+        endif()
+    endif()
+endif()
 
-IF(WINDOWS)
-    SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-    SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-ENDIF(WINDOWS)
+if(WINDOWS)
+    set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
+    set(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
+endif()
 
-IF(NOT PHYSFS_HAVE_CDROM_SUPPORT)
-    ADD_DEFINITIONS(-DPHYSFS_NO_CDROM_SUPPORT=1)
-    MESSAGE(WARNING " ***")
-    MESSAGE(WARNING " *** There is no CD-ROM support in this build!")
-    MESSAGE(WARNING " *** PhysicsFS will just pretend there are no discs.")
-    MESSAGE(WARNING " *** This may be fine, depending on how PhysicsFS is used,")
-    MESSAGE(WARNING " ***   but is this what you REALLY wanted?")
-    MESSAGE(WARNING " *** (Maybe fix CMakeLists.txt, or write a platform driver?)")
-    MESSAGE(WARNING " ***")
-ENDIF(NOT PHYSFS_HAVE_CDROM_SUPPORT)
+if(NOT PHYSFS_HAVE_CDROM_SUPPORT)
+    add_definitions(-DPHYSFS_NO_CDROM_SUPPORT=1)
+    message(WARNING " ***")
+    message(WARNING " *** There is no CD-ROM support in this build!")
+    message(WARNING " *** PhysicsFS will just pretend there are no discs.")
+    message(WARNING " *** This may be fine, depending on how PhysicsFS is used,")
+    message(WARNING " ***   but is this what you REALLY wanted?")
+    message(WARNING " *** (Maybe fix CMakeLists.txt, or write a platform driver?)")
+    message(WARNING " ***")
+endif()
 
-IF(PHYSFS_HAVE_THREAD_SUPPORT)
-    ADD_DEFINITIONS(-D_REENTRANT -D_THREAD_SAFE)
-ELSE(PHYSFS_HAVE_THREAD_SUPPORT)
-    ADD_DEFINITIONS(-DPHYSFS_NO_THREAD_SUPPORT=1)
-    MESSAGE(WARNING " ***")
-    MESSAGE(WARNING " *** There is no thread support in this build!")
-    MESSAGE(WARNING " *** PhysicsFS will NOT be reentrant!")
-    MESSAGE(WARNING " *** This may be fine, depending on how PhysicsFS is used,")
-    MESSAGE(WARNING " ***   but is this what you REALLY wanted?")
-    MESSAGE(WARNING " *** (Maybe fix CMakeLists.txt, or write a platform driver?)")
-    MESSAGE(WARNING " ***")
-ENDIF(PHYSFS_HAVE_THREAD_SUPPORT)
+if(PHYSFS_HAVE_THREAD_SUPPORT)
+    add_definitions(-D_REENTRANT -D_THREAD_SAFE)
+else()
+    add_definitions(-DPHYSFS_NO_THREAD_SUPPORT=1)
+    message(WARNING " ***")
+    message(WARNING " *** There is no thread support in this build!")
+    message(WARNING " *** PhysicsFS will NOT be reentrant!")
+    message(WARNING " *** This may be fine, depending on how PhysicsFS is used,")
+    message(WARNING " ***   but is this what you REALLY wanted?")
+    message(WARNING " *** (Maybe fix CMakeLists.txt, or write a platform driver?)")
+    message(WARNING " ***")
+endif()
 
 
 # Archivers ...
 
-OPTION(PHYSFS_ARCHIVE_ZIP "Enable ZIP support" TRUE)
-IF(PHYSFS_ARCHIVE_ZIP)
-    ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_ZIP=1)
-ENDIF(PHYSFS_ARCHIVE_ZIP)
+option(PHYSFS_ARCHIVE_ZIP "Enable ZIP support" TRUE)
+if(PHYSFS_ARCHIVE_ZIP)
+    add_definitions(-DPHYSFS_SUPPORTS_ZIP=1)
+endif()
 
-OPTION(PHYSFS_ARCHIVE_7Z "Enable 7zip support" TRUE)
-IF(PHYSFS_ARCHIVE_7Z)
-    ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_7Z=1)
+option(PHYSFS_ARCHIVE_7Z "Enable 7zip support" TRUE)
+if(PHYSFS_ARCHIVE_7Z)
+    add_definitions(-DPHYSFS_SUPPORTS_7Z=1)
     # !!! FIXME: rename to 7z.c?
-    SET(PHYSFS_SRCS ${PHYSFS_SRCS} ${LZMA_SRCS})
-ENDIF(PHYSFS_ARCHIVE_7Z)
+    set(PHYSFS_SRCS ${PHYSFS_SRCS} ${LZMA_SRCS})
+endif()
 
-OPTION(PHYSFS_ARCHIVE_GRP "Enable Build Engine GRP support" TRUE)
-IF(PHYSFS_ARCHIVE_GRP)
-    ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_GRP=1)
-ENDIF(PHYSFS_ARCHIVE_GRP)
+option(PHYSFS_ARCHIVE_GRP "Enable Build Engine GRP support" TRUE)
+if(PHYSFS_ARCHIVE_GRP)
+    add_definitions(-DPHYSFS_SUPPORTS_GRP=1)
+endif()
 
-OPTION(PHYSFS_ARCHIVE_WAD "Enable Doom WAD support" TRUE)
-IF(PHYSFS_ARCHIVE_WAD)
-    ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_WAD=1)
-ENDIF(PHYSFS_ARCHIVE_WAD)
+option(PHYSFS_ARCHIVE_WAD "Enable Doom WAD support" TRUE)
+if(PHYSFS_ARCHIVE_WAD)
+    add_definitions(-DPHYSFS_SUPPORTS_WAD=1)
+endif()
 
-OPTION(PHYSFS_ARCHIVE_HOG "Enable Descent I/II HOG support" TRUE)
-IF(PHYSFS_ARCHIVE_HOG)
-    ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_HOG=1)
-ENDIF(PHYSFS_ARCHIVE_HOG)
+option(PHYSFS_ARCHIVE_HOG "Enable Descent I/II HOG support" TRUE)
+if(PHYSFS_ARCHIVE_HOG)
+    add_definitions(-DPHYSFS_SUPPORTS_HOG=1)
+endif()
 
-OPTION(PHYSFS_ARCHIVE_MVL "Enable Descent I/II MVL support" TRUE)
-IF(PHYSFS_ARCHIVE_MVL)
-    ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_MVL=1)
-ENDIF(PHYSFS_ARCHIVE_MVL)
+option(PHYSFS_ARCHIVE_MVL "Enable Descent I/II MVL support" TRUE)
+if(PHYSFS_ARCHIVE_MVL)
+    add_definitions(-DPHYSFS_SUPPORTS_MVL=1)
+endif()
 
-OPTION(PHYSFS_ARCHIVE_QPAK "Enable Quake I/II QPAK support" TRUE)
-IF(PHYSFS_ARCHIVE_QPAK)
-    ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_QPAK=1)
-ENDIF(PHYSFS_ARCHIVE_QPAK)
+option(PHYSFS_ARCHIVE_QPAK "Enable Quake I/II QPAK support" TRUE)
+if(PHYSFS_ARCHIVE_QPAK)
+    add_definitions(-DPHYSFS_SUPPORTS_QPAK=1)
+endif()
 
-OPTION(PHYSFS_ARCHIVE_ISO9660 "Enable ISO9660 support" TRUE)
-IF(PHYSFS_ARCHIVE_ISO9660)
-    ADD_DEFINITIONS(-DPHYSFS_SUPPORTS_ISO9660=1)
-ENDIF(PHYSFS_ARCHIVE_ISO9660)
+option(PHYSFS_ARCHIVE_ISO9660 "Enable ISO9660 support" TRUE)
+if(PHYSFS_ARCHIVE_ISO9660)
+    add_definitions(-DPHYSFS_SUPPORTS_ISO9660=1)
+endif()
 
 
-OPTION(PHYSFS_BUILD_STATIC "Build static library" TRUE)
-IF(PHYSFS_BUILD_STATIC)
-    ADD_LIBRARY(physfs-static STATIC ${PHYSFS_SRCS})
-    SET_TARGET_PROPERTIES(physfs-static PROPERTIES OUTPUT_NAME "physfs")
-    SET(PHYSFS_LIB_TARGET physfs-static)
-    SET(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";physfs-static")
-ENDIF(PHYSFS_BUILD_STATIC)
+option(PHYSFS_BUILD_STATIC "Build static library" TRUE)
+if(PHYSFS_BUILD_STATIC)
+    add_library(physfs-static STATIC ${PHYSFS_SRCS})
+    set_target_properties(physfs-static PROPERTIES OUTPUT_NAME "physfs")
+    set(PHYSFS_LIB_TARGET physfs-static)
+    set(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";physfs-static")
+endif()
 
-OPTION(PHYSFS_BUILD_SHARED "Build shared library" TRUE)
-IF(PHYSFS_BUILD_SHARED)
-    ADD_LIBRARY(physfs SHARED ${PHYSFS_SRCS})
-    SET_TARGET_PROPERTIES(physfs PROPERTIES VERSION ${PHYSFS_VERSION})
-    SET_TARGET_PROPERTIES(physfs PROPERTIES SOVERSION ${PHYSFS_SOVERSION})
-    TARGET_LINK_LIBRARIES(physfs ${OPTIONAL_LIBRARY_LIBS} ${OTHER_LDFLAGS})
-    SET(PHYSFS_LIB_TARGET physfs)
-    SET(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";physfs")
-ENDIF(PHYSFS_BUILD_SHARED)
+option(PHYSFS_BUILD_SHARED "Build shared library" TRUE)
+if(PHYSFS_BUILD_SHARED)
+    add_library(physfs SHARED ${PHYSFS_SRCS})
+    set_target_properties(physfs PROPERTIES VERSION ${PHYSFS_VERSION})
+    set_target_properties(physfs PROPERTIES SOVERSION ${PHYSFS_SOVERSION})
+    target_link_libraries(physfs ${OPTIONAL_LIBRARY_LIBS} ${OTHER_LDFLAGS})
+    set(PHYSFS_LIB_TARGET physfs)
+    set(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";physfs")
+endif()
 
-IF(NOT PHYSFS_BUILD_SHARED AND NOT PHYSFS_BUILD_STATIC)
-    MESSAGE(FATAL "Both shared and static libraries are disabled!")
-ENDIF(NOT PHYSFS_BUILD_SHARED AND NOT PHYSFS_BUILD_STATIC)
+if(NOT PHYSFS_BUILD_SHARED AND NOT PHYSFS_BUILD_STATIC)
+    message(FATAL "Both shared and static libraries are disabled!")
+endif()
 
 # CMake FAQ says I need this...
-IF(PHYSFS_BUILD_SHARED AND PHYSFS_BUILD_STATIC)
-    SET_TARGET_PROPERTIES(physfs PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-    SET_TARGET_PROPERTIES(physfs-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-ENDIF(PHYSFS_BUILD_SHARED AND PHYSFS_BUILD_STATIC)
+if(PHYSFS_BUILD_SHARED AND PHYSFS_BUILD_STATIC)
+    set_target_properties(physfs PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+    set_target_properties(physfs-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+endif()
 
-OPTION(PHYSFS_BUILD_TEST "Build stdio test program." TRUE)
-MARK_AS_ADVANCED(PHYSFS_BUILD_TEST)
-IF(PHYSFS_BUILD_TEST)
-    FIND_PATH(READLINE_H readline/readline.h)
-    FIND_PATH(HISTORY_H readline/history.h)
-    IF(READLINE_H AND HISTORY_H)
-        FIND_LIBRARY(CURSES_LIBRARY NAMES curses ncurses)
-        SET(CMAKE_REQUIRED_LIBRARIES ${CURSES_LIBRARY})
-        FIND_LIBRARY(READLINE_LIBRARY readline)
-        IF(READLINE_LIBRARY)
-            SET(HAVE_SYSTEM_READLINE TRUE)
-            SET(TEST_PHYSFS_LIBS ${TEST_PHYSFS_LIBS} ${READLINE_LIBRARY} ${CURSES_LIBRARY})
-            INCLUDE_DIRECTORIES(${READLINE_H} ${HISTORY_H})
-            ADD_DEFINITIONS(-DPHYSFS_HAVE_READLINE=1)
-        ENDIF(READLINE_LIBRARY)
-    ENDIF(READLINE_H AND HISTORY_H)
-    ADD_EXECUTABLE(test_physfs test/test_physfs.c)
-    TARGET_LINK_LIBRARIES(test_physfs ${PHYSFS_LIB_TARGET} ${TEST_PHYSFS_LIBS} ${OTHER_LDFLAGS})
-    SET(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";test_physfs")
-ENDIF(PHYSFS_BUILD_TEST)
+option(PHYSFS_BUILD_TEST "Build stdio test program." TRUE)
+mark_as_advanced(PHYSFS_BUILD_TEST)
+if(PHYSFS_BUILD_TEST)
+    find_path(READLINE_H readline/readline.h)
+    find_path(HISTORY_H readline/history.h)
+    if(READLINE_H AND HISTORY_H)
+        find_library(CURSES_LIBRARY NAMES curses ncurses)
+        set(CMAKE_REQUIRED_LIBRARIES ${CURSES_LIBRARY})
+        find_library(READLINE_LIBRARY readline)
+        if(READLINE_LIBRARY)
+            set(HAVE_SYSTEM_READLINE TRUE)
+            set(TEST_PHYSFS_LIBS ${TEST_PHYSFS_LIBS} ${READLINE_LIBRARY} ${CURSES_LIBRARY})
+            include_directories(${READLINE_H} ${HISTORY_H})
+            add_definitions(-DPHYSFS_HAVE_READLINE=1)
+        endif()
+    endif()
+    add_executable(test_physfs test/test_physfs.c)
+    target_link_libraries(test_physfs ${PHYSFS_LIB_TARGET} ${TEST_PHYSFS_LIBS} ${OTHER_LDFLAGS})
+    set(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";test_physfs")
+endif()
 
 
 # Scripting language bindings...
 
 #CMake's SWIG support is basically useless.
-#FIND_PACKAGE(SWIG)
+#find_package(SWIG)
 
-OPTION(PHYSFS_BUILD_SWIG "Build ${_LANG} bindings." TRUE)
-MARK_AS_ADVANCED(PHYSFS_BUILD_SWIG)
+option(PHYSFS_BUILD_SWIG "Build ${_LANG} bindings." TRUE)
+mark_as_advanced(PHYSFS_BUILD_SWIG)
 
-FIND_PROGRAM(SWIG swig DOC "Path to swig command line app: http://swig.org/")
-IF(NOT SWIG)
-    MESSAGE(STATUS "SWIG not found. You won't be able to build scripting language bindings.")
-ELSE(NOT SWIG)
-    MARK_AS_ADVANCED(SWIG)
-    IF(DEFINED CMAKE_BUILD_TYPE)
-        IF((NOT CMAKE_BUILD_TYPE STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
-            IF(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-                SET(SWIG_OPT_CFLAGS "-small")
-            ELSE(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-                SET(SWIG_OPT_CFLAGS "-O")
-            ENDIF(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-        ENDIF((NOT CMAKE_BUILD_TYPE STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
-    ENDIF(DEFINED CMAKE_BUILD_TYPE)
+find_program(SWIG swig DOC "Path to swig command line app: http://swig.org/")
+if(NOT SWIG)
+    message(STATUS "SWIG not found. You won't be able to build scripting language bindings.")
+else()
+    mark_as_advanced(SWIG)
+    if(DEFINED CMAKE_BUILD_TYPE)
+        if((NOT CMAKE_BUILD_TYPE STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
+            if(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+                set(SWIG_OPT_CFLAGS "-small")
+            else()
+                set(SWIG_OPT_CFLAGS "-O")
+            endif()
+        endif()
+    endif()
 
-    SET(SWIG_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/physfs-swig-bindings")
+    set(SWIG_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/physfs-swig-bindings")
 
-    MACRO(CONFIGURE_SWIG_BINDING _LANG _INSTALLPATH _EXTRAOUTPUTS _EXTRACFLAGS _EXTRALDFLAGS)
-        STRING(TOUPPER "${_LANG}" _UPPERLANG)
-        STRING(TOLOWER "${_LANG}" _LOWERLANG)
-        SET(_TARGET "physfs-${_LOWERLANG}")
-        SET(_TARGETDIR "${SWIG_OUTPUT_DIR}/${_LOWERLANG}")
+    macro(configure_swig_binding _LANG _INSTALLPATH _EXTRAOUTPUTS _EXTRACFLAGS _EXTRALDFLAGS)
+        string(TOUPPER "${_LANG}" _UPPERLANG)
+        string(TOLOWER "${_LANG}" _LOWERLANG)
+        set(_TARGET "physfs-${_LOWERLANG}")
+        set(_TARGETDIR "${SWIG_OUTPUT_DIR}/${_LOWERLANG}")
 
-        IF(NOT EXISTS "${_TARGETDIR}")
+        if(NOT EXISTS "${_TARGETDIR}")
             FILE(MAKE_DIRECTORY "${_TARGETDIR}")
-        ENDIF(NOT EXISTS "${_TARGETDIR}")
+        endif()
 
-        IF(PHYSFS_BUILD_${_UPPERLANG})
-            ADD_CUSTOM_COMMAND(
+        if(PHYSFS_BUILD_${_UPPERLANG})
+            add_custom_command(
                 OUTPUT "${_TARGETDIR}/${_TARGET}.c" ${_EXTRAOUTPUTS}
                 MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/extras/physfs-swig.i"
                 COMMAND "${SWIG}"
@@ -349,221 +348,221 @@ ELSE(NOT SWIG)
                 COMMENT "Generating ${_LANG} bindings..."
             )
 
-            ADD_LIBRARY(${_TARGET} SHARED "${_TARGETDIR}/${_TARGET}.c")
-            TARGET_LINK_LIBRARIES(${_TARGET} ${PHYSFS_LIB_TARGET})
-            SET_TARGET_PROPERTIES(${_TARGET} PROPERTIES
+            add_library(${_TARGET} SHARED "${_TARGETDIR}/${_TARGET}.c")
+            target_link_libraries(${_TARGET} ${PHYSFS_LIB_TARGET})
+            set_target_properties(${_TARGET} PROPERTIES
                 COMPILE_FLAGS "${_EXTRACFLAGS}"
                 LINK_FLAGS "${_EXTRALDFLAGS}"
                 LIBRARY_OUTPUT_NAME "physfs"
                 LIBRARY_OUTPUT_DIRECTORY "${_TARGETDIR}"
                 CLEAN_DIRECT_OUTPUT 1
             )
-            INSTALL(TARGETS ${_TARGET} LIBRARY DESTINATION "${_INSTALLPATH}")
-            MESSAGE(STATUS "${_LANG} bindings configured!")
-        ELSE(PHYSFS_BUILD_${_UPPERLANG})
-            MESSAGE(STATUS "Couldn't figure out ${_LANG} configuration. Skipping ${_LANG} bindings.")
-        ENDIF(PHYSFS_BUILD_${_UPPERLANG})
-    ENDMACRO(CONFIGURE_SWIG_BINDING)
+            install(TARGETS ${_TARGET} LIBRARY DESTINATION "${_INSTALLPATH}")
+            message(STATUS "${_LANG} bindings configured!")
+        else()
+            message(STATUS "Couldn't figure out ${_LANG} configuration. Skipping ${_LANG} bindings.")
+        endif()
+    endmacro()
 
-    MACRO(ADD_SCRIPT_BINDING_OPTION _VAR _LANG _DEFVAL)
-        SET(BUILDSWIGVAL ${_DEFVAL})
-        IF(NOT PHYSFS_BUILD_SWIG)
-            SET(BUILDSWIGVAL FALSE)
-        ENDIF(NOT PHYSFS_BUILD_SWIG)
-        OPTION(${_VAR} "Build ${_LANG} bindings." ${BUILDSWIGVAL})
-        MARK_AS_ADVANCED(${_VAR})
-    ENDMACRO(ADD_SCRIPT_BINDING_OPTION)
+    macro(add_script_binding_option _VAR _LANG _DEFVAL)
+        set(BUILDSWIGVAL ${_DEFVAL})
+        if(NOT PHYSFS_BUILD_SWIG)
+            set(BUILDSWIGVAL FALSE)
+        endif()
+        option(${_VAR} "Build ${_LANG} bindings." ${BUILDSWIGVAL})
+        mark_as_advanced(${_VAR})
+    endmacro()
 
-    ADD_SCRIPT_BINDING_OPTION(PHYSFS_BUILD_PERL "Perl" TRUE)
-    ADD_SCRIPT_BINDING_OPTION(PHYSFS_BUILD_RUBY "Ruby" TRUE)
-ENDIF(NOT SWIG)
+    add_script_binding_option(PHYSFS_BUILD_PERL "Perl" TRUE)
+    add_script_binding_option(PHYSFS_BUILD_RUBY "Ruby" TRUE)
+endif()
 
-IF(PHYSFS_BUILD_PERL)
-    MESSAGE(STATUS "Configuring Perl bindings...")
-    FIND_PROGRAM(PERL perl DOC "Path to perl command line app: http://perl.org/")
-    IF(NOT PERL)
-        MESSAGE(STATUS "Perl not found. You won't be able to build perl bindings.")
-        SET(PHYSFS_BUILD_PERL FALSE)
-    ENDIF(NOT PERL)
-    MARK_AS_ADVANCED(PERL)
+if(PHYSFS_BUILD_PERL)
+    message(STATUS "Configuring Perl bindings...")
+    find_program(PERL perl DOC "Path to perl command line app: http://perl.org/")
+    if(NOT PERL)
+        message(STATUS "Perl not found. You won't be able to build perl bindings.")
+        set(PHYSFS_BUILD_PERL FALSE)
+    endif()
+    mark_as_advanced(PERL)
 
-    MACRO(GET_PERL_CONFIG _KEY _VALUE)
-        IF(PHYSFS_BUILD_PERL)
-            MESSAGE(STATUS "Figuring out perl config value '${_KEY}' ...")
-            EXECUTE_PROCESS(
+    macro(get_perl_config _KEY _VALUE)
+        if(PHYSFS_BUILD_PERL)
+            message(STATUS "Figuring out perl config value '${_KEY}' ...")
+            execute_process(
                 COMMAND ${PERL} -w -e "use Config; print \$Config{${_KEY}};"
                 RESULT_VARIABLE GET_PERL_CONFIG_RC
                 OUTPUT_VARIABLE ${_VALUE}
             )
-            IF(NOT GET_PERL_CONFIG_RC EQUAL 0)
-                MESSAGE(STATUS "Perl executable ('${PERL}') reported failure: ${GET_PERL_CONFIG_RC}")
-                SET(PHYSFS_BUILD_PERL FALSE)
-            ENDIF(NOT GET_PERL_CONFIG_RC EQUAL 0)
-            IF(NOT ${_VALUE})
-                MESSAGE(STATUS "Perl executable ('${PERL}') didn't have a value for '${_KEY}'")
-                SET(PHYSFS_BUILD_PERL FALSE)
-            ENDIF(NOT ${_VALUE})
+            if(NOT GET_PERL_CONFIG_RC EQUAL 0)
+                message(STATUS "Perl executable ('${PERL}') reported failure: ${GET_PERL_CONFIG_RC}")
+                set(PHYSFS_BUILD_PERL FALSE)
+            endif()
+            if(NOT ${_VALUE})
+                message(STATUS "Perl executable ('${PERL}') didn't have a value for '${_KEY}'")
+                set(PHYSFS_BUILD_PERL FALSE)
+            endif()
 
-            IF(PHYSFS_BUILD_PERL)
-                MESSAGE(STATUS "Perl says: '${${_VALUE}}'.")
-            ENDIF(PHYSFS_BUILD_PERL)
-        ENDIF(PHYSFS_BUILD_PERL)
-    ENDMACRO(GET_PERL_CONFIG)
+            if(PHYSFS_BUILD_PERL)
+                message(STATUS "Perl says: '${${_VALUE}}'.")
+            endif()
+        endif()
+    endmacro()
 
     # !!! FIXME: installsitearch might be the wrong location.
-    GET_PERL_CONFIG("archlibexp" PERL_INCLUDE_PATH)
-    GET_PERL_CONFIG("ccflags" PERL_CCFLAGS)
-    GET_PERL_CONFIG("ldflags" PERL_LDFLAGS)
-    GET_PERL_CONFIG("installsitearch" PERL_INSTALL_PATH)
+    get_perl_config("archlibexp" PERL_INCLUDE_PATH)
+    get_perl_config("ccflags" PERL_CCFLAGS)
+    get_perl_config("ldflags" PERL_LDFLAGS)
+    get_perl_config("installsitearch" PERL_INSTALL_PATH)
 
     # !!! FIXME: this test for Mac OS X is wrong.
-    IF(MACOSX)
-        GET_PERL_CONFIG("libperl" PERL_LIBPERL)
-        SET(TMPLIBPERL "${PERL_LIBPERL}")
-        STRING(REGEX REPLACE "^lib" "" TMPLIBPERL "${TMPLIBPERL}")
-        STRING(REGEX REPLACE "\\.so$" "" TMPLIBPERL "${TMPLIBPERL}")
-        STRING(REGEX REPLACE "\\.dylib$" "" TMPLIBPERL "${TMPLIBPERL}")
-        STRING(REGEX REPLACE "\\.dll$" "" TMPLIBPERL "${TMPLIBPERL}")
-        IF(NOT "${TMPLIBPERL}" STREQUAL "${PERL_LIBPERL}")
-            MESSAGE(STATUS "Stripped '${PERL_LIBPERL}' down to '${TMPLIBPERL}'.")
-            SET(PERL_LIBPERL "${TMPLIBPERL}")
-        ENDIF(NOT "${TMPLIBPERL}" STREQUAL "${PERL_LIBPERL}")
-        SET(PERL_LIBPERL "-l${PERL_LIBPERL}")
-    ENDIF(MACOSX)
+    if(MACOSX)
+        get_perl_config("libperl" PERL_LIBPERL)
+        set(TMPLIBPERL "${PERL_LIBPERL}")
+        string(REGEX REPLACE "^lib" "" TMPLIBPERL "${TMPLIBPERL}")
+        string(REGEX REPLACE "\\.so$" "" TMPLIBPERL "${TMPLIBPERL}")
+        string(REGEX REPLACE "\\.dylib$" "" TMPLIBPERL "${TMPLIBPERL}")
+        string(REGEX REPLACE "\\.dll$" "" TMPLIBPERL "${TMPLIBPERL}")
+        if(NOT "${TMPLIBPERL}" STREQUAL "${PERL_LIBPERL}")
+            message(STATUS "Stripped '${PERL_LIBPERL}' down to '${TMPLIBPERL}'.")
+            set(PERL_LIBPERL "${TMPLIBPERL}")
+        endif()
+        set(PERL_LIBPERL "-l${PERL_LIBPERL}")
+    endif()
 
-    CONFIGURE_SWIG_BINDING(Perl "${PERL_INSTALL_PATH}" "${SWIG_OUTPUT_DIR}/perl/physfs.pm" "\"-I${PERL_INCLUDE_PATH}/CORE\" ${PERL_CCFLAGS} -w" "\"-L${PERL_INCLUDE_PATH}/CORE\" ${PERL_LIBPERL} ${PERL_LDFLAGS}")
-    INSTALL(FILES "${SWIG_OUTPUT_DIR}/perl/physfs.pm" DESTINATION "${PERL_INSTALL_PATH}")
-    INSTALL(
+    configure_swig_binding(Perl "${PERL_INSTALL_PATH}" "${SWIG_OUTPUT_DIR}/perl/physfs.pm" "\"-I${PERL_INCLUDE_PATH}/CORE\" ${PERL_CCFLAGS} -w" "\"-L${PERL_INCLUDE_PATH}/CORE\" ${PERL_LIBPERL} ${PERL_LDFLAGS}")
+    install(FILES "${SWIG_OUTPUT_DIR}/perl/physfs.pm" DESTINATION "${PERL_INSTALL_PATH}")
+    install(
         FILES test/test_physfs.pl
         DESTINATION bin
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                     GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
     )
-ENDIF(PHYSFS_BUILD_PERL)
+endif()
 
 # !!! FIXME: lots of cut-and-paste from perl bindings.
-IF(PHYSFS_BUILD_RUBY)
-    MESSAGE(STATUS "Configuring Ruby bindings...")
-    FIND_PROGRAM(RUBY ruby DOC "Path to ruby command line app: http://ruby-lang.org/")
-    IF(NOT RUBY)
-        MESSAGE(STATUS "Ruby not found. You won't be able to build ruby bindings.")
-        SET(PHYSFS_BUILD_RUBY FALSE)
-    ENDIF(NOT RUBY)
-    MARK_AS_ADVANCED(RUBY)
+if(PHYSFS_BUILD_RUBY)
+    message(STATUS "Configuring Ruby bindings...")
+    find_program(RUBY ruby DOC "Path to ruby command line app: http://ruby-lang.org/")
+    if(NOT RUBY)
+        message(STATUS "Ruby not found. You won't be able to build ruby bindings.")
+        set(PHYSFS_BUILD_RUBY FALSE)
+    endif()
+    mark_as_advanced(RUBY)
 
-    MACRO(GET_RUBY_CONFIG _KEY _VALUE)
-        IF(PHYSFS_BUILD_RUBY)
-            MESSAGE(STATUS "Figuring out ruby config value '${_KEY}' ...")
-            EXECUTE_PROCESS(
+    macro(get_ruby_config _KEY _VALUE)
+        if(PHYSFS_BUILD_RUBY)
+            message(STATUS "Figuring out ruby config value '${_KEY}' ...")
+            execute_process(
                 COMMAND ${RUBY} -e "require 'rbconfig'; puts RbConfig::CONFIG['${_KEY}'];"
                 RESULT_VARIABLE GET_RUBY_CONFIG_RC
                 OUTPUT_VARIABLE ${_VALUE}
                 OUTPUT_STRIP_TRAILING_WHITESPACE
             )
-            IF(NOT GET_RUBY_CONFIG_RC EQUAL 0)
-                MESSAGE(STATUS "Ruby executable ('${RUBY}') reported failure: ${GET_RUBY_CONFIG_RC}")
-                SET(PHYSFS_BUILD_RUBY FALSE)
-            ENDIF(NOT GET_RUBY_CONFIG_RC EQUAL 0)
-            IF(NOT ${_VALUE})
-                MESSAGE(STATUS "Ruby executable ('${RUBY}') didn't have a value for '${_KEY}'")
-                SET(PHYSFS_BUILD_RUBY FALSE)
-            ENDIF(NOT ${_VALUE})
+            if(NOT GET_RUBY_CONFIG_RC EQUAL 0)
+                message(STATUS "Ruby executable ('${RUBY}') reported failure: ${GET_RUBY_CONFIG_RC}")
+                set(PHYSFS_BUILD_RUBY FALSE)
+            endif()
+            if(NOT ${_VALUE})
+                message(STATUS "Ruby executable ('${RUBY}') didn't have a value for '${_KEY}'")
+                set(PHYSFS_BUILD_RUBY FALSE)
+            endif()
 
-            IF(PHYSFS_BUILD_RUBY)
-                MESSAGE(STATUS "Ruby says: '${${_VALUE}}'.")
-            ENDIF(PHYSFS_BUILD_RUBY)
-        ENDIF(PHYSFS_BUILD_RUBY)
-    ENDMACRO(GET_RUBY_CONFIG)
+            if(PHYSFS_BUILD_RUBY)
+                message(STATUS "Ruby says: '${${_VALUE}}'.")
+            endif()
+        endif()
+    endmacro()
 
-    GET_RUBY_CONFIG("archdir" RUBY_INCLUDE_PATH)
-    GET_RUBY_CONFIG("CFLAGS" RUBY_CCFLAGS)
-    GET_RUBY_CONFIG("LDFLAGS" RUBY_LDFLAGS)
-    GET_RUBY_CONFIG("sitearchdir" RUBY_INSTALL_PATH)
-    GET_RUBY_CONFIG("LIBRUBYARG_SHARED" RUBY_LIBRUBY)
-    GET_RUBY_CONFIG("libdir" RUBY_LIBDIR)
+    get_ruby_config("archdir" RUBY_INCLUDE_PATH)
+    get_ruby_config("CFLAGS" RUBY_CCFLAGS)
+    get_ruby_config("LDFLAGS" RUBY_LDFLAGS)
+    get_ruby_config("sitearchdir" RUBY_INSTALL_PATH)
+    get_ruby_config("LIBRUBYARG_SHARED" RUBY_LIBRUBY)
+    get_ruby_config("libdir" RUBY_LIBDIR)
 
-    CONFIGURE_SWIG_BINDING(Ruby "${RUBY_INSTALL_PATH}" "" "\"-I${RUBY_INCLUDE_PATH}\" ${RUBY_CCFLAGS} -w" "\"-L${RUBY_LIBDIR}\" ${RUBY_LIBRUBY} ${RUBY_LDFLAGS}")
-    SET_TARGET_PROPERTIES(physfs-ruby PROPERTIES PREFIX "")
-    INSTALL(
+    configure_swig_binding(Ruby "${RUBY_INSTALL_PATH}" "" "\"-I${RUBY_INCLUDE_PATH}\" ${RUBY_CCFLAGS} -w" "\"-L${RUBY_LIBDIR}\" ${RUBY_LIBRUBY} ${RUBY_LDFLAGS}")
+    set_target_properties(physfs-ruby PROPERTIES PREFIX "")
+    install(
         FILES test/test_physfs.rb
         DESTINATION bin
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                     GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
     )
-ENDIF(PHYSFS_BUILD_RUBY)
+endif()
 
 
-INSTALL(TARGETS ${PHYSFS_INSTALL_TARGETS}
+install(TARGETS ${PHYSFS_INSTALL_TARGETS}
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib${LIB_SUFFIX}
         ARCHIVE DESTINATION lib${LIB_SUFFIX})
-INSTALL(FILES src/physfs.h DESTINATION include)
+install(FILES src/physfs.h DESTINATION include)
 
-FIND_PACKAGE(Doxygen)
-IF(DOXYGEN_FOUND)
-    SET(PHYSFS_OUTPUT_DOXYFILE "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
-    CONFIGURE_FILE(
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+    set(PHYSFS_OUTPUT_DOXYFILE "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
+    configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile"
         "${PHYSFS_OUTPUT_DOXYFILE}"
         COPYONLY
     )
-    FILE(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "\n\n# Below auto-generated by cmake...\n\n")
-    FILE(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "PROJECT_NUMBER = \"${PHYSFS_VERSION}\"\n")
-    FILE(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "OUTPUT_DIRECTORY = \"${CMAKE_CURRENT_BINARY_DIR}/docs\"\n")
-    FILE(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "\n# End auto-generated section.\n\n")
+    file(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "\n\n# Below auto-generated by cmake...\n\n")
+    file(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "PROJECT_NUMBER = \"${PHYSFS_VERSION}\"\n")
+    file(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "OUTPUT_DIRECTORY = \"${CMAKE_CURRENT_BINARY_DIR}/docs\"\n")
+    file(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "\n# End auto-generated section.\n\n")
 
-    ADD_CUSTOM_TARGET(
+    add_custom_target(
         docs
         ${DOXYGEN_EXECUTABLE} "${PHYSFS_OUTPUT_DOXYFILE}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Building documentation in 'docs' directory..."
     )
-ELSE(DOXYGEN_FOUND)
-    MESSAGE(STATUS "Doxygen not found. You won't be able to build documentation.")
-ENDIF(DOXYGEN_FOUND)
+else()
+    message(STATUS "Doxygen not found. You won't be able to build documentation.")
+endif()
 
-IF(UNIX)
-    SET(PHYSFS_TARBALL "${CMAKE_CURRENT_SOURCE_DIR}/../physfs-${PHYSFS_VERSION}.tar.gz")
-    ADD_CUSTOM_TARGET(
+if(UNIX)
+    set(PHYSFS_TARBALL "${CMAKE_CURRENT_SOURCE_DIR}/../physfs-${PHYSFS_VERSION}.tar.gz")
+    add_custom_target(
         dist
         hg archive -t tgz "${PHYSFS_TARBALL}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Building source tarball '${PHYSFS_TARBALL}'..."
     )
-    ADD_CUSTOM_TARGET(
+    add_custom_target(
         uninstall
         "${CMAKE_CURRENT_SOURCE_DIR}/extras/uninstall.sh"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Uninstall the project..."
     )
-ENDIF(UNIX)
+endif()
 
-MACRO(MESSAGE_BOOL_OPTION _NAME _VALUE)
-    IF(${_VALUE})
-        MESSAGE(STATUS "  ${_NAME}: enabled")
-    ELSE(${_VALUE})
-        MESSAGE(STATUS "  ${_NAME}: disabled")
-    ENDIF(${_VALUE})
-ENDMACRO(MESSAGE_BOOL_OPTION)
+macro(message_bool_option _NAME _VALUE)
+    if(${_VALUE})
+        message(STATUS "  ${_NAME}: enabled")
+    else()
+        message(STATUS "  ${_NAME}: disabled")
+    endif()
+endmacro()
 
-MESSAGE(STATUS "PhysicsFS will build with the following options:")
-MESSAGE_BOOL_OPTION("ZIP support" PHYSFS_ARCHIVE_ZIP)
-MESSAGE_BOOL_OPTION("7zip support" PHYSFS_ARCHIVE_7Z)
-MESSAGE_BOOL_OPTION("GRP support" PHYSFS_ARCHIVE_GRP)
-MESSAGE_BOOL_OPTION("WAD support" PHYSFS_ARCHIVE_WAD)
-MESSAGE_BOOL_OPTION("HOG support" PHYSFS_ARCHIVE_HOG)
-MESSAGE_BOOL_OPTION("MVL support" PHYSFS_ARCHIVE_MVL)
-MESSAGE_BOOL_OPTION("QPAK support" PHYSFS_ARCHIVE_QPAK)
-MESSAGE_BOOL_OPTION("CD-ROM drive support" PHYSFS_HAVE_CDROM_SUPPORT)
-MESSAGE_BOOL_OPTION("Thread safety" PHYSFS_HAVE_THREAD_SUPPORT)
-MESSAGE_BOOL_OPTION("Build static library" PHYSFS_BUILD_STATIC)
-MESSAGE_BOOL_OPTION("Build shared library" PHYSFS_BUILD_SHARED)
-MESSAGE_BOOL_OPTION("Build Perl bindings" PHYSFS_BUILD_PERL)
-MESSAGE_BOOL_OPTION("Build Ruby bindings" PHYSFS_BUILD_RUBY)
-MESSAGE_BOOL_OPTION("Build stdio test program" PHYSFS_BUILD_TEST)
-IF(PHYSFS_BUILD_TEST)
-    MESSAGE_BOOL_OPTION("  Use readline in test program" HAVE_SYSTEM_READLINE)
-ENDIF(PHYSFS_BUILD_TEST)
+message(STATUS "PhysicsFS will build with the following options:")
+message_bool_option("ZIP support" PHYSFS_ARCHIVE_ZIP)
+message_bool_option("7zip support" PHYSFS_ARCHIVE_7Z)
+message_bool_option("GRP support" PHYSFS_ARCHIVE_GRP)
+message_bool_option("WAD support" PHYSFS_ARCHIVE_WAD)
+message_bool_option("HOG support" PHYSFS_ARCHIVE_HOG)
+message_bool_option("MVL support" PHYSFS_ARCHIVE_MVL)
+message_bool_option("QPAK support" PHYSFS_ARCHIVE_QPAK)
+message_bool_option("CD-ROM drive support" PHYSFS_HAVE_CDROM_SUPPORT)
+message_bool_option("Thread safety" PHYSFS_HAVE_THREAD_SUPPORT)
+message_bool_option("Build static library" PHYSFS_BUILD_STATIC)
+message_bool_option("Build shared library" PHYSFS_BUILD_SHARED)
+message_bool_option("Build Perl bindings" PHYSFS_BUILD_PERL)
+message_bool_option("Build Ruby bindings" PHYSFS_BUILD_RUBY)
+message_bool_option("Build stdio test program" PHYSFS_BUILD_TEST)
+if(PHYSFS_BUILD_TEST)
+    message_bool_option("  Use readline in test program" HAVE_SYSTEM_READLINE)
+endif()
 
 # end of CMakeLists.txt ...
 
