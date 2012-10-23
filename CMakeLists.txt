@@ -522,10 +522,10 @@ else()
 endif()
 
 if(UNIX)
-    set(PHYSFS_TARBALL "${CMAKE_CURRENT_SOURCE_DIR}/../physfs-${PHYSFS_VERSION}.tar.gz")
+    set(PHYSFS_TARBALL "${CMAKE_CURRENT_SOURCE_DIR}/../physfs-${PHYSFS_VERSION}.tar.bz2")
     add_custom_target(
         dist
-        hg archive -t tgz "${PHYSFS_TARBALL}"
+        hg archive -t tbz2 "${PHYSFS_TARBALL}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Building source tarball '${PHYSFS_TARBALL}'..."
     )
