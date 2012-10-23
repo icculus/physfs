@@ -72,6 +72,7 @@ Other stuff I thought of...
 - rewrite 7zip archiver.
 - ryanify iso9660 code.
 - Reduce the BAIL and GOTO macro use. A lot of these don't add anything.
+- Modernize CMakeLists.txt
 
 Probably other stuff. Requests and recommendations are welcome.
 
