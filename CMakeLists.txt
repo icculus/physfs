@@ -368,10 +368,10 @@ ELSE(DOXYGEN_FOUND)
 ENDIF(DOXYGEN_FOUND)
 
 IF(UNIX)
-    SET(PHYSFS_TARBALL "${CMAKE_CURRENT_SOURCE_DIR}/../physfs-${PHYSFS_VERSION}.tar.gz")
+    SET(PHYSFS_TARBALL "${CMAKE_CURRENT_SOURCE_DIR}/../physfs-${PHYSFS_VERSION}.tar.bz2")
     ADD_CUSTOM_TARGET(
         dist
-        hg archive -t tgz "${PHYSFS_TARBALL}"
+        hg archive -t tbz2 "${PHYSFS_TARBALL}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Building source tarball '${PHYSFS_TARBALL}'..."
     )
