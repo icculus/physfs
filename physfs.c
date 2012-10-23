@@ -94,7 +94,7 @@ static const PHYSFS_ArchiveInfo *supported_types[] =
     NULL
 };
 
-static const PHYSFS_Archiver *archivers[] =
+static const PHYSFS_Archiver * const archivers[] =
 {
     &__PHYSFS_Archiver_DIR,
 #if (defined PHYSFS_SUPPORTS_ZIP)
@@ -417,7 +417,7 @@ static DirHandle *tryOpenDir(const PHYSFS_Archiver *funcs,
 static DirHandle *openDirectory(const char *d, int forWriting)
 {
     DirHandle *retval = NULL;
-    const PHYSFS_Archiver **i;
+    const PHYSFS_Archiver * const *i;
     const char *ext;
 
     BAIL_IF_MACRO(!__PHYSFS_platformExists(d), ERR_NO_SUCH_FILE, NULL);
