@@ -35,6 +35,11 @@
 #  define PHYSFS_PLATFORM_POSIX 1
 #elif defined(macintosh)
 #  error Classic Mac OS support was dropped from PhysicsFS 2.0. Move to OS X.
+#elif defined(ANDROID)
+#  define PHYSFS_PLATFORM_LINUX 1
+#  define PHYSFS_PLATFORM_UNIX 1
+#  define PHYSFS_PLATFORM_POSIX 1
+#  define PHYSFS_NO_CDROM_SUPPORT 1
 #elif defined(__linux)
 #  define PHYSFS_PLATFORM_LINUX 1
 #  define PHYSFS_PLATFORM_UNIX 1
