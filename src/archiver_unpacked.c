@@ -7,7 +7,7 @@
  *
  * RULES: Archive entries must be uncompressed, must not have separate subdir
  *  entries (but can have subdirs), must be case insensitive LOW ASCII
- *  filenames <= 56 bytes. No symlinks, etc. We can relax some of these rules
+ *  filenames <= 64 bytes. No symlinks, etc. We can relax some of these rules
  *  as necessary.
  *
  * Please see the file LICENSE.txt in the source's root directory.
