@@ -54,6 +54,7 @@ extern const PHYSFS_Archiver __PHYSFS_Archiver_QPAK;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_HOG;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_MVL;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_WAD;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_SLB;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_DIR;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660;
 
@@ -79,6 +80,9 @@ static const PHYSFS_Archiver *staticArchivers[] =
 #endif
 #if PHYSFS_SUPPORTS_WAD
     &__PHYSFS_Archiver_WAD,
+#endif
+#if PHYSFS_SUPPORTS_SLB
+    &__PHYSFS_Archiver_SLB,
 #endif
 #if PHYSFS_SUPPORTS_ISO9660
     &__PHYSFS_Archiver_ISO9660,

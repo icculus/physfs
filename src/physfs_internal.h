@@ -114,6 +114,9 @@ void __PHYSFS_smallFree(void *ptr);
 #ifndef PHYSFS_SUPPORTS_WAD
 #define PHYSFS_SUPPORTS_WAD 0
 #endif
+#ifndef PHYSFS_SUPPORTS_SLB
+#define PHYSFS_SUPPORTS_SLB 0
+#endif
 #ifndef PHYSFS_SUPPORTS_ISO9660
 #define PHYSFS_SUPPORTS_ISO9660 0
 #endif
@@ -417,7 +420,7 @@ int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len);
 
 typedef struct
 {
-    char name[56];
+    char name[64];
     PHYSFS_uint32 startPos;
     PHYSFS_uint32 size;
 } UNPKentry;

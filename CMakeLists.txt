@@ -133,6 +133,7 @@ set(PHYSFS_SRCS
     src/archiver_qpak.c
     src/archiver_wad.c
     src/archiver_zip.c
+    src/archiver_slb.c
     src/archiver_iso9660.c
     ${PHYSFS_BEOS_SRCS}
 )
@@ -246,6 +247,11 @@ endif()
 option(PHYSFS_ARCHIVE_QPAK "Enable Quake I/II QPAK support" TRUE)
 if(PHYSFS_ARCHIVE_QPAK)
     add_definitions(-DPHYSFS_SUPPORTS_QPAK=1)
+endif()
+
+option(PHYSFS_ARCHIVE_SLB "Enable I-War / Independence War SLB support" TRUE)
+if(PHYSFS_ARCHIVE_SLB)
+    add_definitions(-DPHYSFS_SUPPORTS_SLB=1)
 endif()
 
 option(PHYSFS_ARCHIVE_ISO9660 "Enable ISO9660 support" TRUE)
@@ -364,6 +370,7 @@ message_bool_option("WAD support" PHYSFS_ARCHIVE_WAD)
 message_bool_option("HOG support" PHYSFS_ARCHIVE_HOG)
 message_bool_option("MVL support" PHYSFS_ARCHIVE_MVL)
 message_bool_option("QPAK support" PHYSFS_ARCHIVE_QPAK)
+message_bool_option("SLB support" PHYSFS_ARCHIVE_SLB)
 message_bool_option("CD-ROM drive support" PHYSFS_HAVE_CDROM_SUPPORT)
 message_bool_option("Thread safety" PHYSFS_HAVE_THREAD_SUPPORT)
 message_bool_option("Build static library" PHYSFS_BUILD_STATIC)

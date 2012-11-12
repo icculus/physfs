@@ -130,6 +130,9 @@ Bug fixes:
 Haiku fixes:
     Chris Roberts
 
+SLB archiver:
+    Aleksi Nurmi
+
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 
