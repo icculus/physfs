@@ -177,6 +177,11 @@ if(UNIX)
         if(HAVE_PTHREAD_H)
             set(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
         endif()
+
+        find_library(PTHREAD_LIBRARY pthread)
+        if(PTHREAD_LIBRARY)
+            set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${PTHREAD_LIBRARY})
+        endif()
     endif()
 endif()
 
