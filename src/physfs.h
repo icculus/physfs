@@ -20,10 +20,6 @@
  *   - It's flexible. Archives (.ZIP files) can be used transparently as
  *      directory structures.
  *
- * This system is largely inspired by Quake 3's PK3 files and the related
- *  fs_* cvars. If you've ever tinkered with these, then this API will be
- *  familiar to you.
- *
  * With PhysicsFS, you have a single writing directory and multiple
  *  directories (the "search path") for reading. You can think of this as a
  *  filesystem within a filesystem. If (on Windows) you were to set the
