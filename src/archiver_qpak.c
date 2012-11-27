@@ -109,11 +109,11 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
     UNPK_openAppend,        /* openAppend() method     */
     UNPK_remove,            /* remove() method         */
     UNPK_mkdir,             /* mkdir() method          */
-    UNPK_closeArchive,       /* closeArchive() method   */
+    UNPK_closeArchive,      /* closeArchive() method   */
     UNPK_stat               /* stat() method           */
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_QPAK */
 
-/* end of qpak.c ... */
+/* end of archiver_qpak.c ... */
 

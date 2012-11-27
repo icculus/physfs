@@ -119,3 +119,6 @@ const PHYSFS_Archiver __PHYSFS_Archiver_SLB =
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_SLB */
+
+/* end of archiver_slb.c ... */
+
