@@ -197,5 +197,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     DIR_stat                /* stat() method           */
 };
 
-/* end of dir.c ... */
+/* end of archiver_dir.c ... */
 
