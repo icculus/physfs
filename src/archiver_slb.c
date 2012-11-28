@@ -101,6 +101,7 @@ static void *SLB_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
 const PHYSFS_Archiver __PHYSFS_Archiver_SLB =
 {
+    CURRENT_PHYSFS_ARCHIVER_API_VERSION,
     {
         "SLB",
         "I-War / Independence War Slab file",

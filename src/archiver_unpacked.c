@@ -34,7 +34,7 @@ typedef struct
 } UNPKfileinfo;
 
 
-void UNPK_closeArchive(PHYSFS_Dir *opaque)
+void UNPK_closeArchive(void *opaque)
 {
     UNPKinfo *info = ((UNPKinfo *) opaque);
     info->io->destroy(info->io);
@@ -242,7 +242,7 @@ static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
 } /* doEnumCallback */
 
 
-void UNPK_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
+void UNPK_enumerateFiles(void *opaque, const char *dname,
                          int omitSymLinks, PHYSFS_EnumFilesCallback cb,
                          const char *origdir, void *callbackdata)
 {
@@ -340,11 +340,11 @@ static UNPKentry *findEntry(const UNPKinfo *info, const char *path, int *isDir)
     if (isDir != NULL)
         *isDir = 0;
 
-    BAIL_MACRO(PHYSFS_ERR_NO_SUCH_PATH, NULL);
+    BAIL_MACRO(PHYSFS_ERR_NOT_FOUND, NULL);
 } /* findEntry */
 
 
-PHYSFS_Io *UNPK_openRead(PHYSFS_Dir *opaque, const char *fnm, int *fileExists)
+PHYSFS_Io *UNPK_openRead(void *opaque, const char *fnm, int *fileExists)
 {
     PHYSFS_Io *retval = NULL;
     UNPKinfo *info = (UNPKinfo *) opaque;
@@ -390,31 +390,31 @@ UNPK_openRead_failed:
 } /* UNPK_openRead */
 
 
-PHYSFS_Io *UNPK_openWrite(PHYSFS_Dir *opaque, const char *name)
+PHYSFS_Io *UNPK_openWrite(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* UNPK_openWrite */
 
 
-PHYSFS_Io *UNPK_openAppend(PHYSFS_Dir *opaque, const char *name)
+PHYSFS_Io *UNPK_openAppend(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* UNPK_openAppend */
 
 
-int UNPK_remove(PHYSFS_Dir *opaque, const char *name)
+int UNPK_remove(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* UNPK_remove */
 
 
-int UNPK_mkdir(PHYSFS_Dir *opaque, const char *name)
+int UNPK_mkdir(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* UNPK_mkdir */
 
 
-int UNPK_stat(PHYSFS_Dir *opaque, const char *filename,
+int UNPK_stat(void *opaque, const char *filename,
               int *exists, PHYSFS_Stat *stat)
 {
     int isDir = 0;
@@ -448,8 +448,7 @@ int UNPK_stat(PHYSFS_Dir *opaque, const char *filename,
 } /* UNPK_stat */
 
 
-PHYSFS_Dir *UNPK_openArchive(PHYSFS_Io *io, UNPKentry *e,
-                             const PHYSFS_uint32 num)
+void *UNPK_openArchive(PHYSFS_Io *io, UNPKentry *e, const PHYSFS_uint32 num)
 {
     UNPKinfo *info = (UNPKinfo *) allocator.Malloc(sizeof (UNPKinfo));
     if (info == NULL)
