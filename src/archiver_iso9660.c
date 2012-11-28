@@ -291,8 +291,8 @@ static int iso_extractfilenameISO(ISO9660FileDescriptor *descriptor,
         for(;pos < descriptor->filenamelen; pos++)
             if (descriptor->filename[pos] == ';')
                 lastfound = pos;
-        BAIL_IF_MACRO(lastfound < 1, PHYSFS_ERR_NO_SUCH_PATH /* !!! FIXME: PHYSFS_ERR_BAD_FILENAME */, -1);
-        BAIL_IF_MACRO(lastfound == (descriptor->filenamelen -1), PHYSFS_ERR_NO_SUCH_PATH /* !!! PHYSFS_ERR_BAD_FILENAME */, -1);
+        BAIL_IF_MACRO(lastfound < 1, PHYSFS_ERR_NOT_FOUND /* !!! FIXME: PHYSFS_ERR_BAD_FILENAME */, -1);
+        BAIL_IF_MACRO(lastfound == (descriptor->filenamelen -1), PHYSFS_ERR_NOT_FOUND /* !!! PHYSFS_ERR_BAD_FILENAME */, -1);
         strncpy(filename, descriptor->filename, lastfound);
         if (filename[lastfound - 1] == '.')
             filename[lastfound - 1] = '\0'; /* consume trailing ., as done in all implementations */
@@ -638,7 +638,7 @@ errorcleanup:
 } /* ISO9660_openArchive */
 
 
-static void ISO9660_closeArchive(PHYSFS_Dir *opaque)
+static void ISO9660_closeArchive(void *opaque)
 {
     ISO9660Handle *handle = (ISO9660Handle*) opaque;
     handle->io->destroy(handle->io);
@@ -766,7 +766,7 @@ closefile:
 } /* iso_file_open_foreign */
 
 
-static PHYSFS_Io *ISO9660_openRead(PHYSFS_Dir *opaque, const char *filename,
+static PHYSFS_Io *ISO9660_openRead(void *opaque, const char *filename,
                                    int *exists)
 {
     PHYSFS_Io *retval = NULL;
@@ -785,7 +785,7 @@ static PHYSFS_Io *ISO9660_openRead(PHYSFS_Dir *opaque, const char *filename,
     /* find file descriptor */
     rc = iso_find_dir_entry(handle, filename, &descriptor, exists);
     GOTO_IF_MACRO(rc, ERRPASS, errorhandling);
-    GOTO_IF_MACRO(!*exists, PHYSFS_ERR_NO_SUCH_PATH, errorhandling);
+    GOTO_IF_MACRO(!*exists, PHYSFS_ERR_NOT_FOUND, errorhandling);
 
     fhandle->startblock = descriptor.extentpos + descriptor.extattributelen;
     fhandle->filesize = descriptor.datalen;
@@ -816,7 +816,7 @@ errorhandling:
  * Information gathering functions
  ******************************************************************************/
 
-static void ISO9660_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
+static void ISO9660_enumerateFiles(void *opaque, const char *dname,
                                    int omitSymLinks,
                                    PHYSFS_EnumFilesCallback cb,
                                    const char *origdir, void *callbackdata)
@@ -873,7 +873,7 @@ static void ISO9660_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
 } /* ISO9660_enumerateFiles */
 
 
-static int ISO9660_stat(PHYSFS_Dir *opaque, const char *name, int *exists,
+static int ISO9660_stat(void *opaque, const char *name, int *exists,
                         PHYSFS_Stat *stat)
 {
     ISO9660Handle *handle = (ISO9660Handle*) opaque;
@@ -920,25 +920,25 @@ static int ISO9660_stat(PHYSFS_Dir *opaque, const char *name, int *exists,
  * Not supported functions
  ******************************************************************************/
 
-static PHYSFS_Io *ISO9660_openWrite(PHYSFS_Dir *opaque, const char *name)
+static PHYSFS_Io *ISO9660_openWrite(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ISO9660_openWrite */
 
 
-static PHYSFS_Io *ISO9660_openAppend(PHYSFS_Dir *opaque, const char *name)
+static PHYSFS_Io *ISO9660_openAppend(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ISO9660_openAppend */
 
 
-static int ISO9660_remove(PHYSFS_Dir *opaque, const char *name)
+static int ISO9660_remove(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ISO9660_remove */
 
 
-static int ISO9660_mkdir(PHYSFS_Dir *opaque, const char *name)
+static int ISO9660_mkdir(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ISO9660_mkdir */
@@ -946,6 +946,7 @@ static int ISO9660_mkdir(PHYSFS_Dir *opaque, const char *name)
 
 const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
 {
+    CURRENT_PHYSFS_ARCHIVER_API_VERSION,
     {
         "ISO",
         "ISO9660 image file",

@@ -600,7 +600,7 @@ static ZIPentry *zip_find_entry(const ZIPinfo *info, const char *path,
     if (isDir != NULL)
         *isDir = 0;
 
-    BAIL_MACRO(PHYSFS_ERR_NO_SUCH_PATH, NULL);
+    BAIL_MACRO(PHYSFS_ERR_NOT_FOUND, NULL);
 } /* zip_find_entry */
 
 
@@ -1487,7 +1487,7 @@ static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
 } /* doEnumCallback */
 
 
-static void ZIP_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
+static void ZIP_enumerateFiles(void *opaque, const char *dname,
                                int omitSymLinks, PHYSFS_EnumFilesCallback cb,
                                const char *origdir, void *callbackdata)
 {
@@ -1560,7 +1560,7 @@ static PHYSFS_Io *zip_get_io(PHYSFS_Io *io, ZIPinfo *inf, ZIPentry *entry)
 } /* zip_get_io */
 
 
-static PHYSFS_Io *ZIP_openRead(PHYSFS_Dir *opaque, const char *fnm,
+static PHYSFS_Io *ZIP_openRead(void *opaque, const char *fnm,
                                int *fileExists)
 {
     PHYSFS_Io *retval = NULL;
@@ -1619,19 +1619,19 @@ ZIP_openRead_failed:
 } /* ZIP_openRead */
 
 
-static PHYSFS_Io *ZIP_openWrite(PHYSFS_Dir *opaque, const char *filename)
+static PHYSFS_Io *ZIP_openWrite(void *opaque, const char *filename)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ZIP_openWrite */
 
 
-static PHYSFS_Io *ZIP_openAppend(PHYSFS_Dir *opaque, const char *filename)
+static PHYSFS_Io *ZIP_openAppend(void *opaque, const char *filename)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
 } /* ZIP_openAppend */
 
 
-static void ZIP_closeArchive(PHYSFS_Dir *opaque)
+static void ZIP_closeArchive(void *opaque)
 {
     ZIPinfo *zi = (ZIPinfo *) (opaque);
     zi->io->destroy(zi->io);
@@ -1640,19 +1640,19 @@ static void ZIP_closeArchive(PHYSFS_Dir *opaque)
 } /* ZIP_closeArchive */
 
 
-static int ZIP_remove(PHYSFS_Dir *opaque, const char *name)
+static int ZIP_remove(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ZIP_remove */
 
 
-static int ZIP_mkdir(PHYSFS_Dir *opaque, const char *name)
+static int ZIP_mkdir(void *opaque, const char *name)
 {
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* ZIP_mkdir */
 
 
-static int ZIP_stat(PHYSFS_Dir *opaque, const char *filename, int *exists,
+static int ZIP_stat(void *opaque, const char *filename, int *exists,
                     PHYSFS_Stat *stat)
 {
     int isDir = 0;
@@ -1694,6 +1694,7 @@ static int ZIP_stat(PHYSFS_Dir *opaque, const char *filename, int *exists,
 
 const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
 {
+    CURRENT_PHYSFS_ARCHIVER_API_VERSION,
     {
         "ZIP",
         "PkZip/WinZip/Info-Zip compatible",

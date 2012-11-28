@@ -66,7 +66,7 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 } /* DIR_openArchive */
 
 
-static void DIR_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
+static void DIR_enumerateFiles(void *opaque, const char *dname,
                                int omitSymLinks, PHYSFS_EnumFilesCallback cb,
                                const char *origdir, void *callbackdata)
 {
@@ -82,7 +82,7 @@ static void DIR_enumerateFiles(PHYSFS_Dir *opaque, const char *dname,
 } /* DIR_enumerateFiles */
 
 
-static PHYSFS_Io *doOpen(PHYSFS_Dir *opaque, const char *name,
+static PHYSFS_Io *doOpen(void *opaque, const char *name,
                          const int mode, int *fileExists)
 {
     char *f;
@@ -114,25 +114,25 @@ static PHYSFS_Io *doOpen(PHYSFS_Dir *opaque, const char *name,
 } /* doOpen */
 
 
-static PHYSFS_Io *DIR_openRead(PHYSFS_Dir *opaque, const char *fnm, int *exist)
+static PHYSFS_Io *DIR_openRead(void *opaque, const char *fnm, int *exist)
 {
     return doOpen(opaque, fnm, 'r', exist);
 } /* DIR_openRead */
 
 
-static PHYSFS_Io *DIR_openWrite(PHYSFS_Dir *opaque, const char *filename)
+static PHYSFS_Io *DIR_openWrite(void *opaque, const char *filename)
 {
     return doOpen(opaque, filename, 'w', NULL);
 } /* DIR_openWrite */
 
 
-static PHYSFS_Io *DIR_openAppend(PHYSFS_Dir *opaque, const char *filename)
+static PHYSFS_Io *DIR_openAppend(void *opaque, const char *filename)
 {
     return doOpen(opaque, filename, 'a', NULL);
 } /* DIR_openAppend */
 
 
-static int DIR_remove(PHYSFS_Dir *opaque, const char *name)
+static int DIR_remove(void *opaque, const char *name)
 {
     int retval;
     char *f;
@@ -145,7 +145,7 @@ static int DIR_remove(PHYSFS_Dir *opaque, const char *name)
 } /* DIR_remove */
 
 
-static int DIR_mkdir(PHYSFS_Dir *opaque, const char *name)
+static int DIR_mkdir(void *opaque, const char *name)
 {
     int retval;
     char *f;
@@ -158,13 +158,13 @@ static int DIR_mkdir(PHYSFS_Dir *opaque, const char *name)
 } /* DIR_mkdir */
 
 
-static void DIR_closeArchive(PHYSFS_Dir *opaque)
+static void DIR_closeArchive(void *opaque)
 {
     allocator.Free(opaque);
 } /* DIR_closeArchive */
 
 
-static int DIR_stat(PHYSFS_Dir *opaque, const char *name,
+static int DIR_stat(void *opaque, const char *name,
                     int *exists, PHYSFS_Stat *stat)
 {
     int retval = 0;
@@ -180,6 +180,7 @@ static int DIR_stat(PHYSFS_Dir *opaque, const char *name,
 
 const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
 {
+    CURRENT_PHYSFS_ARCHIVER_API_VERSION,
     {
         "",
         "Non-archive, direct filesystem I/O",

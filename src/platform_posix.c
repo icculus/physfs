@@ -41,9 +41,9 @@ static PHYSFS_ErrorCode errcodeFromErrnoError(const int err)
         case ELOOP: return PHYSFS_ERR_SYMLINK_LOOP;
         case EMLINK: return PHYSFS_ERR_NO_SPACE;
         case ENAMETOOLONG: return PHYSFS_ERR_BAD_FILENAME;
-        case ENOENT: return PHYSFS_ERR_NO_SUCH_PATH;
+        case ENOENT: return PHYSFS_ERR_NOT_FOUND;
         case ENOSPC: return PHYSFS_ERR_NO_SPACE;
-        case ENOTDIR: return PHYSFS_ERR_NO_SUCH_PATH;
+        case ENOTDIR: return PHYSFS_ERR_NOT_FOUND;
         case EISDIR: return PHYSFS_ERR_NOT_A_FILE;
         case EROFS: return PHYSFS_ERR_READ_ONLY;
         case ETXTBSY: return PHYSFS_ERR_BUSY;

@@ -104,6 +104,7 @@ static void *WAD_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
 const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
 {
+    CURRENT_PHYSFS_ARCHIVER_API_VERSION,
     {
         "WAD",
         "DOOM engine format",

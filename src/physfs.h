@@ -399,6 +399,8 @@ typedef struct PHYSFS_File
  *          supported.
  *
  * \sa PHYSFS_supportedArchiveTypes
+ * \sa PHYSFS_registerArchiver
+ * \sa PHYSFS_deregisterArchiver
  */
 typedef struct PHYSFS_ArchiveInfo
 {
@@ -573,9 +575,13 @@ PHYSFS_DECL int PHYSFS_deinit(void);
  *
  * The return values are pointers to internal memory, and should
  *  be considered READ ONLY, and never freed. The returned values are
- *  valid until the next call to PHYSFS_deinit().
+ *  valid until the next call to PHYSFS_deinit(), PHYSFS_registerArchiver(),
+ *  or PHYSFS_deregisterArchiver().
  *
  *   \return READ ONLY Null-terminated array of READ ONLY structures.
+ *
+ * \sa PHYSFS_registerArchiver
+ * \sa PHYSFS_deregisterArchiver
  */
 PHYSFS_DECL const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void);
 
@@ -3129,7 +3135,7 @@ typedef enum PHYSFS_ErrorCode
     PHYSFS_ERR_FILES_STILL_OPEN, /**< Files still open.                     */
     PHYSFS_ERR_INVALID_ARGUMENT, /**< Bad parameter passed to an function.  */
     PHYSFS_ERR_NOT_MOUNTED,      /**< Requested archive/dir not mounted.    */
-    PHYSFS_ERR_NO_SUCH_PATH,     /**< No such file, directory, or parent.   */
+    PHYSFS_ERR_NOT_FOUND,        /**< File (or whatever) not found.         */
     PHYSFS_ERR_SYMLINK_FORBIDDEN,/**< Symlink seen when not permitted.      */
     PHYSFS_ERR_NO_WRITE_DIR,     /**< No write dir has been specified.      */
     PHYSFS_ERR_OPEN_FOR_READING, /**< Wrote to a file opened for reading.   */
@@ -3144,7 +3150,8 @@ typedef enum PHYSFS_ErrorCode
     PHYSFS_ERR_BAD_FILENAME,     /**< Filename is bogus/insecure.           */
     PHYSFS_ERR_BUSY,             /**< Tried to modify a file the OS needs.  */
     PHYSFS_ERR_DIR_NOT_EMPTY,    /**< Tried to delete dir with files in it. */
-    PHYSFS_ERR_OS_ERROR          /**< Unspecified OS-level error.           */
+    PHYSFS_ERR_OS_ERROR,         /**< Unspecified OS-level error.           */
+    PHYSFS_ERR_DUPLICATE         /**< Duplicate entry.                      */
 } PHYSFS_ErrorCode;
 
 
@@ -3307,8 +3314,232 @@ PHYSFS_DECL void PHYSFS_setErrorCode(PHYSFS_ErrorCode code);
 PHYSFS_DECL const char *PHYSFS_getPrefDir(const char *org, const char *app);
 
 
-/* Everything above this line is part of the PhysicsFS 2.1 API. */
+/**
+ * \struct PHYSFS_Archiver
+ * \brief Abstract interface to provide support for user-defined archives.
+ *
+ * \warning This is advanced, hardcore stuff. You don't need this unless you
+ *          really know what you're doing. Most apps will not need this.
+ *
+ * Historically, PhysicsFS provided a means to mount various archive file
+ *  formats, and physical directories in the native filesystem. However,
+ *  applications have been limited to the file formats provided by the
+ *  library. This interface allows an application to provide their own
+ *  archive file types.
+ *
+ * Conceptually, a PHYSFS_Archiver provides directory entries, while
+ *  PHYSFS_Io provides data streams for those directory entries. The most
+ *  obvious use of PHYSFS_Archiver is to provide support for an archive
+ *  file type that isn't provided by PhysicsFS directly: perhaps some
+ *  proprietary format that only your application needs to understand.
+ *
+ * Internally, all the built-in archive support uses this interface, so the
+ *  best examples for building a PHYSFS_Archiver is the source code to
+ *  PhysicsFS itself.
+ *
+ * An archiver is added to the system with PHYSFS_registerArchiver(), and then
+ *  it will be available for use automatically with PHYSFS_mount(); if a
+ *  given archive can be handled with your archiver, it will be given control
+ *  as appropriate.
+ *
+ * These methods deal with dir handles. You have one instance of your
+ *  archiver, and it generates a unique, opaque handle for each opened
+ *  archive in its openArchive() method. Since the lifetime of an Archiver
+ *  (not an archive) is generally the entire lifetime of the process, and it's
+ *  assumed to be a singleton, we do not provide any instance data for the
+ *  archiver itself; the app can just use some static variables if necessary.
+ *
+ * Symlinks should always be followed (except in stat()); PhysicsFS will
+ *  use the stat() method to check for symlinks and make a judgement on
+ *  whether to continue to call other methods based on that.
+ *
+ * Archivers, when necessary, should set the PhysicsFS error state with
+ *  PHYSFS_setErrorCode() before returning. PhysicsFS will pass these errors
+ *  back to the application unmolested in most cases.
+ *
+ * Thread safety: TO BE DECIDED.  !!! FIXME
+ *
+ * \sa PHYSFS_registerArchiver
+ * \sa PHYSFS_deregisterArchiver
+ * \sa PHYSFS_supportedArchiveTypes
+ */
+typedef struct PHYSFS_Archiver
+{
 
+// !!! FIXME: split read/write interfaces?
+
+    /**
+     * \brief Binary compatibility information.
+     *
+     * This must be set to zero at this time. Future versions of this
+     *  struct will increment this field, so we know what a given
+     *  implementation supports. We'll presumably keep supporting older
+     *  versions as we offer new features, though.
+     */
+    PHYSFS_uint32 version;
+
+    /**
+     * \brief Basic info about this archiver.
+     *
+     * This is used to identify your archive, and is returned in
+     *  PHYSFS_supportedArchiveTypes().
+     */
+    const PHYSFS_ArchiveInfo info;
+
+    /**
+     * \brief
+     *
+     * Open an archive provided by (io).
+     *  (name) is a filename associated with (io), but doesn't necessarily
+     *  map to anything, let alone a real filename. This possibly-
+     *  meaningless name is in platform-dependent notation.
+     * (forWrite) is non-zero if this is to be used for
+     *  the write directory, and zero if this is to be used for an
+     *  element of the search path.
+     * Return NULL on failure. We ignore any error code you set here;
+     *  when PHYSFS_mount() returns, the error will be PHYSFS_ERR_UNSUPPORTED
+     *  (no Archivers could handle this data).  // !!! FIXME: yeah?
+     *  Returns non-NULL on success. The pointer returned will be
+     *  passed as the "opaque" parameter for later calls.
+     */
+    void *(*openArchive)(PHYSFS_Io *io, const char *name, int forWrite);
+
+    /**
+     * List all files in (dirname). Each file is passed to (cb),
+     *  where a copy is made if appropriate, so you should dispose of
+     *  it properly upon return from the callback.
+     * You should omit symlinks if (omitSymLinks) is non-zero.
+     * If you have a failure, report as much as you can.
+     *  (dirname) is in platform-independent notation.
+     */
+
+// !!! FIXME: get rid of this omitsymlinks nonsense.
+    void (*enumerateFiles)(void *opaque, const char *dirname,
+                           int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                           const char *origdir, void *callbackdata);
+
+    /**
+     * Open file for reading.
+     *  This filename, (fnm), is in platform-independent notation.
+     * If you can't handle multiple opens of the same file,
+     *  you can opt to fail for the second call.
+     * Fail if the file does not exist.
+     * Returns NULL on failure, and calls PHYSFS_setErrorCode().
+     *  Returns non-NULL on success. The pointer returned will be
+     *  passed as the "opaque" parameter for later file calls.
+     *
+     * Regardless of success or failure, please set *exists to
+     *  non-zero if the file existed (even if it's a broken symlink!),
+     *  zero if it did not.
+     */
+// !!! FIXME: get rid of the exists nonsense, check error code instead.
+    PHYSFS_Io *(*openRead)(void *opaque, const char *fnm, int *exists);
+
+    /**
+     * Open file for writing.
+     * If the file does not exist, it should be created. If it exists,
+     *  it should be truncated to zero bytes. The writing
+     *  offset should be the start of the file.
+     * This filename is in platform-independent notation.
+     * If you can't handle multiple opens of the same file,
+     *  you can opt to fail for the second call.
+     * Returns NULL on failure, and calls PHYSFS_setErrorCode().
+     *  Returns non-NULL on success. The pointer returned will be
+     *  passed as the "opaque" parameter for later file calls.
+     */
+    PHYSFS_Io *(*openWrite)(void *opaque, const char *filename);
+
+    /**
+     * Open file for appending.
+     * If the file does not exist, it should be created. The writing
+     *  offset should be the end of the file.
+     * This filename is in platform-independent notation.
+     * If you can't handle multiple opens of the same file,
+     *  you can opt to fail for the second call.
+     * Returns NULL on failure, and calls PHYSFS_setErrorCode().
+     *  Returns non-NULL on success. The pointer returned will be
+     *  passed as the "opaque" parameter for later file calls.
+     */
+    PHYSFS_Io *(*openAppend)(void *opaque, const char *filename);
+
+    /**
+     * Delete a file in the archive/directory.
+     *  Return non-zero on success, zero on failure.
+     *  This filename is in platform-independent notation.
+     *  This method may be NULL.
+     * On failure, call PHYSFS_setErrorCode().
+     */
+    int (*remove)(void *opaque, const char *filename);
+
+    /**
+     * Create a directory in the archive/directory.
+     *  If the application is trying to make multiple dirs, PhysicsFS
+     *  will split them up into multiple calls before passing them to
+     *  your driver.
+     *  Return non-zero on success, zero on failure.
+     *  This filename is in platform-independent notation.
+     *  This method may be NULL.
+     * On failure, call PHYSFS_setErrorCode().
+     */
+    int (*mkdir)(void *opaque, const char *filename);
+
+    // !!! FIXME: reorder these methods.
+    /**
+     * Close directories/archives, and free any associated memory,
+     *  including the original PHYSFS_Io and (opaque) itself, if
+     *  applicable. Implementation can assume that it won't be called if
+     *  there are still files open from this archive.
+     */
+    void (*closeArchive)(void *opaque);
+
+    /**
+     * Obtain basic file metadata.
+     *  Returns non-zero on success, zero on failure.
+     *  On failure, call PHYSFS_setErrorCode().
+     */
+// !!! FIXME: remove this exists nonsense (check error code instead)
+    int (*stat)(void *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
+} PHYSFS_Archiver;
+
+/**
+ * \fn int PHYSFS_registerArchiver(const PHYSFS_Archiver *archiver)
+ * \brief Add a new archiver to the system.
+ *
+ * !!! FIXME: write me.
+ *
+ * You may not have two archivers that handle the same extension. If you are
+ *  going to have a clash, you can deregister the other archiver (including
+ *  built-in ones) with PHYSFS_deregisterArchiver().
+ *
+ * The data in (archiver) is copied; you may free this pointer when this
+ *  function returns.
+ *
+ *   \param archiver The archiver to register.
+ *  \return Zero on error, non-zero on success.
+ *
+ * \sa PHYSFS_Archiver
+ * \sa PHYSFS_deregisterArchiver
+ */
+PHYSFS_DECL int PHYSFS_registerArchiver(const PHYSFS_Archiver *archiver);
+
+/**
+ * \fn int PHYSFS_deregisterArchiver(const char *ext)
+ * \brief Remove an archiver from the system.
+ *
+ * !!! FIXME: write me.
+ *
+ * This fails if there are any archives still open that use this archiver.
+ *
+ *   \param ext Filename extension that the archiver handles.
+ *  \return Zero on error, non-zero on success.
+ *
+ * \sa PHYSFS_Archiver
+ * \sa PHYSFS_registerArchiver
+ */
+PHYSFS_DECL int PHYSFS_deregisterArchiver(const char *ext);
+
+
+/* Everything above this line is part of the PhysicsFS 2.1 API. */
 
 #ifdef __cplusplus
 }

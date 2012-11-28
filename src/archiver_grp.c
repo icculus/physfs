@@ -87,6 +87,7 @@ static void *GRP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
 const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
 {
+    CURRENT_PHYSFS_ARCHIVER_API_VERSION,
     {
         "GRP",
         "Build engine Groupfile format",

@@ -93,6 +93,7 @@ static void *HOG_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
 const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
 {
+    CURRENT_PHYSFS_ARCHIVER_API_VERSION,
     {
         "HOG",
         "Descent I/II HOG file format",
