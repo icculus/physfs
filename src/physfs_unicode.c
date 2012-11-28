@@ -449,9 +449,21 @@ static int utf8codepointcmp(const PHYSFS_uint32 cp1, const PHYSFS_uint32 cp2)
     PHYSFS_uint32 folded1[3], folded2[3];
     locate_case_fold_mapping(cp1, folded1);
     locate_case_fold_mapping(cp2, folded2);
-    return ( (folded1[0] == folded2[0]) &&
-             (folded1[1] == folded2[1]) &&
-             (folded1[2] == folded2[2]) );
+
+    if (folded1[0] < folded2[0])
+        return -1;
+    else if (folded1[0] > folded2[0])
+        return 1;
+    else if (folded1[1] < folded2[1])
+        return -1;
+    else if (folded1[1] > folded2[1])
+        return 1;
+    else if (folded1[2] < folded2[2])
+        return -1;
+    else if (folded1[2] > folded2[2])
+        return 1;
+
+    return 0;  /* complete match. */
 } /* utf8codepointcmp */
 
 
@@ -461,8 +473,11 @@ int __PHYSFS_utf8stricmp(const char *str1, const char *str2)
     {
         const PHYSFS_uint32 cp1 = utf8codepoint(&str1);
         const PHYSFS_uint32 cp2 = utf8codepoint(&str2);
-        if (!utf8codepointcmp(cp1, cp2)) break;
-        if (cp1 == 0) return 1;
+        const int rc = utf8codepointcmp(cp1, cp2);
+        if (rc != 0)
+            return rc;
+        else if (cp1 == 0)
+            break;  /* complete match. */
     } /* while */
 
     return 0;
@@ -475,12 +490,15 @@ int __PHYSFS_utf8strnicmp(const char *str1, const char *str2, PHYSFS_uint32 n)
     {
         const PHYSFS_uint32 cp1 = utf8codepoint(&str1);
         const PHYSFS_uint32 cp2 = utf8codepoint(&str2);
-        if (!utf8codepointcmp(cp1, cp2)) return 0;
-        if (cp1 == 0) return 1;
+        const int rc = utf8codepointcmp(cp1, cp2);
+        if (rc != 0)
+            return rc;
+        else if (cp1 == 0)
+            return 0;
         n--;
     } /* while */
 
-    return 1;  /* matched to n chars. */
+    return 0;  /* matched to n chars. */
 } /* __PHYSFS_utf8strnicmp */
 
 
