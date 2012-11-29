@@ -3384,8 +3384,15 @@ typedef struct PHYSFS_Archiver
      * This is used to identify your archive, and is returned in
      *  PHYSFS_supportedArchiveTypes().
      */
+// !! FIXME: should this be const?
     const PHYSFS_ArchiveInfo info;
 
+    /**
+     * !!! FIXME: document me.
+     */    
+    int supportsSymlinks;
+
+// !!! FIXME: documentation: \brief?
     /**
      * \brief
      *
