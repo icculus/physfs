@@ -122,31 +122,13 @@ char *__PHYSFS_platformCalcUserDir(void)
 
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
-                                     int omitSymLinks,
                                      PHYSFS_EnumFilesCallback callback,
                                      const char *origdir,
                                      void *callbackdata)
 {
     DIR *dir;
     struct dirent *ent;
-    int bufsize = 0;
     char *buf = NULL;
-    int dlen = 0;
-
-    if (omitSymLinks)  /* !!! FIXME: this malloc sucks. */
-    {
-        dlen = strlen(dirname);
-        bufsize = dlen + 256;
-        buf = (char *) allocator.Malloc(bufsize);
-        if (buf == NULL)
-            return;
-        strcpy(buf, dirname);
-        if (buf[dlen - 1] != '/')
-        {
-            buf[dlen++] = '/';
-            buf[dlen] = '\0';
-        } /* if */
-    } /* if */
 
     errno = 0;
     dir = opendir(dirname);
@@ -160,34 +142,8 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     {
         if (strcmp(ent->d_name, ".") == 0)
             continue;
-
-        if (strcmp(ent->d_name, "..") == 0)
+        else if (strcmp(ent->d_name, "..") == 0)
             continue;
-
-        if (omitSymLinks)
-        {
-            PHYSFS_Stat statbuf;
-            int exists = 0;
-            char *p;
-            int len = strlen(ent->d_name) + dlen + 1;
-            if (len > bufsize)
-            {
-                p = (char *) allocator.Realloc(buf, len);
-                if (p == NULL)
-                    continue;
-                buf = p;
-                bufsize = len;
-            } /* if */
-
-            strcpy(buf + dlen, ent->d_name);
-
-            if (!__PHYSFS_platformStat(buf, &exists, &statbuf))
-                continue;
-            else if (!exists)
-                continue;  /* probably can't happen, but just in case. */
-            else if (statbuf.filetype == PHYSFS_FILETYPE_SYMLINK)
-                continue;
-        } /* if */
 
         callback(callbackdata, origdir, ent->d_name);
     } /* while */

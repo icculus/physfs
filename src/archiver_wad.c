@@ -111,6 +111,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
         "Travis Wells <traviswells@mchsi.com>",
         "http://www.3dmm2.com/doom/",
     },
+    0,  /* supportsSymlinks */
     WAD_openArchive,        /* openArchive() method    */
     UNPK_enumerateFiles,     /* enumerateFiles() method */
     UNPK_openRead,           /* openRead() method       */

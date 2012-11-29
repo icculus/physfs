@@ -532,7 +532,7 @@ static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
 
 
 static void LZMA_enumerateFiles(void *opaque, const char *dname,
-                                int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                                PHYSFS_EnumFilesCallback cb,
                                 const char *origdir, void *callbackdata)
 {
     size_t dlen = strlen(dname),
@@ -685,6 +685,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
         "Dennis Schridde <devurandom@gmx.net>",
         "http://icculus.org/physfs/",
     },
+    0,  /* supportsSymlinks */
     LZMA_openArchive,        /* openArchive() method    */
     LZMA_enumerateFiles,     /* enumerateFiles() method */
     LZMA_openRead,           /* openRead() method       */

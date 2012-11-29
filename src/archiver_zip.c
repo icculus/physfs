@@ -1488,7 +1488,7 @@ static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
 
 
 static void ZIP_enumerateFiles(void *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                               PHYSFS_EnumFilesCallback cb,
                                const char *origdir, void *callbackdata)
 {
     ZIPinfo *info = ((ZIPinfo *) opaque);
@@ -1510,9 +1510,6 @@ static void ZIP_enumerateFiles(void *opaque, const char *dname,
         char *e = info->entries[i].name;
         if ((dlen) && ((strncmp(e, dname, dlen) != 0) || (e[dlen] != '/')))
             break;  /* past end of this dir; we're done. */
-
-        if ((omitSymLinks) && (zip_entry_is_symlink(&info->entries[i])))
-            i++;
         else
         {
             char *add = e + dlen_inc;
@@ -1701,6 +1698,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
         "Ryan C. Gordon <icculus@icculus.org>",
         "http://icculus.org/physfs/",
     },
+    1,  /* supportsSymlinks */
     ZIP_openArchive,        /* openArchive() method    */
     ZIP_enumerateFiles,     /* enumerateFiles() method */
     ZIP_openRead,           /* openRead() method       */

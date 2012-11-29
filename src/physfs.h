@@ -3408,14 +3408,11 @@ typedef struct PHYSFS_Archiver
      * List all files in (dirname). Each file is passed to (cb),
      *  where a copy is made if appropriate, so you should dispose of
      *  it properly upon return from the callback.
-     * You should omit symlinks if (omitSymLinks) is non-zero.
      * If you have a failure, report as much as you can.
      *  (dirname) is in platform-independent notation.
      */
-
-// !!! FIXME: get rid of this omitsymlinks nonsense.
     void (*enumerateFiles)(void *opaque, const char *dirname,
-                           int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                           PHYSFS_EnumFilesCallback cb,
                            const char *origdir, void *callbackdata);
 
     /**
