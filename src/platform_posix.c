@@ -367,6 +367,12 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
         st->filesize = 0;
     } /* else if */
 
+    else if(S_ISLNK(statbuf.st_mode))
+    {
+        st->filetype = PHYSFS_FILETYPE_SYMLINK;
+        st->filesize = 0;
+    } /* else if */
+
     else
     {
         st->filetype = PHYSFS_FILETYPE_OTHER;
