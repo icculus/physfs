@@ -548,11 +548,11 @@ void *__PHYSFS_platformGetThreadID(void);
 
 /*
  * Enumerate a directory of files. This follows the rules for the
- *  PHYSFS_Archiver->enumerateFiles() method (see above), except that the
+ *  PHYSFS_Archiver::enumerateFiles() method (see above), except that the
  *  (dirName) that is passed to this function is converted to
  *  platform-DEPENDENT notation by the caller. The PHYSFS_Archiver version
  *  uses platform-independent notation. Note that ".", "..", and other
- *  metaentries should always be ignored.
+ *  meta-entries should always be ignored.
  */
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      PHYSFS_EnumFilesCallback callback,
