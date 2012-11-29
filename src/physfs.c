@@ -2245,6 +2245,40 @@ static void enumerateFromMountPoint(DirHandle *i, const char *arcfname,
 } /* enumerateFromMountPoint */
 
 
+typedef struct SymlinkFilterData
+{
+    PHYSFS_EnumFilesCallback callback;
+    void *callbackData;
+    DirHandle *dirhandle;
+} SymlinkFilterData;
+
+static void enumCallbackFilterSymLinks(void *_data, const char *origdir,
+                                       const char *fname)
+{
+    const char *trimmedDir = (*origdir == '/') ? (origdir+1) : origdir;
+    const size_t slen = strlen(trimmedDir) + strlen(fname) + 2;
+    char *path = (char *) __PHYSFS_smallAlloc(slen);
+
+    if (path != NULL)
+    {
+        SymlinkFilterData *data = (SymlinkFilterData *) _data;
+        const DirHandle *dh = data->dirhandle;
+        PHYSFS_Stat statbuf;
+        int exists = 0;
+
+        sprintf(path, "%s%s%s", trimmedDir, *trimmedDir ? "/" : "", fname);
+        if (dh->funcs->stat(dh->opaque, path, &exists, &statbuf))
+        {
+            /* Pass it on to the application if it's not a symlink. */
+            if (statbuf.filetype != PHYSFS_FILETYPE_SYMLINK)
+                data->callback(data->callbackData, origdir, fname);
+        } /* if */
+
+        __PHYSFS_smallFree(path);
+    } /* if */
+} /* enumCallbackFilterSymLinks */
+
+
 /* !!! FIXME: this should report error conditions. */
 void PHYSFS_enumerateFilesCallback(const char *_fname,
                                    PHYSFS_EnumFilesCallback callback,
@@ -2263,10 +2297,17 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
         DirHandle *i;
-        int noSyms;
+        SymlinkFilterData filterdata;
 
         __PHYSFS_platformGrabMutex(stateLock);
-        noSyms = !allowSymLinks;
+
+        if (!allowSymLinks)
+        {
+            memset(&filterdata, '\0', sizeof (filterdata));
+            filterdata.callback = callback;
+            filterdata.callbackData = data;
+        } /* if */
+
         for (i = searchPath; i != NULL; i = i->next)
         {
             char *arcfname = fname;
@@ -2275,8 +2316,18 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
 
             else if (verifyPath(i, &arcfname, 0))
             {
-                i->funcs->enumerateFiles(i->opaque, arcfname, noSyms,
-                                         callback, _fname, data);
+                if ((!allowSymLinks) && (i->funcs->supportsSymlinks))
+                {
+                    filterdata.dirhandle = i;
+                    i->funcs->enumerateFiles(i->opaque, arcfname,
+                                             enumCallbackFilterSymLinks,
+                                             _fname, &filterdata);
+                } /* if */
+                else
+                {
+                    i->funcs->enumerateFiles(i->opaque, arcfname,
+                                             callback, _fname, data);
+                } /* else */
             } /* else if */
         } /* for */
         __PHYSFS_platformReleaseMutex(stateLock);

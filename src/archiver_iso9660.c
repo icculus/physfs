@@ -817,7 +817,6 @@ errorhandling:
  ******************************************************************************/
 
 static void ISO9660_enumerateFiles(void *opaque, const char *dname,
-                                   int omitSymLinks,
                                    PHYSFS_EnumFilesCallback cb,
                                    const char *origdir, void *callbackdata)
 {
@@ -953,6 +952,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
         "Christoph Nelles <evilazrael@evilazrael.de>",
         "http://www.evilazrael.de/",
     },
+    0,  /* supportsSymlinks */
     ISO9660_openArchive,        /* openArchive() method    */
     ISO9660_enumerateFiles,     /* enumerateFiles() method */
     ISO9660_openRead,           /* openRead() method       */

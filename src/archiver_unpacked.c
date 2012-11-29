@@ -243,7 +243,7 @@ static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
 
 
 void UNPK_enumerateFiles(void *opaque, const char *dname,
-                         int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                         PHYSFS_EnumFilesCallback cb,
                          const char *origdir, void *callbackdata)
 {
     UNPKinfo *info = ((UNPKinfo *) opaque);

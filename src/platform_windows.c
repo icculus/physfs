@@ -487,7 +487,6 @@ static int isSymlinkAttrs(const DWORD attr, const DWORD tag)
 
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
-                                     int omitSymLinks,
                                      PHYSFS_EnumFilesCallback callback,
                                      const char *origdir,
                                      void *callbackdata)
@@ -537,8 +536,6 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
         if ((fn[0] == '.') && (fn[1] == '\0'))
             continue;
         if ((fn[0] == '.') && (fn[1] == '.') && (fn[2] == '\0'))
-            continue;
-        if ((omitSymLinks) && (isSymlinkAttrs(attr, tag)))
             continue;
 
         utf8 = unicodeToUtf8Heap(fn);

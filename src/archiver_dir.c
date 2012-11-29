@@ -67,7 +67,7 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
 
 static void DIR_enumerateFiles(void *opaque, const char *dname,
-                               int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                               PHYSFS_EnumFilesCallback cb,
                                const char *origdir, void *callbackdata)
 {
     char *d;
@@ -75,8 +75,7 @@ static void DIR_enumerateFiles(void *opaque, const char *dname,
     CVT_TO_DEPENDENT(d, opaque, dname);
     if (d != NULL)
     {
-        __PHYSFS_platformEnumerateFiles(d, omitSymLinks, cb,
-                                        origdir, callbackdata);
+        __PHYSFS_platformEnumerateFiles(d, cb, origdir, callbackdata);
         __PHYSFS_smallFree(d);
     } /* if */
 } /* DIR_enumerateFiles */
@@ -187,6 +186,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
         "Ryan C. Gordon <icculus@icculus.org>",
         "http://icculus.org/physfs/",
     },
+    1,  /* supportsSymlinks */
     DIR_openArchive,        /* openArchive() method    */
     DIR_enumerateFiles,     /* enumerateFiles() method */
     DIR_openRead,           /* openRead() method       */

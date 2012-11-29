@@ -301,7 +301,7 @@ typedef struct
 void UNPK_closeArchive(void *opaque);
 void *UNPK_openArchive(PHYSFS_Io *io,UNPKentry *e,const PHYSFS_uint32 n);
 void UNPK_enumerateFiles(void *opaque, const char *dname,
-                         int omitSymLinks, PHYSFS_EnumFilesCallback cb,
+                         PHYSFS_EnumFilesCallback cb,
                          const char *origdir, void *callbackdata);
 PHYSFS_Io *UNPK_openRead(void *opaque, const char *fnm, int *fileExists);
 PHYSFS_Io *UNPK_openWrite(void *opaque, const char *name);
@@ -555,7 +555,6 @@ void *__PHYSFS_platformGetThreadID(void);
  *  metaentries should always be ignored.
  */
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
-                                     int omitSymLinks,
                                      PHYSFS_EnumFilesCallback callback,
                                      const char *origdir,
                                      void *callbackdata);
