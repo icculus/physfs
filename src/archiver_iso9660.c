@@ -951,8 +951,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
     ISO9660_openAppend,
     ISO9660_remove,
     ISO9660_mkdir,
-    ISO9660_closeArchive,
-    ISO9660_stat
+    ISO9660_stat,
+    ISO9660_closeArchive
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_ISO9660 */

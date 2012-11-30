@@ -689,8 +689,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
     LZMA_openAppend,
     LZMA_remove,
     LZMA_mkdir,
-    LZMA_closeArchive,
-    LZMA_stat
+    LZMA_stat,
+    LZMA_closeArchive
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_7Z */

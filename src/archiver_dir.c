@@ -183,8 +183,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     DIR_openAppend,
     DIR_remove,
     DIR_mkdir,
-    DIR_closeArchive,
-    DIR_stat
+    DIR_stat,
+    DIR_closeArchive
 };
 
 /* end of archiver_dir.c ... */

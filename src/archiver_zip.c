@@ -1702,8 +1702,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
     ZIP_openAppend,
     ZIP_remove,
     ZIP_mkdir,
-    ZIP_closeArchive,
-    ZIP_stat
+    ZIP_stat,
+    ZIP_closeArchive
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_ZIP */

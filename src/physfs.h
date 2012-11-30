@@ -3477,7 +3477,13 @@ typedef struct PHYSFS_Archiver
      */
     int (*mkdir)(void *opaque, const char *filename);
 
-    // !!! FIXME: reorder these methods.
+    /**
+     * Obtain basic file metadata.
+     *  Returns non-zero on success, zero on failure.
+     *  On failure, call PHYSFS_setErrorCode().
+     */
+    int (*stat)(void *opaque, const char *fn, PHYSFS_Stat *stat);
+
     /**
      * Close directories/archives, and free any associated memory,
      *  including the original PHYSFS_Io and (opaque) itself, if
@@ -3485,13 +3491,6 @@ typedef struct PHYSFS_Archiver
      *  there are still files open from this archive.
      */
     void (*closeArchive)(void *opaque);
-
-    /**
-     * Obtain basic file metadata.
-     *  Returns non-zero on success, zero on failure.
-     *  On failure, call PHYSFS_setErrorCode().
-     */
-    int (*stat)(void *opaque, const char *fn, PHYSFS_Stat *stat);
 } PHYSFS_Archiver;
 
 /**
