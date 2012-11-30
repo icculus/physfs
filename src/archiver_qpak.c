@@ -102,8 +102,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
         "Quake I/II format",
         "Ryan C. Gordon <icculus@icculus.org>",
         "http://icculus.org/physfs/",
+        0,  /* supportsSymlinks */
     },
-    0,  /* supportsSymlinks */
     QPAK_openArchive,       /* openArchive() method    */
     UNPK_enumerateFiles,    /* enumerateFiles() method */
     UNPK_openRead,          /* openRead() method       */

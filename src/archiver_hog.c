@@ -99,8 +99,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
         "Descent I/II HOG file format",
         "Bradley Bell <btb@icculus.org>",
         "http://icculus.org/physfs/",
+        0,  /* supportsSymlinks */
     },
-    0,  /* supportsSymlinks */
     HOG_openArchive,         /* openArchive() method    */
     UNPK_enumerateFiles,     /* enumerateFiles() method */
     UNPK_openRead,           /* openRead() method       */

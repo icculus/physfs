@@ -684,8 +684,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
         "LZMA (7zip) format",
         "Dennis Schridde <devurandom@gmx.net>",
         "http://icculus.org/physfs/",
+        0,  /* supportsSymlinks */
     },
-    0,  /* supportsSymlinks */
     LZMA_openArchive,        /* openArchive() method    */
     LZMA_enumerateFiles,     /* enumerateFiles() method */
     LZMA_openRead,           /* openRead() method       */

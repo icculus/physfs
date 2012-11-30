@@ -1423,6 +1423,7 @@ static int doRegisterArchiver(const PHYSFS_Archiver *_archiver)
     CPYSTR(description);
     CPYSTR(author);
     CPYSTR(url);
+    info->supportsSymlinks = _archiver->info.supportsSymlinks;
     #undef CPYSTR
 
     ptr = allocator.Realloc(archiveInfo, len);
@@ -2316,7 +2317,7 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
 
             else if (verifyPath(i, &arcfname, 0))
             {
-                if ((!allowSymLinks) && (i->funcs->supportsSymlinks))
+                if ((!allowSymLinks) && (i->funcs->info.supportsSymlinks))
                 {
                     filterdata.dirhandle = i;
                     i->funcs->enumerateFiles(i->opaque, arcfname,

@@ -67,6 +67,8 @@ static void output_archivers(void)
             printf(" * %s: %s\n    Written by %s.\n    %s\n",
                     (*i)->extension, (*i)->description,
                     (*i)->author, (*i)->url);
+            printf("    %s symbolic links.\n",
+                    (*i)->supportsSymlinks ? "Supports" : "Does not support");
         } /* for */
     } /* else */
 
