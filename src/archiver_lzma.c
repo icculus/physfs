@@ -291,25 +291,25 @@ static int lzma_err(SZ_RESULT rc)
         case SZ_OK: /* Same as LZMA_RESULT_OK */
             break;
         case SZE_DATA_ERROR: /* Same as LZMA_RESULT_DATA_ERROR */
-            __PHYSFS_setError(PHYSFS_ERR_CORRUPT); /*!!!FIXME: was "PHYSFS_ERR_DATA_ERROR" */
+            PHYSFS_setErrorCode(PHYSFS_ERR_CORRUPT); /*!!!FIXME: was "PHYSFS_ERR_DATA_ERROR" */
             break;
         case SZE_OUTOFMEMORY:
-            __PHYSFS_setError(PHYSFS_ERR_OUT_OF_MEMORY);
+            PHYSFS_setErrorCode(PHYSFS_ERR_OUT_OF_MEMORY);
             break;
         case SZE_CRC_ERROR:
-            __PHYSFS_setError(PHYSFS_ERR_CORRUPT);
+            PHYSFS_setErrorCode(PHYSFS_ERR_CORRUPT);
             break;
         case SZE_NOTIMPL:
-            __PHYSFS_setError(PHYSFS_ERR_UNSUPPORTED);
+            PHYSFS_setErrorCode(PHYSFS_ERR_UNSUPPORTED);
             break;
         case SZE_FAIL:
-            __PHYSFS_setError(PHYSFS_ERR_OTHER_ERROR);  /* !!! FIXME: right? */
+            PHYSFS_setErrorCode(PHYSFS_ERR_OTHER_ERROR);  /* !!! FIXME: right? */
             break;
         case SZE_ARCHIVE_ERROR:
-            __PHYSFS_setError(PHYSFS_ERR_CORRUPT);  /* !!! FIXME: right? */
+            PHYSFS_setErrorCode(PHYSFS_ERR_CORRUPT);  /* !!! FIXME: right? */
             break;
         default:
-            __PHYSFS_setError(PHYSFS_ERR_OTHER_ERROR);
+            PHYSFS_setErrorCode(PHYSFS_ERR_OTHER_ERROR);
     } /* switch */
 
     return rc;

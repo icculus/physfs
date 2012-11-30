@@ -127,16 +127,6 @@ void __PHYSFS_smallFree(void *ptr);
 /* The latest supported PHYSFS_Archiver::version value. */
 #define CURRENT_PHYSFS_ARCHIVER_API_VERSION 0
 
-/* !!! FIXME: update this documentation.
- * Call this to set the message returned by PHYSFS_getLastError().
- *  Please only use the ERR_* constants above, or add new constants to the
- *  above group, but I want these all in one place.
- *
- * Calling this with a NULL argument is a safe no-op.
- */
-void __PHYSFS_setError(const PHYSFS_ErrorCode err);
-
-
 /* This byteorder stuff was lifted from SDL. http://www.libsdl.org/ */
 #define PHYSFS_LIL_ENDIAN  1234
 #define PHYSFS_BIG_ENDIAN  4321
@@ -186,14 +176,14 @@ void __PHYSFS_sort(void *entries, size_t max,
 #define ERRPASS PHYSFS_ERR_OK
 
 /* These get used all over for lessening code clutter. */
-#define BAIL_MACRO(e, r) do { if (e) __PHYSFS_setError(e); return r; } while (0)
-#define BAIL_IF_MACRO(c, e, r) do { if (c) { if (e) __PHYSFS_setError(e); return r; } } while (0)
-#define BAIL_MACRO_MUTEX(e, m, r) do { if (e) __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; } while (0)
-#define BAIL_IF_MACRO_MUTEX(c, e, m, r) do { if (c) { if (e) __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); return r; } } while (0)
-#define GOTO_MACRO(e, g) do { if (e) __PHYSFS_setError(e); goto g; } while (0)
-#define GOTO_IF_MACRO(c, e, g) do { if (c) { if (e) __PHYSFS_setError(e); goto g; } } while (0)
-#define GOTO_MACRO_MUTEX(e, m, g) do { if (e) __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; } while (0)
-#define GOTO_IF_MACRO_MUTEX(c, e, m, g) do { if (c) { if (e) __PHYSFS_setError(e); __PHYSFS_platformReleaseMutex(m); goto g; } } while (0)
+#define BAIL_MACRO(e, r) do { if (e) PHYSFS_setErrorCode(e); return r; } while (0)
+#define BAIL_IF_MACRO(c, e, r) do { if (c) { if (e) PHYSFS_setErrorCode(e); return r; } } while (0)
+#define BAIL_MACRO_MUTEX(e, m, r) do { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); return r; } while (0)
+#define BAIL_IF_MACRO_MUTEX(c, e, m, r) do { if (c) { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); return r; } } while (0)
+#define GOTO_MACRO(e, g) do { if (e) PHYSFS_setErrorCode(e); goto g; } while (0)
+#define GOTO_IF_MACRO(c, e, g) do { if (c) { if (e) PHYSFS_setErrorCode(e); goto g; } } while (0)
+#define GOTO_MACRO_MUTEX(e, m, g) do { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); goto g; } while (0)
+#define GOTO_IF_MACRO_MUTEX(c, e, m, g) do { if (c) { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); goto g; } } while (0)
 
 #define __PHYSFS_ARRAYLEN(x) ( (sizeof (x)) / (sizeof (x[0])) )
 
@@ -365,7 +355,7 @@ int __PHYSFS_platformDeinit(void);
  *  a unique file handle; this is frequently employed to prevent race
  *  conditions in the archivers.
  *
- * Call __PHYSFS_setError() and return (NULL) if the file can't be opened.
+ * Call PHYSFS_setErrorCode() and return (NULL) if the file can't be opened.
  */
 void *__PHYSFS_platformOpenRead(const char *filename);
 
@@ -382,7 +372,7 @@ void *__PHYSFS_platformOpenRead(const char *filename);
  *
  * Opening a file for write multiple times has undefined results.
  *
- * Call __PHYSFS_setError() and return (NULL) if the file can't be opened.
+ * Call PHYSFS_setErrorCode() and return (NULL) if the file can't be opened.
  */
 void *__PHYSFS_platformOpenWrite(const char *filename);
 
@@ -400,7 +390,7 @@ void *__PHYSFS_platformOpenWrite(const char *filename);
  *
  * Opening a file for append multiple times has undefined results.
  *
- * Call __PHYSFS_setError() and return (NULL) if the file can't be opened.
+ * Call PHYSFS_setErrorCode() and return (NULL) if the file can't be opened.
  */
 void *__PHYSFS_platformOpenAppend(const char *filename);
 
@@ -412,7 +402,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename);
  *  immediately after those bytes.
  *  On success, return (len) and position the file pointer immediately past
  *  the end of the last read byte. Return (-1) if there is a catastrophic
- *  error, and call __PHYSFS_setError() to describe the problem; the file
+ *  error, and call PHYSFS_setErrorCode() to describe the problem; the file
  *  pointer should not move in such a case. A partial read is success; only
  *  return (-1) on total failure; presumably, the next read call after a
  *  partial read will fail as such.
@@ -425,7 +415,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len);
  *  8-bit bytes from the area pointed to by (buffer). If there is a problem,
  *  return the number of bytes written, and position the file pointer
  *  immediately after those bytes. Return (-1) if there is a catastrophic
- *  error, and call __PHYSFS_setError() to describe the problem; the file
+ *  error, and call PHYSFS_setErrorCode() to describe the problem; the file
  *  pointer should not move in such a case. A partial write is success; only
  *  return (-1) on total failure; presumably, the next write call after a
  *  partial write will fail as such.
@@ -441,7 +431,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
  *
  * Not all file types can seek; this is to be expected by the caller.
  *
- * On error, call __PHYSFS_setError() and return zero. On success, return
+ * On error, call PHYSFS_setErrorCode() and return zero. On success, return
  *  a non-zero value.
  */
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos);
@@ -454,7 +444,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos);
  *
  * Not all file types can "tell"; this is to be expected by the caller.
  *
- * On error, call __PHYSFS_setError() and return -1. On success, return >= 0.
+ * On error, call PHYSFS_setErrorCode() and return -1. On success, return >= 0.
  */
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque);
 
@@ -465,7 +455,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque);
  * The caller expects that this information may not be available for all
  *  file types on all platforms.
  *
- * Return -1 if you can't do it, and call __PHYSFS_setError(). Otherwise,
+ * Return -1 if you can't do it, and call PHYSFS_setErrorCode(). Otherwise,
  *  return the file length in 8-bit bytes.
  */
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle);
@@ -609,7 +599,7 @@ void __PHYSFS_platformDestroyMutex(void *mutex);
  *  timing out! We're talking major system errors; block until the mutex 
  *  is available otherwise.)
  *
- * _DO NOT_ call __PHYSFS_setError() in here! Since setError calls this
+ * _DO NOT_ call PHYSFS_setErrorCode() in here! Since setErrorCode calls this
  *  function, you'll cause an infinite recursion. This means you can't
  *  use the BAIL_*MACRO* macros, either.
  */
@@ -621,7 +611,7 @@ int __PHYSFS_platformGrabMutex(void *mutex);
  *  been released, the next thread in line to grab the mutex (if any) may
  *  proceed.
  *
- * _DO NOT_ call __PHYSFS_setError() in here! Since setError calls this
+ * _DO NOT_ call PHYSFS_setErrorCode() in here! Since setErrorCode calls this
  *  function, you'll cause an infinite recursion. This means you can't
  *  use the BAIL_*MACRO* macros, either.
  */

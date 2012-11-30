@@ -585,7 +585,7 @@ static char **doEnumStringList(void (*func)(PHYSFS_StringCallback, void *))
 
     if (ecd.errcode)
     {
-        __PHYSFS_setError(ecd.errcode);
+        PHYSFS_setErrorCode(ecd.errcode);
         return NULL;
     } /* if */
 
@@ -697,37 +697,6 @@ static ErrState *findErrorForCurrentThread(void)
 } /* findErrorForCurrentThread */
 
 
-void __PHYSFS_setError(const PHYSFS_ErrorCode errcode)
-{
-    ErrState *err;
-
-    if (!errcode)
-        return;
-
-    err = findErrorForCurrentThread();
-    if (err == NULL)
-    {
-        err = (ErrState *) allocator.Malloc(sizeof (ErrState));
-        if (err == NULL)
-            return;   /* uhh...? */
-
-        memset(err, '\0', sizeof (ErrState));
-        err->tid = __PHYSFS_platformGetThreadID();
-
-        if (errorLock != NULL)
-            __PHYSFS_platformGrabMutex(errorLock);
-
-        err->next = errorStates;
-        errorStates = err;
-
-        if (errorLock != NULL)
-            __PHYSFS_platformReleaseMutex(errorLock);
-    } /* if */
-
-    err->code = errcode;
-} /* __PHYSFS_setError */
-
-
 /* this doesn't reset the error state. */
 static inline PHYSFS_ErrorCode currentErrorCode(void)
 {
@@ -784,9 +753,34 @@ PHYSFS_DECL const char *PHYSFS_getErrorByCode(PHYSFS_ErrorCode code)
 } /* PHYSFS_getErrorByCode */
 
 
-void PHYSFS_setErrorCode(PHYSFS_ErrorCode code)
+void PHYSFS_setErrorCode(PHYSFS_ErrorCode errcode)
 {
-    __PHYSFS_setError(code);
+    ErrState *err;
+
+    if (!errcode)
+        return;
+
+    err = findErrorForCurrentThread();
+    if (err == NULL)
+    {
+        err = (ErrState *) allocator.Malloc(sizeof (ErrState));
+        if (err == NULL)
+            return;   /* uhh...? */
+
+        memset(err, '\0', sizeof (ErrState));
+        err->tid = __PHYSFS_platformGetThreadID();
+
+        if (errorLock != NULL)
+            __PHYSFS_platformGrabMutex(errorLock);
+
+        err->next = errorStates;
+        errorStates = err;
+
+        if (errorLock != NULL)
+            __PHYSFS_platformReleaseMutex(errorLock);
+    } /* if */
+
+    err->code = errcode;
 } /* PHYSFS_setErrorCode */
 
 
@@ -1191,7 +1185,7 @@ int PHYSFS_init(const char *argv0)
     initialized = 1;
 
     /* This makes sure that the error subsystem is initialized. */
-    __PHYSFS_setError(PHYSFS_getLastErrorCode());
+    PHYSFS_setErrorCode(PHYSFS_getLastErrorCode());
 
     return 1;
 
