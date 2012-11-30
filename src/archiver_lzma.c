@@ -682,15 +682,15 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
         "http://icculus.org/physfs/",
         0,  /* supportsSymlinks */
     },
-    LZMA_openArchive,        /* openArchive() method    */
-    LZMA_enumerateFiles,     /* enumerateFiles() method */
-    LZMA_openRead,           /* openRead() method       */
-    LZMA_openWrite,          /* openWrite() method      */
-    LZMA_openAppend,         /* openAppend() method     */
-    LZMA_remove,             /* remove() method         */
-    LZMA_mkdir,              /* mkdir() method          */
-    LZMA_closeArchive,       /* closeArchive() method   */
-    LZMA_stat                /* stat() method           */
+    LZMA_openArchive,
+    LZMA_enumerateFiles,
+    LZMA_openRead,
+    LZMA_openWrite,
+    LZMA_openAppend,
+    LZMA_remove,
+    LZMA_mkdir,
+    LZMA_closeArchive,
+    LZMA_stat
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_7Z */

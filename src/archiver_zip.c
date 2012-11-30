@@ -1695,15 +1695,15 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
         "http://icculus.org/physfs/",
         1,  /* supportsSymlinks */
     },
-    ZIP_openArchive,        /* openArchive() method    */
-    ZIP_enumerateFiles,     /* enumerateFiles() method */
-    ZIP_openRead,           /* openRead() method       */
-    ZIP_openWrite,          /* openWrite() method      */
-    ZIP_openAppend,         /* openAppend() method     */
-    ZIP_remove,             /* remove() method         */
-    ZIP_mkdir,              /* mkdir() method          */
-    ZIP_closeArchive,       /* closeArchive() method   */
-    ZIP_stat                /* stat() method           */
+    ZIP_openArchive,
+    ZIP_enumerateFiles,
+    ZIP_openRead,
+    ZIP_openWrite,
+    ZIP_openAppend,
+    ZIP_remove,
+    ZIP_mkdir,
+    ZIP_closeArchive,
+    ZIP_stat
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_ZIP */
