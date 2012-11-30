@@ -308,7 +308,7 @@ PHYSFS_Io *UNPK_openWrite(void *opaque, const char *name);
 PHYSFS_Io *UNPK_openAppend(void *opaque, const char *name);
 int UNPK_remove(void *opaque, const char *name);
 int UNPK_mkdir(void *opaque, const char *name);
-int UNPK_stat(void *opaque, const char *fn, int *exist, PHYSFS_Stat *st);
+int UNPK_stat(void *opaque, const char *fn, PHYSFS_Stat *st);
 
 
 /*--------------------------------------------------------------------------*/
@@ -474,7 +474,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle);
 /*
  * !!! FIXME: comment me.
  */
-int __PHYSFS_platformStat(const char *fn, int *exists, PHYSFS_Stat *stat);
+int __PHYSFS_platformStat(const char *fn, PHYSFS_Stat *stat);
 
 /*
  * Flush any pending writes to disk. (opaque) should be cast to whatever data

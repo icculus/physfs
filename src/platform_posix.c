@@ -299,17 +299,11 @@ int __PHYSFS_platformDelete(const char *path)
 } /* __PHYSFS_platformDelete */
 
 
-int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *st)
+int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
 {
     struct stat statbuf;
 
-    if (lstat(filename, &statbuf) == -1)
-    {
-        *exists = (errno != ENOENT);
-        BAIL_MACRO(errcodeFromErrno(), 0);
-    } /* if */
-
-    *exists = 1;
+    BAIL_IF_MACRO(lstat(filename, &statbuf) == -1, errcodeFromErrno(), 0);
 
     if (S_ISREG(statbuf.st_mode))
     {
