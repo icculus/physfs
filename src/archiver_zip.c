@@ -163,7 +163,7 @@ static PHYSFS_ErrorCode zlib_error_code(int rc)
  */
 static int zlib_err(const int rc)
 {
-    __PHYSFS_setError(zlib_error_code(rc));
+    PHYSFS_setErrorCode(zlib_error_code(rc));
     return rc;
 } /* zlib_err */
 

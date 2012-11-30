@@ -369,7 +369,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
         } /* while */
 
         if ((ptr == modpath) && (*ptr != '\\'))
-            __PHYSFS_setError(PHYSFS_ERR_OTHER_ERROR);  /* oh well. */
+            PHYSFS_setErrorCode(PHYSFS_ERR_OTHER_ERROR);  /* oh well. */
         else
         {
             *(ptr+1) = '\0';  /* chop off filename. */

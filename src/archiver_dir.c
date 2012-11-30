@@ -94,7 +94,7 @@ static PHYSFS_Io *doOpen(void *opaque, const char *name, const int mode)
         const PHYSFS_ErrorCode err = PHYSFS_getLastErrorCode();
         PHYSFS_Stat statbuf;
         __PHYSFS_platformStat(f, &statbuf);
-        __PHYSFS_setError(err);
+        PHYSFS_setErrorCode(err);
     } /* if */
 
     __PHYSFS_smallFree(f);
