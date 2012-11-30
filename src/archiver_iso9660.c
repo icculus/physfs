@@ -764,8 +764,7 @@ closefile:
 } /* iso_file_open_foreign */
 
 
-static PHYSFS_Io *ISO9660_openRead(void *opaque, const char *filename,
-                                   int *exists)
+static PHYSFS_Io *ISO9660_openRead(void *opaque, const char *filename)
 {
     PHYSFS_Io *retval = NULL;
     ISO9660Handle *handle = (ISO9660Handle*) opaque;

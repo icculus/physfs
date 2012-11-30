@@ -344,15 +344,14 @@ static UNPKentry *findEntry(const UNPKinfo *info, const char *path, int *isDir)
 } /* findEntry */
 
 
-PHYSFS_Io *UNPK_openRead(void *opaque, const char *fnm, int *fileExists)
+PHYSFS_Io *UNPK_openRead(void *opaque, const char *name)
 {
     PHYSFS_Io *retval = NULL;
     UNPKinfo *info = (UNPKinfo *) opaque;
     UNPKfileinfo *finfo = NULL;
     int isdir = 0;
-    UNPKentry *entry = findEntry(info, fnm, &isdir);
+    UNPKentry *entry = findEntry(info, name, &isdir);
 
-    *fileExists = (entry != NULL);
     GOTO_IF_MACRO(isdir, PHYSFS_ERR_NOT_A_FILE, UNPK_openRead_failed);
     GOTO_IF_MACRO(!entry, ERRPASS, UNPK_openRead_failed);
 

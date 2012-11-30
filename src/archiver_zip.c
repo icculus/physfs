@@ -1557,15 +1557,13 @@ static PHYSFS_Io *zip_get_io(PHYSFS_Io *io, ZIPinfo *inf, ZIPentry *entry)
 } /* zip_get_io */
 
 
-static PHYSFS_Io *ZIP_openRead(void *opaque, const char *fnm,
-                               int *fileExists)
+static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
 {
     PHYSFS_Io *retval = NULL;
     ZIPinfo *info = (ZIPinfo *) opaque;
-    ZIPentry *entry = zip_find_entry(info, fnm, NULL);
+    ZIPentry *entry = zip_find_entry(info, filename, NULL);
     ZIPfileinfo *finfo = NULL;
 
-    *fileExists = (entry != NULL);
     BAIL_IF_MACRO(!entry, ERRPASS, NULL);
 
     retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));

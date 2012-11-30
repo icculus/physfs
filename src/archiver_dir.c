@@ -103,9 +103,8 @@ static PHYSFS_Io *doOpen(void *opaque, const char *name, const int mode)
 } /* doOpen */
 
 
-static PHYSFS_Io *DIR_openRead(void *opaque, const char *filename, int *exists)
+static PHYSFS_Io *DIR_openRead(void *opaque, const char *filename)
 {
-// !!! FIXME: exists
     return doOpen(opaque, filename, 'r');
 } /* DIR_openRead */
 

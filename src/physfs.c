@@ -2452,7 +2452,6 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
 
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
-        int fileExists = 0;
         DirHandle *i = NULL;
         PHYSFS_Io *io = NULL;
 
@@ -2460,12 +2459,12 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
 
         GOTO_IF_MACRO(!searchPath, PHYSFS_ERR_NOT_FOUND, openReadEnd);
 
-        for (i = searchPath; (i != NULL) && (!fileExists); i = i->next)
+        for (i = searchPath; i != NULL; i = i->next)
         {
             char *arcfname = fname;
             if (verifyPath(i, &arcfname, 0))
             {
-                io = i->funcs->openRead(i->opaque, arcfname, &fileExists);
+                io = i->funcs->openRead(i->opaque, arcfname);
                 if (io)
                     break;
             } /* if */
