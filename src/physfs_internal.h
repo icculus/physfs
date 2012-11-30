@@ -293,7 +293,7 @@ void *UNPK_openArchive(PHYSFS_Io *io,UNPKentry *e,const PHYSFS_uint32 n);
 void UNPK_enumerateFiles(void *opaque, const char *dname,
                          PHYSFS_EnumFilesCallback cb,
                          const char *origdir, void *callbackdata);
-PHYSFS_Io *UNPK_openRead(void *opaque, const char *fnm, int *fileExists);
+PHYSFS_Io *UNPK_openRead(void *opaque, const char *name);
 PHYSFS_Io *UNPK_openWrite(void *opaque, const char *name);
 PHYSFS_Io *UNPK_openAppend(void *opaque, const char *name);
 int UNPK_remove(void *opaque, const char *name);

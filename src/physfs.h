@@ -3426,13 +3426,8 @@ typedef struct PHYSFS_Archiver
      * Returns NULL on failure, and calls PHYSFS_setErrorCode().
      *  Returns non-NULL on success. The pointer returned will be
      *  passed as the "opaque" parameter for later file calls.
-     *
-     * Regardless of success or failure, please set *exists to
-     *  non-zero if the file existed (even if it's a broken symlink!),
-     *  zero if it did not.
      */
-// !!! FIXME: get rid of the exists nonsense, check error code instead.
-    PHYSFS_Io *(*openRead)(void *opaque, const char *fnm, int *exists);
+    PHYSFS_Io *(*openRead)(void *opaque, const char *fnm);
 
     /**
      * Open file for writing.

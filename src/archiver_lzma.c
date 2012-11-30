@@ -575,14 +575,12 @@ static void LZMA_enumerateFiles(void *opaque, const char *dname,
 } /* LZMA_enumerateFiles */
 
 
-static PHYSFS_Io *LZMA_openRead(void *opaque, const char *name,
-                                int *fileExists)
+static PHYSFS_Io *LZMA_openRead(void *opaque, const char *name)
 {
     LZMAarchive *archive = (LZMAarchive *) opaque;
     LZMAfile *file = lzma_find_file(archive, name);
     PHYSFS_Io *io = NULL;
 
-    *fileExists = (file != NULL);
     BAIL_IF_MACRO(file == NULL, PHYSFS_ERR_NOT_FOUND, NULL);
     BAIL_IF_MACRO(file->folder == NULL, PHYSFS_ERR_NOT_A_FILE, NULL);
 
