@@ -116,8 +116,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_SLB =
     UNPK_openAppend,
     UNPK_remove,
     UNPK_mkdir,
-    UNPK_closeArchive,
-    UNPK_stat
+    UNPK_stat,
+    UNPK_closeArchive
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_SLB */
