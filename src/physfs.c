@@ -46,52 +46,6 @@ typedef struct __PHYSFS_ERRSTATETYPE__
 } ErrState;
 
 
-/* The various i/o drivers...some of these may not be compiled in. */
-extern const PHYSFS_Archiver __PHYSFS_Archiver_ZIP;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_LZMA;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_GRP;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_QPAK;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_HOG;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_MVL;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_WAD;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_SLB;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_DIR;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660;
-
-static const PHYSFS_Archiver * const staticArchivers[] =
-{
-#if PHYSFS_SUPPORTS_ZIP
-    &__PHYSFS_Archiver_ZIP,
-#endif
-#if PHYSFS_SUPPORTS_7Z
-    &__PHYSFS_Archiver_LZMA,
-#endif
-#if PHYSFS_SUPPORTS_GRP
-    &__PHYSFS_Archiver_GRP,
-#endif
-#if PHYSFS_SUPPORTS_QPAK
-    &__PHYSFS_Archiver_QPAK,
-#endif
-#if PHYSFS_SUPPORTS_HOG
-    &__PHYSFS_Archiver_HOG,
-#endif
-#if PHYSFS_SUPPORTS_MVL
-    &__PHYSFS_Archiver_MVL,
-#endif
-#if PHYSFS_SUPPORTS_WAD
-    &__PHYSFS_Archiver_WAD,
-#endif
-#if PHYSFS_SUPPORTS_SLB
-    &__PHYSFS_Archiver_SLB,
-#endif
-#if PHYSFS_SUPPORTS_ISO9660
-    &__PHYSFS_Archiver_ISO9660,
-#endif
-    NULL
-};
-
-
-
 /* General PhysicsFS state ... */
 static int initialized = 0;
 static ErrState *errorStates = NULL;
@@ -880,6 +834,7 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
     if (io == NULL)
     {
         /* DIR gets first shot (unlike the rest, it doesn't deal with files). */
+        extern const PHYSFS_Archiver __PHYSFS_Archiver_DIR;
         retval = tryOpenDir(io, &__PHYSFS_Archiver_DIR, d, forWriting);
         if (retval != NULL)
             return retval;
@@ -1133,16 +1088,42 @@ static int doRegisterArchiver(const PHYSFS_Archiver *_archiver);
 
 static int initStaticArchivers(void)
 {
-    const PHYSFS_Archiver * const *i;
+    #define REGISTER_STATIC_ARCHIVER(arc) { \
+        extern const PHYSFS_Archiver __PHYSFS_Archiver_##arc; \
+        if (!doRegisterArchiver(&__PHYSFS_Archiver_##arc)) { \
+            return 0; \
+        } \
+    }
 
-    assert(__PHYSFS_ARRAYLEN(staticArchivers) > 0);  /* at least a NULL. */
-    assert(staticArchivers[__PHYSFS_ARRAYLEN(staticArchivers) - 1] == NULL);
+    #if PHYSFS_SUPPORTS_ZIP
+        REGISTER_STATIC_ARCHIVER(ZIP);
+    #endif
+    #if PHYSFS_SUPPORTS_7Z
+        REGISTER_STATIC_ARCHIVER(LZMA);
+    #endif
+    #if PHYSFS_SUPPORTS_GRP
+        REGISTER_STATIC_ARCHIVER(GRP);
+    #endif
+    #if PHYSFS_SUPPORTS_QPAK
+        REGISTER_STATIC_ARCHIVER(QPAK);
+    #endif
+    #if PHYSFS_SUPPORTS_HOG
+        REGISTER_STATIC_ARCHIVER(HOG);
+    #endif
+    #if PHYSFS_SUPPORTS_MVL
+        REGISTER_STATIC_ARCHIVER(MVL);
+    #endif
+    #if PHYSFS_SUPPORTS_WAD
+        REGISTER_STATIC_ARCHIVER(WAD);
+    #endif
+    #if PHYSFS_SUPPORTS_SLB
+        REGISTER_STATIC_ARCHIVER(SLB);
+    #endif
+    #if PHYSFS_SUPPORTS_ISO9660
+        REGISTER_STATIC_ARCHIVER(ISO9660);
+    #endif
 
-    for (i = staticArchivers; *i != NULL; i++)
-    {
-        if (!doRegisterArchiver(*i))
-            return 0;
-    } /* for */
+    #undef REGISTER_STATIC_ARCHIVER
 
     return 1;
 } /* initStaticArchivers */
