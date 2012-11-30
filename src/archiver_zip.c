@@ -1649,8 +1649,7 @@ static int ZIP_mkdir(void *opaque, const char *name)
 } /* ZIP_mkdir */
 
 
-static int ZIP_stat(void *opaque, const char *filename, int *exists,
-                    PHYSFS_Stat *stat)
+static int ZIP_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
 {
     int isDir = 0;
     const ZIPinfo *info = (const ZIPinfo *) opaque;
@@ -1658,11 +1657,10 @@ static int ZIP_stat(void *opaque, const char *filename, int *exists,
 
     /* !!! FIXME: does this need to resolve entries here? */
 
-    *exists = isDir || (entry != 0);
-    if (!*exists)
+    if ((!isDir) && (entry == NULL))
         return 0;
 
-    if (isDir)
+    else if (isDir)
     {
         stat->filesize = 0;
         stat->filetype = PHYSFS_FILETYPE_DIRECTORY;

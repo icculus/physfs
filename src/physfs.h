@@ -3496,8 +3496,7 @@ typedef struct PHYSFS_Archiver
      *  Returns non-zero on success, zero on failure.
      *  On failure, call PHYSFS_setErrorCode().
      */
-// !!! FIXME: remove this exists nonsense (check error code instead)
-    int (*stat)(void *opaque, const char *fn, int *exists, PHYSFS_Stat *stat);
+    int (*stat)(void *opaque, const char *fn, PHYSFS_Stat *stat);
 } PHYSFS_Archiver;
 
 /**

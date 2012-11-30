@@ -873,7 +873,8 @@ static PHYSFS_sint64 FileTimeToPhysfsTime(const FILETIME *ft)
     return retval;
 } /* FileTimeToPhysfsTime */
 
-int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *stat)
+
+int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
 {
     WIN32_FILE_ATTRIBUTE_DATA winstat;
     WCHAR *wstr = NULL;
@@ -884,37 +885,36 @@ int __PHYSFS_platformStat(const char *filename, int *exists, PHYSFS_Stat *stat)
     BAIL_IF_MACRO(!wstr, PHYSFS_ERR_OUT_OF_MEMORY, 0);
     rc = GetFileAttributesExW(wstr, GetFileExInfoStandard, &winstat);
     err = (!rc) ? GetLastError() : 0;
-    *exists = ((err != ERROR_FILE_NOT_FOUND) && (err != ERROR_PATH_NOT_FOUND));
     __PHYSFS_smallFree(wstr);
     BAIL_IF_MACRO(!rc, errcodeFromWinApiError(err), 0);
 
-    stat->modtime = FileTimeToPhysfsTime(&winstat.ftLastWriteTime);
-    stat->accesstime = FileTimeToPhysfsTime(&winstat.ftLastAccessTime);
-    stat->createtime = FileTimeToPhysfsTime(&winstat.ftCreationTime);
+    st->modtime = FileTimeToPhysfsTime(&winstat.ftLastWriteTime);
+    st->accesstime = FileTimeToPhysfsTime(&winstat.ftLastAccessTime);
+    st->createtime = FileTimeToPhysfsTime(&winstat.ftCreationTime);
 
     if(winstat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     {
-        stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
-        stat->filesize = 0;
+        st->filetype = PHYSFS_FILETYPE_DIRECTORY;
+        st->filesize = 0;
     } /* if */
 
     else if(winstat.dwFileAttributes & (FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_DEVICE))
     {
         /* !!! FIXME: what are reparse points? */
-        stat->filetype = PHYSFS_FILETYPE_OTHER;
+        st->filetype = PHYSFS_FILETYPE_OTHER;
         /* !!! FIXME: don't rely on this */
-        stat->filesize = 0;
+        st->filesize = 0;
     } /* else if */
 
     /* !!! FIXME: check for symlinks on Vista. */
 
     else
     {
-        stat->filetype = PHYSFS_FILETYPE_REGULAR;
-        stat->filesize = (((PHYSFS_uint64) winstat.nFileSizeHigh) << 32) | winstat.nFileSizeLow;
+        st->filetype = PHYSFS_FILETYPE_REGULAR;
+        st->filesize = (((PHYSFS_uint64) winstat.nFileSizeHigh) << 32) | winstat.nFileSizeLow;
     } /* else */
 
-    stat->readonly = ((winstat.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0);
+    st->readonly = ((winstat.dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0);
 
     return 1;
 } /* __PHYSFS_platformStat */

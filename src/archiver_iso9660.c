@@ -398,7 +398,7 @@ static void iso_extractsubpath(char *path, char **subpath)
  * a file needs to branch to the directory extent sooner or later.
  */
 static int iso_find_dir_entry(ISO9660Handle *handle,const char *path,
-                              ISO9660FileDescriptor *descriptor, int *exists)
+                              ISO9660FileDescriptor *descriptor)
 {
     char *subpath = 0;
     PHYSFS_uint64 readpos, end_of_dir;
@@ -409,7 +409,6 @@ static int iso_find_dir_entry(ISO9660Handle *handle,const char *path,
 
     strcpy(pathcopy, path);
     mypath = pathcopy;
-    *exists = 0;
 
     readpos = handle->rootdirstart;
     end_of_dir = handle->rootdirstart + handle->rootdirsize;
@@ -442,10 +441,7 @@ static int iso_find_dir_entry(ISO9660Handle *handle,const char *path,
         if (strcmp(filename, mypath) == 0)
         {
             if ( (subpath == 0) || (subpath[0] == 0) )
-            {
-                *exists = 1;
                 return 0;  /* no subpaths left and we found the entry */
-            } /* if */
 
             if (descriptor->flags.directory)
             {
@@ -458,12 +454,14 @@ static int iso_find_dir_entry(ISO9660Handle *handle,const char *path,
             } /* if */
             else
             {
+                /* !!! FIXME: set PHYSFS_ERR_NOT_FOUND? */
                 /* we're at a file but have a remaining subpath -> no match */
                 return 0;
             } /* else */
         } /* if */
     } /* while */
 
+    /* !!! FIXME: set PHYSFS_ERR_NOT_FOUND? */
     return 0;
 } /* iso_find_dir_entry */
 
@@ -783,9 +781,8 @@ static PHYSFS_Io *ISO9660_openRead(void *opaque, const char *filename,
     GOTO_IF_MACRO(retval == 0, PHYSFS_ERR_OUT_OF_MEMORY, errorhandling);
 
     /* find file descriptor */
-    rc = iso_find_dir_entry(handle, filename, &descriptor, exists);
+    rc = iso_find_dir_entry(handle, filename, &descriptor);
     GOTO_IF_MACRO(rc, ERRPASS, errorhandling);
-    GOTO_IF_MACRO(!*exists, PHYSFS_ERR_NOT_FOUND, errorhandling);
 
     fhandle->startblock = descriptor.extentpos + descriptor.extattributelen;
     fhandle->filesize = descriptor.datalen;
@@ -835,9 +832,7 @@ static void ISO9660_enumerateFiles(void *opaque, const char *dname,
     else
     {
         printf("pfad %s\n",dname);
-        int exists = 0;
-        BAIL_IF_MACRO(iso_find_dir_entry(handle,dname, &descriptor, &exists), ERRPASS,);
-        BAIL_IF_MACRO(!exists, ERRPASS, );
+        BAIL_IF_MACRO(iso_find_dir_entry(handle,dname, &descriptor), ERRPASS,);
         BAIL_IF_MACRO(!descriptor.flags.directory, ERRPASS,);
 
         readpos = descriptor.extentpos * 2048;
@@ -872,15 +867,12 @@ static void ISO9660_enumerateFiles(void *opaque, const char *dname,
 } /* ISO9660_enumerateFiles */
 
 
-static int ISO9660_stat(void *opaque, const char *name, int *exists,
-                        PHYSFS_Stat *stat)
+static int ISO9660_stat(void *opaque, const char *name, PHYSFS_Stat *stat)
 {
     ISO9660Handle *handle = (ISO9660Handle*) opaque;
     ISO9660FileDescriptor descriptor;
     ISO9660ExtAttributeRec extattr;
-    BAIL_IF_MACRO(iso_find_dir_entry(handle, name, &descriptor, exists), ERRPASS, -1);
-    if (!*exists)
-        return 0;
+    BAIL_IF_MACRO(iso_find_dir_entry(handle, name, &descriptor), ERRPASS, -1);
 
     stat->readonly = 1;
 

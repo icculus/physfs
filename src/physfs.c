@@ -728,6 +728,14 @@ void __PHYSFS_setError(const PHYSFS_ErrorCode errcode)
 } /* __PHYSFS_setError */
 
 
+/* this doesn't reset the error state. */
+static inline PHYSFS_ErrorCode currentErrorCode(void)
+{
+    const ErrState *err = findErrorForCurrentThread();
+    return err ? err->code : PHYSFS_ERR_OK;
+} /* currentErrorCode */
+
+
 PHYSFS_ErrorCode PHYSFS_getLastErrorCode(void)
 {
     ErrState *err = findErrorForCurrentThread();
@@ -1537,7 +1545,6 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
     PHYSFS_Stat statbuf;
     char *ptr = NULL;
     char *endstr = NULL;
-    int exists = 0;
 
     BAIL_IF_MACRO(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
     BAIL_IF_MACRO(!org, PHYSFS_ERR_INVALID_ARGUMENT, NULL);
@@ -1554,7 +1561,7 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
     assert(*endstr == dirsep);
     *endstr = '\0';  /* mask out the final dirsep for now. */
 
-    if (!__PHYSFS_platformStat(prefDir, &exists, &statbuf))
+    if (!__PHYSFS_platformStat(prefDir, &statbuf))
     {
         for (ptr = strchr(prefDir, dirsep); ptr; ptr = strchr(ptr+1, dirsep))
         {
@@ -1968,9 +1975,12 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
             end = strchr(start, '/');
 
             if (end != NULL) *end = '\0';
-            rc = h->funcs->stat(h->opaque, fname, &retval, &statbuf);
+            rc = h->funcs->stat(h->opaque, fname, &statbuf);
             if (rc)
                 rc = (statbuf.filetype == PHYSFS_FILETYPE_SYMLINK);
+            else if (currentErrorCode() == PHYSFS_ERR_NOT_FOUND)
+                retval = 0;
+
             if (end != NULL) *end = '/';
 
             /* insecure path (has a disallowed symlink in it)? */
@@ -2026,7 +2036,9 @@ static int doMkdir(const char *_dname, char *dname)
         if (exists)
         {
             PHYSFS_Stat statbuf;
-            const int rc = h->funcs->stat(h->opaque, dname, &exists, &statbuf);
+            const int rc = h->funcs->stat(h->opaque, dname, &statbuf);
+            if ((!rc) && (currentErrorCode() == PHYSFS_ERR_NOT_FOUND))
+                exists = 0;
             retval = ((rc) && (statbuf.filetype == PHYSFS_FILETYPE_DIRECTORY));
         } /* if */
 
@@ -2123,11 +2135,9 @@ const char *PHYSFS_getRealDir(const char *_fname)
             else if (verifyPath(i, &arcfname, 0))
             {
                 PHYSFS_Stat statbuf;
-                int exists = 0;
-                if (i->funcs->stat(i->opaque, arcfname, &exists, &statbuf))
+                if (i->funcs->stat(i->opaque, arcfname, &statbuf))
                 {
-                    if (exists)
-                        retval = i->dirName;
+                    retval = i->dirName;
                     break;
                 } /* if */
             } /* if */
@@ -2265,10 +2275,9 @@ static void enumCallbackFilterSymLinks(void *_data, const char *origdir,
         SymlinkFilterData *data = (SymlinkFilterData *) _data;
         const DirHandle *dh = data->dirhandle;
         PHYSFS_Stat statbuf;
-        int exists = 0;
 
         sprintf(path, "%s%s%s", trimmedDir, *trimmedDir ? "/" : "", fname);
-        if (dh->funcs->stat(dh->opaque, path, &exists, &statbuf))
+        if (dh->funcs->stat(dh->opaque, path, &statbuf))
         {
             /* Pass it on to the application if it's not a symlink. */
             if (statbuf.filetype != PHYSFS_FILETYPE_SYMLINK)
@@ -2871,7 +2880,9 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
                     /* !!! FIXME: this test is wrong and should be elsewhere. */
                     stat->readonly = !(writeDir &&
                                  (strcmp(writeDir->dirName, i->dirName) == 0));
-                    retval = i->funcs->stat(i->opaque, arcfname, &exists, stat);
+                    retval = i->funcs->stat(i->opaque, arcfname, stat);
+                    if ((retval) || (currentErrorCode() != PHYSFS_ERR_NOT_FOUND))
+                        exists = 1;
                 } /* else if */
             } /* for */
             __PHYSFS_platformReleaseMutex(stateLock);

@@ -639,13 +639,11 @@ static int LZMA_mkdir(void *opaque, const char *name)
     BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
 } /* LZMA_mkdir */
 
-static int LZMA_stat(void *opaque, const char *filename,
-                     int *exists, PHYSFS_Stat *stat)
+static int LZMA_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
 {
     const LZMAarchive *archive = (const LZMAarchive *) opaque;
     const LZMAfile *file = lzma_find_file(archive, filename);
 
-    *exists = (file != 0);
     if (!file)
         return 0;
 
@@ -699,5 +697,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_LZMA =
 
 #endif  /* defined PHYSFS_SUPPORTS_7Z */
 
-/* end of lzma.c ... */
+/* end of archiver_lzma.c ... */
 

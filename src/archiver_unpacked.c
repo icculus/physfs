@@ -414,8 +414,7 @@ int UNPK_mkdir(void *opaque, const char *name)
 } /* UNPK_mkdir */
 
 
-int UNPK_stat(void *opaque, const char *filename,
-              int *exists, PHYSFS_Stat *stat)
+int UNPK_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
 {
     int isDir = 0;
     const UNPKinfo *info = (const UNPKinfo *) opaque;
@@ -423,19 +422,16 @@ int UNPK_stat(void *opaque, const char *filename,
 
     if (isDir)
     {
-        *exists = 1;
         stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
         stat->filesize = 0;
     } /* if */
     else if (entry != NULL)
     {
-        *exists = 1;
         stat->filetype = PHYSFS_FILETYPE_REGULAR;
         stat->filesize = entry->size;
     } /* else if */
     else
     {
-        *exists = 0;
         return 0;
     } /* else */
 
