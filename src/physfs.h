@@ -408,6 +408,7 @@ typedef struct PHYSFS_ArchiveInfo
     const char *description; /**< Human-readable archive description. */
     const char *author;      /**< Person who did support for this archive. */
     const char *url;         /**< URL related to this archive */
+    int supportsSymlinks;    /**< non-zero if archive offers symbolic links. */
 } PHYSFS_ArchiveInfo;
 
 
@@ -3384,13 +3385,7 @@ typedef struct PHYSFS_Archiver
      * This is used to identify your archive, and is returned in
      *  PHYSFS_supportedArchiveTypes().
      */
-// !! FIXME: should this be const?
-    const PHYSFS_ArchiveInfo info;
-
-    /**
-     * !!! FIXME: document me.
-     */    
-    int supportsSymlinks;
+    PHYSFS_ArchiveInfo info;
 
 // !!! FIXME: documentation: \brief?
     /**

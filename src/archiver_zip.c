@@ -1697,8 +1697,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
         "PkZip/WinZip/Info-Zip compatible",
         "Ryan C. Gordon <icculus@icculus.org>",
         "http://icculus.org/physfs/",
+        1,  /* supportsSymlinks */
     },
-    1,  /* supportsSymlinks */
     ZIP_openArchive,        /* openArchive() method    */
     ZIP_enumerateFiles,     /* enumerateFiles() method */
     ZIP_openRead,           /* openRead() method       */

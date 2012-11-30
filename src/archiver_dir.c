@@ -185,8 +185,8 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
         "Non-archive, direct filesystem I/O",
         "Ryan C. Gordon <icculus@icculus.org>",
         "http://icculus.org/physfs/",
+        1,  /* supportsSymlinks */
     },
-    1,  /* supportsSymlinks */
     DIR_openArchive,        /* openArchive() method    */
     DIR_enumerateFiles,     /* enumerateFiles() method */
     DIR_openRead,           /* openRead() method       */
