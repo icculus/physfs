@@ -944,15 +944,15 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
         "http://www.evilazrael.de/",
         0,  /* supportsSymlinks */
     },
-    ISO9660_openArchive,        /* openArchive() method    */
-    ISO9660_enumerateFiles,     /* enumerateFiles() method */
-    ISO9660_openRead,           /* openRead() method       */
-    ISO9660_openWrite,          /* openWrite() method      */
-    ISO9660_openAppend,         /* openAppend() method     */
-    ISO9660_remove,             /* remove() method         */
-    ISO9660_mkdir,              /* mkdir() method          */
-    ISO9660_closeArchive,       /* closeArchive() method   */
-    ISO9660_stat                /* stat() method           */
+    ISO9660_openArchive,
+    ISO9660_enumerateFiles,
+    ISO9660_openRead,
+    ISO9660_openWrite,
+    ISO9660_openAppend,
+    ISO9660_remove,
+    ISO9660_mkdir,
+    ISO9660_closeArchive,
+    ISO9660_stat
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_ISO9660 */

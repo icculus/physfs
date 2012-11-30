@@ -176,15 +176,15 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
         "http://icculus.org/physfs/",
         1,  /* supportsSymlinks */
     },
-    DIR_openArchive,        /* openArchive() method    */
-    DIR_enumerateFiles,     /* enumerateFiles() method */
-    DIR_openRead,           /* openRead() method       */
-    DIR_openWrite,          /* openWrite() method      */
-    DIR_openAppend,         /* openAppend() method     */
-    DIR_remove,             /* remove() method         */
-    DIR_mkdir,              /* mkdir() method          */
-    DIR_closeArchive,       /* closeArchive() method   */
-    DIR_stat                /* stat() method           */
+    DIR_openArchive,
+    DIR_enumerateFiles,
+    DIR_openRead,
+    DIR_openWrite,
+    DIR_openAppend,
+    DIR_remove,
+    DIR_mkdir,
+    DIR_closeArchive,
+    DIR_stat
 };
 
 /* end of archiver_dir.c ... */

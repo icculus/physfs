@@ -104,15 +104,15 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
         "http://icculus.org/physfs/",
         0,  /* supportsSymlinks */
     },
-    QPAK_openArchive,       /* openArchive() method    */
-    UNPK_enumerateFiles,    /* enumerateFiles() method */
-    UNPK_openRead,          /* openRead() method       */
-    UNPK_openWrite,         /* openWrite() method      */
-    UNPK_openAppend,        /* openAppend() method     */
-    UNPK_remove,            /* remove() method         */
-    UNPK_mkdir,             /* mkdir() method          */
-    UNPK_closeArchive,      /* closeArchive() method   */
-    UNPK_stat               /* stat() method           */
+    QPAK_openArchive,
+    UNPK_enumerateFiles,
+    UNPK_openRead,
+    UNPK_openWrite,
+    UNPK_openAppend,
+    UNPK_remove,
+    UNPK_mkdir,
+    UNPK_closeArchive,
+    UNPK_stat
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_QPAK */
