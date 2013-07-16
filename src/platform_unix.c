@@ -193,7 +193,7 @@ static char *findBinaryInPath(const char *bin, char *envr)
 
         if (access(exe, X_OK) == 0)  /* Exists as executable? We're done. */
         {
-            exe[size - binlen] = '\0'; /* chop off filename, leave '/' */
+            exe[(size - binlen) - 1] = '\0'; /* chop off filename, leave '/' */
             return exe;
         } /* if */
 
