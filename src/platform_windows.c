@@ -412,6 +412,7 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     } /* if */
 
     sprintf(retval, "%s\\%s\\%s\\", utf8, org, app);
+    allocator.Free(utf8);
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */
 
