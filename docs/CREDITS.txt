@@ -136,6 +136,9 @@ SLB archiver:
 Bug fixes:
     Dmitry Marakasov
 
+Bug fixes:
+    Andreas Karlsson
+
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 
