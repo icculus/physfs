@@ -279,7 +279,8 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 int __PHYSFS_platformFlush(void *opaque)
 {
     const int fd = *((int *) opaque);
-    BAIL_IF_MACRO(fsync(fd) == -1, errcodeFromErrno(), 0);
+    if ((fcntl(fd, F_GETFL) & O_ACCMODE) != O_RDONLY)
+        BAIL_IF_MACRO(fsync(fd) == -1, errcodeFromErrno(), 0);
     return 1;
 } /* __PHYSFS_platformFlush */
 
