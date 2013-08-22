@@ -109,6 +109,9 @@ Bug fixes:
 Bug fixes:
     Lauri Kasanen
 
+Bug fixes:
+    Andreas Karlsson
+
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 
