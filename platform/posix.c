@@ -390,7 +390,8 @@ int __PHYSFS_platformEOF(void *opaque)
 int __PHYSFS_platformFlush(void *opaque)
 {
     int fd = *((int *) opaque);
-    BAIL_IF_MACRO(fsync(fd) == -1, strerror(errno), 0);
+    if ((fcntl(fd, F_GETFL) & O_ACCMODE) != O_RDONLY)
+        BAIL_IF_MACRO(fsync(fd) == -1, strerror(errno), 0);
     return(1);
 } /* __PHYSFS_platformFlush */
 
