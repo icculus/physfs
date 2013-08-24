@@ -631,6 +631,11 @@ void __PHYSFS_platformReleaseMutex(void *mutex);
  */
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a);
 
+/*
+ * Like strdup(), but uses the current PhysicsFS allocator.
+ */
+char *__PHYSFS_strdup(const char *str);
+
 #ifdef __cplusplus
 }
 #endif

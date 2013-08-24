@@ -1347,13 +1347,13 @@ int PHYSFS_isInit(void)
 } /* PHYSFS_isInit */
 
 
-static char *PHYSFS_strdup(const char *str)
+char *__PHYSFS_strdup(const char *str)
 {
     char *retval = (char *) allocator.Malloc(strlen(str) + 1);
     if (retval)
         strcpy(retval, str);
     return retval;
-} /* PHYSFS_strdup */
+} /* __PHYSFS_strdup */
 
 
 /* MAKE SURE you hold stateLock before calling this! */
@@ -1400,7 +1400,7 @@ static int doRegisterArchiver(const PHYSFS_Archiver *_archiver)
     info = (PHYSFS_ArchiveInfo *) &archiver->info;
     memset(info, '\0', sizeof (*info));  /* NULL in case an alloc fails. */
     #define CPYSTR(item) \
-        info->item = PHYSFS_strdup(_archiver->info.item); \
+        info->item = __PHYSFS_strdup(_archiver->info.item); \
         GOTO_IF_MACRO(!info->item, PHYSFS_ERR_OUT_OF_MEMORY, regfailed);
     CPYSTR(extension);
     CPYSTR(description);
