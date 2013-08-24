@@ -13,6 +13,7 @@
 
 #include <ctype.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <sys/stat.h>
@@ -20,6 +21,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <errno.h>
+#include <limits.h>
 
 #if PHYSFS_PLATFORM_LINUX && !defined(PHYSFS_HAVE_MNTENT_H)
 #define PHYSFS_HAVE_MNTENT_H 1
@@ -244,20 +246,45 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     char *retval = NULL;
     const char *envr = NULL;
 
-    /*
-     * Try to avoid using argv0 unless forced to. If there's a Linux-like
-     *  /proc filesystem, you can get the full path to the current process from
-     *  the /proc/self/exe symlink.
-     */
-    retval = readSymLink("/proc/self/exe");
-    if (retval == NULL)
+    /* Try to avoid using argv0 unless forced to. Try system-specific stuff. */
+    
+    #if PHYSFS_PLATFORM_FREEBSD
     {
-        /* older kernels don't have /proc/self ... try PID version... */
-        const unsigned long long pid = (unsigned long long) getpid();
-        char path[64];
-        const int rc = (int) snprintf(path,sizeof(path),"/proc/%llu/exe",pid);
-        if ( (rc > 0) && (rc < sizeof(path)) )
-            retval = readSymLink(path);
+        char fullpath[PATH_MAX];
+        size_t buflen = sizeof (fullpath);
+        int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+        if (sysctl(mib, 4, fullpath, &buflen, NULL, 0) != -1)
+            retval = __PHYSFS_strdup(fullpath);
+    }
+    #elif PHYSFS_PLATFORM_SOLARIS
+    {
+        const char *path = getexecname();
+        if ((path != NULL) && (path[0] == '/'))  /* must be absolute path... */
+            retval = __PHYSFS_strdup(path);
+    }
+    #endif
+
+    if (retval)
+        return retval;   /* already got it. */
+
+    /* If there's a Linux-like /proc filesystem, you can get the full path to
+     *  the current process from a symlink in there.
+     */
+
+    if (access("/proc", F_OK) == 0)
+    {
+        retval = readSymLink("/proc/self/exe");
+        if (!retval) retval = readSymLink("/proc/curproc/file");
+        if (!retval) retval = readSymLink("/proc/curproc/exe");
+        if (retval == NULL)
+        {
+            /* older kernels don't have /proc/self ... try PID version... */
+            const unsigned long long pid = (unsigned long long) getpid();
+            char path[64];
+            const int rc = (int) snprintf(path,sizeof(path),"/proc/%llu/exe",pid);
+            if ( (rc > 0) && (rc < sizeof(path)) )
+                retval = readSymLink(path);
+        } /* if */
     } /* if */
 
     if (retval != NULL)  /* chop off filename. */
@@ -272,7 +299,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
         } /* else */
     } /* if */
 
-    /* No /proc/self/exe, but we have an argv[0] we can parse? */
+    /* No /proc/self/exe, etc, but we have an argv[0] we can parse? */
     if ((retval == NULL) && (argv0 != NULL))
     {
         /* fast path: default behaviour can handle this. */
