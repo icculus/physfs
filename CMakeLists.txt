@@ -358,6 +358,18 @@ if(UNIX)
     )
 endif()
 
+if(UNIX AND NOT APPLE)
+    configure_file(
+        "extras/physfs.pc.in"
+        "extras/physfs.pc"
+        @ONLY
+    )
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/extras/physfs.pc"
+        DESTINATION "lib/pkgconfig"
+    )
+endif()
+
 macro(message_bool_option _NAME _VALUE)
     if(${_VALUE})
         message(STATUS "  ${_NAME}: enabled")
