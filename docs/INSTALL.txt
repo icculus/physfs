@@ -78,7 +78,7 @@ PhysicsFS will only link directly against system libraries that have existed
  behaviour when we can't find it...this is used for Unicode support and
  locating user-specific directories, etc.
 
-PhysicsFS works on 32-bit and 64-bit Windows. There is  no 16-bit Windows
+PhysicsFS works on 32-bit and 64-bit Windows. There is no 16-bit Windows
  support at all. Reports of success and problems can go to Ryan at
  icculus@icculus.org ...
 
@@ -123,19 +123,8 @@ If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
 
 OS/2:
 
-You need Innotek GCC and libc installed (or kLIBC). I tried this on a stock
- Warp 4 install, no fixpaks. You need to install link386.exe (Selective
- Install, "link object modules" option). Once klibc and GCC are installed
- correctly, unpack the source to PhysicsFS and run the script
- file "makeos2.cmd". I know this isn't ideal, but I wanted to have this build
- without users having to hunt down a "make" program.
-
-Someone please port CMake to OS/2. Ideally I'd like to be able to target
- Innotek GCC and OpenWatcom with CMake.
-
-If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
- OS/2, I'd like to hear from you; send an email to icculus@icculus.org.
-
+Support for OS/2 was removed in PhysicsFS 2.1. PhysicsFS 2.0 can still target
+this platform.
 
 
 OTHER PLATFORMS:
