@@ -1387,7 +1387,7 @@ static int doRegisterArchiver(const PHYSFS_Archiver *_archiver)
     for (i = 0; i < numArchivers; i++)
     {
         if (__PHYSFS_utf8stricmp(archiveInfo[i]->extension, ext) == 0)
-            BAIL_MACRO(PHYSFS_ERR_DUPLICATE, 0);  // !!! FIXME: better error? ERR_IN_USE?
+            BAIL_MACRO(PHYSFS_ERR_DUPLICATE, 0);  /* !!! FIXME: better error? ERR_IN_USE? */
     } /* for */
 
     /* make a copy of the data. */
