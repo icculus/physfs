@@ -2238,6 +2238,7 @@ typedef struct SymlinkFilterData
     DirHandle *dirhandle;
 } SymlinkFilterData;
 
+/* !!! FIXME: broken if in a virtual mountpoint (stat call fails). */
 static void enumCallbackFilterSymLinks(void *_data, const char *origdir,
                                        const char *fname)
 {
