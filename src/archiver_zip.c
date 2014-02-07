@@ -15,12 +15,7 @@
 #include <errno.h>
 #include <time.h>
 
-#define USE_MINIZ 1
-#if USE_MINIZ
 #include "physfs_miniz.h"
-#else
-#include <zlib.h>
-#endif
 
 /*
  * A buffer of ZIP_READBUFSIZE is allocated for each compressed file opened,
