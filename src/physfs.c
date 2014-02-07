@@ -2813,11 +2813,11 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
     char *fname;
     size_t len;
 
-    BAIL_IF_MACRO(!_fname, PHYSFS_ERR_INVALID_ARGUMENT, -1);
-    BAIL_IF_MACRO(!stat, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+    BAIL_IF_MACRO(!_fname, PHYSFS_ERR_INVALID_ARGUMENT, 0);
+    BAIL_IF_MACRO(!stat, PHYSFS_ERR_INVALID_ARGUMENT, 0);
     len = strlen(_fname) + 1;
     fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MACRO(!fname, PHYSFS_ERR_OUT_OF_MEMORY, -1);
+    BAIL_IF_MACRO(!fname, PHYSFS_ERR_OUT_OF_MEMORY, 0);
 
     /* set some sane defaults... */
     stat->filesize = -1;
