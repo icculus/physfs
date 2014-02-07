@@ -429,7 +429,7 @@ static PHYSFS_sint64 zip_find_end_of_central_dir(PHYSFS_Io *io, PHYSFS_sint64 *l
     int found = 0;
 
     filelen = io->length(io);
-    BAIL_IF_MACRO(filelen == -1, ERRPASS, 0);
+    BAIL_IF_MACRO(filelen == -1, ERRPASS, -1);
 
     /*
      * Jump to the end of the file and start reading backwards.
