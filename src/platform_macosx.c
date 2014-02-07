@@ -32,11 +32,11 @@
 /* Wrap PHYSFS_Allocator in a CFAllocator... */
 static CFAllocatorRef cfallocator = NULL;
 
-static CFStringRef cfallocDesc(const void *info)
+static CFStringRef cfallocCopyDesc(const void *info)
 {
     return CFStringCreateWithCString(cfallocator, "PhysicsFS",
                                      kCFStringEncodingASCII);
-} /* cfallocDesc */
+} /* cfallocCopyDesc */
 
 
 static void *cfallocMalloc(CFIndex allocSize, CFOptionFlags hint, void *info)
@@ -65,7 +65,7 @@ int __PHYSFS_platformInit(void)
     /* set up a CFAllocator, so Carbon can use the physfs allocator, too. */
     CFAllocatorContext ctx;
     memset(&ctx, '\0', sizeof (ctx));
-    ctx.copyDescription = cfallocDesc;
+    ctx.copyDescription = cfallocCopyDesc;
     ctx.allocate = cfallocMalloc;
     ctx.reallocate = cfallocRealloc;
     ctx.deallocate = cfallocFree;
