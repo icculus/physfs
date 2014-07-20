@@ -1187,7 +1187,7 @@ static int closeFileHandleList(FileHandle **list)
         PHYSFS_Io *io = i->io;
         next = i->next;
 
-        if (!io->flush(io))
+        if (io->flush && !io->flush(io))
         {
             *list = i;
             return 0;
@@ -2803,7 +2803,7 @@ int PHYSFS_flush(PHYSFS_File *handle)
     rc = io->write(io, fh->buffer + fh->bufpos, fh->buffill - fh->bufpos);
     BAIL_IF_MACRO(rc <= 0, ERRPASS, 0);
     fh->bufpos = fh->buffill = 0;
-    return io->flush(io);
+    return io->flush ? io->flush(io) : 1;
 } /* PHYSFS_flush */
 
 
