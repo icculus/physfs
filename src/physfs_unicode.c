@@ -447,6 +447,10 @@ static void locate_case_fold_mapping(const PHYSFS_uint32 from,
 static int utf8codepointcmp(const PHYSFS_uint32 cp1, const PHYSFS_uint32 cp2)
 {
     PHYSFS_uint32 folded1[3], folded2[3];
+
+    if (cp1 == cp2)
+        return 0;  /* obviously matches. */
+
     locate_case_fold_mapping(cp1, folded1);
     locate_case_fold_mapping(cp2, folded2);
 
