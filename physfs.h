@@ -899,7 +899,7 @@ __EXPORT__ const char *PHYSFS_getRealDir(const char *filename);
  *
  * Feel free to sort the list however you like. However, the returned data
  *  will always contain no duplicates, and will be always sorted in alphabetic
- *  (rather: Unicode) order for you.
+ *  (rather: Latin1, probably) order for you.
  *
  * Don't forget to call PHYSFS_freeList() with the return value from this
  *  function when you are done with it.
