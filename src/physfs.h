@@ -1097,8 +1097,9 @@ PHYSFS_DECL const char *PHYSFS_getRealDir(const char *filename);
  * We've got [z.sav].
  * We've got [w.sav].\endverbatim
  *
- * Feel free to sort the list however you like. We only promise there will
- *  be no duplicates, but not what order the final list will come back in.
+ * Feel free to sort the list however you like. However, the returned data
+ *  will always contain no duplicates, and will be always sorted in alphabetic
+ *  (rather: Unicode) order for you.
  *
  * Don't forget to call PHYSFS_freeList() with the return value from this
  *  function when you are done with it.
