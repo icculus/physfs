@@ -828,6 +828,7 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
     DirHandle *retval = NULL;
     const PHYSFS_Archiver **i;
     const char *ext;
+    int created_io = 0;
 
     assert((io != NULL) || (d != NULL));
 
@@ -841,6 +842,7 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
 
         io = __PHYSFS_createNativeIo(d, forWriting ? 'w' : 'r');
         BAIL_IF_MACRO(!io, ERRPASS, 0);
+        created_io = 1;
     } /* if */
 
     ext = find_filename_extension(d);
@@ -866,6 +868,9 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
             retval = tryOpenDir(io, *i, d, forWriting);
     } /* else */
+
+    if ((!retval) && (created_io))
+        io->destroy(io);
 
     BAIL_IF_MACRO(!retval, PHYSFS_ERR_UNSUPPORTED, NULL);
     return retval;
