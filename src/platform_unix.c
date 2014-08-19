@@ -173,7 +173,7 @@ static char *findBinaryInPath(const char *bin, char *envr)
 
         binlen = strlen(bin);
         size = strlen(start) + binlen + 2;
-        if (size > alloc_size)
+        if (size >= alloc_size)
         {
             char *x = (char *) allocator.Realloc(exe, size);
             if (!x)
