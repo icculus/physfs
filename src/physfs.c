@@ -2556,19 +2556,20 @@ static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
         memcpy(buffer, fh->buffer + fh->bufpos, (size_t) len);
         fh->bufpos += (PHYSFS_uint32) len;
         return (PHYSFS_sint64) len;
-    } /* else if */
+    } /* if */
 
-    if (buffered > 0) /* partially in the buffer... */
+    else if (buffered > 0) /* partially in the buffer... */
     {
         memcpy(buffer, fh->buffer + fh->bufpos, (size_t) buffered);
         buffer = ((PHYSFS_uint8 *) buffer) + buffered;
         len -= buffered;
         retval = buffered;
-        fh->buffill = fh->bufpos = 0;
     } /* if */
 
     /* if you got here, the buffer is drained and we still need bytes. */
     assert(len > 0);
+
+    fh->buffill = fh->bufpos = 0;
 
     io = fh->io;
     if (len >= fh->bufsize)  /* need more than the buffer takes. */

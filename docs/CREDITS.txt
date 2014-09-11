@@ -139,6 +139,9 @@ Bug fixes:
 Bug fixes:
     Andreas Karlsson
 
+Bug fixes:
+    Michael Bacon
+
 pkg-config support:
     Jonas Kulla
 
