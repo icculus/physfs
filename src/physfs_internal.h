@@ -134,7 +134,7 @@ void __PHYSFS_smallFree(void *ptr);
 #if  defined(__i386__) || defined(__ia64__) || \
      defined(_M_IX86) || defined(_M_IA64) || defined(_M_X64) || \
     (defined(__alpha__) || defined(__alpha)) || \
-     defined(__arm__) || defined(ARM) || \
+     defined(__arm__) || defined(ARM) || defined(_M_ARM) || \
     (defined(__mips__) && defined(__MIPSEL__)) || \
      defined(__SYMBIAN32__) || \
      defined(__x86_64__) || \

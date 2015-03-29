@@ -10,6 +10,7 @@
 #include "physfs_platforms.h"
 
 #ifdef PHYSFS_PLATFORM_WINDOWS
+#ifndef PHYSFS_PLATFORM_WINRT
 
 /* Forcibly disable UNICODE macro, since we manage this ourselves. */
 #ifdef UNICODE
@@ -928,6 +929,7 @@ int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 #endif  /* PHYSFS_PLATFORM_WINDOWS */
+#endif  /* PHYSFS_PLATFORM_WINRT */
 
 /* end of windows.c ... */
 
