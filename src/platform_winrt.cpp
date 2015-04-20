@@ -35,6 +35,8 @@
 * 18. Profit!
 */
 
+/* !!! FIXME: remove the tabstops from this file. */
+/* !!! FIXME: maybe just merge this back into platform_windows.c? */
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_platforms.h"
