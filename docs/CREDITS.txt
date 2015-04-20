@@ -52,6 +52,9 @@ Mac OS X improvements:
 iPhone support:
     Christian Gmeiner
 
+WinRT support:
+    Martin Ahrnbom
+
 HOG archiver,
 MVL archiver:
     Bradley Bell
