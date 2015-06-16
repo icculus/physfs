@@ -553,7 +553,7 @@ static void *ISO9660_openArchive(PHYSFS_Io *io, const char *filename, int forWri
 
     /* Skip system area to magic number in Volume descriptor */
     BAIL_IF_MACRO(!io->seek(io, 32769), ERRPASS, NULL);
-    BAIL_IF_MACRO(!io->read(io, magicnumber, 5) != 5, ERRPASS, NULL);
+    BAIL_IF_MACRO(io->read(io, magicnumber, 5) != 5, ERRPASS, NULL);
     if (memcmp(magicnumber, "CD001", 6) != 0)
         BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
 
