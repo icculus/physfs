@@ -1273,8 +1273,8 @@ static void freeArchivers(void)
 {
     while (numArchivers > 0)
     {
-        const int rc = doDeregisterArchiver(numArchivers - 1);
-        assert(rc);  /* nothing should be mounted during shutdown. */
+        if (!doDeregisterArchiver(numArchivers - 1))
+            assert(!"nothing should be mounted during shutdown.");
     } /* while */
 
     allocator.Free(archivers);
