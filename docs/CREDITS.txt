@@ -148,6 +148,9 @@ Bug fixes:
 Bug fixes:
     Xian Nox
 
+Bug fixes:
+    Reto Schneider
+
 pkg-config support:
     Jonas Kulla
 

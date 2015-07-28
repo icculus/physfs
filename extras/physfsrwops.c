@@ -24,15 +24,30 @@
 #include <stdio.h>  /* used for SEEK_SET, SEEK_CUR, SEEK_END ... */
 #include "physfsrwops.h"
 
-/* SDL's RWOPS interface changed a little in SDL 1.3... */
+/* SDL's RWOPS interface changed a little in SDL 2.0... */
 #if defined(SDL_VERSION_ATLEAST)
-#if SDL_VERSION_ATLEAST(1, 3, 0)
-#define TARGET_SDL13 1
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+#define TARGET_SDL2 1
 #endif
 #endif
 
-#if TARGET_SDL13
-static long SDLCALL physfsrwops_seek(struct SDL_RWops *rw, long offset, int whence)
+#if !TARGET_SDL2
+#define RW_SEEK_SET SEEK_SET
+#define RW_SEEK_CUR SEEK_CUR
+#define RW_SEEK_END SEEK_END
+#endif
+
+#if TARGET_SDL2
+static Sint64 SDLCALL physfsrwops_size(struct SDL_RWops *rw)
+{
+    PHYSFS_File *handle = (PHYSFS_File *) rw->hidden.unknown.data1;
+    return (Sint64) PHYSFS_fileLength(handle);
+} /* physfsrwops_size */
+#endif
+
+
+#if TARGET_SDL2
+static Sint64 SDLCALL physfsrwops_seek(struct SDL_RWops *rw, Sint64 offset, int whence)
 #else
 static int physfsrwops_seek(SDL_RWops *rw, int offset, int whence)
 #endif
@@ -40,10 +55,10 @@ static int physfsrwops_seek(SDL_RWops *rw, int offset, int whence)
     PHYSFS_File *handle = (PHYSFS_File *) rw->hidden.unknown.data1;
     PHYSFS_sint64 pos = 0;
 
-    if (whence == SEEK_SET)
+    if (whence == RW_SEEK_SET)
         pos = (PHYSFS_sint64) offset;
 
-    else if (whence == SEEK_CUR)
+    else if (whence == RW_SEEK_CUR)
     {
         const PHYSFS_sint64 current = PHYSFS_tell(handle);
         if (current == -1)
@@ -55,8 +70,8 @@ static int physfsrwops_seek(SDL_RWops *rw, int offset, int whence)
 
         if (offset == 0)  /* this is a "tell" call. We're done. */
         {
-            #if TARGET_SDL13
-            return (long) current;
+            #if TARGET_SDL2
+            return (Sint64) current;
             #else
             return (int) current;
             #endif
@@ -65,7 +80,7 @@ static int physfsrwops_seek(SDL_RWops *rw, int offset, int whence)
         pos = current + ((PHYSFS_sint64) offset);
     } /* else if */
 
-    else if (whence == SEEK_END)
+    else if (whence == RW_SEEK_END)
     {
         const PHYSFS_sint64 len = PHYSFS_fileLength(handle);
         if (len == -1)
@@ -95,15 +110,15 @@ static int physfsrwops_seek(SDL_RWops *rw, int offset, int whence)
         return -1;
     } /* if */
 
-    #if TARGET_SDL13
-    return (long) pos;
+    #if TARGET_SDL2
+    return (Sint64) pos;
     #else
     return (int) pos;
     #endif
 } /* physfsrwops_seek */
 
 
-#if TARGET_SDL13
+#if TARGET_SDL2
 static size_t SDLCALL physfsrwops_read(struct SDL_RWops *rw, void *ptr,
                                        size_t size, size_t maxnum)
 #else
@@ -116,18 +131,26 @@ static int physfsrwops_read(SDL_RWops *rw, void *ptr, int size, int maxnum)
     if (rc != ((PHYSFS_sint64) readlen))
     {
         if (!PHYSFS_eof(handle)) /* not EOF? Must be an error. */
+        {
             SDL_SetError("PhysicsFS error: %s", PHYSFS_getLastError());
+
+            #if TARGET_SDL2
+            return 0;
+            #else
+            return -1;
+            #endif
+        } /* if */
     } /* if */
 
-    #if TARGET_SDL13
-    return (size_t) rc;
+    #if TARGET_SDL2
+    return (size_t) rc / size;
     #else
-    return (int) rc;
+    return (int) rc / size;
     #endif
 } /* physfsrwops_read */
 
 
-#if TARGET_SDL13
+#if TARGET_SDL2
 static size_t SDLCALL physfsrwops_write(struct SDL_RWops *rw, const void *ptr,
                                         size_t size, size_t num)
 #else
@@ -140,7 +163,7 @@ static int physfsrwops_write(SDL_RWops *rw, const void *ptr, int size, int num)
     if (rc != ((PHYSFS_sint64) writelen))
         SDL_SetError("PhysicsFS error: %s", PHYSFS_getLastError());
 
-    #if TARGET_SDL13
+    #if TARGET_SDL2
     return (size_t) rc;
     #else
     return (int) rc;
@@ -173,6 +196,9 @@ static SDL_RWops *create_rwops(PHYSFS_File *handle)
         retval = SDL_AllocRW();
         if (retval != NULL)
         {
+            #if TARGET_SDL2
+            retval->size  = physfsrwops_size;
+            #endif
             retval->seek  = physfsrwops_seek;
             retval->read  = physfsrwops_read;
             retval->write = physfsrwops_write;
