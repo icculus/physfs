@@ -1176,25 +1176,34 @@ static PHYSFS_sint64 zip64_find_end_of_central_dir(PHYSFS_Io *io,
     /*  Just try moving back at most 256k. Oh well. */
     if ((offset < pos) && (pos > 4))
     {
-        /* we assume you can eat this stack if you handle Zip64 files. */
-        PHYSFS_uint8 buf[256 * 1024];
+        const PHYSFS_uint64 maxbuflen = 256 * 1024;
         PHYSFS_uint64 len = pos - offset;
+        PHYSFS_uint8 *buf = NULL;
         PHYSFS_sint32 i;
 
-        if (len > sizeof (buf))
-            len = sizeof (buf);
+        if (len > maxbuflen)
+            len = maxbuflen;
 
-        BAIL_IF_MACRO(!io->seek(io, pos - len), ERRPASS, -1);
-        BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, len), ERRPASS, -1);
+        buf = (PHYSFS_uint8 *) __PHYSFS_smallAlloc(len);
+        BAIL_IF_MACRO(!buf, PHYSFS_ERR_OUT_OF_MEMORY, -1);
+
+        if (!io->seek(io, pos - len) || !__PHYSFS_readAll(io, buf, len))
+        {
+            __PHYSFS_smallFree(buf);
+            return -1;  /* error was set elsewhere. */
+        } /* if */
+
         for (i = (PHYSFS_sint32) (len - 4); i >= 0; i--)
         {
-            if (buf[i] != 0x50)
-                continue;
-            if ( (buf[i+1] == 0x4b) &&
-                 (buf[i+2] == 0x06) &&
-                 (buf[i+3] == 0x06) )
+            if ( (buf[i] == 0x50) && (buf[i+1] == 0x4b) &&
+                 (buf[i+2] == 0x06) && (buf[i+3] == 0x06) )
+            {
+                __PHYSFS_smallFree(buf);
                 return pos - (len - i);
+            } /* if */
         } /* for */
+
+        __PHYSFS_smallFree(buf);
     } /* if */
 
     BAIL_MACRO(PHYSFS_ERR_CORRUPT, -1);  /* didn't find it. */
