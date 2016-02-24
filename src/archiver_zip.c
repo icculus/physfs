@@ -74,7 +74,7 @@ typedef struct _ZIPentry
  */
 typedef struct
 {
-    PHYSFS_Io *io;
+    PHYSFS_Io *io;            /* the i/o interface for this archive.  */
     int zip64;                /* non-zero if this is a Zip64 archive. */
     PHYSFS_uint64 entryCount; /* Number of files in ZIP.              */
     ZIPentry *entries;        /* info on all files in ZIP.            */
