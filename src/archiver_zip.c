@@ -46,6 +46,7 @@ typedef enum
     ZIP_UNRESOLVED_SYMLINK,
     ZIP_RESOLVING,
     ZIP_RESOLVED,
+    ZIP_DIRECTORY,
     ZIP_BROKEN_FILE,
     ZIP_BROKEN_SYMLINK
 } ZipResolveType;
@@ -67,6 +68,9 @@ typedef struct _ZIPentry
     PHYSFS_uint64 compressed_size;      /* compressed size                */
     PHYSFS_uint64 uncompressed_size;    /* uncompressed size              */
     PHYSFS_sint64 last_mod_time;        /* last file mod time             */
+    struct _ZIPentry *hashnext;         /* next item in this hash bucket  */
+    struct _ZIPentry *children;         /* linked list of kids, if dir    */
+    struct _ZIPentry *sibling;          /* next item in same dir          */
 } ZIPentry;
 
 /*
@@ -75,9 +79,10 @@ typedef struct _ZIPentry
 typedef struct
 {
     PHYSFS_Io *io;            /* the i/o interface for this archive.  */
+    ZIPentry root;            /* root of directory tree.              */
+    ZIPentry **hash;          /* all entries hashed for fast lookup.  */
+    size_t hashBuckets;       /* number of buckets in hash.           */
     int zip64;                /* non-zero if this is a Zip64 archive. */
-    PHYSFS_uint64 entryCount; /* Number of files in ZIP.              */
-    ZIPentry *entries;        /* info on all files in ZIP.            */
 } ZIPinfo;
 
 /*
@@ -162,6 +167,13 @@ static int zlib_err(const int rc)
     return rc;
 } /* zlib_err */
 
+/*
+ * Hash a string for lookup an a ZIPinfo hashtable.
+ */
+static inline PHYSFS_uint32 zip_hash_string(const ZIPinfo *info, const char *s)
+{
+    return __PHYSFS_hashString(s, strlen(s)) % info->hashBuckets;
+} /* zip_hash_string */
 
 /*
  * Read an unsigned 64-bit int and swap to native byte order.
@@ -531,69 +543,33 @@ static int isZip(PHYSFS_Io *io)
 } /* isZip */
 
 
-static void zip_free_entries(ZIPentry *entries, PHYSFS_uint64 max)
+/* Find the ZIPentry for a path in platform-independent notation. */
+static ZIPentry *zip_find_entry(ZIPinfo *info, const char *path)
 {
-    PHYSFS_uint64 i;
-    for (i = 0; i < max; i++)
+    PHYSFS_uint32 hashval;
+    ZIPentry *prev = NULL;
+    ZIPentry *retval;
+
+    if (*path == '\0')
+        return &info->root;
+
+    hashval = zip_hash_string(info, path);
+    for (retval = info->hash[hashval]; retval; retval = retval->hashnext)
     {
-        ZIPentry *entry = &entries[i];
-        if (entry->name != NULL)
-            allocator.Free(entry->name);
-    } /* for */
-
-    allocator.Free(entries);
-} /* zip_free_entries */
-
-
-/*
- * This will find the ZIPentry associated with a path in platform-independent
- *  notation. Directories don't have ZIPentries associated with them, but 
- *  (*isDir) will be set to non-zero if a dir was hit.
- */
-static ZIPentry *zip_find_entry(const ZIPinfo *info, const char *path,
-                                int *isDir)
-{
-    ZIPentry *a = info->entries;
-    PHYSFS_sint32 pathlen = (PHYSFS_sint32) strlen(path);
-    PHYSFS_sint64 lo = 0;
-    PHYSFS_sint64 hi = (PHYSFS_sint64) (info->entryCount - 1);
-    PHYSFS_sint64 middle;
-    const char *thispath = NULL;
-    int rc;
-
-    while (lo <= hi)
-    {
-        middle = lo + ((hi - lo) / 2);
-        thispath = a[middle].name;
-        rc = strncmp(path, thispath, pathlen);
-
-        if (rc > 0)
-            lo = middle + 1;
-
-        else if (rc < 0)
-            hi = middle - 1;
-
-        else /* substring match...might be dir or entry or nothing. */
+        if (strcmp(retval->name, path) == 0)
         {
-            if (isDir != NULL)
+            if (prev != NULL)  /* move this to the front of the list */
             {
-                *isDir = (thispath[pathlen] == '/');
-                if (*isDir)
-                    return NULL;
+                prev->hashnext = retval->hashnext;
+                retval->hashnext = info->hash[hashval];
+                info->hash[hashval] = retval;
             } /* if */
 
-            if (thispath[pathlen] == '\0') /* found entry? */
-                return &a[middle];
-            /* adjust search params, try again. */
-            else if (thispath[pathlen] > '/')
-                hi = middle - 1;
-            else
-                lo = middle + 1;
+            return retval;
         } /* if */
-    } /* while */
 
-    if (isDir != NULL)
-        *isDir = 0;
+        prev = retval;
+    } /* for */
 
     BAIL_MACRO(PHYSFS_ERR_NOT_FOUND, NULL);
 } /* zip_find_entry */
@@ -687,7 +663,7 @@ static ZIPentry *zip_follow_symlink(PHYSFS_Io *io, ZIPinfo *info, char *path)
     ZIPentry *entry;
 
     zip_expand_symlink_path(path);
-    entry = zip_find_entry(info, path, NULL);
+    entry = zip_find_entry(info, path);
     if (entry != NULL)
     {
         if (!zip_resolve(io, info, entry))  /* recursive! */
@@ -813,7 +789,10 @@ static int zip_parse_local(PHYSFS_Io *io, ZIPentry *entry)
 static int zip_resolve(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
 {
     int retval = 1;
-    ZipResolveType resolve_type = entry->resolved;
+    const ZipResolveType resolve_type = entry->resolved;
+
+    if (resolve_type == ZIP_DIRECTORY)
+        return 1;   /* we're good. */
 
     /* Don't bother if we've failed to resolve this entry before. */
     BAIL_IF_MACRO(resolve_type == ZIP_BROKEN_FILE, PHYSFS_ERR_CORRUPT, 0);
@@ -855,6 +834,78 @@ static int zip_resolve(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
 } /* zip_resolve */
 
 
+static int zip_hash_entry(ZIPinfo *info, ZIPentry *entry);
+
+/* Fill in missing parent directories. */
+static ZIPentry *zip_hash_ancestors(ZIPinfo *info, char *name)
+{
+    ZIPentry *retval = &info->root;
+    char *sep = strrchr(name, '/');
+
+    if (sep)
+    {
+        const size_t namelen = (sep - name) + 1;
+        ZIPentry *parent;
+
+        *sep = '\0';  /* chop off last piece. */
+        retval = zip_find_entry(info, name);
+        *sep = '/';
+
+        if (retval != NULL)
+        {
+            if (retval->resolved != ZIP_DIRECTORY)
+                BAIL_MACRO(PHYSFS_ERR_CORRUPT, NULL);
+            return retval;  /* already hashed. */
+        } /* if */
+
+        /* okay, this is a new dir. Build and hash us. */
+        retval = (ZIPentry *) allocator.Malloc(sizeof (ZIPentry) + namelen);
+        BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        memset(retval, '\0', sizeof (*retval));
+        retval->name = ((char *) retval) + sizeof (ZIPentry);
+        memcpy(retval->name, name, namelen);
+        retval->name[namelen] = '\0';
+        retval->resolved = ZIP_DIRECTORY;
+        if (!zip_hash_entry(info, retval))
+        {
+            allocator.Free(retval);
+            return NULL;
+        } /* if */
+    } /* else */
+
+    return retval;
+} /* zip_hash_ancestors */
+
+
+static int zip_hash_entry(ZIPinfo *info, ZIPentry *entry)
+{
+    PHYSFS_uint32 hashval;
+    ZIPentry *parent;
+
+    assert(!zip_find_entry(info, entry->name));  /* checked elsewhere */
+
+    parent = zip_hash_ancestors(info, entry->name);
+    if (!parent)
+        return 0;
+
+    hashval = zip_hash_string(info, entry->name);
+    entry->hashnext = info->hash[hashval];
+    info->hash[hashval] = entry;
+
+    entry->sibling = parent->children;
+    parent->children = entry;
+    return 1;
+} /* zip_hash_entry */
+
+
+static int zip_entry_is_symlink(const ZIPentry *entry)
+{
+    return ((entry->resolved == ZIP_UNRESOLVED_SYMLINK) ||
+            (entry->resolved == ZIP_BROKEN_SYMLINK) ||
+            (entry->symlink));
+} /* zip_entry_is_symlink */
+
+
 static int zip_version_does_symlinks(PHYSFS_uint32 version)
 {
     int retval = 0;
@@ -885,14 +936,6 @@ static int zip_version_does_symlinks(PHYSFS_uint32 version)
 
     return retval;
 } /* zip_version_does_symlinks */
-
-
-static int zip_entry_is_symlink(const ZIPentry *entry)
-{
-    return ((entry->resolved == ZIP_UNRESOLVED_SYMLINK) ||
-            (entry->resolved == ZIP_BROKEN_SYMLINK) ||
-            (entry->symlink));
-} /* zip_entry_is_symlink */
 
 
 static int zip_has_symlink_attr(ZIPentry *entry, PHYSFS_uint32 extern_attr)
@@ -930,9 +973,11 @@ static PHYSFS_sint64 zip_dos_time_to_physfs_time(PHYSFS_uint32 dostime)
 } /* zip_dos_time_to_physfs_time */
 
 
-static int zip_load_entry(PHYSFS_Io *io, const int zip64, ZIPentry *entry,
-                          PHYSFS_uint64 ofs_fixup)
+static ZIPentry *zip_load_entry(PHYSFS_Io *io, const int zip64,
+                                const PHYSFS_uint64 ofs_fixup)
 {
+    ZIPentry entry;
+    ZIPentry *retval = NULL;
     PHYSFS_uint16 fnamelen, extralen, commentlen;
     PHYSFS_uint32 external_attr;
     PHYSFS_uint32 starting_disk;
@@ -941,43 +986,57 @@ static int zip_load_entry(PHYSFS_Io *io, const int zip64, ZIPentry *entry,
     PHYSFS_uint32 ui32;
     PHYSFS_sint64 si64;
 
+    memset(&entry, '\0', sizeof (entry));
+
     /* sanity check with central directory signature... */
-    BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
-    BAIL_IF_MACRO(ui32 != ZIP_CENTRAL_DIR_SIG, PHYSFS_ERR_CORRUPT, 0);
+    if (!readui32(io, &ui32)) return NULL;
+    BAIL_IF_MACRO(ui32 != ZIP_CENTRAL_DIR_SIG, PHYSFS_ERR_CORRUPT, NULL);
 
     /* Get the pertinent parts of the record... */
-    BAIL_IF_MACRO(!readui16(io, &entry->version), ERRPASS, 0);
-    BAIL_IF_MACRO(!readui16(io, &entry->version_needed), ERRPASS, 0);
-    BAIL_IF_MACRO(!readui16(io, &ui16), ERRPASS, 0);  /* general bits */
-    BAIL_IF_MACRO(!readui16(io, &entry->compression_method), ERRPASS, 0);
-    BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
-    entry->last_mod_time = zip_dos_time_to_physfs_time(ui32);
-    BAIL_IF_MACRO(!readui32(io, &entry->crc), ERRPASS, 0);
-    BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
-    entry->compressed_size = (PHYSFS_uint64) ui32;
-    BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
-    entry->uncompressed_size = (PHYSFS_uint64) ui32;
-    BAIL_IF_MACRO(!readui16(io, &fnamelen), ERRPASS, 0);
-    BAIL_IF_MACRO(!readui16(io, &extralen), ERRPASS, 0);
-    BAIL_IF_MACRO(!readui16(io, &commentlen), ERRPASS, 0);
-    BAIL_IF_MACRO(!readui16(io, &ui16), ERRPASS, 0);
+    if (!readui16(io, &entry.version)) return NULL;
+    if (!readui16(io, &entry.version_needed)) return NULL;
+    if (!readui16(io, &ui16)) return NULL;  /* general bits */
+    if (!readui16(io, &entry.compression_method)) return NULL;
+    if (!readui32(io, &ui32)) return NULL;
+    entry.last_mod_time = zip_dos_time_to_physfs_time(ui32);
+    if (!readui32(io, &entry.crc)) return NULL;
+    if (!readui32(io, &ui32)) return NULL;
+    entry.compressed_size = (PHYSFS_uint64) ui32;
+    if (!readui32(io, &ui32)) return NULL;
+    entry.uncompressed_size = (PHYSFS_uint64) ui32;
+    if (!readui16(io, &fnamelen)) return NULL;
+    if (!readui16(io, &extralen)) return NULL;
+    if (!readui16(io, &commentlen)) return NULL;
+    if (!readui16(io, &ui16)) return NULL;
     starting_disk = (PHYSFS_uint32) ui16;
-    BAIL_IF_MACRO(!readui16(io, &ui16), ERRPASS, 0);  /* internal file attribs */
-    BAIL_IF_MACRO(!readui32(io, &external_attr), ERRPASS, 0);
-    BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
+    if (!readui16(io, &ui16)) return NULL;  /* internal file attribs */
+    if (!readui32(io, &external_attr)) return NULL;
+    if (!readui32(io, &ui32)) return NULL;
     offset = (PHYSFS_uint64) ui32;
 
-    entry->symlink = NULL;  /* will be resolved later, if necessary. */
-    entry->resolved = (zip_has_symlink_attr(entry, external_attr)) ?
-                            ZIP_UNRESOLVED_SYMLINK : ZIP_UNRESOLVED_FILE;
+    retval = (ZIPentry *) allocator.Malloc(sizeof (ZIPentry) + fnamelen + 1);
+    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, 0);
+    memcpy(retval, &entry, sizeof (*retval));
+    retval->name = ((char *) retval) + sizeof (ZIPentry);
 
-    entry->name = (char *) allocator.Malloc(fnamelen + 1);
-    BAIL_IF_MACRO(entry->name == NULL, PHYSFS_ERR_OUT_OF_MEMORY, 0);
-    if (!__PHYSFS_readAll(io, entry->name, fnamelen))
+    if (!__PHYSFS_readAll(io, retval->name, fnamelen))
         goto zip_load_entry_puked;
 
-    entry->name[fnamelen] = '\0';  /* null-terminate the filename. */
-    zip_convert_dos_path(entry, entry->name);
+    retval->name[fnamelen] = '\0';  /* null-terminate the filename. */
+    zip_convert_dos_path(retval, retval->name);
+
+    retval->symlink = NULL;  /* will be resolved later, if necessary. */
+
+    if (retval->name[fnamelen - 1] == '/')
+    {
+        retval->name[fnamelen - 1] = '\0';
+        retval->resolved = ZIP_DIRECTORY;
+    } /* if */
+    else
+    {
+        retval->resolved = (zip_has_symlink_attr(&entry, external_attr)) ?
+                                ZIP_UNRESOLVED_SYMLINK : ZIP_UNRESOLVED_FILE;
+    } /* else */
 
     si64 = io->tell(io);
     if (si64 == -1)
@@ -990,8 +1049,8 @@ static int zip_load_entry(PHYSFS_Io *io, const int zip64, ZIPentry *entry,
     if ( (zip64) &&
          ((offset == 0xFFFFFFFF) ||
           (starting_disk == 0xFFFFFFFF) ||
-          (entry->compressed_size == 0xFFFFFFFF) ||
-          (entry->uncompressed_size == 0xFFFFFFFF)) )
+          (retval->compressed_size == 0xFFFFFFFF) ||
+          (retval->uncompressed_size == 0xFFFFFFFF)) )
     {
         int found = 0;
         PHYSFS_uint16 sig, len;
@@ -1017,18 +1076,18 @@ static int zip_load_entry(PHYSFS_Io *io, const int zip64, ZIPentry *entry,
 
         GOTO_IF_MACRO(!found, PHYSFS_ERR_CORRUPT, zip_load_entry_puked);
 
-        if (entry->uncompressed_size == 0xFFFFFFFF)
+        if (retval->uncompressed_size == 0xFFFFFFFF)
         {
             GOTO_IF_MACRO(len < 8, PHYSFS_ERR_CORRUPT, zip_load_entry_puked);
-            if (!readui64(io, &entry->uncompressed_size))
+            if (!readui64(io, &retval->uncompressed_size))
                 goto zip_load_entry_puked;
             len -= 8;
         } /* if */
 
-        if (entry->compressed_size == 0xFFFFFFFF)
+        if (retval->compressed_size == 0xFFFFFFFF)
         {
             GOTO_IF_MACRO(len < 8, PHYSFS_ERR_CORRUPT, zip_load_entry_puked);
-            if (!readui64(io, &entry->compressed_size))
+            if (!readui64(io, &retval->compressed_size))
                 goto zip_load_entry_puked;
             len -= 8;
         } /* if */
@@ -1054,69 +1113,71 @@ static int zip_load_entry(PHYSFS_Io *io, const int zip64, ZIPentry *entry,
 
     GOTO_IF_MACRO(starting_disk != 0, PHYSFS_ERR_CORRUPT, zip_load_entry_puked);
 
-    entry->offset = offset + ofs_fixup;
+    retval->offset = offset + ofs_fixup;
 
     /* seek to the start of the next entry in the central directory... */
     if (!io->seek(io, si64 + extralen + commentlen))
         goto zip_load_entry_puked;
 
-    return 1;  /* success. */
+    return retval;  /* success. */
 
 zip_load_entry_puked:
-    allocator.Free(entry->name);
-    return 0;  /* failure. */
+    allocator.Free(retval);
+    return NULL;  /* failure. */
 } /* zip_load_entry */
 
 
-static int zip_entry_cmp(void *_a, size_t one, size_t two)
-{
-    if (one != two)
-    {
-        const ZIPentry *a = (const ZIPentry *) _a;
-        return strcmp(a[one].name, a[two].name);
-    } /* if */
-
-    return 0;
-} /* zip_entry_cmp */
-
-
-static void zip_entry_swap(void *_a, size_t one, size_t two)
-{
-    if (one != two)
-    {
-        ZIPentry tmp;
-        ZIPentry *first = &(((ZIPentry *) _a)[one]);
-        ZIPentry *second = &(((ZIPentry *) _a)[two]);
-        memcpy(&tmp, first, sizeof (ZIPentry));
-        memcpy(first, second, sizeof (ZIPentry));
-        memcpy(second, &tmp, sizeof (ZIPentry));
-    } /* if */
-} /* zip_entry_swap */
-
-
-static int zip_load_entries(PHYSFS_Io *io, ZIPinfo *info,
+/* This leaves things allocated on error; the caller will clean up the mess. */
+static int zip_load_entries(ZIPinfo *info,
                             const PHYSFS_uint64 data_ofs,
-                            const PHYSFS_uint64 central_ofs)
+                            const PHYSFS_uint64 central_ofs,
+                            const PHYSFS_uint64 entry_count)
 {
-    const PHYSFS_uint64 max = info->entryCount;
+    PHYSFS_Io *io = info->io;
     const int zip64 = info->zip64;
     PHYSFS_uint64 i;
 
-    BAIL_IF_MACRO(!io->seek(io, central_ofs), ERRPASS, 0);
+    if (!io->seek(io, central_ofs))
+        return 0;
 
-    info->entries = (ZIPentry *) allocator.Malloc(sizeof (ZIPentry) * max);
-    BAIL_IF_MACRO(!info->entries, PHYSFS_ERR_OUT_OF_MEMORY, 0);
-
-    for (i = 0; i < max; i++)
+    for (i = 0; i < entry_count; i++)
     {
-        if (!zip_load_entry(io, zip64, &info->entries[i], data_ofs))
+        ZIPentry *entry = zip_load_entry(io, zip64, data_ofs);
+        ZIPentry *find;
+
+        if (!entry)
+            return 0;
+
+        find = zip_find_entry(info, entry->name);
+        if (find != NULL)  /* duplicate? */
         {
-            zip_free_entries(info->entries, i);
+            if (find->last_mod_time != 0)  /* duplicate? */
+            {
+                allocator.Free(entry);
+                BAIL_MACRO(PHYSFS_ERR_CORRUPT, 0);
+            } /* if */
+            else  /* we filled this in as a placeholder. Update it. */
+            {
+                find->offset = entry->offset;
+                find->version = entry->version;
+                find->version_needed = entry->version_needed;
+                find->compression_method = entry->compression_method;
+                find->crc = entry->crc;
+                find->compressed_size = entry->compressed_size;
+                find->uncompressed_size = entry->uncompressed_size;
+                find->last_mod_time = entry->last_mod_time;
+                allocator.Free(entry);
+                continue;
+            } /* else */
+        } /* if */
+
+        if (!zip_hash_entry(info, entry))
+        {
+            allocator.Free(entry);
             return 0;
         } /* if */
     } /* for */
 
-    __PHYSFS_sort(info->entries, (size_t) max, zip_entry_cmp, zip_entry_swap);
     return 1;
 } /* zip_load_entries */
 
@@ -1210,11 +1271,13 @@ static PHYSFS_sint64 zip64_find_end_of_central_dir(PHYSFS_Io *io,
 } /* zip64_find_end_of_central_dir */
 
 
-static int zip64_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
+static int zip64_parse_end_of_central_dir(ZIPinfo *info,
                                           PHYSFS_uint64 *data_start,
                                           PHYSFS_uint64 *dir_ofs,
+                                          PHYSFS_uint64 *entry_count,
                                           PHYSFS_sint64 pos)
 {
+    PHYSFS_Io *io = info->io;
     PHYSFS_uint64 ui64;
     PHYSFS_uint32 ui32;
     PHYSFS_uint16 ui16;
@@ -1282,8 +1345,8 @@ static int zip64_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
     BAIL_IF_MACRO(!readui64(io, &ui64), ERRPASS, 0);
 
     /* total number of entries in the central dir */
-    BAIL_IF_MACRO(!readui64(io, &info->entryCount), ERRPASS, 0);
-    BAIL_IF_MACRO(ui64 != info->entryCount, PHYSFS_ERR_CORRUPT, 0);
+    BAIL_IF_MACRO(!readui64(io, entry_count), ERRPASS, 0);
+    BAIL_IF_MACRO(ui64 != *entry_count, PHYSFS_ERR_CORRUPT, 0);
 
     /* size of the central directory */
     BAIL_IF_MACRO(!readui64(io, &ui64), ERRPASS, 0);
@@ -1303,10 +1366,12 @@ static int zip64_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
 } /* zip64_parse_end_of_central_dir */
 
 
-static int zip_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
+static int zip_parse_end_of_central_dir(ZIPinfo *info,
                                         PHYSFS_uint64 *data_start,
-                                        PHYSFS_uint64 *dir_ofs)
+                                        PHYSFS_uint64 *dir_ofs,
+                                        PHYSFS_uint64 *entry_count)
 {
+    PHYSFS_Io *io = info->io;
     PHYSFS_uint16 entryCount16;
     PHYSFS_uint32 offset32;
     PHYSFS_uint32 ui32;
@@ -1326,10 +1391,12 @@ static int zip_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
 
     /* Seek back to see if "Zip64 end of central directory locator" exists. */
     /* this record is 20 bytes before end-of-central-dir */
-    rc = zip64_parse_end_of_central_dir(io, info, data_start, dir_ofs, pos-20);
-    BAIL_IF_MACRO(rc == 0, ERRPASS, 0);
-    if (rc == 1)
-        return 1;  /* we're done here. */
+    rc = zip64_parse_end_of_central_dir(info, data_start, dir_ofs,
+                                        entry_count, pos - 20);
+
+    /* Error or success? Bounce out of here. Keep going if not zip64. */
+    if ((rc == 0) || (rc == 1))
+        return rc;
 
     assert(rc == -1);  /* no error, just not a Zip64 archive. */
 
@@ -1351,7 +1418,7 @@ static int zip_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
     BAIL_IF_MACRO(!readui16(io, &entryCount16), ERRPASS, 0);
     BAIL_IF_MACRO(ui16 != entryCount16, PHYSFS_ERR_CORRUPT, 0);
 
-    info->entryCount = entryCount16;
+    *entry_count = entryCount16;
 
     /* size of the central directory */
     BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
@@ -1388,11 +1455,30 @@ static int zip_parse_end_of_central_dir(PHYSFS_Io *io, ZIPinfo *info,
 } /* zip_parse_end_of_central_dir */
 
 
+static int zip_alloc_hashtable(ZIPinfo *info, const PHYSFS_uint64 entry_count)
+{
+    size_t alloclen;
+
+    info->hashBuckets = (size_t) (entry_count / 5);
+    if (!info->hashBuckets)
+        info->hashBuckets = 1;
+
+    alloclen = info->hashBuckets * sizeof (ZIPentry *);
+    info->hash = (ZIPentry **) allocator.Malloc(alloclen);
+    BAIL_IF_MACRO(!info->hash, PHYSFS_ERR_OUT_OF_MEMORY, 0);
+    memset(info->hash, '\0', alloclen);
+
+    return 1;
+} /* zip_alloc_hashtable */
+
+static void ZIP_closeArchive(void *opaque);
+
 static void *ZIP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     ZIPinfo *info = NULL;
-    PHYSFS_uint64 data_start;
-    PHYSFS_uint64 cent_dir_ofs;
+    PHYSFS_uint64 dstart;  /* data start */
+    PHYSFS_uint64 cdir_ofs;  /* central dir offset */
+    PHYSFS_uint64 entry_count;
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
@@ -1402,93 +1488,24 @@ static void *ZIP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     info = (ZIPinfo *) allocator.Malloc(sizeof (ZIPinfo));
     BAIL_IF_MACRO(!info, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     memset(info, '\0', sizeof (ZIPinfo));
+    info->root.resolved = ZIP_DIRECTORY;
     info->io = io;
 
-    if (!zip_parse_end_of_central_dir(io, info, &data_start, &cent_dir_ofs))
+    if (!zip_parse_end_of_central_dir(info, &dstart, &cdir_ofs, &entry_count))
+        goto ZIP_openarchive_failed;
+    else if (!zip_alloc_hashtable(info, entry_count))
+        goto ZIP_openarchive_failed;
+    else if (!zip_load_entries(info, dstart, cdir_ofs, entry_count))
         goto ZIP_openarchive_failed;
 
-    if (!zip_load_entries(io, info, data_start, cent_dir_ofs))
-        goto ZIP_openarchive_failed;
-
+    assert(info->root.sibling == NULL);
     return info;
 
 ZIP_openarchive_failed:
-    if (info != NULL)
-        allocator.Free(info);
-
+    info->io = NULL;  /* don't let ZIP_closeArchive destroy (io). */
+    ZIP_closeArchive(info);
     return NULL;
 } /* ZIP_openArchive */
-
-
-static PHYSFS_sint64 zip_find_start_of_dir(ZIPinfo *info, const char *path,
-                                            int stop_on_first_find)
-{
-    PHYSFS_sint64 lo = 0;
-    PHYSFS_sint64 hi = (PHYSFS_sint64) (info->entryCount - 1);
-    PHYSFS_sint64 middle;
-    PHYSFS_uint32 dlen = (PHYSFS_uint32) strlen(path);
-    PHYSFS_sint64 retval = -1;
-    const char *name;
-    int rc;
-
-    if (*path == '\0')  /* root dir? */
-        return 0;
-
-    if ((dlen > 0) && (path[dlen - 1] == '/')) /* ignore trailing slash. */
-        dlen--;
-
-    while (lo <= hi)
-    {
-        middle = lo + ((hi - lo) / 2);
-        name = info->entries[middle].name;
-        rc = strncmp(path, name, dlen);
-        if (rc == 0)
-        {
-            char ch = name[dlen];
-            if ('/' < ch) /* make sure this isn't just a substr match. */
-                rc = -1;
-            else if ('/' > ch)
-                rc = 1;
-            else 
-            {
-                if (stop_on_first_find) /* Just checking dir's existance? */
-                    return middle;
-
-                if (name[dlen + 1] == '\0') /* Skip initial dir entry. */
-                    return (middle + 1);
-
-                /* there might be more entries earlier in the list. */
-                retval = middle;
-                hi = middle - 1;
-            } /* else */
-        } /* if */
-
-        if (rc > 0)
-            lo = middle + 1;
-        else
-            hi = middle - 1;
-    } /* while */
-
-    return retval;
-} /* zip_find_start_of_dir */
-
-
-/*
- * Moved to seperate function so we can use alloca then immediately throw
- *  away the allocated stack space...
- */
-static void doEnumCallback(PHYSFS_EnumFilesCallback cb, void *callbackdata,
-                           const char *odir, const char *str, PHYSFS_sint32 ln)
-{
-    char *newstr = __PHYSFS_smallAlloc(ln + 1);
-    if (newstr == NULL)
-        return;
-
-    memcpy(newstr, str, ln);
-    newstr[ln] = '\0';
-    cb(callbackdata, odir, newstr);
-    __PHYSFS_smallFree(newstr);
-} /* doEnumCallback */
 
 
 static void ZIP_enumerateFiles(void *opaque, const char *dname,
@@ -1496,41 +1513,15 @@ static void ZIP_enumerateFiles(void *opaque, const char *dname,
                                const char *origdir, void *callbackdata)
 {
     ZIPinfo *info = ((ZIPinfo *) opaque);
-    PHYSFS_sint32 dlen, dlen_inc;
-    PHYSFS_sint64 i, max;
-
-    i = zip_find_start_of_dir(info, dname, 0);
-    if (i == -1)  /* no such directory. */
-        return;
-
-    dlen = (PHYSFS_sint32) strlen(dname);
-    if ((dlen > 0) && (dname[dlen - 1] == '/')) /* ignore trailing slash. */
-        dlen--;
-
-    dlen_inc = ((dlen > 0) ? 1 : 0) + dlen;
-    max = (PHYSFS_sint64) info->entryCount;
-    while (i < max)
+    const ZIPentry *entry = zip_find_entry(info, dname);
+    if (entry && (entry->resolved == ZIP_DIRECTORY))
     {
-        char *e = info->entries[i].name;
-        if ((dlen) && ((strncmp(e, dname, dlen) != 0) || (e[dlen] != '/')))
-            break;  /* past end of this dir; we're done. */
-        else
+        for (entry = entry->children; entry; entry = entry->sibling)
         {
-            char *add = e + dlen_inc;
-            char *ptr = strchr(add, '/');
-            PHYSFS_sint32 ln = (PHYSFS_sint32) ((ptr) ? ptr-add : strlen(add));
-            doEnumCallback(cb, callbackdata, origdir, add, ln);
-            ln += dlen_inc;  /* point past entry to children... */
-
-            /* increment counter and skip children of subdirs... */
-            while ((++i < max) && (ptr != NULL))
-            {
-                char *e_new = info->entries[i].name;
-                if ((strncmp(e, e_new, ln) != 0) || (e_new[ln] != '/'))
-                    break;
-            } /* while */
-        } /* else */
-    } /* while */
+            const char *ptr = strrchr(entry->name, '/');
+            cb(callbackdata, origdir, ptr ? ptr + 1 : entry->name);
+        } /* for */
+    } /* if */
 } /* ZIP_enumerateFiles */
 
 
@@ -1565,7 +1556,7 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
 {
     PHYSFS_Io *retval = NULL;
     ZIPinfo *info = (ZIPinfo *) opaque;
-    ZIPentry *entry = zip_find_entry(info, filename, NULL);
+    ZIPentry *entry = zip_find_entry(info, filename);
     ZIPfileinfo *finfo = NULL;
 
     BAIL_IF_MACRO(!entry, ERRPASS, NULL);
@@ -1632,10 +1623,34 @@ static PHYSFS_Io *ZIP_openAppend(void *opaque, const char *filename)
 
 static void ZIP_closeArchive(void *opaque)
 {
-    ZIPinfo *zi = (ZIPinfo *) (opaque);
-    zi->io->destroy(zi->io);
-    zip_free_entries(zi->entries, zi->entryCount);
-    allocator.Free(zi);
+    ZIPinfo *info = (ZIPinfo *) (opaque);
+
+    if (!info)
+        return;
+
+    if (info->io)
+        info->io->destroy(info->io);
+
+    assert(info->root.sibling == NULL);
+    assert(info->hash || (info->root.children == NULL));
+
+    if (info->hash)
+    {
+        size_t i;
+        for (i = 0; i < info->hashBuckets; i++)
+        {
+            ZIPentry *entry;
+            ZIPentry *next;
+            for (entry = info->hash[i]; entry; entry = next)
+            {
+                next = entry->hashnext;
+                allocator.Free(entry);
+            } /* for */
+        } /* for */
+        allocator.Free(info->hash);
+    } /* if */
+
+    allocator.Free(info);
 } /* ZIP_closeArchive */
 
 
@@ -1653,16 +1668,15 @@ static int ZIP_mkdir(void *opaque, const char *name)
 
 static int ZIP_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
 {
-    int isDir = 0;
-    const ZIPinfo *info = (const ZIPinfo *) opaque;
-    const ZIPentry *entry = zip_find_entry(info, filename, &isDir);
+    ZIPinfo *info = (ZIPinfo *) opaque;
+    const ZIPentry *entry = zip_find_entry(info, filename);
 
     /* !!! FIXME: does this need to resolve entries here? */
 
-    if ((!isDir) && (entry == NULL))
+    if (entry == NULL)
         return 0;
 
-    else if (isDir)
+    else if (entry->resolved == ZIP_DIRECTORY)
     {
         stat->filesize = 0;
         stat->filetype = PHYSFS_FILETYPE_DIRECTORY;

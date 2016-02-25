@@ -1361,6 +1361,15 @@ char *__PHYSFS_strdup(const char *str)
 } /* __PHYSFS_strdup */
 
 
+PHYSFS_uint32 __PHYSFS_hashString(const char *str, size_t len)
+{
+    PHYSFS_uint32 hash = 5381;
+    while (len--)
+        hash = ((hash << 5) + hash) ^ *(str++);
+    return hash;
+} /* __PHYSFS_hashString */
+
+
 /* MAKE SURE you hold stateLock before calling this! */
 static int doRegisterArchiver(const PHYSFS_Archiver *_archiver)
 {
