@@ -162,8 +162,6 @@ void __PHYSFS_smallFree(void *ptr);
  *  a QuickSort and BubbleSort internally.
  * (cmpfn) is used to determine ordering, and (swapfn) does the actual
  *  swapping of elements in the list.
- *
- *  See zip.c for an example.
  */
 void __PHYSFS_sort(void *entries, size_t max,
                    int (*cmpfn)(void *, size_t, size_t),
@@ -251,6 +249,11 @@ int __PHYSFS_strnicmpASCII(const char *s1, const char *s2, PHYSFS_uint32 l);
  * Like strdup(), but uses the current PhysicsFS allocator.
  */
 char *__PHYSFS_strdup(const char *str);
+
+/*
+ * Give a hash value for a C string (uses djb's xor hashing algorithm).
+ */
+PHYSFS_uint32 __PHYSFS_hashString(const char *str, size_t len);
 
 
 /*
