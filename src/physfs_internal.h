@@ -131,18 +131,20 @@ void __PHYSFS_smallFree(void *ptr);
 #define PHYSFS_LIL_ENDIAN  1234
 #define PHYSFS_BIG_ENDIAN  4321
 
-#if  defined(__i386__) || defined(__ia64__) || \
-     defined(_M_IX86) || defined(_M_IA64) || defined(_M_X64) || \
-    (defined(__alpha__) || defined(__alpha)) || \
-     defined(__arm__) || defined(ARM) || defined(_M_ARM) || \
-    (defined(__mips__) && defined(__MIPSEL__)) || \
-     defined(__SYMBIAN32__) || \
-     defined(__x86_64__) || \
-     defined(__LITTLE_ENDIAN__)
-#define PHYSFS_BYTEORDER    PHYSFS_LIL_ENDIAN
+#ifdef __linux__
+#include <endian.h>
+#define PHYSFS_BYTEORDER  __BYTE_ORDER
+#else /* __linux__ */
+#if defined(__hppa__) || \
+    defined(__m68k__) || defined(mc68000) || defined(_M_M68K) || \
+    (defined(__MIPS__) && defined(__MISPEB__)) || \
+    defined(__ppc__) || defined(__POWERPC__) || defined(_M_PPC) || \
+    defined(__sparc__)
+#define PHYSFS_BYTEORDER   PHYSFS_BIG_ENDIAN
 #else
-#define PHYSFS_BYTEORDER    PHYSFS_BIG_ENDIAN
+#define PHYSFS_BYTEORDER   PHYSFS_LIL_ENDIAN
 #endif
+#endif /* __linux__ */
 
 
 /*
