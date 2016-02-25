@@ -16,7 +16,7 @@
  *  Please see LICENSE.txt in the root of the source tree.
  *
  * SDL 1.2 falls under the LGPL license. SDL 1.3+ is zlib, like PhysicsFS.
- *  You can get SDL at http://www.libsdl.org/
+ *  You can get SDL at https://www.libsdl.org/
  *
  *  This file was written by Ryan C. Gordon. (icculus@icculus.org).
  */

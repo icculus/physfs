@@ -88,7 +88,7 @@ int __PHYSFS_platformDeinit(void)
 
 /*
  * Code based on sample from Apple Developer Connection:
- *  http://developer.apple.com/samplecode/Sample_Code/Devices_and_Hardware/Disks/VolumeToBSDNode/VolumeToBSDNode.c.htm
+ *  https://developer.apple.com/samplecode/Sample_Code/Devices_and_Hardware/Disks/VolumeToBSDNode/VolumeToBSDNode.c.htm
  */
 
 #if !defined(PHYSFS_NO_CDROM_SUPPORT)

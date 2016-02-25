@@ -87,7 +87,7 @@ static char *getMountPoint(const char *devname, char *buf, size_t bufsize)
 
     /*
      * This function is lifted from Simple Directmedia Layer (SDL):
-     *  http://www.libsdl.org/  ... this is zlib-licensed code, too.
+     *  https://www.libsdl.org/  ... this is zlib-licensed code, too.
      */
 static void tryDir(const char *d, PHYSFS_StringCallback callback, void *data)
 {

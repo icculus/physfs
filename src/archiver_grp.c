@@ -92,7 +92,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
         "GRP",
         "Build engine Groupfile format",
         "Ryan C. Gordon <icculus@icculus.org>",
-        "http://icculus.org/physfs/",
+        "https://icculus.org/physfs/",
         0,  /* supportsSymlinks */
     },
     GRP_openArchive,

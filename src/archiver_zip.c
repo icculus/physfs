@@ -1710,7 +1710,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
         "ZIP",
         "PkZip/WinZip/Info-Zip compatible",
         "Ryan C. Gordon <icculus@icculus.org>",
-        "http://icculus.org/physfs/",
+        "https://icculus.org/physfs/",
         1,  /* supportsSymlinks */
     },
     ZIP_openArchive,

@@ -127,7 +127,7 @@ void __PHYSFS_smallFree(void *ptr);
 /* The latest supported PHYSFS_Archiver::version value. */
 #define CURRENT_PHYSFS_ARCHIVER_API_VERSION 0
 
-/* This byteorder stuff was lifted from SDL. http://www.libsdl.org/ */
+/* This byteorder stuff was lifted from SDL. https://www.libsdl.org/ */
 #define PHYSFS_LIL_ENDIAN  1234
 #define PHYSFS_BIG_ENDIAN  4321
 

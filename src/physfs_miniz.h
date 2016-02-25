@@ -1,7 +1,7 @@
 /* tinfl.c v1.11 - public domain inflate with zlib header parsing/adler32 checking (inflate-only subset of miniz.c)
    See "unlicense" statement at the end of this file.
    Rich Geldreich <richgel99@gmail.com>, last updated May 20, 2011
-   Implements RFC 1950: http://www.ietf.org/rfc/rfc1950.txt and RFC 1951: http://www.ietf.org/rfc/rfc1951.txt
+   Implements RFC 1950: https://www.ietf.org/rfc/rfc1950.txt and RFC 1951: https://www.ietf.org/rfc/rfc1951.txt
 
    The entire decompressor coroutine is implemented in tinfl_decompress(). The other functions are optional high-level helpers.
 */
@@ -694,5 +694,5 @@ static int mz_inflateEnd(mz_streamp pStream)
   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
   OTHER DEALINGS IN THE SOFTWARE.
 
-  For more information, please refer to <http://unlicense.org/>
+  For more information, please refer to <https://unlicense.org/>
 */

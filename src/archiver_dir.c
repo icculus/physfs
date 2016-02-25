@@ -173,7 +173,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
         "",
         "Non-archive, direct filesystem I/O",
         "Ryan C. Gordon <icculus@icculus.org>",
-        "http://icculus.org/physfs/",
+        "https://icculus.org/physfs/",
         1,  /* supportsSymlinks */
     },
     DIR_openArchive,
