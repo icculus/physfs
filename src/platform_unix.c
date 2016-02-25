@@ -337,7 +337,7 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
      *  This isn't strictly correct, but the results are relatively sane
      *  in any case.
      *
-     * http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+     * https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
      */
     const char *envr = getenv("XDG_DATA_HOME");
     const char *append = "/";

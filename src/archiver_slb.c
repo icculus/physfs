@@ -106,7 +106,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_SLB =
         "SLB",
         "I-War / Independence War Slab file",
         "Aleksi Nurmi <aleksi.nurmi@gmail.com>",
-        "http://bitbucket.org/ahnurmi/",
+        "https://bitbucket.org/ahnurmi/",
         0,  /* supportsSymlinks */
     },
     SLB_openArchive,

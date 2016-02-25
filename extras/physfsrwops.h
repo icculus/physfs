@@ -15,7 +15,7 @@
  * Unless otherwise stated, the rest of PhysicsFS falls under the zlib license.
  *  Please see LICENSE.txt in the root of the source tree.
  *
- * SDL falls under the LGPL license. You can get SDL at http://www.libsdl.org/
+ * SDL falls under the LGPL license. You can get SDL at https://www.libsdl.org/
  *
  *  This file was written by Ryan C. Gordon. (icculus@icculus.org).
  */

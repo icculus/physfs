@@ -4,7 +4,7 @@
 
 /*
  * From rfc3629, the UTF-8 spec:
- *  http://www.ietf.org/rfc/rfc3629.txt
+ *  https://www.ietf.org/rfc/rfc3629.txt
  *
  *   Char. number range  |        UTF-8 octet sequence
  *      (hexadecimal)    |              (binary)

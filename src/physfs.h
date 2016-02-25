@@ -8,7 +8,7 @@
  * \mainpage PhysicsFS
  *
  * The latest version of PhysicsFS can be found at:
- *     http://icculus.org/physfs/
+ *     https://icculus.org/physfs/
  *
  * PhysicsFS; a portable, flexible file i/o abstraction.
  *

@@ -941,7 +941,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
         "ISO",
         "ISO9660 image file",
         "Christoph Nelles <evilazrael@evilazrael.de>",
-        "http://www.evilazrael.de/",
+        "https://www.evilazrael.de/",
         0,  /* supportsSymlinks */
     },
     ISO9660_openArchive,
