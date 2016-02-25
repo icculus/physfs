@@ -247,6 +247,11 @@ int __PHYSFS_stricmpASCII(const char *s1, const char *s2);
  */
 int __PHYSFS_strnicmpASCII(const char *s1, const char *s2, PHYSFS_uint32 l);
 
+/*
+ * Like strdup(), but uses the current PhysicsFS allocator.
+ */
+char *__PHYSFS_strdup(const char *str);
+
 
 /*
  * The current allocator. Not valid before PHYSFS_init is called!
@@ -630,11 +635,6 @@ void __PHYSFS_platformReleaseMutex(void *mutex);
  *  after this function returns non-zero.
  */
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a);
-
-/*
- * Like strdup(), but uses the current PhysicsFS allocator.
- */
-char *__PHYSFS_strdup(const char *str);
 
 #ifdef __cplusplus
 }
