@@ -845,7 +845,6 @@ static ZIPentry *zip_hash_ancestors(ZIPinfo *info, char *name)
     if (sep)
     {
         const size_t namelen = (sep - name) + 1;
-        ZIPentry *parent;
 
         *sep = '\0';  /* chop off last piece. */
         retval = zip_find_entry(info, name);
