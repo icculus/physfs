@@ -480,14 +480,6 @@ void *__PHYSFS_platformGetThreadID(void)
     return ( (void *) ((size_t) GetCurrentThreadId()) );
 } /* __PHYSFS_platformGetThreadID */
 
-
-static int isSymlinkAttrs(const DWORD attr, const DWORD tag)
-{
-    return ( (attr & FILE_ATTRIBUTE_REPARSE_POINT) && 
-             (tag == PHYSFS_IO_REPARSE_TAG_SYMLINK) );
-} /* isSymlinkAttrs */
-
-
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      PHYSFS_EnumFilesCallback callback,
                                      const char *origdir,
@@ -530,8 +522,6 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 
     do
     {
-        const DWORD attr = entw.dwFileAttributes;
-        const DWORD tag = entw.dwReserved0;
         const WCHAR *fn = entw.cFileName;
         char *utf8;
 
