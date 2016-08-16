@@ -124,7 +124,7 @@ SZ_RESULT SzFileReadImp(void *object, void **buffer, size_t maxReqSize,
 SZ_RESULT SzFileReadImp(void *object, void *buffer, size_t size,
                         size_t *processedSize)
 {
-    FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); /* HACK! */
+    FileInputStream *s = (FileInputStream *)((size_t)object - offsetof(FileInputStream, inStream)); /* HACK! */
     const size_t processedSizeLoc = s->io->read(s->io, buffer, size);
     if (processedSize != NULL)
         *processedSize = processedSizeLoc;
@@ -139,7 +139,7 @@ SZ_RESULT SzFileReadImp(void *object, void *buffer, size_t size,
  */
 SZ_RESULT SzFileSeekImp(void *object, CFileSize pos)
 {
-    FileInputStream *s = (FileInputStream *)((unsigned long)object - offsetof(FileInputStream, inStream)); /* HACK! */
+    FileInputStream *s = (FileInputStream *)((size_t)object - offsetof(FileInputStream, inStream)); /* HACK! */
     if (s->io->seek(s->io, (PHYSFS_uint64) pos))
         return SZ_OK;
     return SZE_FAIL;
