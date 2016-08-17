@@ -1550,7 +1550,7 @@ PHYSFS_DECL PHYSFS_uint32 PHYSFS_swapULE32(PHYSFS_uint32 val);
  *    \param val value to convert
  *   \return converted value.
  *
- * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_swapSLE64(PHYSFS_sint64 val);
@@ -1633,7 +1633,7 @@ PHYSFS_DECL PHYSFS_uint32 PHYSFS_swapUBE32(PHYSFS_uint32 val);
  *    \param val value to convert
  *   \return converted value.
  *
- * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_swapSBE64(PHYSFS_sint64 val);
@@ -1997,7 +1997,7 @@ PHYSFS_DECL int PHYSFS_writeUBE32(PHYSFS_File *file, PHYSFS_uint32 val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_getLastError().
  *
- * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
 PHYSFS_DECL int PHYSFS_writeSLE64(PHYSFS_File *file, PHYSFS_sint64 val);
@@ -2033,7 +2033,7 @@ PHYSFS_DECL int PHYSFS_writeULE64(PHYSFS_File *file, PHYSFS_uint64 val);
  *   \return zero on failure, non-zero on success. On failure, you can
  *           find out what went wrong from PHYSFS_getLastError().
  *
- * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
+ * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
  */
 PHYSFS_DECL int PHYSFS_writeSBE64(PHYSFS_File *file, PHYSFS_sint64 val);
