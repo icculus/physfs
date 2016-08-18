@@ -67,8 +67,7 @@ extern "C" {
  *  existing match. If there is no match, the search aborts and reports an
  *  error. Exact matches are favored over case-insensitive matches.
  *
- * THIS IS RISKY. Please do not use this function for anything but crappy
- *  legacy code.
+ * THIS IS RISKY. Please do not use this function for anything but legacy code.
  *
  *   \param buf Buffer with null-terminated string of path/file to locate.
  *               This buffer will be modified by this function.
