@@ -18,14 +18,14 @@
  *    or file (which brings security considerations and potential bugs). This
  *    code favours exact case matches, but you will lose access to otherwise
  *    duplicate filenames, or you might go down a wrong directory tree, etc.
- *    In practive, this is rarely a problem, but you need to be aware of it.
+ *    In practice, this is rarely a problem, but you need to be aware of it.
  *  - This doesn't do _anything_ with the write directory; you're on your
  *    own for opening the right files for writing. You can sort of get around
  *    this by adding your write directory to the search path, but then the
  *    interpolated directory tree can screw you up even more.
  *
  * This code should be considered an aid for legacy code. New development
- *  shouldn't do dumbass things that require this aid in the first place.  :)
+ *  shouldn't do things that require this aid in the first place.  :)
  *
  * Usage: Set up PhysicsFS as you normally would, then use
  *  PHYSFSEXT_locateCorrectCase() to get a "correct" pathname to pass to
