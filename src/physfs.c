@@ -1286,8 +1286,6 @@ static void freeArchivers(void)
 
 static int doDeinit(void)
 {
-    BAIL_IF_MACRO(!__PHYSFS_platformDeinit(), ERRPASS, 0);
-
     closeFileHandleList(&openWriteList);
     BAIL_IF_MACRO(!PHYSFS_setWriteDir(NULL), PHYSFS_ERR_FILES_STILL_OPEN, 0);
 
@@ -1335,6 +1333,10 @@ static int doDeinit(void)
         allocator.Deinit();
 
     errorLock = stateLock = NULL;
+
+    /* !!! FIXME: what on earth are you supposed to do if this fails? */
+    BAIL_IF_MACRO(!__PHYSFS_platformDeinit(), ERRPASS, 0);
+
     return 1;
 } /* doDeinit */
 
