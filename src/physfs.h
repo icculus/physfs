@@ -3153,7 +3153,8 @@ typedef enum PHYSFS_ErrorCode
     PHYSFS_ERR_BUSY,             /**< Tried to modify a file the OS needs.  */
     PHYSFS_ERR_DIR_NOT_EMPTY,    /**< Tried to delete dir with files in it. */
     PHYSFS_ERR_OS_ERROR,         /**< Unspecified OS-level error.           */
-    PHYSFS_ERR_DUPLICATE         /**< Duplicate entry.                      */
+    PHYSFS_ERR_DUPLICATE,        /**< Duplicate entry.                      */
+    PHYSFS_ERR_BAD_PASSWORD      /**< Bad password.                         */
 } PHYSFS_ErrorCode;
 
 

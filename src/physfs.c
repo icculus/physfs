@@ -701,6 +701,7 @@ PHYSFS_DECL const char *PHYSFS_getErrorByCode(PHYSFS_ErrorCode code)
         case PHYSFS_ERR_DIR_NOT_EMPTY: return "directory isn't empty";
         case PHYSFS_ERR_OS_ERROR: return "OS reported an error";
         case PHYSFS_ERR_DUPLICATE: return "duplicate resource";
+        case PHYSFS_ERR_BAD_PASSWORD: return "bad password";
     } /* switch */
 
     return NULL;  /* don't know this error code. */

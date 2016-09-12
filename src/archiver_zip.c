@@ -63,11 +63,13 @@ typedef struct _ZIPentry
     PHYSFS_uint64 offset;               /* offset of data in archive      */
     PHYSFS_uint16 version;              /* version made by                */
     PHYSFS_uint16 version_needed;       /* version needed to extract      */
+    PHYSFS_uint16 general_bits;         /* general purpose bits           */
     PHYSFS_uint16 compression_method;   /* compression method             */
     PHYSFS_uint32 crc;                  /* crc-32                         */
     PHYSFS_uint64 compressed_size;      /* compressed size                */
     PHYSFS_uint64 uncompressed_size;    /* uncompressed size              */
     PHYSFS_sint64 last_mod_time;        /* last file mod time             */
+    PHYSFS_uint32 dos_mod_time;         /* original MS-DOS style mod time */
     struct _ZIPentry *hashnext;         /* next item in this hash bucket  */
     struct _ZIPentry *children;         /* linked list of kids, if dir    */
     struct _ZIPentry *sibling;          /* next item in same dir          */
@@ -78,11 +80,12 @@ typedef struct _ZIPentry
  */
 typedef struct
 {
-    PHYSFS_Io *io;            /* the i/o interface for this archive.  */
-    ZIPentry root;            /* root of directory tree.              */
-    ZIPentry **hash;          /* all entries hashed for fast lookup.  */
-    size_t hashBuckets;       /* number of buckets in hash.           */
-    int zip64;                /* non-zero if this is a Zip64 archive. */
+    PHYSFS_Io *io;            /* the i/o interface for this archive.    */
+    ZIPentry root;            /* root of directory tree.                */
+    ZIPentry **hash;          /* all entries hashed for fast lookup.    */
+    size_t hashBuckets;       /* number of buckets in hash.             */
+    int zip64;                /* non-zero if this is a Zip64 archive.   */
+    int has_crypto;           /* non-zero if any entry uses encryption. */
 } ZIPinfo;
 
 /*
@@ -95,6 +98,8 @@ typedef struct
     PHYSFS_uint32 compressed_position;    /* offset in compressed data. */
     PHYSFS_uint32 uncompressed_position;  /* tell() position.           */
     PHYSFS_uint8 *buffer;                 /* decompression buffer.      */
+    PHYSFS_uint32 crypto_keys[3];         /* for "traditional" crypto.  */
+    PHYSFS_uint32 initial_crypto_keys[3]; /* for "traditional" crypto.  */
     z_stream stream;                      /* zlib stream state.         */
 } ZIPfileinfo;
 
@@ -114,6 +119,103 @@ typedef struct
 
 #define UNIX_FILETYPE_MASK    0170000
 #define UNIX_FILETYPE_SYMLINK 0120000
+
+#define ZIP_GENERAL_BITS_TRADITIONAL_CRYPTO   (1 << 0)
+#define ZIP_GENERAL_BITS_IGNORE_LOCAL_HEADER  (1 << 3)
+
+/* support for "traditional" PKWARE encryption. */
+static int zip_entry_is_tradional_crypto(const ZIPentry *entry)
+{
+    return (entry->general_bits & ZIP_GENERAL_BITS_TRADITIONAL_CRYPTO) != 0;
+} /* zip_entry_is_traditional_crypto */
+
+static int zip_entry_ignore_local_header(const ZIPentry *entry)
+{
+    return (entry->general_bits & ZIP_GENERAL_BITS_IGNORE_LOCAL_HEADER) != 0;
+} /* zip_entry_is_traditional_crypto */
+
+static PHYSFS_uint32 zip_crypto_crc32(const PHYSFS_uint32 crc, const PHYSFS_uint8 val)
+{
+    int i;
+    PHYSFS_uint32 xorval = (crc ^ ((PHYSFS_uint32) val)) & 0xFF;
+    for (i = 0; i < 8; i++)
+        xorval = ((xorval & 1) ? (0xEDB88320 ^ (xorval >> 1)) : (xorval >> 1));
+    return xorval ^ (crc >> 8);
+} /* zip_crc32 */
+
+static void zip_update_crypto_keys(PHYSFS_uint32 *keys, const PHYSFS_uint8 val)
+{
+    keys[0] = zip_crypto_crc32(keys[0], val);
+    keys[1] = keys[1] + (keys[0] & 0x000000FF);
+    keys[1] = (keys[1] * 134775813) + 1;
+    keys[2] = zip_crypto_crc32(keys[2], (PHYSFS_uint8) ((keys[1] >> 24) & 0xFF));
+} /* zip_update_crypto_keys */
+
+static PHYSFS_uint8 zip_decrypt_byte(const PHYSFS_uint32 *keys)
+{
+    const PHYSFS_uint16 tmp = keys[2] | 2;
+    return (PHYSFS_uint8) ((tmp * (tmp ^ 1)) >> 8);
+} /* zip_decrypt_byte */
+
+static PHYSFS_sint64 zip_read_decrypt(ZIPfileinfo *finfo, void *buf, PHYSFS_uint64 len)
+{
+    PHYSFS_Io *io = finfo->io;
+    const PHYSFS_sint64 br = io->read(io, buf, len);
+
+    /* Decompression the new data if necessary. */
+    if (zip_entry_is_tradional_crypto(finfo->entry) && (br > 0))
+    {
+        PHYSFS_uint32 *keys = finfo->crypto_keys;
+        PHYSFS_uint8 *ptr = (PHYSFS_uint8 *) buf;
+        PHYSFS_sint64 i;
+        for (i = 0; i < br; i++, ptr++)
+        {
+            const PHYSFS_uint8 ch = *ptr ^ zip_decrypt_byte(keys);
+            zip_update_crypto_keys(keys, ch);
+            *ptr = ch;
+        } /* for */
+    } /* if  */
+
+    return br;
+} /* zip_read_decrypt */
+
+static int zip_prep_crypto_keys(ZIPfileinfo *finfo, const PHYSFS_uint8 *crypto_header, const PHYSFS_uint8 *password)
+{
+    /* It doesn't appear to be documented in PKWare's APPNOTE.TXT, but you
+       need to use a different byte in the header to verify the password
+       if general purpose bit 3 is set. Discovered this from Info-Zip.
+       That's what the (verifier) value is doing, below. */
+
+    PHYSFS_uint32 *keys = finfo->crypto_keys;
+    const ZIPentry *entry = finfo->entry;
+    const int usedate = zip_entry_ignore_local_header(entry);
+    const PHYSFS_uint8 verifier = (PHYSFS_uint8) ((usedate ? (entry->dos_mod_time >> 8) : (entry->crc >> 24)) & 0xFF);
+    PHYSFS_uint8 finalbyte = 0;
+    int i = 0;
+
+    /* initialize vector with defaults, then password, then header. */
+    keys[0] = 305419896;
+    keys[1] = 591751049;
+    keys[2] = 878082192;
+
+    while (*password)
+        zip_update_crypto_keys(keys, *(password++));
+
+    for (i = 0; i < 12; i++)
+    {
+        const PHYSFS_uint8 c = crypto_header[i] ^ zip_decrypt_byte(keys);
+        zip_update_crypto_keys(keys, c);
+        finalbyte = c;
+    } /* for */
+
+    /* you have a 1/256 chance of passing this test incorrectly. :/ */
+    if (finalbyte != verifier)
+        BAIL_MACRO(PHYSFS_ERR_BAD_PASSWORD, 0);
+
+    /* save the initial vector for seeking purposes. Not secure!! */
+    memcpy(finfo->initial_crypto_keys, finfo->crypto_keys, 12);
+    return 1;
+} /* zip_prep_crypto_keys */
 
 
 /*
@@ -213,7 +315,6 @@ static int readui16(PHYSFS_Io *io, PHYSFS_uint16 *val)
 static PHYSFS_sint64 ZIP_read(PHYSFS_Io *_io, void *buf, PHYSFS_uint64 len)
 {
     ZIPfileinfo *finfo = (ZIPfileinfo *) _io->opaque;
-    PHYSFS_Io *io = finfo->io;
     ZIPentry *entry = finfo->entry;
     PHYSFS_sint64 retval = 0;
     PHYSFS_sint64 maxread = (PHYSFS_sint64) len;
@@ -226,7 +327,7 @@ static PHYSFS_sint64 ZIP_read(PHYSFS_Io *_io, void *buf, PHYSFS_uint64 len)
     BAIL_IF_MACRO(maxread == 0, ERRPASS, 0);    /* quick rejection. */
 
     if (entry->compression_method == COMPMETH_NONE)
-        retval = io->read(io, buf, maxread);
+        retval = zip_read_decrypt(finfo, buf, maxread);
     else
     {
         finfo->stream.next_out = buf;
@@ -247,7 +348,7 @@ static PHYSFS_sint64 ZIP_read(PHYSFS_Io *_io, void *buf, PHYSFS_uint64 len)
                     if (br > ZIP_READBUFSIZE)
                         br = ZIP_READBUFSIZE;
 
-                    br = io->read(io, finfo->buffer, (PHYSFS_uint64) br);
+                    br = zip_read_decrypt(finfo, finfo->buffer, (PHYSFS_uint64) br);
                     if (br <= 0)
                         break;
 
@@ -289,12 +390,13 @@ static int ZIP_seek(PHYSFS_Io *_io, PHYSFS_uint64 offset)
     ZIPfileinfo *finfo = (ZIPfileinfo *) _io->opaque;
     ZIPentry *entry = finfo->entry;
     PHYSFS_Io *io = finfo->io;
+    const int encrypted = zip_entry_is_tradional_crypto(entry);
 
     BAIL_IF_MACRO(offset > entry->uncompressed_size, PHYSFS_ERR_PAST_EOF, 0);
 
-    if (entry->compression_method == COMPMETH_NONE)
+    if (!encrypted && (entry->compression_method == COMPMETH_NONE))
     {
-        const PHYSFS_sint64 newpos = offset + entry->offset;
+        PHYSFS_sint64 newpos = offset + entry->offset;
         BAIL_IF_MACRO(!io->seek(io, newpos), ERRPASS, 0);
         finfo->uncompressed_position = (PHYSFS_uint32) offset;
     } /* if */
@@ -315,12 +417,15 @@ static int ZIP_seek(PHYSFS_Io *_io, PHYSFS_uint64 offset)
             if (zlib_err(inflateInit2(&str, -MAX_WBITS)) != Z_OK)
                 return 0;
 
-            if (!io->seek(io, entry->offset))
+            if (!io->seek(io, entry->offset + (encrypted ? 12 : 0)))
                 return 0;
 
             inflateEnd(&finfo->stream);
             memcpy(&finfo->stream, &str, sizeof (z_stream));
             finfo->uncompressed_position = finfo->compressed_position = 0;
+
+            if (encrypted)
+                memcpy(finfo->crypto_keys, finfo->initial_crypto_keys, 12);
         } /* if */
 
         while (finfo->uncompressed_position != offset)
@@ -994,10 +1099,10 @@ static ZIPentry *zip_load_entry(PHYSFS_Io *io, const int zip64,
     /* Get the pertinent parts of the record... */
     if (!readui16(io, &entry.version)) return NULL;
     if (!readui16(io, &entry.version_needed)) return NULL;
-    if (!readui16(io, &ui16)) return NULL;  /* general bits */
+    if (!readui16(io, &entry.general_bits)) return NULL;  /* general bits */
     if (!readui16(io, &entry.compression_method)) return NULL;
-    if (!readui32(io, &ui32)) return NULL;
-    entry.last_mod_time = zip_dos_time_to_physfs_time(ui32);
+    if (!readui32(io, &entry.dos_mod_time)) return NULL;
+    entry.last_mod_time = zip_dos_time_to_physfs_time(entry.dos_mod_time);
     if (!readui32(io, &entry.crc)) return NULL;
     if (!readui32(io, &ui32)) return NULL;
     entry.compressed_size = (PHYSFS_uint64) ui32;
@@ -1175,6 +1280,9 @@ static int zip_load_entries(ZIPinfo *info,
             allocator.Free(entry);
             return 0;
         } /* if */
+
+        if (zip_entry_is_tradional_crypto(entry))
+            info->has_crypto = 1;
     } /* for */
 
     return 1;
@@ -1557,6 +1665,26 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
     ZIPinfo *info = (ZIPinfo *) opaque;
     ZIPentry *entry = zip_find_entry(info, filename);
     ZIPfileinfo *finfo = NULL;
+    PHYSFS_Io *io = NULL;
+    PHYSFS_uint8 *password = NULL;
+    int i;
+
+    /* if not found, see if maybe "$PASSWORD" is appended. */
+    if ((!entry) && (info->has_crypto))
+    {
+        const char *ptr = strrchr(filename, '$');
+        if (ptr != NULL)
+        {
+            const PHYSFS_uint64 len = (PHYSFS_uint64) (ptr - filename);
+            char *str = (char *) __PHYSFS_smallAlloc(len + 1);
+            BAIL_IF_MACRO(!str, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+            memcpy(str, filename, len);
+            str[len] = '\0';
+            entry = zip_find_entry(info, str);
+            __PHYSFS_smallFree(str);
+            password = (PHYSFS_uint8 *) (ptr + 1);
+        } /* if */
+    } /* if */
 
     BAIL_IF_MACRO(!entry, ERRPASS, NULL);
 
@@ -1567,8 +1695,9 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
     GOTO_IF_MACRO(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, ZIP_openRead_failed);
     memset(finfo, '\0', sizeof (ZIPfileinfo));
 
-    finfo->io = zip_get_io(info->io, info, entry);
-    GOTO_IF_MACRO(!finfo->io, ERRPASS, ZIP_openRead_failed);
+    io = zip_get_io(info->io, info, entry);
+    GOTO_IF_MACRO(!io, ERRPASS, ZIP_openRead_failed);
+    finfo->io = io;
     finfo->entry = ((entry->symlink != NULL) ? entry->symlink : entry);
     initializeZStream(&finfo->stream);
 
@@ -1578,6 +1707,18 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
         if (!finfo->buffer)
             GOTO_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, ZIP_openRead_failed);
         else if (zlib_err(inflateInit2(&finfo->stream, -MAX_WBITS)) != Z_OK)
+            goto ZIP_openRead_failed;
+    } /* if */
+
+    if (!zip_entry_is_tradional_crypto(entry))
+        GOTO_IF_MACRO(password != NULL, PHYSFS_ERR_BAD_PASSWORD, ZIP_openRead_failed);
+    else
+    {
+        PHYSFS_uint8 crypto_header[12];
+        GOTO_IF_MACRO(password == NULL, PHYSFS_ERR_BAD_PASSWORD, ZIP_openRead_failed);
+        if (io->read(io, crypto_header, 12) != 12)
+            goto ZIP_openRead_failed;
+        else if (!zip_prep_crypto_keys(finfo, crypto_header, password))
             goto ZIP_openRead_failed;
     } /* if */
 
