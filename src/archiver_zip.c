@@ -863,6 +863,10 @@ static int zip_parse_local(PHYSFS_Io *io, ZIPentry *entry)
      *  possible that's a Zip64 thing.
      */
 
+    /* !!! FIXME: apparently these are zero if general purpose bit 3 is set,
+       !!! FIXME:  which is probably true for Jar files, fwiw, but we don't
+       !!! FIXME:  care about these values anyhow. */
+
     BAIL_IF_MACRO(!io->seek(io, entry->offset), ERRPASS, 0);
     BAIL_IF_MACRO(!readui32(io, &ui32), ERRPASS, 0);
     BAIL_IF_MACRO(ui32 != ZIP_LOCAL_FILE_SIG, PHYSFS_ERR_CORRUPT, 0);
