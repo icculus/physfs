@@ -89,12 +89,11 @@ int PHYSFSEXT_locateCorrectCase(char *buf)
 {
     int rc;
     char *ptr;
-    char *prevptr;
 
     while (*buf == '/')  /* skip any '/' at start of string... */
         buf++;
 
-    ptr = prevptr = buf;
+    ptr = buf;
     if (*ptr == '\0')
         return 0;  /* Uh...I guess that's success. */
 
