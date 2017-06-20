@@ -1,6 +1,6 @@
 
 The latest PhysicsFS information and releases can be found at:
-  http://icculus.org/physfs/
+  https://icculus.org/physfs/
 
 Building is (ahem) very easy.
 
@@ -17,14 +17,14 @@ If you've got Doxygen (http://www.doxygen.org/) installed, you can run it
  the API reference (or build the "docs" target from your build system). This
  is optional. You can browse the API docs online here:
 
-    http://icculus.org/physfs/docs/
+    https://icculus.org/physfs/docs/
 
 
 
 
 UNIX:
 
-You will need CMake (http://www.cmake.org/) 2.4 or later installed.
+You will need CMake (https://www.cmake.org/) 2.4 or later installed.
 
 Make a directory, wherever you like. This will be your build directory.
 
@@ -61,7 +61,7 @@ If building with Cygwin, mingw32, MSYS, or something else that uses the GNU
  toolchain, follow the Unix instructions, above.
 
 If you want to use Visual Studio, nmake, or the Platform SDK, you will need
- CMake (http://www.cmake.org/) 2.4 or later installed. Point CMake at the
+ CMake (https://www.cmake.org/) 2.4 or later installed. Point CMake at the
  CMakeLists.txt file in the root of the source directory and hit the
  "Configure" button. After telling it what type of compiler you are targeting
  (Borland, Visual Studio, etc), CMake will process for while and then give you
@@ -109,7 +109,7 @@ Classic Mac OS support has been dropped in PhysicsFS 2.0. Apple hasn't updated
 
 MAC OS X:
 
-You will need CMake (http://www.cmake.org/) 2.4 or later installed.
+You will need CMake (https://www.cmake.org/) 2.4 or later installed.
 
 You can either generate a Unix makefile with CMake, or generate an Xcode
  project, whichever makes you more comfortable.

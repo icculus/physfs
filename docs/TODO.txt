@@ -4,7 +4,7 @@ These are in no particular order.
 Some might be dupes, some might be done already, some might be bad ideas.
 
 
-From http://icculus.org/pipermail/physfs/2009-March/000698.html ...
+From https://icculus.org/pipermail/physfs/2009-March/000698.html ...
 
 - Archives formats provided by the implementation.
 - Write support for various archives. I haven't decided how to do this yet,
@@ -15,17 +15,17 @@ From http://icculus.org/pipermail/physfs/2009-March/000698.html ...
 - Clean up the sources to match my ever-changing coding style. :)
 
 
-From http://icculus.org/pipermail/physfs/2010-January/000821.html ...
+From https://icculus.org/pipermail/physfs/2010-January/000821.html ...
 
 - Plugin system for the archive handlers
 
 
-From http://icculus.org/pipermail/physfs/2010-January/000826.html ...
+From https://icculus.org/pipermail/physfs/2010-January/000826.html ...
 
 - Lua bindings
 
 
-From http://icculus.org/pipermail/physfs/2010-January/000833.html ...
+From https://icculus.org/pipermail/physfs/2010-January/000833.html ...
 
 - SWIG bindings
 

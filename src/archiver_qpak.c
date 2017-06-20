@@ -8,7 +8,7 @@
  *  ========================================================================
  *
  *  This format info (in more detail) comes from:
- *     http://debian.fmi.uni-sofia.bg/~sergei/cgsr/docs/pak.txt
+ *     https://web.archive.org/web/20040209101748/http://debian.fmi.uni-sofia.bg/~sergei/cgsr/docs/pak.txt
  *
  *  Quake PAK Format
  *
