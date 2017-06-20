@@ -147,6 +147,7 @@
  *   - .HOG (Descent I/II HOG file archives)
  *   - .MVL (Descent II movielib archives)
  *   - .WAD (DOOM engine archives)
+ *   - .VDF (Gothic I/II engine archives)
  *
  *
  * String policy for PhysicsFS 2.0 and later:

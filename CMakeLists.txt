@@ -135,6 +135,7 @@ set(PHYSFS_SRCS
     src/archiver_zip.c
     src/archiver_slb.c
     src/archiver_iso9660.c
+    src/archiver_vdf.c
     ${PHYSFS_BEOS_SRCS}
 )
 
@@ -261,6 +262,11 @@ endif()
 option(PHYSFS_ARCHIVE_ISO9660 "Enable ISO9660 support" TRUE)
 if(PHYSFS_ARCHIVE_ISO9660)
     add_definitions(-DPHYSFS_SUPPORTS_ISO9660=1)
+endif()
+
+option(PHYSFS_ARCHIVE_VDF "Enable Gothic I/II VDF archive support" TRUE)
+if(PHYSFS_ARCHIVE_VDF)
+    add_definitions(-DPHYSFS_SUPPORTS_VDF=1)
 endif()
 
 

@@ -1128,6 +1128,9 @@ static int initStaticArchivers(void)
     #if PHYSFS_SUPPORTS_ISO9660
         REGISTER_STATIC_ARCHIVER(ISO9660);
     #endif
+    #if PHYSFS_SUPPORTS_VDF
+        REGISTER_STATIC_ARCHIVER(VDF)
+    #endif
 
     #undef REGISTER_STATIC_ARCHIVER
 
