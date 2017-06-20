@@ -120,6 +120,9 @@ void __PHYSFS_smallFree(void *ptr);
 #ifndef PHYSFS_SUPPORTS_ISO9660
 #define PHYSFS_SUPPORTS_ISO9660 0
 #endif
+#ifndef PHYSFS_SUPPORTS_VDF
+#define PHYSFS_SUPPORTS_VDF 0
+#endif
 
 /* The latest supported PHYSFS_Io::version value. */
 #define CURRENT_PHYSFS_IO_API_VERSION 0
