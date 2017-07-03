@@ -63,12 +63,6 @@ typedef struct
     PHYSFS_uint32 attributes;
 } VdfEntryInfo;
 
-typedef enum
-{
-    VDF_VERSION_GOTHIC1,
-    VDF_VERSION_GOTHIC2
-} VdfVersion;
-
 typedef struct _VdfLinkedList
 {
     VdfEntryInfo *entry;
@@ -301,18 +295,6 @@ static int vdfStrcmp(const char *a, const char *b)
     return 1;
 } /* vdfStrcmp */
 
-static int vdfMemcmp(const char *a, const char *b, int len)
-{
-    while (len > 0)
-    {
-        if (toupper(*a) != toupper(*b)) return 1;
-        a++;
-        b++;
-        len--;
-    } /* while */
-    return 0;
-} /* vdfMemcmp */
-
 /* Adds an entry to the hashtable */
 static void vdfAddEntry(VdfRecord *record, VdfEntryInfo *entry)
 {
@@ -357,6 +339,10 @@ static VdfRecord *vdfLoadRecord(PHYSFS_Io *io, VdfHeader header)
 
     for (entry = entries; header.numEntries > 0; header.numEntries--, entry++)
     {
+        entry->jump = PHYSFS_swapULE32(entry->jump);
+        entry->size = PHYSFS_swapULE32(entry->size);
+        entry->type = PHYSFS_swapULE32(entry->type);
+        entry->attributes = PHYSFS_swapULE32(entry->attributes);
         vdfTruncateFilename(entry->name, &len);
         vdfAddEntry(record, entry);
     } /* for */
@@ -392,8 +378,6 @@ void VDF_enumerateFiles(void *opaque, const char *dname,
 /* Retrieves a file from the hashtable */
 static int vdfFindFile(const VdfRecord *record, const char *filename, VdfEntryInfo *outEntry)
 {
-    char *next_sep = strchr(filename, '/');
-
     VdfLinkedList *list = record->table[vdfGenCrc16(filename)];
     while (list)
     {
@@ -429,28 +413,27 @@ int VDF_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
 void *VDF_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     VdfHeader header;
-    VdfVersion version;
     VdfRecord *record = NULL;
-    PHYSFS_uint32 count = 0;
-
     assert(io != NULL); /* shouldn't ever happen. */
 
     BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
     BAIL_IF_MACRO(!__PHYSFS_readAll(io, &header, sizeof(VdfHeader)), ERRPASS, NULL);
+
+    header.numEntries = PHYSFS_swapULE32(header.numEntries);
+    header.numFiles = PHYSFS_swapULE32(header.numFiles);
+    header.timestamp.raw = PHYSFS_swapULE32(header.timestamp.raw);
+    header.dataSize = PHYSFS_swapULE32(header.dataSize);
+    header.rootCatOffset = PHYSFS_swapULE32(header.rootCatOffset);
+    header.version = PHYSFS_swapULE32(header.version);
+
     BAIL_IF_MACRO(header.version != 0x50, PHYSFS_ERR_UNSUPPORTED, NULL);
 
-    if (memcmp(header.signature, VDF_SIGNATURE_G1, VDF_HEADER_SIGNATURE_LENGTH) == 0)
-    {
-        version = VDF_VERSION_GOTHIC1;
-    } /* if */
-    else if (memcmp(header.signature, VDF_SIGNATURE_G2, VDF_HEADER_SIGNATURE_LENGTH) == 0)
-    {
-        version = VDF_VERSION_GOTHIC2;
-    } /* else if */
-    else
+    if ((memcmp(header.signature, VDF_SIGNATURE_G1, VDF_HEADER_SIGNATURE_LENGTH) != 0) &&
+        (memcmp(header.signature, VDF_SIGNATURE_G2, VDF_HEADER_SIGNATURE_LENGTH) != 0))
     {
         BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
-    } /* else */
+    } /* if */
+
     record = vdfLoadRecord(io, header);
     BAIL_IF_MACRO(!record, ERRPASS, NULL);
     record->io = io;
