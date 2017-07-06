@@ -2768,7 +2768,7 @@ int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 _bufsize)
 
     /* !!! FIXME: actually, why use 32 bits here? */
     /*BAIL_IF_MACRO(_bufsize > 0xFFFFFFFF, "buffer must fit in 32-bits", 0);*/
-    BAIL_IF_MACRO(_bufsize > 0xFFFFFFFF, PHYSFS_ERR_INVALID_ARGUMENT, 0);
+    BAIL_IF_MACRO(_bufsize > __PHYSFS_UI64(0xFFFFFFFF), PHYSFS_ERR_INVALID_ARGUMENT, 0);
     bufsize = (PHYSFS_uint32) _bufsize;
 
     BAIL_IF_MACRO(!PHYSFS_flush(handle), ERRPASS, 0);
