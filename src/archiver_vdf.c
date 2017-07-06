@@ -154,7 +154,7 @@ static PHYSFS_sint64 VDF_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 
 static PHYSFS_sint64 VDF_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
-    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, -1);
+    BAIL(PHYSFS_ERR_READ_ONLY, -1);
 } /* VDF_write */
 
 
@@ -170,7 +170,7 @@ static int VDF_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
     const VdfEntryInfo *entry = finfo->entry;
     int rc;
 
-    BAIL_IF_MACRO(offset >= entry->size, PHYSFS_ERR_PAST_EOF, 0);
+    BAIL_IF(offset >= entry->size, PHYSFS_ERR_PAST_EOF, 0);
     rc = finfo->io->seek(finfo->io, entry->jump + offset);
     if (rc)
         finfo->curPos = (PHYSFS_uint32)offset;
@@ -192,8 +192,8 @@ static PHYSFS_Io *VDF_duplicate(PHYSFS_Io *_io)
     PHYSFS_Io *io = NULL;
     PHYSFS_Io *retval = (PHYSFS_Io *)allocator.Malloc(sizeof(PHYSFS_Io));
     VdfFileinfo *finfo = (VdfFileinfo *)allocator.Malloc(sizeof(VdfFileinfo));
-    GOTO_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, VDF_duplicate_failed);
-    GOTO_IF_MACRO(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, VDF_duplicate_failed);
+    GOTO_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, VDF_duplicate_failed);
+    GOTO_IF(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, VDF_duplicate_failed);
 
     io = origfinfo->io->duplicate(origfinfo->io);
     if (!io) goto VDF_duplicate_failed;
@@ -322,10 +322,10 @@ static void vdfAddEntry(VdfRecord *record, VdfEntryInfo *entry)
 static VdfRecord *vdfLoadRecord(PHYSFS_Io *io, VdfHeader header)
 {
     VdfRecord *record = (VdfRecord*)allocator.Malloc(sizeof(VdfRecord));
-    BAIL_IF_MACRO(!record, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(!record, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     VdfEntryInfo *entries = (VdfEntryInfo *)allocator.Malloc(sizeof(VdfEntryInfo) * header.numEntries);
-    GOTO_IF_MACRO(!entries, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+    GOTO_IF(!entries, PHYSFS_ERR_OUT_OF_MEMORY, failed);
 
     if (!__PHYSFS_readAll(io, entries, sizeof(VdfEntryInfo) * header.numEntries)) goto failed;
 
@@ -416,8 +416,8 @@ void *VDF_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     VdfRecord *record = NULL;
     assert(io != NULL); /* shouldn't ever happen. */
 
-    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &header, sizeof(VdfHeader)), ERRPASS, NULL);
+    BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &header, sizeof(VdfHeader)), NULL);
 
     header.numEntries = PHYSFS_swapULE32(header.numEntries);
     header.numFiles = PHYSFS_swapULE32(header.numFiles);
@@ -426,16 +426,16 @@ void *VDF_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     header.rootCatOffset = PHYSFS_swapULE32(header.rootCatOffset);
     header.version = PHYSFS_swapULE32(header.version);
 
-    BAIL_IF_MACRO(header.version != 0x50, PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_IF(header.version != 0x50, PHYSFS_ERR_UNSUPPORTED, NULL);
 
     if ((memcmp(header.signature, VDF_SIGNATURE_G1, VDF_HEADER_SIGNATURE_LENGTH) != 0) &&
         (memcmp(header.signature, VDF_SIGNATURE_G2, VDF_HEADER_SIGNATURE_LENGTH) != 0))
     {
-        BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+        BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
     } /* if */
 
     record = vdfLoadRecord(io, header);
-    BAIL_IF_MACRO(!record, ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!record, NULL);
     record->io = io;
     return record;
 } /* VDF_openArchive */
@@ -464,16 +464,16 @@ PHYSFS_Io *VDF_openRead(void *opaque, const char *name)
     VdfRecord *record = (VdfRecord *)opaque;
     VdfFileinfo *finfo = NULL;
     VdfEntryInfo entry;
-    GOTO_IF_MACRO(!vdfFindFile(record, name, &entry), PHYSFS_ERR_NOT_FOUND, VDF_openRead_failed);
+    GOTO_IF(!vdfFindFile(record, name, &entry), PHYSFS_ERR_NOT_FOUND, VDF_openRead_failed);
 
     retval = (PHYSFS_Io *)allocator.Malloc(sizeof(PHYSFS_Io));
-    GOTO_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, VDF_openRead_failed);
+    GOTO_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, VDF_openRead_failed);
 
     finfo = (VdfFileinfo *)allocator.Malloc(sizeof(VdfFileinfo));
-    GOTO_IF_MACRO(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, VDF_openRead_failed);
+    GOTO_IF(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, VDF_openRead_failed);
 
     finfo->io = record->io->duplicate(record->io);
-    GOTO_IF_MACRO(!finfo->io, ERRPASS, VDF_openRead_failed);
+    GOTO_IF_ERRPASS(!finfo->io, VDF_openRead_failed);
 
     if (!finfo->io->seek(finfo->io, entry.jump))
         goto VDF_openRead_failed;
@@ -481,7 +481,7 @@ PHYSFS_Io *VDF_openRead(void *opaque, const char *name)
     finfo->curPos = 0;
 
     finfo->entry = (VdfEntryInfo *)allocator.Malloc(sizeof(VdfEntryInfo));
-    GOTO_IF_MACRO(!finfo->entry, PHYSFS_ERR_OUT_OF_MEMORY, VDF_openRead_failed);
+    GOTO_IF(!finfo->entry, PHYSFS_ERR_OUT_OF_MEMORY, VDF_openRead_failed);
     memcpy(finfo->entry, &entry, sizeof(VdfEntryInfo));
 
     memcpy(retval, &VDF_Io, sizeof(*retval));

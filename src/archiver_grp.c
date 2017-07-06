@@ -37,14 +37,14 @@ static UNPKentry *grpLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
     char *ptr = NULL;
 
     entries = (UNPKentry *) allocator.Malloc(sizeof (UNPKentry) * fileCount);
-    BAIL_IF_MACRO(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     location += (16 * fileCount);
 
     for (entry = entries; fileCount > 0; fileCount--, entry++)
     {
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 12), ERRPASS, failed);
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), ERRPASS, failed);
+        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->name, 12), failed);
+        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->size, 4), failed);
         entry->name[12] = '\0';  /* name isn't null-terminated in file. */
         if ((ptr = strchr(entry->name, ' ')) != NULL)
             *ptr = '\0';  /* trim extra spaces. */
@@ -70,17 +70,17 @@ static void *GRP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
-    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, sizeof (buf)), ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, buf, sizeof (buf)), NULL);
     if (memcmp(buf, "KenSilverman", sizeof (buf)) != 0)
-        BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+        BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof(count)), ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &count, sizeof(count)), NULL);
     count = PHYSFS_swapULE32(count);
 
     entries = grpLoadEntries(io, count);
-    BAIL_IF_MACRO(!entries, ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!entries, NULL);
     return UNPK_openArchive(io, entries, count);
 } /* GRP_openArchive */
 

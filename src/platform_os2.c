@@ -205,7 +205,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     ULONG drivemap = 0;
     ULONG i, bit;
     const APIRET rc = DosQueryCurrentDisk(&dummy, &drivemap);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc),);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc),);
 
     for (i = 0, bit = 1; i < 26; i++, bit <<= 1)
     {
@@ -232,9 +232,9 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     PHYSFS_sint32 len;
 
     rc = DosGetInfoBlocks(&ptib, &ppib);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     rc = DosQueryModuleName(ppib->pib_hmte, sizeof (buf), (PCHAR) buf);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
 
     /* chop off filename, leave path. */
     for (len = strlen(buf) - 1; len >= 0; len--)
@@ -252,7 +252,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     cvt_path_to_correct_case(buf);
 
     retval = (char *) allocator.Malloc(len + 1);
-    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, buf);
     return retval;
 } /* __PHYSFS_platformCalcBaseDir */
@@ -285,7 +285,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     char *retval = allocator.Malloc(len);
     char *p;
 
-    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     if (prepend)
         strcpy(retval, prepend);
@@ -315,7 +315,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     ULONG count = 1;
     APIRET rc;
 
-    BAIL_IF_MACRO(strlen(dirname) > sizeof (spec) - 5, PHYSFS_ERR_BAD_FILENAME,);
+    BAIL_IF(strlen(dirname) > sizeof (spec) - 5, PHYSFS_ERR_BAD_FILENAME,);
 
     strcpy(spec, dirname);
     strcat(spec, (spec[strlen(spec) - 1] != '\\') ? "\\*.*" : "*.*");
@@ -325,7 +325,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
                       FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM,
                       &fb, sizeof (fb), &count, FIL_STANDARD);
 
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc),);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc),);
 
     while (count == 1)
     {
@@ -349,20 +349,20 @@ char *__PHYSFS_platformCurrentDir(void)
     BYTE byte;
 
     rc = DosQueryCurrentDisk(&currentDisk, &dummy);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
 
     /* The first call just tells us how much space we need for the string. */
     rc = DosQueryCurrentDir(currentDisk, &byte, &pathSize);
     pathSize++; /* Add space for null terminator. */
     retval = (char *) allocator.Malloc(pathSize + 3);  /* plus "x:\\" */
-    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     /* Actually get the string this time. */
     rc = DosQueryCurrentDir(currentDisk, (PBYTE) (retval + 3), &pathSize);
     if (rc != NO_ERROR)
     {
         allocator.Free(retval);
-        BAIL_MACRO(errcodeFromAPIRET(rc), NULL);
+        BAIL(errcodeFromAPIRET(rc), NULL);
     } /* if */
 
     retval[0] = ('A' + (currentDisk - 1));
@@ -378,9 +378,9 @@ char *__PHYSFS_platformRealPath(const char *_path)
     char buf[CCHMAXPATH];
     char *retval;
     APIRET rc = DosQueryPathInfo(path, FIL_QUERYFULLNAME, buf, sizeof (buf));
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
     retval = (char *) allocator.Malloc(strlen(buf) + 1);
-    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, buf);
     return retval;
 } /* __PHYSFS_platformRealPath */
@@ -390,7 +390,7 @@ int __PHYSFS_platformMkDir(const char *_filename)
 {
     const unsigned char *filename = (const unsigned char *) _filename;
     const APIRET rc = DosCreateDir(filename, NULL);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     return 1;
 } /* __PHYSFS_platformMkDir */
 
@@ -410,7 +410,7 @@ void *__PHYSFS_platformOpenRead(const char *_filename)
                    OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
                    OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
                    OPEN_ACCESS_READONLY, NULL);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
 
     return ((void *) hfile);
 } /* __PHYSFS_platformOpenRead */
@@ -431,7 +431,7 @@ void *__PHYSFS_platformOpenWrite(const char *_filename)
                    OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
                    OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
                    OPEN_ACCESS_READWRITE, NULL);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
 
     return ((void *) hfile);
 } /* __PHYSFS_platformOpenWrite */
@@ -454,13 +454,13 @@ void *__PHYSFS_platformOpenAppend(const char *_filename)
                    OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
                    OPEN_ACCESS_READWRITE, NULL);
 
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
 
     rc = DosSetFilePtr(hfile, 0, FILE_END, &dummy);
     if (rc != NO_ERROR)
     {
         DosClose(hfile);
-        BAIL_MACRO(errcodeFromAPIRET(rc), NULL);
+        BAIL(errcodeFromAPIRET(rc), NULL);
     } /* if */
 
     return ((void *) hfile);
@@ -471,9 +471,9 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 {
     ULONG br = 0;
     APIRET rc;
-    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),PHYSFS_ERR_INVALID_ARGUMENT,-1);
+    BAIL_IF(!__PHYSFS_ui64FitsAddressSpace(len),PHYSFS_ERR_INVALID_ARGUMENT,-1);
     rc = DosRead((HFILE) opaque, buf, (ULONG) len, &br);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), (br > 0) ? ((PHYSFS_sint64) br) : -1);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), (br > 0) ? ((PHYSFS_sint64) br) : -1);
     return (PHYSFS_sint64) br;
 } /* __PHYSFS_platformRead */
 
@@ -483,9 +483,9 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buf,
 {
     ULONG bw = 0;
     APIRET rc;
-    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),PHYSFS_ERR_INVALID_ARGUMENT,-1);
+    BAIL_IF(!__PHYSFS_ui64FitsAddressSpace(len),PHYSFS_ERR_INVALID_ARGUMENT,-1);
     rc = DosWrite((HFILE) opaque, (void *) buf, (ULONG) len, &bw);    
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), (bw > 0) ? ((PHYSFS_sint64) bw) : -1);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), (bw > 0) ? ((PHYSFS_sint64) bw) : -1);
     return (PHYSFS_sint64) bw;
 } /* __PHYSFS_platformWrite */
 
@@ -498,9 +498,9 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
     APIRET rc;
 
     /* hooray for 32-bit filesystem limits!  :) */
-    BAIL_IF_MACRO((PHYSFS_uint64) dist != pos, PHYSFS_ERR_INVALID_ARGUMENT, 0);
+    BAIL_IF((PHYSFS_uint64) dist != pos, PHYSFS_ERR_INVALID_ARGUMENT, 0);
     rc = DosSetFilePtr(hfile, dist, FILE_BEGIN, &dummy);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     return 1;
 } /* __PHYSFS_platformSeek */
 
@@ -510,7 +510,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
     ULONG pos;
     HFILE hfile = (HFILE) opaque;
     const APIRET rc = DosSetFilePtr(hfile, 0, FILE_CURRENT, &pos);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), -1);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), -1);
     return ((PHYSFS_sint64) pos);
 } /* __PHYSFS_platformTell */
 
@@ -520,7 +520,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
     FILESTATUS3 fs;
     HFILE hfile = (HFILE) opaque;
     const APIRET rc = DosQueryFileInfo(hfile, FIL_STANDARD, &fs, sizeof (fs));
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), -1);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), -1);
     return ((PHYSFS_sint64) fs.cbFile);
 } /* __PHYSFS_platformFileLength */
 
@@ -528,7 +528,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 int __PHYSFS_platformFlush(void *opaque)
 {
     const APIRET rc = DosResetBuffer((HFILE) opaque);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     return 1;
 } /* __PHYSFS_platformFlush */
 
@@ -544,9 +544,9 @@ int __PHYSFS_platformDelete(const char *_path)
     FILESTATUS3 fs;
     const unsigned char *path = (const unsigned char *) _path;
     APIRET rc = DosQueryPathInfo(path, FIL_STANDARD, &fs, sizeof (fs));
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     rc = (fs.attrFile & FILE_DIRECTORY) ? DosDeleteDir(path) : DosDelete(path);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     return 1;
 } /* __PHYSFS_platformDelete */
 
@@ -575,7 +575,7 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *stat)
     FILESTATUS3 fs;
     const unsigned char *fname = (const unsigned char *) filename;
     const APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
 
     if (fs.attrFile & FILE_DIRECTORY)
     {
@@ -616,7 +616,7 @@ void *__PHYSFS_platformGetThreadID(void)
      *  default value (zero might as well do) if it does.
      */
     const APIRET rc = DosGetInfoBlocks(&ptib, &ppib);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     return ((void *) ptib->tib_ordinal);
 } /* __PHYSFS_platformGetThreadID */
 
@@ -625,7 +625,7 @@ void *__PHYSFS_platformCreateMutex(void)
 {
     HMTX hmtx = NULLHANDLE;
     const APIRET rc = DosCreateMutexSem(NULL, &hmtx, 0, 0);
-    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
     return ((void *) hmtx);
 } /* __PHYSFS_platformCreateMutex */
 
