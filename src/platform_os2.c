@@ -241,7 +241,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     {
         if (buf[len] == '\\')
         {
-            buf[len] = '\0';
+            buf[len + 1] = '\0';
             break;
         } /* if */
     } /* for */
