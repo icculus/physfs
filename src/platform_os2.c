@@ -145,8 +145,6 @@ static void cvt_path_to_correct_case(char *buf)
 } /* cvt_file_to_correct_case */
 
 
-static char *baseDir = NULL;
-
 int __PHYSFS_platformInit(void)
 {
     return 1;  /* it's all good. */
@@ -155,12 +153,6 @@ int __PHYSFS_platformInit(void)
 
 int __PHYSFS_platformDeinit(void)
 {
-    if (baseDir != NULL)
-    {
-        allocator.Free(baseDir);
-        baseDir = NULL;
-    } /* if */
-
     return 1;  /* success. */
 } /* __PHYSFS_platformDeinit */
 
@@ -233,43 +225,35 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
     char *retval = NULL;
+    char buf[CCHMAXPATH];
+    APIRET rc;
+    PTIB ptib;
+    PPIB ppib;
+    PHYSFS_sint32 len;
 
-    if (baseDir == NULL)
+    rc = DosGetInfoBlocks(&ptib, &ppib);
+    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    rc = DosQueryModuleName(ppib->pib_hmte, sizeof (buf), (PCHAR) buf);
+    BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+
+    /* chop off filename, leave path. */
+    for (len = strlen(buf) - 1; len >= 0; len--)
     {
-        char buf[CCHMAXPATH];
-        APIRET rc;
-        PTIB ptib;
-        PPIB ppib;
-        PHYSFS_sint32 len;
-
-        rc = DosGetInfoBlocks(&ptib, &ppib);
-        BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
-        rc = DosQueryModuleName(ppib->pib_hmte, sizeof (buf), (PCHAR) buf);
-        BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
-
-        /* chop off filename, leave path. */
-        for (len = strlen(buf) - 1; len >= 0; len--)
+        if (buf[len] == '\\')
         {
-            if (buf[len] == '\\')
-            {
-                buf[len] = '\0';
-                break;
-            } /* if */
-        } /* for */
+            buf[len] = '\0';
+            break;
+        } /* if */
+    } /* for */
 
-        assert(len > 0);  /* should have been a "x:\\" on the front on string. */
+    assert(len > 0);  /* should have been a "x:\\" on the front on string. */
 
-        /* The string is capitalized! Figure out the REAL case... */
-        cvt_path_to_correct_case(buf);
+    /* The string is capitalized! Figure out the REAL case... */
+    cvt_path_to_correct_case(buf);
 
-        baseDir = (char *) allocator.Malloc(len + 1);
-        BAIL_IF_MACRO(baseDir == NULL, PHYSFS_ERR_OUT_OF_MEMORY, 0);
-        strcpy(baseDir, buf);
-    } /* if */
-
-    retval = (char *) allocator.Malloc(strlen(baseDir) + 1);
+    retval = (char *) allocator.Malloc(len + 1);
     BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    strcpy(retval, baseDir);
+    strcpy(retval, buf);
     return retval;
 } /* __PHYSFS_platformCalcBaseDir */
 
@@ -280,11 +264,15 @@ char *__PHYSFS_platformGetUserName(void)
 } /* __PHYSFS_platformGetUserName */
 
 
-char *__PHYSFS_platformGetUserDir(void)
+char *__PHYSFS_platformCalcUserDir(void)
 {
-    return __PHYSFS_platformCalcBaseDir(NULL);
-} /* __PHYSFS_platformGetUserDir */
+    return __PHYSFS_platformCalcBaseDir(NULL);  /* !!! FIXME: ? */
+} /* __PHYSFS_platformCalcUserDir */
 
+char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
+{
+    return __PHYSFS_platformCalcBaseDir(NULL);  /* !!! FIXME: ? */
+}
 
 /* !!! FIXME: can we lose the malloc here? */
 char *__PHYSFS_platformCvtToDependent(const char *prepend,
