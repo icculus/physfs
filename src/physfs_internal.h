@@ -26,7 +26,7 @@
 #include <assert.h>
 
 /* !!! FIXME: remove this when revamping stack allocation code... */
-#if defined(_MSC_VER) || defined(__MINGW32__)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WATCOMC__)
 #include <malloc.h>
 #endif
 
