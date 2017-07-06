@@ -35,7 +35,7 @@ static PHYSFS_ErrorCode errcodeFromAPIRET(const APIRET rc)
         case NO_ERROR: return PHYSFS_ERR_OK;  /* not an error. */
         case ERROR_INTERRUPT: return PHYSFS_ERR_OK;  /* not an error. */
         case ERROR_TIMEOUT: return PHYSFS_ERR_OK;  /* not an error. */
-        case ERROR_NOT_ENOUGH_MEMORY: return ERR_OUT_OF_MEMORY;
+        case ERROR_NOT_ENOUGH_MEMORY: return PHYSFS_ERR_OUT_OF_MEMORY;
         case ERROR_FILE_NOT_FOUND: return PHYSFS_ERR_NOT_FOUND;
         case ERROR_PATH_NOT_FOUND: return PHYSFS_ERR_NOT_FOUND;
         case ERROR_ACCESS_DENIED: return PHYSFS_ERR_PERMISSION;
@@ -185,13 +185,16 @@ static int is_cdrom_drive(ULONG drive)
     ULONG ul1, ul2;
     APIRET rc;
     HFILE hfile = NULLHANDLE;
-    unsigned char drivename[3] = { 'A' + drive, ':', '\0' };
+    unsigned char drivename[3] = { 0, ':', '\0' };
+
+    drivename[0] = 'A' + drive;
 
     rc = DosOpen(drivename, &hfile, &ul1, 0, 0,
                  OPEN_ACTION_OPEN_IF_EXISTS | OPEN_ACTION_FAIL_IF_NEW,
                  OPEN_FLAGS_DASD | OPEN_FLAGS_FAIL_ON_ERROR |
                  OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYNONE, NULL);
-    BAIL_IF_MACRO(rc != NO_ERROR, NULL, 0);
+    if (rc != NO_ERROR)
+        return 0;
 
     data = 0;
     param = PHYSFS_swapULE32(CD01);
@@ -229,6 +232,8 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
+    char *retval = NULL;
+
     if (baseDir == NULL)
     {
         char buf[CCHMAXPATH];
@@ -258,12 +263,12 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
         cvt_path_to_correct_case(buf);
 
         baseDir = (char *) allocator.Malloc(len + 1);
-        BAIL_IF_MACRO(baseDir == NULL, ERR_OUT_OF_MEMORY, 0);
+        BAIL_IF_MACRO(baseDir == NULL, PHYSFS_ERR_OUT_OF_MEMORY, 0);
         strcpy(baseDir, buf);
     } /* if */
 
-    char *retval = (char *) allocator.Malloc(strlen(baseDir) + 1);
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    retval = (char *) allocator.Malloc(strlen(baseDir) + 1);
+    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, baseDir);
     return retval;
 } /* __PHYSFS_platformCalcBaseDir */
@@ -292,7 +297,7 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
     char *retval = allocator.Malloc(len);
     char *p;
 
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     if (prepend)
         strcpy(retval, prepend);
@@ -312,22 +317,17 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
-                                     int omitSymLinks,
                                      PHYSFS_EnumFilesCallback callback,
                                      const char *origdir,
                                      void *callbackdata)
-{
+{                                        
     char spec[CCHMAXPATH];
     FILEFINDBUF3 fb;
     HDIR hdir = HDIR_CREATE;
     ULONG count = 1;
     APIRET rc;
 
-    if (strlen(dirname) > sizeof (spec) - 5)
-    {
-        __PHYSFS_setError(ERR_BAD_FILENAME);
-        return;
-    } /* if */
+    BAIL_IF_MACRO(strlen(dirname) > sizeof (spec) - 5, PHYSFS_ERR_BAD_FILENAME,);
 
     strcpy(spec, dirname);
     strcat(spec, (spec[strlen(spec) - 1] != '\\') ? "\\*.*" : "*.*");
@@ -367,7 +367,7 @@ char *__PHYSFS_platformCurrentDir(void)
     rc = DosQueryCurrentDir(currentDisk, &byte, &pathSize);
     pathSize++; /* Add space for null terminator. */
     retval = (char *) allocator.Malloc(pathSize + 3);  /* plus "x:\\" */
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     /* Actually get the string this time. */
     rc = DosQueryCurrentDir(currentDisk, (PBYTE) (retval + 3), &pathSize);
@@ -392,7 +392,7 @@ char *__PHYSFS_platformRealPath(const char *_path)
     APIRET rc = DosQueryPathInfo(path, FIL_QUERYFULLNAME, buf, sizeof (buf));
     BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
     retval = (char *) allocator.Malloc(strlen(buf) + 1);
-    BAIL_IF_MACRO(retval == NULL, ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     strcpy(retval, buf);
     return retval;
 } /* __PHYSFS_platformRealPath */
@@ -483,7 +483,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 {
     ULONG br = 0;
     APIRET rc;
-    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),PHYSFS_ERR_INVALID_ARGUMENT,-1);
     rc = DosRead((HFILE) opaque, buf, (ULONG) len, &br);
     BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), (br > 0) ? ((PHYSFS_sint64) br) : -1);
     return (PHYSFS_sint64) br;
@@ -495,8 +495,8 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buf,
 {
     ULONG bw = 0;
     APIRET rc;
-    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),ERR_INVALID_ARGUMENT,-1);
-    rc = DosWrite((HFILE) opaque, buf, (ULONG) len, &bw);
+    BAIL_IF_MACRO(!__PHYSFS_ui64FitsAddressSpace(len),PHYSFS_ERR_INVALID_ARGUMENT,-1);
+    rc = DosWrite((HFILE) opaque, (void *) buf, (ULONG) len, &bw);    
     BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), (bw > 0) ? ((PHYSFS_sint64) bw) : -1);
     return (PHYSFS_sint64) bw;
 } /* __PHYSFS_platformWrite */
@@ -510,7 +510,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
     APIRET rc;
 
     /* hooray for 32-bit filesystem limits!  :) */
-    BAIL_IF_MACRO((PHYSFS_uint64) dist != pos, ERR_SEEK_OUT_OF_RANGE, 0);
+    BAIL_IF_MACRO((PHYSFS_uint64) dist != pos, PHYSFS_ERR_INVALID_ARGUMENT, 0);
     rc = DosSetFilePtr(hfile, dist, FILE_BEGIN, &dummy);
     BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     return 1;
@@ -568,7 +568,7 @@ PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
 {
     struct tm tm;
 
-    tm.tm_sec = ((PHYSFS_uint32) time->.twosecs) * 2;
+    tm.tm_sec = ((PHYSFS_uint32) time->twosecs) * 2;                        
     tm.tm_min = time->minutes;
     tm.tm_hour = time->hours;
     tm.tm_mday = date->day;
@@ -582,11 +582,10 @@ PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
 } /* os2TimeToUnixTime */
 
 
-int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
+int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *stat)
 {
-    struct tm tm;
     FILESTATUS3 fs;
-    const unsigned char *fname = (const unsigned char *) _fname;
+    const unsigned char *fname = (const unsigned char *) filename;
     const APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
     BAIL_IF_MACRO(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
 
