@@ -39,7 +39,7 @@ static UNPKentry *mvlLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
     UNPKentry *entry = NULL;
 
     entries = (UNPKentry *) allocator.Malloc(sizeof (UNPKentry) * fileCount);
-    BAIL_IF_MACRO(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     location += (17 * fileCount);
 
@@ -67,10 +67,10 @@ static void *MVL_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     UNPKentry *entries = NULL;
 
     assert(io != NULL);  /* shouldn't ever happen. */
-    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, 4), ERRPASS, NULL);
-    BAIL_IF_MACRO(memcmp(buf, "DMVL", 4) != 0, PHYSFS_ERR_UNSUPPORTED, NULL);
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof(count)), ERRPASS, NULL);
+    BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, buf, 4), NULL);
+    BAIL_IF(memcmp(buf, "DMVL", 4) != 0, PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &count, sizeof(count)), NULL);
 
     count = PHYSFS_swapULE32(count);
     entries = mvlLoadEntries(io, count);

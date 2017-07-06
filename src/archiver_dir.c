@@ -15,7 +15,7 @@
 
 static char *cvtToDependent(const char *prepend, const char *path, char *buf)
 {
-    BAIL_IF_MACRO(buf == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(buf == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     sprintf(buf, "%s%s", prepend ? prepend : "", path);
 
     if (__PHYSFS_platformDirSeparator != '/')
@@ -45,12 +45,12 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     const size_t seplen = 1;
 
     assert(io == NULL);  /* shouldn't create an Io for these. */
-    BAIL_IF_MACRO(!__PHYSFS_platformStat(name, &st), ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_platformStat(name, &st), NULL);
     if (st.filetype != PHYSFS_FILETYPE_DIRECTORY)
-        BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+        BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
 
     retval = allocator.Malloc(namelen + seplen + 1);
-    BAIL_IF_MACRO(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     strcpy(retval, name);
 
@@ -86,7 +86,7 @@ static PHYSFS_Io *doOpen(void *opaque, const char *name, const int mode)
     char *f = NULL;
 
     CVT_TO_DEPENDENT(f, opaque, name);
-    BAIL_IF_MACRO(!f, ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!f, NULL);
 
     io = __PHYSFS_createNativeIo(f, mode);
     if (io == NULL)
@@ -127,7 +127,7 @@ static int DIR_remove(void *opaque, const char *name)
     char *f;
 
     CVT_TO_DEPENDENT(f, opaque, name);
-    BAIL_IF_MACRO(!f, ERRPASS, 0);
+    BAIL_IF_ERRPASS(!f, 0);
     retval = __PHYSFS_platformDelete(f);
     __PHYSFS_smallFree(f);
     return retval;
@@ -140,7 +140,7 @@ static int DIR_mkdir(void *opaque, const char *name)
     char *f;
 
     CVT_TO_DEPENDENT(f, opaque, name);
-    BAIL_IF_MACRO(!f, ERRPASS, 0);
+    BAIL_IF_ERRPASS(!f, 0);
     retval = __PHYSFS_platformMkDir(f);
     __PHYSFS_smallFree(f);
     return retval;
@@ -159,7 +159,7 @@ static int DIR_stat(void *opaque, const char *name, PHYSFS_Stat *stat)
     char *d;
 
     CVT_TO_DEPENDENT(d, opaque, name);
-    BAIL_IF_MACRO(!d, ERRPASS, 0);
+    BAIL_IF_ERRPASS(!d, 0);
     retval = __PHYSFS_platformStat(d, stat);
     __PHYSFS_smallFree(d);
     return retval;

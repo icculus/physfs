@@ -92,7 +92,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     struct mntent *ent = NULL;
 
     mounts = setmntent("/etc/mtab", "r");
-    BAIL_IF_MACRO(mounts == NULL, PHYSFS_ERR_IO, /*return void*/);
+    BAIL_IF(mounts == NULL, PHYSFS_ERR_IO, /*return void*/);
 
     while ( (ent = getmntent(mounts)) != NULL )
     {
@@ -122,7 +122,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     FILE *mounts = fopen(MNTTAB, "r");
     struct mnttab ent;
 
-    BAIL_IF_MACRO(mounts == NULL, PHYSFS_ERR_IO, /*return void*/);
+    BAIL_IF(mounts == NULL, PHYSFS_ERR_IO, /*return void*/);
     while (getmntent(mounts, &ent) == 0)
     {
         int add_it = 0;
@@ -180,7 +180,7 @@ static char *findBinaryInPath(const char *bin, char *envr)
             {
                 if (exe != NULL)
                     allocator.Free(exe);
-                BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+                BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
             } /* if */
 
             alloc_size = size;
@@ -311,7 +311,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
         if (envr != NULL)
         {
             char *path = (char *) __PHYSFS_smallAlloc(strlen(envr) + 1);
-            BAIL_IF_MACRO(!path, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+            BAIL_IF(!path, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
             strcpy(path, envr);
             retval = findBinaryInPath(argv0, path);
             __PHYSFS_smallFree(path);
@@ -348,13 +348,13 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     {
         /* You end up with "$HOME/.local/share/Game Name 2" */
         envr = __PHYSFS_getUserDir();
-        BAIL_IF_MACRO(!envr, ERRPASS, NULL);  /* oh well. */
+        BAIL_IF_ERRPASS(!envr, NULL);  /* oh well. */
         append = ".local/share/";
     } /* if */
 
     len = strlen(envr) + strlen(append) + strlen(app) + 2;
     retval = (char *) allocator.Malloc(len);
-    BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     snprintf(retval, len, "%s%s%s/", envr, append, app);
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */

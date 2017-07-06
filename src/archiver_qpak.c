@@ -42,7 +42,7 @@ static UNPKentry *qpakLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
     UNPKentry *entry = NULL;
 
     entries = (UNPKentry *) allocator.Malloc(sizeof (UNPKentry) * fileCount);
-    BAIL_IF_MACRO(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     for (entry = entries; fileCount > 0; fileCount--, entry++)
     {
@@ -70,26 +70,26 @@ static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
-    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &val, 4), NULL);
     if (PHYSFS_swapULE32(val) != QPAK_SIG)
-        BAIL_MACRO(PHYSFS_ERR_UNSUPPORTED, NULL);
+        BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &val, 4), NULL);
     pos = PHYSFS_swapULE32(val);  /* directory table offset. */
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &val, 4), ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &val, 4), NULL);
     count = PHYSFS_swapULE32(val);
 
     /* corrupted archive? */
-    BAIL_IF_MACRO((count % 64) != 0, PHYSFS_ERR_CORRUPT, NULL);
+    BAIL_IF((count % 64) != 0, PHYSFS_ERR_CORRUPT, NULL);
     count /= 64;
 
-    BAIL_IF_MACRO(!io->seek(io, pos), ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!io->seek(io, pos), NULL);
 
     entries = qpakLoadEntries(io, count);
-    BAIL_IF_MACRO(!entries, ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!entries, NULL);
     return UNPK_openArchive(io, entries, count);
 } /* QPAK_openArchive */
 

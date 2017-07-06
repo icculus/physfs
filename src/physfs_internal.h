@@ -172,21 +172,25 @@ void __PHYSFS_sort(void *entries, size_t max,
                    int (*cmpfn)(void *, size_t, size_t),
                    void (*swapfn)(void *, size_t, size_t));
 
-/*
- * This isn't a formal error code, it's just for BAIL_MACRO.
- *  It means: there was an error, but someone else already set it for us.
- */
-#define ERRPASS PHYSFS_ERR_OK
-
 /* These get used all over for lessening code clutter. */
-#define BAIL_MACRO(e, r) do { if (e) PHYSFS_setErrorCode(e); return r; } while (0)
-#define BAIL_IF_MACRO(c, e, r) do { if (c) { if (e) PHYSFS_setErrorCode(e); return r; } } while (0)
-#define BAIL_MACRO_MUTEX(e, m, r) do { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); return r; } while (0)
-#define BAIL_IF_MACRO_MUTEX(c, e, m, r) do { if (c) { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); return r; } } while (0)
-#define GOTO_MACRO(e, g) do { if (e) PHYSFS_setErrorCode(e); goto g; } while (0)
-#define GOTO_IF_MACRO(c, e, g) do { if (c) { if (e) PHYSFS_setErrorCode(e); goto g; } } while (0)
-#define GOTO_MACRO_MUTEX(e, m, g) do { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); goto g; } while (0)
-#define GOTO_IF_MACRO_MUTEX(c, e, m, g) do { if (c) { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); goto g; } } while (0)
+/* "ERRPASS" means "something else just set the error state for us" and is
+    just to make it clear where the responsibility for the error state lays. */
+#define BAIL(e, r) do { if (e) PHYSFS_setErrorCode(e); return r; } while (0)
+#define BAIL_ERRPASS(r) do { return r; } while (0)
+#define BAIL_IF(c, e, r) do { if (c) { if (e) PHYSFS_setErrorCode(e); return r; } } while (0)
+#define BAIL_IF_ERRPASS(c, r) do { if (c) { return r; } } while (0)
+#define BAIL_MUTEX(e, m, r) do { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); return r; } while (0)
+#define BAIL_MUTEX_ERRPASS(m, r) do { __PHYSFS_platformReleaseMutex(m); return r; } while (0)
+#define BAIL_IF_MUTEX(c, e, m, r) do { if (c) { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); return r; } } while (0)
+#define BAIL_IF_MUTEX_ERRPASS(c, m, r) do { if (c) { __PHYSFS_platformReleaseMutex(m); return r; } } while (0)
+#define GOTO(e, g) do { if (e) PHYSFS_setErrorCode(e); goto g; } while (0)
+#define GOTO_ERRPASS(g) do { goto g; } while (0)
+#define GOTO_IF(c, e, g) do { if (c) { if (e) PHYSFS_setErrorCode(e); goto g; } } while (0)
+#define GOTO_IF_ERRPASS(c, g) do { if (c) { goto g; } } while (0)
+#define GOTO_MUTEX(e, m, g) do { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); goto g; } while (0)
+#define GOTO_MUTEX_ERRPASS(m, g) do { __PHYSFS_platformReleaseMutex(m); goto g; } while (0)
+#define GOTO_IF_MUTEX(c, e, m, g) do { if (c) { if (e) PHYSFS_setErrorCode(e); __PHYSFS_platformReleaseMutex(m); goto g; } } while (0)
+#define GOTO_IF_MUTEX_ERRPASS(c, m, g) do { if (c) { __PHYSFS_platformReleaseMutex(m); goto g; } } while (0)
 
 #define __PHYSFS_ARRAYLEN(x) ( (sizeof (x)) / (sizeof (x[0])) )
 

@@ -63,7 +63,7 @@ static PHYSFS_sint64 UNPK_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 
 static PHYSFS_sint64 UNPK_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 len)
 {
-    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, -1);
+    BAIL(PHYSFS_ERR_READ_ONLY, -1);
 } /* UNPK_write */
 
 
@@ -79,7 +79,7 @@ static int UNPK_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
     const UNPKentry *entry = finfo->entry;
     int rc;
 
-    BAIL_IF_MACRO(offset >= entry->size, PHYSFS_ERR_PAST_EOF, 0);
+    BAIL_IF(offset >= entry->size, PHYSFS_ERR_PAST_EOF, 0);
     rc = finfo->io->seek(finfo->io, entry->startPos + offset);
     if (rc)
         finfo->curPos = (PHYSFS_uint32) offset;
@@ -101,8 +101,8 @@ static PHYSFS_Io *UNPK_duplicate(PHYSFS_Io *_io)
     PHYSFS_Io *io = NULL;
     PHYSFS_Io *retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
     UNPKfileinfo *finfo = (UNPKfileinfo *) allocator.Malloc(sizeof (UNPKfileinfo));
-    GOTO_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, UNPK_duplicate_failed);
-    GOTO_IF_MACRO(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, UNPK_duplicate_failed);
+    GOTO_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, UNPK_duplicate_failed);
+    GOTO_IF(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, UNPK_duplicate_failed);
 
     io = origfinfo->io->duplicate(origfinfo->io);
     if (!io) goto UNPK_duplicate_failed;
@@ -340,7 +340,7 @@ static UNPKentry *findEntry(const UNPKinfo *info, const char *path, int *isDir)
     if (isDir != NULL)
         *isDir = 0;
 
-    BAIL_MACRO(PHYSFS_ERR_NOT_FOUND, NULL);
+    BAIL(PHYSFS_ERR_NOT_FOUND, NULL);
 } /* findEntry */
 
 
@@ -352,17 +352,17 @@ PHYSFS_Io *UNPK_openRead(void *opaque, const char *name)
     int isdir = 0;
     UNPKentry *entry = findEntry(info, name, &isdir);
 
-    GOTO_IF_MACRO(isdir, PHYSFS_ERR_NOT_A_FILE, UNPK_openRead_failed);
-    GOTO_IF_MACRO(!entry, ERRPASS, UNPK_openRead_failed);
+    GOTO_IF(isdir, PHYSFS_ERR_NOT_A_FILE, UNPK_openRead_failed);
+    GOTO_IF_ERRPASS(!entry, UNPK_openRead_failed);
 
     retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
-    GOTO_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, UNPK_openRead_failed);
+    GOTO_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, UNPK_openRead_failed);
 
     finfo = (UNPKfileinfo *) allocator.Malloc(sizeof (UNPKfileinfo));
-    GOTO_IF_MACRO(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, UNPK_openRead_failed);
+    GOTO_IF(!finfo, PHYSFS_ERR_OUT_OF_MEMORY, UNPK_openRead_failed);
 
     finfo->io = info->io->duplicate(info->io);
-    GOTO_IF_MACRO(!finfo->io, ERRPASS, UNPK_openRead_failed);
+    GOTO_IF_ERRPASS(!finfo->io, UNPK_openRead_failed);
 
     if (!finfo->io->seek(finfo->io, entry->startPos))
         goto UNPK_openRead_failed;
@@ -391,25 +391,25 @@ UNPK_openRead_failed:
 
 PHYSFS_Io *UNPK_openWrite(void *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL(PHYSFS_ERR_READ_ONLY, NULL);
 } /* UNPK_openWrite */
 
 
 PHYSFS_Io *UNPK_openAppend(void *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL(PHYSFS_ERR_READ_ONLY, NULL);
 } /* UNPK_openAppend */
 
 
 int UNPK_remove(void *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
+    BAIL(PHYSFS_ERR_READ_ONLY, 0);
 } /* UNPK_remove */
 
 
 int UNPK_mkdir(void *opaque, const char *name)
 {
-    BAIL_MACRO(PHYSFS_ERR_READ_ONLY, 0);
+    BAIL(PHYSFS_ERR_READ_ONLY, 0);
 } /* UNPK_mkdir */
 
 
@@ -449,7 +449,7 @@ void *UNPK_openArchive(PHYSFS_Io *io, UNPKentry *e, const PHYSFS_uint32 num)
     if (info == NULL)
     {
         allocator.Free(e);
-        BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
     __PHYSFS_sort(e, (size_t) num, entryCmp, entrySwap);

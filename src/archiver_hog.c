@@ -48,13 +48,13 @@ static UNPKentry *hogLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 *_entCount)
     {
         entCount++;
         ptr = allocator.Realloc(ptr, sizeof (UNPKentry) * entCount);
-        GOTO_IF_MACRO(ptr == NULL, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+        GOTO_IF(ptr == NULL, PHYSFS_ERR_OUT_OF_MEMORY, failed);
         entries = (UNPKentry *) ptr;
         entry = &entries[entCount-1];
 
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 13), ERRPASS, failed);
+        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->name, 13), failed);
         pos += 13;
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &size, 4), ERRPASS, failed);
+        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), failed);
         pos += 4;
 
         entry->size = PHYSFS_swapULE32(size);
@@ -62,7 +62,7 @@ static UNPKentry *hogLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 *_entCount)
         pos += size;
 
         /* skip over entry */
-        GOTO_IF_MACRO(!io->seek(io, pos), ERRPASS, failed);
+        GOTO_IF_ERRPASS(!io->seek(io, pos), failed);
     } /* while */
 
     *_entCount = entCount;
@@ -81,12 +81,12 @@ static void *HOG_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     UNPKentry *entries = NULL;
 
     assert(io != NULL);  /* shouldn't ever happen. */
-    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, buf, 3), ERRPASS, NULL);
-    BAIL_IF_MACRO(memcmp(buf, "DHF", 3) != 0, PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, buf, 3), NULL);
+    BAIL_IF(memcmp(buf, "DHF", 3) != 0, PHYSFS_ERR_UNSUPPORTED, NULL);
 
     entries = hogLoadEntries(io, &count);
-    BAIL_IF_MACRO(!entries, ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!entries, NULL);
     return UNPK_openArchive(io, entries, count);
 } /* HOG_openArchive */
 

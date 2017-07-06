@@ -68,7 +68,7 @@
 #define PHYSFS_IO_REPARSE_TAG_SYMLINK    0xA000000C
 
 
-#define UTF8_TO_UNICODE_STACK_MACRO(w_assignto, str) { \
+#define UTF8_TO_UNICODE_STACK(w_assignto, str) { \
     if (str == NULL) \
         w_assignto = NULL; \
     else { \
@@ -195,7 +195,7 @@ static char *unicodeToUtf8Heap(const WCHAR *w_str)
 		void *ptr = NULL;
 		const PHYSFS_uint64 len = (wStrLen(w_str) * 4) + 1;
 		retval = (char*)allocator.Malloc(len);
-		BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+		BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 		PHYSFS_utf8FromUtf16((const PHYSFS_uint16 *)w_str, retval, len);
 		ptr = allocator.Realloc(retval, strlen(retval) + 1); /* shrink. */
 		if (ptr != NULL)
@@ -274,7 +274,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 	/* Append the "*" to the end of the string */
 	strcat(searchPath, "*");
 
-	UTF8_TO_UNICODE_STACK_MACRO(wSearchPath, searchPath);
+	UTF8_TO_UNICODE_STACK(wSearchPath, searchPath);
 	if (!wSearchPath)
 		return;  /* oh well. */
 
@@ -314,10 +314,10 @@ int __PHYSFS_platformMkDir(const char *path)
 {
 	WCHAR *wpath;
 	DWORD rc;
-	UTF8_TO_UNICODE_STACK_MACRO(wpath, path);
+	UTF8_TO_UNICODE_STACK(wpath, path);
 	rc = CreateDirectoryW(wpath, NULL);
 	__PHYSFS_smallFree(wpath);
-	BAIL_IF_MACRO(rc == 0, errcodeFromWinApi(), 0);
+	BAIL_IF(rc == 0, errcodeFromWinApi(), 0);
 	return 1;
 } /* __PHYSFS_platformMkDir */
 
@@ -340,19 +340,19 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 	WinApiFile *retval;
 	WCHAR *wfname;
 
-	UTF8_TO_UNICODE_STACK_MACRO(wfname, fname);
-	BAIL_IF_MACRO(!wfname, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+	UTF8_TO_UNICODE_STACK(wfname, fname);
+	BAIL_IF(!wfname, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 	//fileh = CreateFileW(wfname, mode, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, creation, FILE_ATTRIBUTE_NORMAL, NULL);
 	fileh = CreateFile2(wfname, mode, FILE_SHARE_READ | FILE_SHARE_WRITE, creation, NULL);
 	__PHYSFS_smallFree(wfname);
 
-	BAIL_IF_MACRO(fileh == INVALID_HANDLE_VALUE, errcodeFromWinApi(), NULL);
+	BAIL_IF(fileh == INVALID_HANDLE_VALUE, errcodeFromWinApi(), NULL);
 
 	retval = (WinApiFile *)allocator.Malloc(sizeof(WinApiFile));
 	if (!retval)
 	{
 		CloseHandle(fileh);
-		BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+		BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 	} /* if */
 
 	retval->readonly = rdonly;
@@ -387,7 +387,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 			const PHYSFS_ErrorCode err = errcodeFromWinApi();
 			CloseHandle(h);
 			allocator.Free(retval);
-			BAIL_MACRO(err, NULL);
+			BAIL(err, NULL);
 		} /* if */
 	} /* if */
 
@@ -401,14 +401,14 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 	PHYSFS_sint64 totalRead = 0;
 
 	if (!__PHYSFS_ui64FitsAddressSpace(len))
-		BAIL_MACRO(PHYSFS_ERR_INVALID_ARGUMENT, -1);
+		BAIL(PHYSFS_ERR_INVALID_ARGUMENT, -1);
 
 	while (len > 0)
 	{
 		const DWORD thislen = (len > 0xFFFFFFFF) ? 0xFFFFFFFF : (DWORD)len;
 		DWORD numRead = 0;
 		if (!ReadFile(Handle, buf, thislen, &numRead, NULL))
-			BAIL_MACRO(errcodeFromWinApi(), -1);
+			BAIL(errcodeFromWinApi(), -1);
 		len -= (PHYSFS_uint64)numRead;
 		totalRead += (PHYSFS_sint64)numRead;
 		if (numRead != thislen)
@@ -426,14 +426,14 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 	PHYSFS_sint64 totalWritten = 0;
 
 	if (!__PHYSFS_ui64FitsAddressSpace(len))
-		BAIL_MACRO(PHYSFS_ERR_INVALID_ARGUMENT, -1);
+		BAIL(PHYSFS_ERR_INVALID_ARGUMENT, -1);
 
 	while (len > 0)
 	{
 		const DWORD thislen = (len > 0xFFFFFFFF) ? 0xFFFFFFFF : (DWORD)len;
 		DWORD numWritten = 0;
 		if (!WriteFile(Handle, buffer, thislen, &numWritten, NULL))
-			BAIL_MACRO(errcodeFromWinApi(), -1);
+			BAIL(errcodeFromWinApi(), -1);
 		len -= (PHYSFS_uint64)numWritten;
 		totalWritten += (PHYSFS_sint64)numWritten;
 		if (numWritten != thislen)
@@ -457,7 +457,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 
 	if (!rc && (GetLastError() != NO_ERROR))
 	{
-		BAIL_MACRO(errcodeFromWinApi(), 0);
+		BAIL(errcodeFromWinApi(), 0);
 	} /* if */
 
 	return 1;  /* No error occured */
@@ -477,7 +477,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 	rc = SetFilePointerEx(Handle, zero, &out, FILE_CURRENT);
 	if (!rc)
 	{
-		BAIL_MACRO(errcodeFromWinApi(), -1);
+		BAIL(errcodeFromWinApi(), -1);
 	} /* if */
 	else
 	{
@@ -513,7 +513,7 @@ int __PHYSFS_platformFlush(void *opaque)
 {
 	WinApiFile *fh = ((WinApiFile *)opaque);
 	if (!fh->readonly)
-		BAIL_IF_MACRO(!FlushFileBuffers(fh->handle), errcodeFromWinApi(), 0);
+		BAIL_IF(!FlushFileBuffers(fh->handle), errcodeFromWinApi(), 0);
 
 	return 1;
 } /* __PHYSFS_platformFlush */
@@ -538,7 +538,7 @@ static int doPlatformDelete(LPWSTR wpath)
 	}
 
 	const BOOL rc = (isdir) ? RemoveDirectoryW(wpath) : DeleteFileW(wpath);
-	BAIL_IF_MACRO(!rc, errcodeFromWinApi(), 0);
+	BAIL_IF(!rc, errcodeFromWinApi(), 0);
 	return 1;   /* if you made it here, it worked. */
 } /* doPlatformDelete */
 
@@ -547,8 +547,8 @@ int __PHYSFS_platformDelete(const char *path)
 {
 	int retval = 0;
 	LPWSTR wpath = NULL;
-	UTF8_TO_UNICODE_STACK_MACRO(wpath, path);
-	BAIL_IF_MACRO(!wpath, PHYSFS_ERR_OUT_OF_MEMORY, 0);
+	UTF8_TO_UNICODE_STACK(wpath, path);
+	BAIL_IF(!wpath, PHYSFS_ERR_OUT_OF_MEMORY, 0);
 	retval = doPlatformDelete(wpath);
 	__PHYSFS_smallFree(wpath);
 	return retval;
@@ -559,7 +559,7 @@ void *__PHYSFS_platformCreateMutex(void)
 {
 	LPCRITICAL_SECTION lpcs;
 	lpcs = (LPCRITICAL_SECTION)allocator.Malloc(sizeof(CRITICAL_SECTION));
-	BAIL_IF_MACRO(!lpcs, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+	BAIL_IF(!lpcs, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 	//InitializeCriticalSection(lpcs);
 	InitializeCriticalSectionEx(lpcs, 2000, 0);
 	return lpcs;
@@ -596,11 +596,11 @@ static PHYSFS_sint64 FileTimeToPhysfsTime(const FILETIME *ft)
 	struct tm tm;
 	BOOL rc;
 
-	BAIL_IF_MACRO(!FileTimeToSystemTime(ft, &st_utc), errcodeFromWinApi(), -1);
+	BAIL_IF(!FileTimeToSystemTime(ft, &st_utc), errcodeFromWinApi(), -1);
 	tzid = GetTimeZoneInformation(&tzi);
-	BAIL_IF_MACRO(tzid == TIME_ZONE_ID_INVALID, errcodeFromWinApi(), -1);
+	BAIL_IF(tzid == TIME_ZONE_ID_INVALID, errcodeFromWinApi(), -1);
 	rc = SystemTimeToTzSpecificLocalTime(&tzi, &st_utc, &st_localtz);
-	BAIL_IF_MACRO(!rc, errcodeFromWinApi(), -1);
+	BAIL_IF(!rc, errcodeFromWinApi(), -1);
 
 	/* Convert to a format that mktime() can grok... */
 	tm.tm_sec = st_localtz.wSecond;
@@ -615,7 +615,7 @@ static PHYSFS_sint64 FileTimeToPhysfsTime(const FILETIME *ft)
 
 	/* Convert to a format PhysicsFS can grok... */
 	retval = (PHYSFS_sint64)mktime(&tm);
-	BAIL_IF_MACRO(retval == -1, PHYSFS_ERR_OS_ERROR, -1);
+	BAIL_IF(retval == -1, PHYSFS_ERR_OS_ERROR, -1);
 	return retval;
 } /* FileTimeToPhysfsTime */
 
@@ -627,12 +627,12 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
 	DWORD err = 0;
 	BOOL rc = 0;
 
-	UTF8_TO_UNICODE_STACK_MACRO(wstr, filename);
-	BAIL_IF_MACRO(!wstr, PHYSFS_ERR_OUT_OF_MEMORY, 0);
+	UTF8_TO_UNICODE_STACK(wstr, filename);
+	BAIL_IF(!wstr, PHYSFS_ERR_OUT_OF_MEMORY, 0);
 	rc = GetFileAttributesExW(wstr, GetFileExInfoStandard, &winstat);
 	err = (!rc) ? GetLastError() : 0;
 	__PHYSFS_smallFree(wstr);
-	BAIL_IF_MACRO(!rc, errcodeFromWinApiError(err), 0);
+	BAIL_IF(!rc, errcodeFromWinApiError(err), 0);
 
 	st->modtime = FileTimeToPhysfsTime(&winstat.ftLastWriteTime);
 	st->accesstime = FileTimeToPhysfsTime(&winstat.ftLastAccessTime);

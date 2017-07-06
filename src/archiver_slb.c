@@ -26,7 +26,7 @@ static UNPKentry *slbLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
     UNPKentry *entry = NULL;
 
     entries = (UNPKentry *) allocator.Malloc(sizeof (UNPKentry) * fileCount);
-    BAIL_IF_MACRO(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     for (entry = entries; fileCount > 0; fileCount--, entry++)
     {
@@ -34,11 +34,11 @@ static UNPKentry *slbLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
 
         /* don't include the '\' in the beginning */
         char backslash;
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &backslash, 1), ERRPASS, failed);
-        GOTO_IF_MACRO(backslash != '\\', ERRPASS, failed);
+        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &backslash, 1), failed);
+        GOTO_IF_ERRPASS(backslash != '\\', failed);
 
         /* read the rest of the buffer, 63 bytes */
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->name, 63), ERRPASS, failed);
+        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->name, 63), failed);
         entry->name[63] = '\0'; /* in case the name lacks the null terminator */
 
         /* convert backslashes */
@@ -48,11 +48,10 @@ static UNPKentry *slbLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
                 *ptr = '/';
         } /* for */
 
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->startPos, 4),
-                      ERRPASS, failed);
+        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->startPos, 4), failed);
         entry->startPos = PHYSFS_swapULE32(entry->startPos);
 
-        GOTO_IF_MACRO(!__PHYSFS_readAll(io, &entry->size, 4), ERRPASS, failed);
+        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->size, 4), failed);
         entry->size = PHYSFS_swapULE32(entry->size);
     } /* for */
     
@@ -74,26 +73,24 @@ static void *SLB_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
-    BAIL_IF_MACRO(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &version, sizeof(version)),
-                  ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &version, sizeof(version)), NULL);
     version = PHYSFS_swapULE32(version);
-    BAIL_IF_MACRO(version != 0, ERRPASS, NULL);
+    BAIL_IF(version != 0, PHYSFS_ERR_UNSUPPORTED, NULL);
 
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &count, sizeof(count)), ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &count, sizeof(count)), NULL);
     count = PHYSFS_swapULE32(count);
 
     /* offset of the table of contents */
-    BAIL_IF_MACRO(!__PHYSFS_readAll(io, &tocPos, sizeof(tocPos)),
-                  ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &tocPos, sizeof(tocPos)), NULL);
     tocPos = PHYSFS_swapULE32(tocPos);
     
     /* seek to the table of contents */
-    BAIL_IF_MACRO(!io->seek(io, tocPos), ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!io->seek(io, tocPos), NULL);
 
     entries = slbLoadEntries(io, count);
-    BAIL_IF_MACRO(!entries, ERRPASS, NULL);
+    BAIL_IF_ERRPASS(!entries, NULL);
 
     return UNPK_openArchive(io, entries, count);
 } /* SLB_openArchive */

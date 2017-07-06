@@ -70,7 +70,7 @@ int __PHYSFS_platformInit(void)
     ctx.reallocate = cfallocRealloc;
     ctx.deallocate = cfallocFree;
     cfallocator = CFAllocatorCreate(kCFAllocatorUseContext, &ctx);
-    BAIL_IF_MACRO(!cfallocator, PHYSFS_ERR_OUT_OF_MEMORY, 0);
+    BAIL_IF(!cfallocator, PHYSFS_ERR_OUT_OF_MEMORY, 0);
     return 1;  /* success. */
 } /* __PHYSFS_platformInit */
 
@@ -180,7 +180,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     int i, mounts;
 
     if (IOMasterPort(MACH_PORT_NULL, &masterPort) != KERN_SUCCESS)
-        BAIL_MACRO(PHYSFS_ERR_OS_ERROR, ) /*return void*/;
+        BAIL(PHYSFS_ERR_OS_ERROR, ) /*return void*/;
 
     mounts = getmntinfo(&mntbufp, MNT_WAIT);  /* NOT THREAD SAFE! */
     for (i = 0; i < mounts; i++)
@@ -203,7 +203,7 @@ static char *convertCFString(CFStringRef cfstr)
     CFIndex len = CFStringGetMaximumSizeForEncoding(CFStringGetLength(cfstr),
                                                     kCFStringEncodingUTF8) + 1;
     char *retval = (char *) allocator.Malloc(len);
-    BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     if (CFStringGetCString(cfstr, retval, len, kCFStringEncodingUTF8))
     {
@@ -220,7 +220,7 @@ static char *convertCFString(CFStringRef cfstr)
     else  /* probably shouldn't fail, but just in case... */
     {
         allocator.Free(retval);
-        BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* else */
 
     return retval;
@@ -235,13 +235,13 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     char *retval = NULL;
 
     cfurl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    BAIL_IF_MACRO(cfurl == NULL, PHYSFS_ERR_OS_ERROR, NULL);
+    BAIL_IF(cfurl == NULL, PHYSFS_ERR_OS_ERROR, NULL);
     cfstr = CFURLCopyFileSystemPath(cfurl, kCFURLPOSIXPathStyle);
     CFRelease(cfurl);
-    BAIL_IF_MACRO(!cfstr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(!cfstr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     cfmutstr = CFStringCreateMutableCopy(cfallocator, 0, cfstr);
     CFRelease(cfstr);
-    BAIL_IF_MACRO(!cfmutstr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(!cfmutstr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     CFStringAppendCString(cfmutstr, "/", kCFStringEncodingUTF8);
     retval = convertCFString(cfmutstr);
     CFRelease(cfmutstr);
@@ -257,7 +257,7 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     const char *append = "Library/Application Support/";
     const size_t len = strlen(userdir) + strlen(append) + strlen(app) + 2;
     char *retval = allocator.Malloc(len);
-    BAIL_IF_MACRO(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     snprintf(retval, len, "%s%s%s/", userdir, append, app);
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */
@@ -291,7 +291,7 @@ static void macosxAllocatorDeinit(void)
 static void *macosxAllocatorMalloc(PHYSFS_uint64 s)
 {
     if (!__PHYSFS_ui64FitsAddressSpace(s))
-        BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     return CFAllocatorAllocate(cfallocdef, (CFIndex) s, 0);
 } /* macosxAllocatorMalloc */
 
@@ -299,7 +299,7 @@ static void *macosxAllocatorMalloc(PHYSFS_uint64 s)
 static void *macosxAllocatorRealloc(void *ptr, PHYSFS_uint64 s)
 {
     if (!__PHYSFS_ui64FitsAddressSpace(s))
-        BAIL_MACRO(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     return CFAllocatorReallocate(cfallocdef, ptr, (CFIndex) s, 0);
 } /* macosxAllocatorRealloc */
 
