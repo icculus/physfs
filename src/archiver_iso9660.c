@@ -257,6 +257,7 @@ static int iso_atoi4(char *text)
 
 static PHYSFS_sint64 iso_volume_mktime(ISO9660VolumeTimestamp *timestamp)
 {
+    PHYSFS_sint64 value;
     struct tm tm;
     tm.tm_year = iso_atoi4(timestamp->year);
     tm.tm_mon = iso_atoi2(timestamp->month) - 1;
@@ -265,7 +266,7 @@ static PHYSFS_sint64 iso_volume_mktime(ISO9660VolumeTimestamp *timestamp)
     tm.tm_min = iso_atoi2(timestamp->minute);
     tm.tm_sec = iso_atoi2(timestamp->second);
     /* this allows values outside the range of a unix timestamp... sanitize them */
-    PHYSFS_sint64 value = mktime(&tm);
+    value = mktime(&tm);     
     return value == -1 ? 0 : value;
 } /* iso_volume_mktime */
 
@@ -344,8 +345,8 @@ static int iso_extractfilename(ISO9660Handle *handle,
 static int iso_readimage(ISO9660Handle *handle, PHYSFS_uint64 where,
                          void *buffer, PHYSFS_uint64 len)
 {
-    BAIL_IF_MACRO(!__PHYSFS_platformGrabMutex(handle->mutex), ERRPASS, -1);
     int rc = -1;
+    BAIL_IF_MACRO(!__PHYSFS_platformGrabMutex(handle->mutex), ERRPASS, -1);
     if (where != handle->currpos)
         GOTO_IF_MACRO(!handle->io->seek(handle->io,where), ERRPASS, unlockme);
     rc = handle->io->read(handle->io, buffer, len);
@@ -689,12 +690,14 @@ static void iso_file_close_mem(ISO9660FileHandle *fhandle)
 static PHYSFS_uint32 iso_file_read_foreign(ISO9660FileHandle *filehandle,
                                            void *buffer, PHYSFS_uint64 len)
 {
+    PHYSFS_sint64 rc;
+
     /* check remaining bytes & max obj which can be fetched */
     const PHYSFS_sint64 bytesleft = filehandle->filesize - filehandle->currpos;
     if (bytesleft < len)
         len = bytesleft;
 
-    const PHYSFS_sint64 rc = filehandle->io->read(filehandle->io, buffer, len);
+    rc = filehandle->io->read(filehandle->io, buffer, len);
     BAIL_IF_MACRO(rc == -1, ERRPASS, -1);
 
     filehandle->currpos += rc; /* i trust my internal book keeping */
@@ -706,10 +709,12 @@ static PHYSFS_uint32 iso_file_read_foreign(ISO9660FileHandle *filehandle,
 static int iso_file_seek_foreign(ISO9660FileHandle *fhandle,
                                  PHYSFS_sint64 offset)
 {
+    PHYSFS_sint64 pos;
+
     BAIL_IF_MACRO(offset < 0, PHYSFS_ERR_INVALID_ARGUMENT, 0);
     BAIL_IF_MACRO(offset >= fhandle->filesize, PHYSFS_ERR_PAST_EOF, 0);
 
-    PHYSFS_sint64 pos = fhandle->startblock * 2048 + offset;
+    pos = fhandle->startblock * 2048 + offset;
     BAIL_IF_MACRO(!fhandle->io->seek(fhandle->io, pos), ERRPASS, -1);
 
     fhandle->currpos = offset;
@@ -726,9 +731,10 @@ static void iso_file_close_foreign(ISO9660FileHandle *fhandle)
 
 static int iso_file_open_mem(ISO9660Handle *handle, ISO9660FileHandle *fhandle)
 {
+    int rc;
     fhandle->cacheddata = allocator.Malloc(fhandle->filesize);
     BAIL_IF_MACRO(!fhandle->cacheddata, PHYSFS_ERR_OUT_OF_MEMORY, -1);
-    int rc = iso_readimage(handle, fhandle->startblock * 2048,
+    rc = iso_readimage(handle, fhandle->startblock * 2048,
                            fhandle->cacheddata, fhandle->filesize);
     GOTO_IF_MACRO(rc < 0, ERRPASS, freemem);
     GOTO_IF_MACRO(rc == 0, PHYSFS_ERR_CORRUPT, freemem);
