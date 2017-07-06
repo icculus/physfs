@@ -330,7 +330,7 @@ int UNPK_stat(void *opaque, const char *fn, PHYSFS_Stat *st);
  *  Obviously, this isn't a function. If you need more than one char for this,
  *  you'll need to pull some old pieces of PhysicsFS out of revision control.
  */
-#if PHYSFS_PLATFORM_WINDOWS
+#if PHYSFS_PLATFORM_WINDOWS || PHYSFS_PLATFORM_OS2
 #define __PHYSFS_platformDirSeparator '\\'
 #else
 #define __PHYSFS_platformDirSeparator '/'

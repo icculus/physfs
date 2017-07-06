@@ -185,7 +185,7 @@ if(UNIX)
     endif()
 endif()
 
-if(WINDOWS)
+if(WINDOWS OR OS2)
     set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
     set(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
 endif()
