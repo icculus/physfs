@@ -74,6 +74,8 @@ Other stuff I thought of...
 - Reduce the BAIL and GOTO macro use. A lot of these don't add anything.
 - Modernize CMakeLists.txt
 - Change the term "search path" to something less confusing.
+- OS/2 codepages. No full Unicode in the filesystem, but we can probably make
+  a conversion effort.
 
 Probably other stuff. Requests and recommendations are welcome.
 
