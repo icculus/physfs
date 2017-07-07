@@ -94,14 +94,14 @@ static PHYSFS_ErrorCode errcodeFromAPIRET(const APIRET rc)
     return PHYSFS_ERR_OTHER_ERROR;
 } /* errcodeFromAPIRET */
 
-static char *cvtUtf8ToCodepage(const char *cpstr)
+static char *cvtUtf8ToCodepage(const char *utf8str)
 {
     if (uconvdll)
     {
         int rc;
-        size_t len = strlen(cpstr) + 1;
+        size_t len = strlen(utf8str) + 1;
         const size_t uc2buflen = len * sizeof (UniChar);
-        UniChar *uc2ptr = (char *) __PHYSFS_smallAlloc(uc2buflen);
+        UniChar *uc2ptr = (UniChar *) __PHYSFS_smallAlloc(uc2buflen);
         UniChar *uc2str = uc2ptr;
         char *cpptr = NULL;
         char *cpstr = NULL;
@@ -110,7 +110,7 @@ static char *cvtUtf8ToCodepage(const char *cpstr)
         size_t cplen;
 
         GOTO_IF(!uc2str, PHYSFS_ERR_OUT_OF_MEMORY, failed);
-        PHYSFS_utf8ToUcs2(cpstr, (const PHYSFS_uint16 *) uc2str, uc2buflen);
+        PHYSFS_utf8ToUcs2(utf8str, (PHYSFS_uint16 *) uc2str, uc2buflen);
         for (unilen = 0; uc2str[unilen]; unilen++) { /* spin */ }
         unilen++;  /* null terminator. */
 
@@ -119,10 +119,9 @@ static char *cvtUtf8ToCodepage(const char *cpstr)
         GOTO_IF(!cpptr, PHYSFS_ERR_OUT_OF_MEMORY, failed);
         cpstr = cpptr;
 
-        rc = pUniUconvFromUcs(uconv, &uc2str, &unilen, (void **) &cpstr, &cplen, &uc2str, &subs);
+        rc = pUniUconvFromUcs(uconv, &uc2str, &unilen, (void **) &cpstr, &cplen, &subs);
         GOTO_IF(rc != ULS_SUCCESS, PHYSFS_ERR_BAD_FILENAME, failed);
         GOTO_IF(subs > 0, PHYSFS_ERR_BAD_FILENAME, failed);
-        assert(len == 0);
         assert(unilen == 0);
 
         return cpptr;
@@ -152,8 +151,7 @@ static char *cvtCodepageToUtf8(const char *cpstr)
         rc = pUniUconvToUcs(uconv, (void **) &cpstr, &cplen, &uc2str, &unilen, &subs);
         GOTO_IF(rc != ULS_SUCCESS, PHYSFS_ERR_BAD_FILENAME, done);
         GOTO_IF(subs > 0, PHYSFS_ERR_BAD_FILENAME, done);
-        assert(len == 0);
-        assert(unilen == 0);
+        assert(cplen == 0);
         retval = (char *) allocator.Malloc(len * 4);
         GOTO_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, done);
         PHYSFS_utf8FromUcs2((const PHYSFS_uint16 *) uc2ptr, retval, len * 4);
@@ -181,7 +179,7 @@ static char *cvtPathToCorrectCase(char *buf)
      * If there's an error, or the path has vanished for some reason, it
      *  won't hurt to have the original case, so we just keep going.
      */
-    while (fname != NULL)
+    while ((fname != NULL) && (*fname != '\0'))
     {
         char spec[CCHMAXPATH];
         FILEFINDBUF3 fb;
@@ -436,7 +434,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
             utf8 = cvtCodepageToUtf8(fb.achName);
             if (utf8)
             {
-                callback(callbackdata, origdir, fb.achName);
+                callback(callbackdata, origdir, utf8);
                 allocator.Free(utf8);
             } /* if */
         } /* if */
