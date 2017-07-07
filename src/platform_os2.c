@@ -11,6 +11,7 @@
 
 #ifdef PHYSFS_PLATFORM_OS2
 
+#define INCL_DOSMODULEMGR
 #define INCL_DOSSEMAPHORES
 #define INCL_DOSDATETIME
 #define INCL_DOSFILEMGR
@@ -21,6 +22,7 @@
 #define INCL_DOSDEVIOCTL
 #define INCL_DOSMISC
 #include <os2.h>
+#include <uconv.h>
 
 #include <errno.h>
 #include <time.h>
@@ -28,6 +30,13 @@
 
 #include "physfs_internal.h"
 
+static HMODULE uconvdll = 0;
+static UconvObject uconv = 0;
+static int (_System *pUniCreateUconvObject)(UniChar *, UconvObject *) = NULL;
+static int (_System *pUniFreeUconvObject)(UconvObject *) = NULL;
+static int (_System *pUniUconvToUcs)(UconvObject,void **,size_t *, UniChar**, size_t *, size_t *) = NULL;
+static int (_System *pUniUconvFromUcs)(UconvObject,UniChar **,size_t *,void **,size_t *,size_t *) = NULL;
+)
 static PHYSFS_ErrorCode errcodeFromAPIRET(const APIRET rc)
 {
     switch (rc)
@@ -85,10 +94,38 @@ static PHYSFS_ErrorCode errcodeFromAPIRET(const APIRET rc)
     return PHYSFS_ERR_OTHER_ERROR;
 } /* errcodeFromAPIRET */
 
+static char *cvtCodepageToUtf8(const char *cpstr)
+{
+    char *retval = NULL;
+    if (uconvdll)
+    {
+        int rc;
+        size_t len = strlen(cpstr) + 1;
+        size_t cplen = len;
+        size_t unilen = len;
+        size_t subs = 0;
+        UniChar *uc2str = __PHYSFS_smallAlloc(len * sizeof (UniChar));
+        BAIL_IF(!uc2str, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        rc = pUniUconvToUcs(uconv, &cpstr, &cplen, &uc2buf, &unilen, &subs);
+        GOTO_IF(rc != ULS_SUCCESS, PHYSFS_ERR_BAD_FILENAME, done);
+        GOTO_IF(subs > 0, PHYSFS_ERR_BAD_FILENAME, done);
+        assert(len == 0);
+        assert(unilen == 0);
+        retval = (char *) allocator.Malloc(len * 4);
+        GOTO_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, done);
+        PHYSFS_utf8FromUcs2((const PHYSFS_uint16 *) uc2str, retval, len * 4);
+        done:
+        __PHYSFS_smallFree(uc2str);
+    } /* if */
+
+    return retval;
+} /* cvtCodepageToUtf8 */
+
 
 /* (be gentle, this function isn't very robust.) */
-static void cvt_path_to_correct_case(char *buf)
+static char *cvtPathToCorrectCase(char *buf)
 {
+    char *retval = buf;
     char *fname = buf + 3;            /* point to first element. */
     char *ptr = strchr(fname, '\\');  /* find end of first element. */
 
@@ -123,7 +160,17 @@ static void cvt_path_to_correct_case(char *buf)
         {
             while (count == 1)  /* while still entries to enumerate... */
             {
-                if (__PHYSFS_stricmpASCII(fb.achName, fname) == 0)
+                int cmp;
+                char *utf8 = cvtCodepageToUtf8(fb.achName);
+                if (!utf8) /* ugh, maybe we'll get lucky and it's ASCII */
+                    cmp = __PHYSFS_stricmpASCII(utf8, fname);
+                else
+                {
+                    cmp = __PHYSFS_utf8stricmp(utf8, fname);
+                    allocator.Free(utf8);
+                } /* else */
+
+                if (cmp == 0)
                 {
                     strcpy(fname, fb.achName);
                     break;  /* there it is. Overwrite and stop searching. */
@@ -142,22 +189,64 @@ static void cvt_path_to_correct_case(char *buf)
             ptr = strchr(++fname, '\\');  /* find next element. */
         } /* if */
     } /* while */
-} /* cvt_file_to_correct_case */
+
+    return retval;
+} /* cvtPathToCorrectCase */
+
+static void prepUnicodeSupport(void)
+{
+    /* really old OS/2 might not have Unicode support _at all_, so load
+       the system library and do without if it doesn't exist. */
+    int ok = 0;
+    int rc = 0;
+    char buf[CCHMAXPATH];
+    UniChar defstr[] = { 0 };
+    if (DosLoadModule(buf, sizeof (buf) - 1, "uconv", &uconvdll) == NO_ERROR)
+    {
+        #define LOAD(x) (DosQueryProcAddr(uconvdll,0,#x,(PFN*)&p##x)==NO_ERROR)
+        ok = LOAD(UniCreateUconvObject) &&
+             LOAD(UniFreeUconvObject) &&
+             LOAD(UniUconvToUcs) &&
+             LOAD(UniUconvFromUcs);
+        #undef LOAD
+    } /* else */
+
+    if (!ok || (pUniCreateUconvObject(defstr, &uconv) != ULS_SUCCESS))
+    {
+        /* oh well, live without it. */
+        if (uconvdll)
+        {
+            if (uconv)
+                pUniFreeUconvObject(uconv);
+            DosFreeModule(uconvdll);
+            uconvdll = 0;
+        } /* if */
+    } /* if */
+} /* prepUnicodeSupport */
 
 
 int __PHYSFS_platformInit(void)
 {
-    return 1;  /* it's all good. */
+    prepUnicodeSupport();
+    return 1;  /* ready to go! */
 } /* __PHYSFS_platformInit */
 
 
 int __PHYSFS_platformDeinit(void)
 {
+    if (uconvdll)
+    {
+        pUniFreeUconvObject(uconv);
+        uconv = 0;
+        DosFreeModule(uconvdll);
+        uconvdll = 0;
+    } /* if */
+
     return 1;  /* success. */
 } /* __PHYSFS_platformDeinit */
 
 
-static int disc_is_inserted(ULONG drive)
+static int discIsInserted(ULONG drive)
 {
     int rc;
     char buf[20];
@@ -171,7 +260,7 @@ static int disc_is_inserted(ULONG drive)
 /* looks like "CD01" in ASCII (littleendian)...used for an ioctl. */
 #define CD01 0x31304443
 
-static int is_cdrom_drive(ULONG drive)
+static int isCdRomDrive(ULONG drive)
 {
     PHYSFS_uint32 param, data;
     ULONG ul1, ul2;
@@ -196,7 +285,7 @@ static int is_cdrom_drive(ULONG drive)
 
     DosClose(hfile);
     return ((rc == NO_ERROR) && (PHYSFS_swapULE32(data) == CD01));
-} /* is_cdrom_drive */
+} /* isCdRomDrive */
 
 
 void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
@@ -211,7 +300,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     {
         if (drivemap & bit)  /* this logical drive exists. */
         {
-            if ((is_cdrom_drive(i)) && (disc_is_inserted(i)))
+            if ((isCdRomDrive(i)) && (discIsInserted(i)))
             {
                 char drive[4] = "x:\\";
                 drive[0] = ('A' + i);
@@ -235,13 +324,15 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     rc = DosQueryModuleName(ppib->pib_hmte, sizeof (buf), (PCHAR) buf);
     BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    retval = cvtCodepageToUtf8(buf);
+    BAIL_IF_ERRPASS(!retval, NULL);
 
     /* chop off filename, leave path. */
-    for (len = strlen(buf) - 1; len >= 0; len--)
+    for (len = strlen(retval) - 1; len >= 0; len--)
     {
-        if (buf[len] == '\\')
+        if (retval[len] == '\\')
         {
-            buf[len + 1] = '\0';
+            retval[len + 1] = '\0';
             break;
         } /* if */
     } /* for */
@@ -249,20 +340,8 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     assert(len > 0);  /* should have been a "x:\\" on the front on string. */
 
     /* The string is capitalized! Figure out the REAL case... */
-    cvt_path_to_correct_case(buf);
-
-    retval = (char *) allocator.Malloc(len + 1);
-    BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    strcpy(retval, buf);
-    return retval;
+    return cvtPathToCorrectCase(retval);
 } /* __PHYSFS_platformCalcBaseDir */
-
-
-char *__PHYSFS_platformGetUserName(void)
-{
-    return NULL;  /* (*shrug*) */
-} /* __PHYSFS_platformGetUserName */
-
 
 char *__PHYSFS_platformCalcUserDir(void)
 {
@@ -274,64 +353,50 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     return __PHYSFS_platformCalcBaseDir(NULL);  /* !!! FIXME: ? */
 }
 
-/* !!! FIXME: can we lose the malloc here? */
-char *__PHYSFS_platformCvtToDependent(const char *prepend,
-                                      const char *dirName,
-                                      const char *append)
-{
-    int len = ((prepend) ? strlen(prepend) : 0) +
-              ((append) ? strlen(append) : 0) +
-              strlen(dirName) + 1;
-    char *retval = allocator.Malloc(len);
-    char *p;
-
-    BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-
-    if (prepend)
-        strcpy(retval, prepend);
-    else
-        retval[0] = '\0';
-
-    strcat(retval, dirName);
-
-    if (append)
-        strcat(retval, append);
-
-    for (p = strchr(retval, '/'); p != NULL; p = strchr(p + 1, '/'))
-        *p = '\\';
-
-    return retval;
-} /* __PHYSFS_platformCvtToDependent */
-
-
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      PHYSFS_EnumFilesCallback callback,
                                      const char *origdir,
                                      void *callbackdata)
 {                                        
-    char spec[CCHMAXPATH];
+    char *utf8len = strlen(dirname);
+    char *utf8 = (char *) __PHYSFS_smallAlloc(utf8len + 5);
+    char *cpspec = NULL;
     FILEFINDBUF3 fb;
     HDIR hdir = HDIR_CREATE;
     ULONG count = 1;
     APIRET rc;
 
-    BAIL_IF(strlen(dirname) > sizeof (spec) - 5, PHYSFS_ERR_BAD_FILENAME,);
+    BAIL_IF(!utf8, PHYSFS_ERR_OUT_OF_MEMORY,);
 
-    strcpy(spec, dirname);
-    strcat(spec, (spec[strlen(spec) - 1] != '\\') ? "\\*.*" : "*.*");
+    strcpy(utf8, dirname);
+    if (utf8[utf8len - 1] != '\\')
+        strcpy(utf8 + utf8len, "\\*.*");
+    else
+        strcpy(utf8 + utf8len, "*.*");
 
-    rc = DosFindFirst((unsigned char *) spec, &hdir,
+    cpspec = cvtUtf8ToCodepage(utf8);
+    __PHYSFS_smallFree(utf8);
+    BAIL_IF_ERRPASS(!cpspec, NULL);
+
+    rc = DosFindFirst((unsigned char *) cpspec, &hdir,
                       FILE_DIRECTORY | FILE_ARCHIVED |
                       FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM,
                       &fb, sizeof (fb), &count, FIL_STANDARD);
+    allocator.Free(cpspec);
 
     BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc),);
 
     while (count == 1)
     {
         if ((strcmp(fb.achName, ".") != 0) && (strcmp(fb.achName, "..") != 0))
-            callback(callbackdata, origdir, fb.achName);
-
+        {
+            utf8 = cvtCodepageToUtf8(fb.achName);
+            if (utf8)
+            {
+                callback(callbackdata, origdir, fb.achName);
+                allocator.Free(utf8);
+            } /* if */
+        } /* if */
         DosFindNext(hdir, &fb, sizeof (fb), &count);
     } /* while */
 
@@ -342,6 +407,8 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 char *__PHYSFS_platformCurrentDir(void)
 {
     char *retval;
+    char *cpstr;
+    char *utf8;
     ULONG currentDisk;
     ULONG dummy;
     ULONG pathSize = 0;
@@ -354,107 +421,108 @@ char *__PHYSFS_platformCurrentDir(void)
     /* The first call just tells us how much space we need for the string. */
     rc = DosQueryCurrentDir(currentDisk, &byte, &pathSize);
     pathSize++; /* Add space for null terminator. */
-    retval = (char *) allocator.Malloc(pathSize + 3);  /* plus "x:\\" */
-    BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    cpstr = (char *) __PHYSFS_smallAlloc(pathSize);
+    BAIL_IF(cpstr == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
     /* Actually get the string this time. */
-    rc = DosQueryCurrentDir(currentDisk, (PBYTE) (retval + 3), &pathSize);
+    rc = DosQueryCurrentDir(currentDisk, (PBYTE) cpstr, &pathSize);
     if (rc != NO_ERROR)
     {
-        allocator.Free(retval);
+        __PHYSFS_smallFree(cpstr);
         BAIL(errcodeFromAPIRET(rc), NULL);
+    } /* if */
+
+    utf8 = cvtCodepageToUtf8(cpstr);
+    __PHYSFS_smallFree(cpstr);
+    BAIL_IF_ERRPASS(utf8 == NULL, NULL);
+
+    /* +4 for "x:\\" drive selector and null terminator. */
+    retval = (char *) allocator.Malloc(strlen(utf8) + 4);
+    if (retval == NULL)
+    {
+        allocator.Free(utf8);
+        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
     retval[0] = ('A' + (currentDisk - 1));
     retval[1] = ':';
     retval[2] = '\\';
+    strcpy(retval + 3, utf8);
+
+    allocator.Free(utf8);
+
     return retval;
 } /* __PHYSFS_platformCurrentDir */
 
 
-char *__PHYSFS_platformRealPath(const char *_path)
+int __PHYSFS_platformMkDir(const char *filename)
 {
-    const unsigned char *path = (const unsigned char *) _path;
-    char buf[CCHMAXPATH];
-    char *retval;
-    APIRET rc = DosQueryPathInfo(path, FIL_QUERYFULLNAME, buf, sizeof (buf));
-    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
-    retval = (char *) allocator.Malloc(strlen(buf) + 1);
-    BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    strcpy(retval, buf);
-    return retval;
-} /* __PHYSFS_platformRealPath */
-
-
-int __PHYSFS_platformMkDir(const char *_filename)
-{
-    const unsigned char *filename = (const unsigned char *) _filename;
-    const APIRET rc = DosCreateDir(filename, NULL);
+    APIRET rc;
+    char *cpstr = cvtUtf8ToCodepage(filename);
+    BAIL_IF_ERRPASS(!cpstr, 0);
+    rc = DosCreateDir((unsigned char *) cpstr, NULL);
+    allocator.Free(cpstr);
     BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
     return 1;
 } /* __PHYSFS_platformMkDir */
 
 
-void *__PHYSFS_platformOpenRead(const char *_filename)
+static HFILE openFile(const char *filename, const ULONG flags, const ULONG mode)
 {
-    const unsigned char *filename = (const unsigned char *) _filename;
-    ULONG actionTaken = 0;
+    char *cpfname = cvtUtf8ToCodepage(filename);
+    ULONG action = 0;
     HFILE hfile = NULLHANDLE;
+    APIRET rc;
 
+    BAIL_IF_ERRPASS(!cpfname, 0);
+
+    rc = DosOpen(cpfname, &hfile, &action, 0, FILE_NORMAL, flags, mode, NULL);
+    allocator.Free(cpfname);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+
+    return hfile;
+} /* openFile */
+
+void *__PHYSFS_platformOpenRead(const char *filename)
+{
     /*
      * File must be opened SHARE_DENYWRITE and ACCESS_READONLY, otherwise
      *  DosQueryFileInfo() will fail if we try to get a file length, etc.
      */
-    const APIRET rc = DosOpen(filename, &hfile, &actionTaken, 0, FILE_NORMAL,
-                   OPEN_ACTION_OPEN_IF_EXISTS | OPEN_ACTION_FAIL_IF_NEW,
-                   OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
-                   OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
-                   OPEN_ACCESS_READONLY, NULL);
-    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
-
-    return ((void *) hfile);
+    return (void *) openFile(filename,
+                        OPEN_ACTION_OPEN_IF_EXISTS | OPEN_ACTION_FAIL_IF_NEW,
+                        OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
+                        OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
+                        OPEN_ACCESS_READONLY);
 } /* __PHYSFS_platformOpenRead */
 
 
-void *__PHYSFS_platformOpenWrite(const char *_filename)
+void *__PHYSFS_platformOpenWrite(const char *filename)
 {
-    const unsigned char *filename = (const unsigned char *) _filename;
-    ULONG actionTaken = 0;
-    HFILE hfile = NULLHANDLE;
-
-    /*
-     * File must be opened SHARE_DENYWRITE and ACCESS_READWRITE, otherwise
-     *  DosQueryFileInfo() will fail if we try to get a file length, etc.
-     */
-    const APIRET rc = DosOpen(filename, &hfile, &actionTaken, 0, FILE_NORMAL,
-                   OPEN_ACTION_REPLACE_IF_EXISTS | OPEN_ACTION_CREATE_IF_NEW,
-                   OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
-                   OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
-                   OPEN_ACCESS_READWRITE, NULL);
-    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
-
-    return ((void *) hfile);
+    return (void *) openFile(filename,
+                        OPEN_ACTION_REPLACE_IF_EXISTS |
+                        OPEN_ACTION_CREATE_IF_NEW,
+                        OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
+                        OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE);
 } /* __PHYSFS_platformOpenWrite */
 
 
 void *__PHYSFS_platformOpenAppend(const char *_filename)
 {
-    const unsigned char *filename = (const unsigned char *) _filename;
-    ULONG dummy = 0;
-    HFILE hfile = NULLHANDLE;
     APIRET rc;
+    ULONG dummy = 0;
+    HFILE hfile;
 
     /*
      * File must be opened SHARE_DENYWRITE and ACCESS_READWRITE, otherwise
      *  DosQueryFileInfo() will fail if we try to get a file length, etc.
      */
-    rc = DosOpen(filename, &hfile, &dummy, 0, FILE_NORMAL,
-                   OPEN_ACTION_OPEN_IF_EXISTS | OPEN_ACTION_CREATE_IF_NEW,
-                   OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
-                   OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
-                   OPEN_ACCESS_READWRITE, NULL);
-
-    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), NULL);
+    hfile = openFile(filename,
+                        OPEN_ACTION_OPEN_IF_EXISTS | OPEN_ACTION_CREATE_IF_NEW,
+                        OPEN_FLAGS_FAIL_ON_ERROR | OPEN_FLAGS_NO_LOCALITY |
+                        OPEN_FLAGS_NOINHERIT | OPEN_SHARE_DENYWRITE |
+                        OPEN_ACCESS_READWRITE);
+    BAIL_IF_ERRPASS(!hfile, NULL);
 
     rc = DosSetFilePtr(hfile, 0, FILE_END, &dummy);
     if (rc != NO_ERROR)
@@ -539,15 +607,23 @@ void __PHYSFS_platformClose(void *opaque)
 } /* __PHYSFS_platformClose */
 
 
-int __PHYSFS_platformDelete(const char *_path)
+int __PHYSFS_platformDelete(const char *path)
 {
+    char *cppath = cvtUtf8ToCodepage(path);
     FILESTATUS3 fs;
-    const unsigned char *path = (const unsigned char *) _path;
-    APIRET rc = DosQueryPathInfo(path, FIL_STANDARD, &fs, sizeof (fs));
-    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    APIRET rc;
+    int retval = 0;
+
+    BAIL_IF_ERRPASS(!cppath, 0);
+    rc = DosQueryPathInfo(cppath, FIL_STANDARD, &fs, sizeof (fs));
+    GOTO_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), done);
     rc = (fs.attrFile & FILE_DIRECTORY) ? DosDeleteDir(path) : DosDelete(path);
-    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
-    return 1;
+    GOTO_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), done);
+    retval = 1;  /* success */
+
+done:
+    allocator.Free(cppath);
+    return retval;
 } /* __PHYSFS_platformDelete */
 
 
@@ -572,10 +648,15 @@ PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
 
 int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *stat)
 {
+    char *cpfname = cvtUtf8ToCodepage(filename);
     FILESTATUS3 fs;
-    const unsigned char *fname = (const unsigned char *) filename;
-    const APIRET rc = DosQueryPathInfo(fname, FIL_STANDARD, &fs, sizeof (fs));
-    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), 0);
+    int retval = 0;
+    APIRET rc;
+
+    BAIL_IF_ERRPASS(!cppath, 0);
+
+    rc = DosQueryPathInfo(cpfname, FIL_STANDARD, &fs, sizeof (fs));
+    GOTO_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), done);
 
     if (fs.attrFile & FILE_DIRECTORY)
     {
@@ -601,8 +682,11 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *stat)
         stat->createtime = 0;
 
     stat->readonly = ((fs.attrFile & FILE_READONLY) == FILE_READONLY);
+    return 1;  /* success */
 
-    return 1;
+done:
+    allocator.Free(cppath);
+    return retval;
 } /* __PHYSFS_platformStat */
 
 
