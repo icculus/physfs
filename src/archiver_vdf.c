@@ -258,8 +258,9 @@ static PHYSFS_sint64 vdfDosTimeToEpoch(VdfTimestamp time)
  */
 static void vdfTruncateFilename(char *s, PHYSFS_uint32 *nameLength)
 {
-    s[VDF_ENTRY_NAME_LENGTH - 1] = '\0';
     int i;
+
+    s[VDF_ENTRY_NAME_LENGTH - 1] = '\0';
     for (i = VDF_ENTRY_NAME_LENGTH - 2; i > 0; i--) {
         if (isspace(s[i]))
         {
@@ -322,23 +323,24 @@ static void vdfAddEntry(VdfRecord *record, VdfEntryInfo *entry)
 static VdfRecord *vdfLoadRecord(PHYSFS_Io *io, VdfHeader header)
 {
     VdfRecord *record = (VdfRecord*)allocator.Malloc(sizeof(VdfRecord));
+    VdfEntryInfo *entries;
+    VdfEntryInfo *entry;
+
     BAIL_IF(!record, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 
-    VdfEntryInfo *entries = (VdfEntryInfo *)allocator.Malloc(sizeof(VdfEntryInfo) * header.numEntries);
+    entries = (VdfEntryInfo *)allocator.Malloc(sizeof(VdfEntryInfo) * header.numEntries);
     GOTO_IF(!entries, PHYSFS_ERR_OUT_OF_MEMORY, failed);
 
     if (!__PHYSFS_readAll(io, entries, sizeof(VdfEntryInfo) * header.numEntries)) goto failed;
-
-    VdfEntryInfo *entry;
 
     record->timestamp = vdfDosTimeToEpoch(header.timestamp);
     record->numEntries = header.numEntries;
     record->entries = entries;
     memset(record->table, 0, sizeof(record->table));
-    PHYSFS_uint32 len;
 
     for (entry = entries; header.numEntries > 0; header.numEntries--, entry++)
     {
+        PHYSFS_uint32 len;
         entry->jump = PHYSFS_swapULE32(entry->jump);
         entry->size = PHYSFS_swapULE32(entry->size);
         entry->type = PHYSFS_swapULE32(entry->type);
