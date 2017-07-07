@@ -154,6 +154,10 @@ Bug fixes:
 pkg-config support:
     Jonas Kulla
 
+Bug fixes,
+VDF archiver:
+    Francesco Bertolaccini
+
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 
