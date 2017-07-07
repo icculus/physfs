@@ -36,7 +36,7 @@ static int (_System *pUniCreateUconvObject)(UniChar *, UconvObject *) = NULL;
 static int (_System *pUniFreeUconvObject)(UconvObject *) = NULL;
 static int (_System *pUniUconvToUcs)(UconvObject,void **,size_t *, UniChar**, size_t *, size_t *) = NULL;
 static int (_System *pUniUconvFromUcs)(UconvObject,UniChar **,size_t *,void **,size_t *,size_t *) = NULL;
-)
+
 static PHYSFS_ErrorCode errcodeFromAPIRET(const APIRET rc)
 {
     switch (rc)
@@ -94,6 +94,47 @@ static PHYSFS_ErrorCode errcodeFromAPIRET(const APIRET rc)
     return PHYSFS_ERR_OTHER_ERROR;
 } /* errcodeFromAPIRET */
 
+static char *cvtUtf8ToCodepage(const char *cpstr)
+{
+    if (uconvdll)
+    {
+        int rc;
+        size_t len = strlen(cpstr) + 1;
+        const size_t uc2buflen = len * sizeof (UniChar);
+        UniChar *uc2ptr = (char *) __PHYSFS_smallAlloc(uc2buflen);
+        UniChar *uc2str = uc2ptr;
+        char *cpptr = NULL;
+        char *cpstr = NULL;
+        size_t subs = 0;
+        size_t unilen;
+        size_t cplen;
+
+        GOTO_IF(!uc2str, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+        PHYSFS_utf8ToUcs2(cpstr, (const PHYSFS_uint16 *) uc2str, uc2buflen);
+        for (unilen = 0; uc2str[unilen]; unilen++) { /* spin */ }
+        unilen++;  /* null terminator. */
+
+        cplen = unilen * 4; /* overallocate, just in case. */
+        cpptr = (char *) allocator.Malloc(cplen);
+        GOTO_IF(!cpptr, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+        cpstr = cpptr;
+
+        rc = pUniUconvFromUcs(uconv, &uc2str, &unilen, (void **) &cpstr, &cplen, &uc2str, &subs);
+        GOTO_IF(rc != ULS_SUCCESS, PHYSFS_ERR_BAD_FILENAME, failed);
+        GOTO_IF(subs > 0, PHYSFS_ERR_BAD_FILENAME, failed);
+        assert(len == 0);
+        assert(unilen == 0);
+
+        return cpptr;
+
+        failed:
+        __PHYSFS_smallFree(uc2ptr);
+        allocator.Free(cpptr);
+    } /* if */
+
+    return NULL;
+} /* cvtUtf8ToCodepage */
+
 static char *cvtCodepageToUtf8(const char *cpstr)
 {
     char *retval = NULL;
@@ -104,19 +145,21 @@ static char *cvtCodepageToUtf8(const char *cpstr)
         size_t cplen = len;
         size_t unilen = len;
         size_t subs = 0;
-        UniChar *uc2str = __PHYSFS_smallAlloc(len * sizeof (UniChar));
-        BAIL_IF(!uc2str, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-        rc = pUniUconvToUcs(uconv, &cpstr, &cplen, &uc2buf, &unilen, &subs);
+        UniChar *uc2ptr = __PHYSFS_smallAlloc(len * sizeof (UniChar));
+        UniChar *uc2str = uc2ptr;
+
+        BAIL_IF(!uc2ptr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        rc = pUniUconvToUcs(uconv, (void **) &cpstr, &cplen, &uc2str, &unilen, &subs);
         GOTO_IF(rc != ULS_SUCCESS, PHYSFS_ERR_BAD_FILENAME, done);
         GOTO_IF(subs > 0, PHYSFS_ERR_BAD_FILENAME, done);
         assert(len == 0);
         assert(unilen == 0);
         retval = (char *) allocator.Malloc(len * 4);
         GOTO_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, done);
-        PHYSFS_utf8FromUcs2((const PHYSFS_uint16 *) uc2str, retval, len * 4);
+        PHYSFS_utf8FromUcs2((const PHYSFS_uint16 *) uc2ptr, retval, len * 4);
         done:
-        __PHYSFS_smallFree(uc2str);
-    } /* if */
+        __PHYSFS_smallFree(uc2ptr);
+    } /* if */                
 
     return retval;
 } /* cvtCodepageToUtf8 */
@@ -197,8 +240,7 @@ static void prepUnicodeSupport(void)
 {
     /* really old OS/2 might not have Unicode support _at all_, so load
        the system library and do without if it doesn't exist. */
-    int ok = 0;
-    int rc = 0;
+    int ok = 0;                                                   
     char buf[CCHMAXPATH];
     UniChar defstr[] = { 0 };
     if (DosLoadModule(buf, sizeof (buf) - 1, "uconv", &uconvdll) == NO_ERROR)
@@ -358,7 +400,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      const char *origdir,
                                      void *callbackdata)
 {                                        
-    char *utf8len = strlen(dirname);
+    size_t utf8len = strlen(dirname);
     char *utf8 = (char *) __PHYSFS_smallAlloc(utf8len + 5);
     char *cpspec = NULL;
     FILEFINDBUF3 fb;
@@ -376,7 +418,8 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 
     cpspec = cvtUtf8ToCodepage(utf8);
     __PHYSFS_smallFree(utf8);
-    BAIL_IF_ERRPASS(!cpspec, NULL);
+    if (!cpspec)
+        return;
 
     rc = DosFindFirst((unsigned char *) cpspec, &hdir,
                       FILE_DIRECTORY | FILE_ARCHIVED |
@@ -507,7 +550,7 @@ void *__PHYSFS_platformOpenWrite(const char *filename)
 } /* __PHYSFS_platformOpenWrite */
 
 
-void *__PHYSFS_platformOpenAppend(const char *_filename)
+void *__PHYSFS_platformOpenAppend(const char *filename)
 {
     APIRET rc;
     ULONG dummy = 0;
@@ -653,7 +696,7 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *stat)
     int retval = 0;
     APIRET rc;
 
-    BAIL_IF_ERRPASS(!cppath, 0);
+    BAIL_IF_ERRPASS(!cpfname, 0);
 
     rc = DosQueryPathInfo(cpfname, FIL_STANDARD, &fs, sizeof (fs));
     GOTO_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), done);
@@ -685,7 +728,7 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *stat)
     return 1;  /* success */
 
 done:
-    allocator.Free(cppath);
+    allocator.Free(cpfname); 
     return retval;
 } /* __PHYSFS_platformStat */
 
