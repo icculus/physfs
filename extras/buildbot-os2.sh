@@ -20,6 +20,8 @@
 
 set -e
 
+ZIPFILE="$1"
+
 export WATCOM="/usr/local/share/watcom"
 export PATH="$PATH:$WATCOM/binl"
 
@@ -64,8 +66,12 @@ fi
 
 if [ "$OKAY" == "1" ]; then
     echo 1>&2 "Build succeeded."
-    cp ../src/physfs.h .
-    zip -9r ../physfs-os2.zip physfs.lib physfs.h
+    if [ ! -z "$ZIPFILE" ]; then
+        rm -f "$ZIPFILE"
+        echo "Zipping to '$ZIPFILE' ..."
+        ( cp ../src/physfs.h . && zip -9r ../physfs-os2.zip physfs.lib physfs.h ) || exit 1
+        echo "Done."
+    fi
     exit 0
 else
     echo 1>&2 "Build failed."
