@@ -64,7 +64,9 @@ fi
 
 if [ "$OKAY" == "1" ]; then
     echo 1>&2 "Build succeeded."
+    exit 0
 else
     echo 1>&2 "Build failed."
+    exit 1
 fi
 
