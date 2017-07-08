@@ -23,7 +23,7 @@ set -e
 export WATCOM="/usr/local/share/watcom"
 export PATH="$PATH:$WATCOM/binl"
 
-CFLAGS="-i=\"$WATCOM/h;$WATCOM/h/os2;../src\" -wx -zq -bt=os2 -fo=.obj -mf"
+CFLAGS="-i=\"$WATCOM/h;$WATCOM/h/os2;../src\" -wx -d0 -otexan -6r -zq -bt=os2 -fo=.obj -mf"
 WLIBFLAGS="-b -c -n -q -p=512"
 
 cd `dirname "$0"`
@@ -64,6 +64,8 @@ fi
 
 if [ "$OKAY" == "1" ]; then
     echo 1>&2 "Build succeeded."
+    cp ../src/physfs.h .
+    zip -9r ../physfs-os2.zip physfs.lib physfs.h
     exit 0
 else
     echo 1>&2 "Build failed."
