@@ -103,25 +103,25 @@ void __PHYSFS_smallFree(void *ptr);
 #define PHYSFS_SUPPORTS_7Z 0
 #endif
 #ifndef PHYSFS_SUPPORTS_GRP
-#define PHYSFS_SUPPORTS_GRP 0
+#define PHYSFS_SUPPORTS_GRP 1
 #endif
 #ifndef PHYSFS_SUPPORTS_HOG
-#define PHYSFS_SUPPORTS_HOG 0
+#define PHYSFS_SUPPORTS_HOG 1
 #endif
 #ifndef PHYSFS_SUPPORTS_MVL
-#define PHYSFS_SUPPORTS_MVL 0
+#define PHYSFS_SUPPORTS_MVL 1
 #endif
 #ifndef PHYSFS_SUPPORTS_WAD
-#define PHYSFS_SUPPORTS_WAD 0
+#define PHYSFS_SUPPORTS_WAD 1
 #endif
 #ifndef PHYSFS_SUPPORTS_SLB
-#define PHYSFS_SUPPORTS_SLB 0
+#define PHYSFS_SUPPORTS_SLB 1
 #endif
 #ifndef PHYSFS_SUPPORTS_ISO9660
-#define PHYSFS_SUPPORTS_ISO9660 0
+#define PHYSFS_SUPPORTS_ISO9660 1
 #endif
 #ifndef PHYSFS_SUPPORTS_VDF
-#define PHYSFS_SUPPORTS_VDF 0
+#define PHYSFS_SUPPORTS_VDF 1
 #endif
 
 /* The latest supported PHYSFS_Io::version value. */
