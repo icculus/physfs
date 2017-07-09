@@ -887,7 +887,7 @@ static int isSymlink(const WCHAR *wpath, const DWORD attr)
         return 0;  /* ...maybe the file just vanished...? */
 
     FindClose(h);
-    return (w32dw.dwReserved == PHYSFS_IO_REPARSE_TAG_SYMLINK);
+    return (w32dw.dwReserved0 == PHYSFS_IO_REPARSE_TAG_SYMLINK);
 } /* isSymlink */
 
 
