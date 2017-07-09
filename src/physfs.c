@@ -2983,5 +2983,33 @@ static void setDefaultAllocator(void)
     } /* if */
 } /* setDefaultAllocator */
 
+
+#if defined(_MSC_VER)
+/* this code came from https://stackoverflow.com/a/8712996 */
+int __PHYSFS_msvc_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
+{
+    int count = -1;
+
+    if (size != 0)
+        count = _vsnprintf_s(outBuf, size, _TRUNCATE, format, ap);
+    if (count == -1)
+        count = _vscprintf(format, ap);
+
+    return count;
+}
+
+int __PHYSFS_msvc_snprintf(char *outBuf, size_t size, const char *format, ...)
+{
+    int count;
+    va_list ap;
+
+    va_start(ap, format);
+    count = c99_vsnprintf(outBuf, size, format, ap);
+    va_end(ap);
+
+    return count;
+}
+#endif
+
 /* end of physfs.c ... */
 
