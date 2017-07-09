@@ -56,9 +56,9 @@ if [ "$OKAY" == "1" ]; then
 fi
 
 if [ "$OKAY" == "1" ]; then
-    F=`file ../buildbot/test_physfs.exe`
+    F=`file test_physfs.exe`
     echo "$F"
-    if [ "$F" != '../buildbot/test_physfs.exe: MS-DOS executable, LX for OS/2 (console) i80386' ]; then
+    if [ "$F" != 'test_physfs.exe: MS-DOS executable, LX for OS/2 (console) i80386' ]; then
         echo 1>&2 "ERROR: final binary doesn't appear to be OS/2 executable."
         OKAY=0
     fi
@@ -69,7 +69,7 @@ if [ "$OKAY" == "1" ]; then
     if [ ! -z "$ZIPFILE" ]; then
         rm -f "$ZIPFILE"
         echo "Zipping to '$ZIPFILE' ..."
-        ( cp ../src/physfs.h . && zip -9r ../physfs-os2.zip physfs.lib physfs.h ) || exit 1
+        ( cp ../src/physfs.h . && zip -9r physfs-os2.zip physfs.lib physfs.h ) || exit 1
         echo "Done."
     fi
     exit 0
