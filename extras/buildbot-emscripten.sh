@@ -43,6 +43,8 @@ if [ -z "$MAKE" ]; then
 fi
 
 echo "\$MAKE is '$MAKE'"
+MAKECMD="$MAKE"
+unset MAKE  # prevent warnings about jobserver mode.
 
 echo "Setting up Emscripten SDK environment..."
 source "$ENVSCRIPT"
@@ -58,7 +60,7 @@ echo "Configuring..."
 emcmake cmake -G "Unix Makefiles" -DPHYSFS_BUILD_SHARED=False -DCMAKE_BUILD_TYPE=MinSizeRel .. || exit $?
 
 echo "Building..."
-emmake $MAKE || exit $?
+emmake $MAKECMD || exit $?
 
 set -e
 rm -rf "$TARBALL" physfs-emscripten
