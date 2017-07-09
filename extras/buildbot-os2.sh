@@ -67,9 +67,10 @@ fi
 if [ "$OKAY" == "1" ]; then
     echo 1>&2 "Build succeeded."
     if [ ! -z "$ZIPFILE" ]; then
-        rm -f "$ZIPFILE"
+        rm -rf "$ZIPFILE" physfs-os2
+        mkdir -p physfs-os2
         echo "Zipping to '$ZIPFILE' ..."
-        ( cp ../src/physfs.h . && zip -9r "$ZIPFILE" physfs.lib physfs.h ) || exit 1
+        ( cp ../src/physfs.h physfs.lib physfs-os2 && zip -9r "$ZIPFILE" physfs-os2 ) || exit 1
         echo "Done."
     fi
     exit 0
