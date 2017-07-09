@@ -69,7 +69,7 @@ if [ "$OKAY" == "1" ]; then
     if [ ! -z "$ZIPFILE" ]; then
         rm -f "$ZIPFILE"
         echo "Zipping to '$ZIPFILE' ..."
-        ( cp ../src/physfs.h . && zip -9r physfs-os2.zip physfs.lib physfs.h ) || exit 1
+        ( cp ../src/physfs.h . && zip -9r "$ZIPFILE" physfs.lib physfs.h ) || exit 1
         echo "Done."
     fi
     exit 0
