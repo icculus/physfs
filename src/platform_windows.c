@@ -42,6 +42,7 @@
 #define PHYSFS_INVALID_FILE_ATTRIBUTES   0xFFFFFFFF
 
 /* Not defined before the Vista SDK. */
+#define PHYSFS_FILE_ATTRIBUTE_REPARSE_POINT 0x400
 #define PHYSFS_IO_REPARSE_TAG_SYMLINK    0xA000000C
 
 
@@ -866,17 +867,47 @@ static PHYSFS_sint64 FileTimeToPhysfsTime(const FILETIME *ft)
 } /* FileTimeToPhysfsTime */
 
 
+/* check for symlinks. These exist in NTFS 3.1 (WinXP), even though
+   they aren't really available to userspace before Vista. I wonder
+   what would happen if you put an NTFS disk with a symlink on it
+   into an XP machine, though; would this flag get set?
+   NTFS symlinks are a form of "reparse point" (junction, volume mount,
+   etc), so if the REPARSE_POINT attribute is set, check for the symlink
+   tag thereafter. This assumes you already read in the file attributes. */
+static int isSymlink(const WCHAR *wpath, const DWORD attr)
+{
+    WIN32_FIND_DATAW w32dw;
+    HANDLE h;
+
+    if ((attr & PHYSFS_FILE_ATTRIBUTE_REPARSE_POINT) == 0)
+        return 0;  /* not a reparse point? Definitely not a symlink. */
+
+    h = FindFirstFileW(wpath, &w32dw);
+    if (h == INVALID_HANDLE_VALUE)
+        return 0;  /* ...maybe the file just vanished...? */
+
+    FindClose(h);
+    return (w32dw.dwReserved == PHYSFS_IO_REPARSE_TAG_SYMLINK);
+} /* isSymlink */
+
+
 int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
 {
     WIN32_FILE_ATTRIBUTE_DATA winstat;
     WCHAR *wstr = NULL;
     DWORD err = 0;
     BOOL rc = 0;
+    int issymlink = 0;
 
     UTF8_TO_UNICODE_STACK(wstr, filename);
     BAIL_IF(!wstr, PHYSFS_ERR_OUT_OF_MEMORY, 0);
     rc = GetFileAttributesExW(wstr, GetFileExInfoStandard, &winstat);
-    err = (!rc) ? GetLastError() : 0;
+
+    if (!rc)
+        err = GetLastError();
+    else  /* check for symlink while wstr is still available */
+        issymlink = isSymlink(wstr, winstat.dwFileAttributes);
+
     __PHYSFS_smallFree(wstr);
     BAIL_IF(!rc, errcodeFromWinApiError(err), 0);
 
@@ -884,21 +915,24 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
     st->accesstime = FileTimeToPhysfsTime(&winstat.ftLastAccessTime);
     st->createtime = FileTimeToPhysfsTime(&winstat.ftCreationTime);
 
-    if(winstat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    if (issymlink)
     {
-        st->filetype = PHYSFS_FILETYPE_DIRECTORY;
+        st->filetype = PHYSFS_FILETYPE_SYMLINK;
         st->filesize = 0;
     } /* if */
 
-    else if(winstat.dwFileAttributes & (FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_DEVICE))
+    else if (winstat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     {
-        /* !!! FIXME: what are reparse points? */
+        st->filetype = PHYSFS_FILETYPE_DIRECTORY;
+        st->filesize = 0;
+    } /* else if */
+
+    else if (winstat.dwFileAttributes & (FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_DEVICE))
+    {
         st->filetype = PHYSFS_FILETYPE_OTHER;
         /* !!! FIXME: don't rely on this */
         st->filesize = 0;
     } /* else if */
-
-    /* !!! FIXME: check for symlinks on Vista. */
 
     else
     {
