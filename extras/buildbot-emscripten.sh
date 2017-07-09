@@ -60,10 +60,15 @@ emcmake cmake -G "Unix Makefiles" -DPHYSFS_BUILD_SHARED=False -DCMAKE_BUILD_TYPE
 echo "Building..."
 emmake $MAKE || exit $?
 
+set -e
 rm -rf "$TARBALL" physfs-emscripten
 mkdir -p physfs-emscripten
 echo "Archiving to '$TARBALL' ..."
-( cp ../src/physfs.h libphysfs.a physfs-emscripten && tar -cJvvf "$TARBALL" physfs-emscripten ) || exit 1
+cp ../src/physfs.h libphysfs.a physfs-emscripten
+chmod -R a+r physfs-emscripten
+chmod a+x physfs-emscripten
+chmod -R go-w physfs-emscripten
+tar -cJvvf "$TARBALL" physfs-emscripten
 echo "Done."
 
 exit 0
