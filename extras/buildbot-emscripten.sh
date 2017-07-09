@@ -50,7 +50,6 @@ echo "Setting up Emscripten SDK environment..."
 source "$ENVSCRIPT"
 
 echo "Setting up..."
-set -x
 cd "$PHYSFSBASE"
 rm -rf buildbot
 mkdir buildbot
