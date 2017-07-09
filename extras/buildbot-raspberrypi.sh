@@ -28,6 +28,10 @@ if [ "x$MAKE" == "x" ]; then
     MAKE="make -j$NCPU"
 fi
 
+echo "\$MAKE is '$MAKE'"
+MAKECMD="$MAKE"
+unset MAKE  # prevent warnings about jobserver mode.
+
 BUILDBOTDIR="raspberrypi-buildbot"
 PARENTDIR="$PWD"
 
@@ -51,7 +55,7 @@ cmake -G "Unix Makefiles" \
     -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
     ..
 
-$MAKE
+$MAKECMD
 
 rm -rf "$TARBALL" physfs-raspberrypi
 mkdir -p physfs-raspberrypi

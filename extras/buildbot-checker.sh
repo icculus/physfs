@@ -45,10 +45,8 @@ if [ -z "$MAKE" ]; then
 fi
 
 echo "\$MAKE is '$MAKE'"
-
-# Unset $MAKE so submakes don't use it.
-MAKECOMMAND="$MAKE"
-unset MAKE
+MAKECMD="$MAKE"
+unset MAKE  # prevent warnings about jobserver mode.
 
 set -x
 set -e
@@ -74,7 +72,7 @@ PATH="$CHECKERDIR/bin:$PATH" scan-build -o analysis cmake -Wno-dev -DPHYSFS_BUIL
 #CC="$CHECKERDIR/libexec/ccc-analyzer" CFLAGS="-O0 -Wno-deprecated-declarations" LDFLAGS="-Wno-liblto" ../configure --enable-assertions=enabled
 
 rm -rf analysis
-PATH="$CHECKERDIR/bin:$PATH" scan-build -o analysis $MAKECOMMAND
+PATH="$CHECKERDIR/bin:$PATH" scan-build -o analysis $MAKECMD
 
 if [ `ls -A analysis |wc -l` == 0 ] ; then
     mkdir analysis/zarro
