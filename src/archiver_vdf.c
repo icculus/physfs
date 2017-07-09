@@ -129,7 +129,7 @@ static PHYSFS_uint16 vdfGenCrc16(const char *c_ptr)
     PHYSFS_uint16 crc = 0xFFFF;
 
     while (*c_ptr)
-        crc = (crc << 8) ^ vdfCrcTable[((crc >> 8) ^ toupper(*c_ptr++))];
+        crc = (crc << 8) ^ vdfCrcTable[((crc >> 8) ^ toupper((int)(*c_ptr++)))];
 
     return crc;
 } /* vdfGenCrc16 */
@@ -262,7 +262,7 @@ static void vdfTruncateFilename(char *s, PHYSFS_uint32 *nameLength)
 
     s[VDF_ENTRY_NAME_LENGTH - 1] = '\0';
     for (i = VDF_ENTRY_NAME_LENGTH - 2; i > 0; i--) {
-        if (isspace(s[i]))
+        if (isspace((int) s[i]))
         {
             s[i] = '\0';
         } /* if */
@@ -288,7 +288,7 @@ static int vdfStrcmp(const char *a, const char *b)
 {
     while (*a && *b)
     {
-        if (toupper(*a) != toupper(*b)) return 1;
+        if (toupper((int) *a) != toupper((int) *b)) return 1;
         a++;
         b++;
     } /* while */
