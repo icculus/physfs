@@ -47,6 +47,10 @@
 #include <sys/mnttab.h>
 #endif
 
+#if PHYSFS_PLATFORM_FREEBSD
+#include <sys/sysctl.h>
+#endif
+
 #include "physfs_internal.h"
 
 int __PHYSFS_platformInit(void)
