@@ -64,7 +64,6 @@ Other stuff I thought of...
 - See if we can ditch some #include lines...
 - PHYSFS_exists() fails if you mountIo with a NULL filename. We need to decide
   how this API should work.
-- ZIP64 support?
 - LZMA support in zip archiver?
 - bzip2 support in zip archiver?
 - rewrite 7zip archiver.
