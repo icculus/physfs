@@ -9,7 +9,6 @@
  */
 
 /* !!! FIXME: ERR_PAST_EOF shouldn't trigger for reads. Just return zero. */
-/* !!! FIXME: use snprintf(), not sprintf(). */
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
@@ -1831,7 +1830,7 @@ static void setSaneCfgAddPath(const char *i, const size_t l, const char *dirsep,
     char *str = (char *) __PHYSFS_smallAlloc(allocsize);
     if (str != NULL)
     {
-        sprintf(str, "%s%s%s", d, dirsep, i);
+        snprintf(str, allocsize, "%s%s%s", d, dirsep, i);
         PHYSFS_mount(str, NULL, archivesFirst == 0);
         __PHYSFS_smallFree(str);
     } /* if */
@@ -2272,7 +2271,7 @@ static void enumCallbackFilterSymLinks(void *_data, const char *origdir,
         const DirHandle *dh = data->dirhandle;
         PHYSFS_Stat statbuf;
 
-        sprintf(path, "%s%s%s", trimmedDir, *trimmedDir ? "/" : "", fname);
+        snprintf(path, slen, "%s%s%s", trimmedDir, *trimmedDir ? "/" : "", fname);
         if (dh->funcs->stat(dh->opaque, path, &statbuf))
         {
             /* Pass it on to the application if it's not a symlink. */
