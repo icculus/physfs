@@ -62,8 +62,6 @@ Other stuff I thought of...
 - Doxygen replacement? (manpages suck.)
 - Fix coding standards to match.
 - See if we can ditch some #include lines...
-- We lost Vista symlink support when removing isSymLink(). Pull it back from
-  revision control.
 - PHYSFS_exists() fails if you mountIo with a NULL filename. We need to decide
   how this API should work.
 - ZIP64 support?
