@@ -57,6 +57,15 @@ extern "C" {
 #define _FILE_OFFSET_BITS 64
 #endif
 
+/* a real C99-compliant snprintf() is in Visual Studio 2015,
+   but just use this everywhere for binary compatibility. */
+#if defined(_MSC_VER)
+int __PHYSFS_msvc_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap);
+int __PHYSFS_msvc_snprintf(char *outBuf, size_t size, const char *format, ...);
+#define vsnprintf __PHYSFS_msvc_vsnprintf
+#define snprintf __PHYSFS_msvc_snprintf
+#endif
+
 /*
  * Interface for small allocations. If you need a little scratch space for
  *  a throwaway buffer or string, use this. It will make small allocations
