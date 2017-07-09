@@ -13,10 +13,11 @@
 
 
 
-static char *cvtToDependent(const char *prepend, const char *path, char *buf)
+static char *cvtToDependent(const char *prepend, const char *path,
+                            char *buf, const size_t buflen)
 {
     BAIL_IF(buf == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    sprintf(buf, "%s%s", prepend ? prepend : "", path);
+    snprintf(buf, buflen, "%s%s", prepend ? prepend : "", path);
 
     if (__PHYSFS_platformDirSeparator != '/')
     {
@@ -31,7 +32,7 @@ static char *cvtToDependent(const char *prepend, const char *path, char *buf)
 
 #define CVT_TO_DEPENDENT(buf, pre, dir) { \
     const size_t len = ((pre) ? strlen((char *) pre) : 0) + strlen(dir) + 1; \
-    buf = cvtToDependent((char*)pre,dir,(char*)__PHYSFS_smallAlloc(len)); \
+    buf = cvtToDependent((char*)pre,dir,(char*)__PHYSFS_smallAlloc(len),len); \
 }
 
 

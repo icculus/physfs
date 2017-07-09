@@ -413,7 +413,7 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
         BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
-    sprintf(retval, "%s\\%s\\%s\\", utf8, org, app);
+    snprintf(retval, len, "%s\\%s\\%s\\", utf8, org, app);
     allocator.Free(utf8);
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */
