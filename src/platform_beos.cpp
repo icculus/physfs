@@ -191,7 +191,7 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     const char *userdir = __PHYSFS_getUserDir();
     const char *append = "config/settings/";
     const size_t len = strlen(userdir) + strlen(append) + strlen(app) + 2;
-    char *retval = allocator.Malloc(len);
+    char *retval = (char *) allocator.Malloc(len);
     BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     snprintf(retval, len, "%s%s%s/", userdir, append, app);
     return retval;
