@@ -34,8 +34,6 @@
 /* cache files smaller than this completely in memory */
 #define ISO9660_FULLCACHEMAXSIZE 2048
 
-/* !!! FIXME: this is going to cause trouble. */
-#pragma pack(push)  /* push current alignment to stack */
 #pragma pack(1)     /* set alignment to 1 byte boundary */
 
 /* This is the format as defined by the standard
@@ -194,7 +192,8 @@ typedef struct
     /** further fields not implemented */
 } ISO9660ExtAttributeRec;
 
-#pragma pack(pop)   /* restore original alignment from stack */
+#pragma pack()   /* restore original alignment from stack */
+
 
 typedef struct
 {
@@ -218,7 +217,7 @@ typedef struct __ISO9660FileHandle
             PHYSFS_uint64 len);
     int (*seek)(struct __ISO9660FileHandle *filehandle,  PHYSFS_sint64 offset);
     void (*close)(struct __ISO9660FileHandle *filehandle);
-    /* !!! FIXME: anonymouse union is going to cause problems. */
+    /* !!! FIXME: anonymous union is going to cause problems. */
     union
     {
         /* !!! FIXME: just use a memory PHYSFS_Io here, unify all this code. */
