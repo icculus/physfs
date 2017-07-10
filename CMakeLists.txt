@@ -29,6 +29,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
     set(SOLARIS TRUE)
 endif()
 
+# Don't treat MingW as Unix; use it as a strictly-Windows compiler.
+if(MINGW)
+    set(UNIX FALSE)
+endif()
+
 include(CheckIncludeFile)
 include(CheckLibraryExists)
 include(CheckCSourceCompiles)
