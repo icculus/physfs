@@ -221,57 +221,59 @@ endif()
 
 
 # Archivers ...
+# These are (mostly) on by default now, so these options are only useful for
+#  disabling them.
 
 option(PHYSFS_ARCHIVE_ZIP "Enable ZIP support" TRUE)
-if(PHYSFS_ARCHIVE_ZIP)
-    add_definitions(-DPHYSFS_SUPPORTS_ZIP=1)
+if(NOT PHYSFS_ARCHIVE_ZIP)
+    add_definitions(-DPHYSFS_SUPPORTS_ZIP=0)
 endif()
 
 option(PHYSFS_ARCHIVE_7Z "Enable 7zip support" TRUE)
-if(PHYSFS_ARCHIVE_7Z)
-    add_definitions(-DPHYSFS_SUPPORTS_7Z=1)
+if(NOT PHYSFS_ARCHIVE_7Z)
+    add_definitions(-DPHYSFS_SUPPORTS_7Z=0)
     # !!! FIXME: rename to 7z.c?
     set(PHYSFS_SRCS ${PHYSFS_SRCS} ${LZMA_SRCS})
 endif()
 
 option(PHYSFS_ARCHIVE_GRP "Enable Build Engine GRP support" TRUE)
-if(PHYSFS_ARCHIVE_GRP)
-    add_definitions(-DPHYSFS_SUPPORTS_GRP=1)
+if(NOT PHYSFS_ARCHIVE_GRP)
+    add_definitions(-DPHYSFS_SUPPORTS_GRP=0)
 endif()
 
 option(PHYSFS_ARCHIVE_WAD "Enable Doom WAD support" TRUE)
-if(PHYSFS_ARCHIVE_WAD)
-    add_definitions(-DPHYSFS_SUPPORTS_WAD=1)
+if(NOT PHYSFS_ARCHIVE_WAD)
+    add_definitions(-DPHYSFS_SUPPORTS_WAD=0)
 endif()
 
 option(PHYSFS_ARCHIVE_HOG "Enable Descent I/II HOG support" TRUE)
-if(PHYSFS_ARCHIVE_HOG)
-    add_definitions(-DPHYSFS_SUPPORTS_HOG=1)
+if(NOT PHYSFS_ARCHIVE_HOG)
+    add_definitions(-DPHYSFS_SUPPORTS_HOG=0)
 endif()
 
 option(PHYSFS_ARCHIVE_MVL "Enable Descent I/II MVL support" TRUE)
-if(PHYSFS_ARCHIVE_MVL)
-    add_definitions(-DPHYSFS_SUPPORTS_MVL=1)
+if(NOT PHYSFS_ARCHIVE_MVL)
+    add_definitions(-DPHYSFS_SUPPORTS_MVL=0)
 endif()
 
 option(PHYSFS_ARCHIVE_QPAK "Enable Quake I/II QPAK support" TRUE)
-if(PHYSFS_ARCHIVE_QPAK)
-    add_definitions(-DPHYSFS_SUPPORTS_QPAK=1)
+if(NOT PHYSFS_ARCHIVE_QPAK)
+    add_definitions(-DPHYSFS_SUPPORTS_QPAK=0)
 endif()
 
 option(PHYSFS_ARCHIVE_SLB "Enable I-War / Independence War SLB support" TRUE)
-if(PHYSFS_ARCHIVE_SLB)
-    add_definitions(-DPHYSFS_SUPPORTS_SLB=1)
+if(NOT PHYSFS_ARCHIVE_SLB)
+    add_definitions(-DPHYSFS_SUPPORTS_SLB=0)
 endif()
 
 option(PHYSFS_ARCHIVE_ISO9660 "Enable ISO9660 support" TRUE)
-if(PHYSFS_ARCHIVE_ISO9660)
-    add_definitions(-DPHYSFS_SUPPORTS_ISO9660=1)
+if(NOT PHYSFS_ARCHIVE_ISO9660)
+    add_definitions(-DPHYSFS_SUPPORTS_ISO9660=0)
 endif()
 
 option(PHYSFS_ARCHIVE_VDF "Enable Gothic I/II VDF archive support" TRUE)
-if(PHYSFS_ARCHIVE_VDF)
-    add_definitions(-DPHYSFS_SUPPORTS_VDF=1)
+if(NOT PHYSFS_ARCHIVE_VDF)
+    add_definitions(-DPHYSFS_SUPPORTS_VDF=0)
 endif()
 
 
