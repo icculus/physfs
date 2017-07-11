@@ -278,7 +278,13 @@ endif()
 option(PHYSFS_BUILD_STATIC "Build static library" TRUE)
 if(PHYSFS_BUILD_STATIC)
     add_library(physfs-static STATIC ${PHYSFS_SRCS})
-    set_target_properties(physfs-static PROPERTIES OUTPUT_NAME "physfs")
+    # Don't rename this on Windows, since DLLs will also produce an import
+    #  library named "physfs.lib" which would conflict; Unix tend to like the
+    #  same library name with a different extension for static libs, but
+    #  Windows can just have a separate name.
+    if(NOT WINDOWS)
+        set_target_properties(physfs-static PROPERTIES OUTPUT_NAME "physfs")
+    endif()
     set(PHYSFS_LIB_TARGET physfs-static)
     set(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";physfs-static")
 endif()
@@ -298,7 +304,7 @@ if(NOT PHYSFS_BUILD_SHARED AND NOT PHYSFS_BUILD_STATIC)
 endif()
 
 # CMake FAQ says I need this...
-if(PHYSFS_BUILD_SHARED AND PHYSFS_BUILD_STATIC)
+if(PHYSFS_BUILD_SHARED AND PHYSFS_BUILD_STATIC AND NOT WINDOWS)
     set_target_properties(physfs PROPERTIES CLEAN_DIRECT_OUTPUT 1)
     set_target_properties(physfs-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 endif()
