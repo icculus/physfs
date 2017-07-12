@@ -1123,7 +1123,6 @@ static int doRegisterArchiver(const PHYSFS_Archiver *_archiver);
 static int initStaticArchivers(void)
 {
     #define REGISTER_STATIC_ARCHIVER(arc) { \
-        extern const PHYSFS_Archiver __PHYSFS_Archiver_##arc; \
         if (!doRegisterArchiver(&__PHYSFS_Archiver_##arc)) { \
             return 0; \
         } \

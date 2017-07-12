@@ -14,13 +14,6 @@
 #error Do not include this header from your applications.
 #endif
 
-/* Make sure everything that includes this header exports no symbols by
-   default. physfs.h uses function attributes to mark only the public API as
-   visible. */
-#if (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)
-#pragma GCC visibility push(hidden)
-#endif
-
 /* Turn off MSVC warnings that are aggressively anti-portability. */
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS 1
@@ -68,6 +61,33 @@ extern "C" {
 #if PHYSFS_PLATFORM_LINUX && !defined(_FILE_OFFSET_BITS)
 #define _FILE_OFFSET_BITS 64
 #endif
+
+/* All public APIs need to be in physfs.h with a PHYSFS_DECL.
+   All file-private symbols need to be marked "static".
+   Everything shared between PhysicsFS sources needs to be in this
+   file between the visibility pragma blocks. */
+#if PHYSFS_MINIMUM_GCC_VERSION(4,0) || defined(__clang__)
+#define PHYSFS_HAVE_PRAGMA_VISIBILITY 1
+#endif
+
+#if PHYSFS_HAVE_PRAGMA_VISIBILITY
+#pragma GCC visibility push(hidden)
+#endif
+
+/* These are the build-in archivers. We list them all as "extern" here without
+   #ifdefs to keep it tidy, but obviously you need to make sure these are
+   wrapped in PHYSFS_SUPPORTS_* checks before actually referencing them. */
+extern const PHYSFS_Archiver __PHYSFS_Archiver_DIR;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_ZIP;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_LZMA;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_GRP;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_QPAK;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_HOG;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_MVL;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_WAD;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_SLB;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_VDF;
 
 /* a real C99-compliant snprintf() is in Visual Studio 2015,
    but just use this everywhere for binary compatibility. */
@@ -654,6 +674,10 @@ int __PHYSFS_platformGrabMutex(void *mutex);
  *  use the BAIL_*MACRO* macros, either.
  */
 void __PHYSFS_platformReleaseMutex(void *mutex);
+
+#if PHYSFS_HAVE_PRAGMA_VISIBILITY
+#pragma GCC visibility pop
+#endif
 
 #ifdef __cplusplus
 }
