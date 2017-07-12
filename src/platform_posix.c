@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#if ((!defined PHYSFS_NO_THREAD_SUPPORT) && (!defined PHYSFS_PLATFORM_BEOS))
+#ifndef PHYSFS_PLATFORM_BEOS
 #include <pthread.h>
 #endif
 
@@ -341,15 +341,6 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
 
 
 #ifndef PHYSFS_PLATFORM_BEOS  /* BeOS has its own code in platform_beos.cpp */
-#if (defined PHYSFS_NO_THREAD_SUPPORT)
-
-void *__PHYSFS_platformGetThreadID(void) { return ((void *) 0x0001); }
-void *__PHYSFS_platformCreateMutex(void) { return ((void *) 0x0001); }
-void __PHYSFS_platformDestroyMutex(void *mutex) {}
-int __PHYSFS_platformGrabMutex(void *mutex) { return 1; }
-void __PHYSFS_platformReleaseMutex(void *mutex) {}
-
-#else
 
 typedef struct
 {
@@ -427,7 +418,6 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     } /* if */
 } /* __PHYSFS_platformReleaseMutex */
 
-#endif /* !PHYSFS_NO_THREAD_SUPPORT */
 #endif /* !PHYSFS_PLATFORM_BEOS */
 
 #endif  /* PHYSFS_PLATFORM_POSIX */

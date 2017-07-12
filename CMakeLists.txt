@@ -2,6 +2,13 @@
 #
 # Please see the file LICENSE.txt in the source's root directory.
 
+# The CMake project file is meant to get this compiling on all sorts of
+#  platforms quickly, and serve as the way Unix platforms and Linux distros
+#  package up official builds, but you don't _need_ to use this; we have
+#  built PhysicsFS to (hopefully) be able to drop into your project and
+#  compile, using preprocessor checks for platform-specific bits instead of
+#  testing in here.
+
 cmake_minimum_required(VERSION 2.8.4)
 
 project(PhysicsFS)
@@ -15,68 +22,13 @@ if(WIN32 AND NOT WINDOWS)
     set(WINDOWS TRUE)
 endif()
 
-# Bleh, let's do it for "APPLE" too.
-if(APPLE AND NOT MACOSX)
-    set(MACOSX TRUE)
-endif()
-
-# For now, Haiku and BeOS are the same, as far as the build system cares.
-if(HAIKU AND NOT BEOS)
-    set(BEOS TRUE)
-endif()
-
-if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
-    set(SOLARIS TRUE)
-endif()
-
-# Don't treat MingW as Unix; use it as a strictly-Windows compiler.
-if(MINGW)
-    set(UNIX FALSE)
-endif()
-
-include(CheckIncludeFile)
-include(CheckLibraryExists)
-include(CheckCSourceCompiles)
-
 include_directories(./src)
 
-if(MACOSX)
-    # Fallback to older OS X on PowerPC to support wider range of systems...
-    if(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
-        add_definitions(-DMAC_OS_X_VERSION_MIN_REQUIRED=1020)
-        set(OTHER_LDFLAGS ${OTHER_LDFLAGS} " -mmacosx-version-min=10.2")
-    endif()
-
-    # Need these everywhere...
-    add_definitions(-fno-common)
+if(APPLE)
     set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework CoreFoundation -framework IOKit")
 endif()
 
-# Add some gcc-specific command lines.
 if(CMAKE_COMPILER_IS_GNUCC)
-    # Always build with debug symbols...you can strip it later.
-    add_definitions(-g -pipe -Werror -fsigned-char)
-
-    # Stupid BeOS generates warnings in the system headers.
-    if(NOT BEOS)
-        add_definitions(-Wall)
-    endif()
-
-    check_c_source_compiles("
-        #if ((defined(__GNUC__)) && (__GNUC__ >= 4))
-        int main(int argc, char **argv) { int is_gcc4 = 1; return 0; }
-        #else
-        #error This is not gcc4.
-        #endif
-    " PHYSFS_IS_GCC4)
-
-    if(PHYSFS_IS_GCC4)
-        # Not supported on several operating systems at this time.
-        if(NOT SOLARIS AND NOT WINDOWS)
-            add_definitions(-fvisibility=hidden)
-        endif()
-    endif()
-
     # Don't use -rpath.
     set(CMAKE_SKIP_RPATH ON CACHE BOOL "Skip RPATH" FORCE)
 endif()
@@ -86,11 +38,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
     add_definitions(-xldscope=hidden)
 endif()
 
-if(MSVC)
-    # VS.NET 8.0 got really really anal about strcpy, etc, which even if we
-    #  cleaned up our code, zlib, etc still use...so disable the warning.
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
-endif()
 
 # Basic chunks of source code ...
 
@@ -108,13 +55,21 @@ set(LZMA_SRCS
     src/lzma/C/Compress/Lzma/LzmaDecode.c
 )
 
-if(BEOS)
+if(HAIKU OR BEOS)
     # We add this explicitly, since we don't want CMake to think this
-    #  is a C++ project unless we're on BeOS.
+    #  is a C++ project unless we're on BeOS/Haiku.
     set(PHYSFS_BEOS_SRCS src/platform_beos.cpp)
     find_library(BE_LIBRARY be)
     find_library(ROOT_LIBRARY root)
     set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${BE_LIBRARY} ${ROOT_LIBRARY})
+endif()
+
+if(UNIX AND NOT WINDOWS AND NOT APPLE)  # (MingW and such might be UNIX _and_ WINDOWS!)
+    set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-pthread")
+    find_library(PTHREAD_LIBRARY pthread)
+    if(PTHREAD_LIBRARY)
+        set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${PTHREAD_LIBRARY})
+    endif()
 endif()
 
 # Almost everything is "compiled" here, but things that don't apply to the
@@ -143,81 +98,6 @@ set(PHYSFS_SRCS
     src/archiver_vdf.c
     ${PHYSFS_BEOS_SRCS}
 )
-
-
-# platform layers ...
-
-if(UNIX)
-    if(BEOS)
-        set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        set(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-        set(HAVE_PTHREAD_H TRUE)
-    else()
-        check_include_file(sys/ucred.h HAVE_UCRED_H)
-        if(HAVE_UCRED_H)
-            add_definitions(-DPHYSFS_HAVE_SYS_UCRED_H=1)
-            set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        endif()
-
-        check_include_file(mntent.h HAVE_MNTENT_H)
-        if(HAVE_MNTENT_H)
-            add_definitions(-DPHYSFS_HAVE_MNTENT_H=1)
-            set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        endif()
-
-        # !!! FIXME: Solaris fails this, because mnttab.h implicitly
-        # !!! FIXME:  depends on other system headers.  :(
-        #check_include_file(sys/mnttab.h HAVE_SYS_MNTTAB_H)
-        check_c_source_compiles("
-            #include <stdio.h>
-            #include <sys/mnttab.h>
-            int main(int argc, char **argv) { return 0; }
-        " HAVE_SYS_MNTTAB_H)
-
-        if(HAVE_SYS_MNTTAB_H)
-            add_definitions(-DPHYSFS_HAVE_SYS_MNTTAB_H=1)
-            set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        endif()
-
-        check_include_file(pthread.h HAVE_PTHREAD_H)
-        if(HAVE_PTHREAD_H)
-            set(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-            find_library(PTHREAD_LIBRARY pthread)
-            if(PTHREAD_LIBRARY)
-                set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${PTHREAD_LIBRARY})
-            endif()
-        endif()
-    endif()
-endif()
-
-if(WINDOWS OR OS2)
-    set(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-    set(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-endif()
-
-if(NOT PHYSFS_HAVE_CDROM_SUPPORT)
-    add_definitions(-DPHYSFS_NO_CDROM_SUPPORT=1)
-    message(WARNING " ***")
-    message(WARNING " *** There is no CD-ROM support in this build!")
-    message(WARNING " *** PhysicsFS will just pretend there are no discs.")
-    message(WARNING " *** This may be fine, depending on how PhysicsFS is used,")
-    message(WARNING " ***   but is this what you REALLY wanted?")
-    message(WARNING " *** (Maybe fix CMakeLists.txt, or write a platform driver?)")
-    message(WARNING " ***")
-endif()
-
-if(PHYSFS_HAVE_THREAD_SUPPORT)
-    add_definitions(-D_REENTRANT -D_THREAD_SAFE)
-else()
-    add_definitions(-DPHYSFS_NO_THREAD_SUPPORT=1)
-    message(WARNING " ***")
-    message(WARNING " *** There is no thread support in this build!")
-    message(WARNING " *** PhysicsFS will NOT be reentrant!")
-    message(WARNING " *** This may be fine, depending on how PhysicsFS is used,")
-    message(WARNING " ***   but is this what you REALLY wanted?")
-    message(WARNING " *** (Maybe fix CMakeLists.txt, or write a platform driver?)")
-    message(WARNING " ***")
-endif()
 
 
 # Archivers ...
@@ -408,8 +288,6 @@ message_bool_option("QPAK support" PHYSFS_ARCHIVE_QPAK)
 message_bool_option("SLB support" PHYSFS_ARCHIVE_SLB)
 message_bool_option("VDF support" PHYSFS_ARCHIVE_VDF)
 message_bool_option("ISO9660 support" PHYSFS_ARCHIVE_ISO9660)
-message_bool_option("CD-ROM drive support" PHYSFS_HAVE_CDROM_SUPPORT)
-message_bool_option("Thread safety" PHYSFS_HAVE_THREAD_SUPPORT)
 message_bool_option("Build static library" PHYSFS_BUILD_STATIC)
 message_bool_option("Build shared library" PHYSFS_BUILD_SHARED)
 message_bool_option("Build stdio test program" PHYSFS_BUILD_TEST)
