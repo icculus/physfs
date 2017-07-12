@@ -55,10 +55,10 @@ set(LZMA_SRCS
     src/lzma/C/Compress/Lzma/LzmaDecode.c
 )
 
-if(HAIKU OR BEOS)
+if(HAIKU)
     # We add this explicitly, since we don't want CMake to think this
-    #  is a C++ project unless we're on BeOS/Haiku.
-    set(PHYSFS_BEOS_SRCS src/platform_beos.cpp)
+    #  is a C++ project unless we're on Haiku.
+    set(PHYSFS_HAIKU_SRCS src/platform_beos.cpp)
     find_library(BE_LIBRARY be)
     find_library(ROOT_LIBRARY root)
     set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${BE_LIBRARY} ${ROOT_LIBRARY})
@@ -96,7 +96,7 @@ set(PHYSFS_SRCS
     src/archiver_slb.c
     src/archiver_iso9660.c
     src/archiver_vdf.c
-    ${PHYSFS_BEOS_SRCS}
+    ${PHYSFS_HAIKU_SRCS}
 )
 
 

@@ -21,10 +21,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-
-#ifndef PHYSFS_PLATFORM_BEOS
 #include <pthread.h>
-#endif
 
 #include "physfs_internal.h"
 
@@ -340,8 +337,6 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
 } /* __PHYSFS_platformStat */
 
 
-#ifndef PHYSFS_PLATFORM_BEOS  /* BeOS has its own code in platform_beos.cpp */
-
 typedef struct
 {
     pthread_mutex_t mutex;
@@ -417,8 +412,6 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
         } /* if */
     } /* if */
 } /* __PHYSFS_platformReleaseMutex */
-
-#endif /* !PHYSFS_PLATFORM_BEOS */
 
 #endif  /* PHYSFS_PLATFORM_POSIX */
 
