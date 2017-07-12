@@ -25,7 +25,7 @@ endif()
 include_directories(./src)
 
 if(APPLE)
-    set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework CoreFoundation -framework IOKit")
+    set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-fno-common -framework CoreFoundation -framework IOKit")
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
