@@ -7,78 +7,28 @@
  */
 
 #define __PHYSICSFS_INTERNAL__
-#include "physfs_platforms.h"
+#include "physfs_internal.h"
 
 #ifdef PHYSFS_PLATFORM_MACOSX
 
 #include <CoreFoundation/CoreFoundation.h>
 
 #if !defined(PHYSFS_NO_CDROM_SUPPORT)
-#include <Carbon/Carbon.h>  /* !!! FIXME */
+#include <IOKit/IOKitLib.h>
 #include <IOKit/storage/IOMedia.h>
 #include <IOKit/storage/IOCDMedia.h>
 #include <IOKit/storage/IODVDMedia.h>
 #include <sys/mount.h>
 #endif
 
-/* Seems to get defined in some system header... */
-#ifdef Free
-#undef Free
-#endif
-
-#include "physfs_internal.h"
-
-
-/* Wrap PHYSFS_Allocator in a CFAllocator... */
-static CFAllocatorRef cfallocator = NULL;
-
-static CFStringRef cfallocCopyDesc(const void *info)
-{
-    return CFStringCreateWithCString(cfallocator, "PhysicsFS",
-                                     kCFStringEncodingASCII);
-} /* cfallocCopyDesc */
-
-
-static void *cfallocMalloc(CFIndex allocSize, CFOptionFlags hint, void *info)
-{
-    return allocator.Malloc(allocSize);
-} /* cfallocMalloc */
-
-
-static void cfallocFree(void *ptr, void *info)
-{
-    allocator.Free(ptr);
-} /* cfallocFree */
-
-
-static void *cfallocRealloc(void *ptr, CFIndex newsize,
-                            CFOptionFlags hint, void *info)
-{
-    if ((ptr == NULL) || (newsize <= 0))
-        return NULL;  /* ADC docs say you should always return NULL here. */
-    return allocator.Realloc(ptr, newsize);
-} /* cfallocRealloc */
-
-
 int __PHYSFS_platformInit(void)
 {
-    /* set up a CFAllocator, so Carbon can use the physfs allocator, too. */
-    CFAllocatorContext ctx;
-    memset(&ctx, '\0', sizeof (ctx));
-    ctx.copyDescription = cfallocCopyDesc;
-    ctx.allocate = cfallocMalloc;
-    ctx.reallocate = cfallocRealloc;
-    ctx.deallocate = cfallocFree;
-    cfallocator = CFAllocatorCreate(kCFAllocatorUseContext, &ctx);
-    BAIL_IF(!cfallocator, PHYSFS_ERR_OUT_OF_MEMORY, 0);
     return 1;  /* success. */
 } /* __PHYSFS_platformInit */
 
 
 int __PHYSFS_platformDeinit(void)
 {
-    CFRelease(cfallocator);
-    cfallocator = NULL;
     return 1;  /* always succeed. */
 } /* __PHYSFS_platformDeinit */
 
@@ -103,7 +53,7 @@ static int darwinIsWholeMedia(io_service_t service)
         
     wholeMedia = IORegistryEntryCreateCFProperty(service,
                                                  CFSTR(kIOMediaWholeKey),
-                                                 cfallocator, 0);
+                                                 NULL, 0);
     if (wholeMedia == NULL)
         return 0;
 
@@ -239,7 +189,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     cfstr = CFURLCopyFileSystemPath(cfurl, kCFURLPOSIXPathStyle);
     CFRelease(cfurl);
     BAIL_IF(!cfstr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    cfmutstr = CFStringCreateMutableCopy(cfallocator, 0, cfstr);
+    cfmutstr = CFStringCreateMutableCopy(NULL, 0, cfstr);
     CFRelease(cfstr);
     BAIL_IF(!cfmutstr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     CFStringAppendCString(cfmutstr, "/", kCFStringEncodingUTF8);
@@ -263,61 +213,9 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 } /* __PHYSFS_platformCalcPrefDir */
 
 
-/* Platform allocator uses default CFAllocator at PHYSFS_init() time. */
-
-static CFAllocatorRef cfallocdef = NULL;
-
-static int macosxAllocatorInit(void)
-{
-    int retval = 0;
-    cfallocdef = CFAllocatorGetDefault();
-    retval = (cfallocdef != NULL);
-    if (retval)
-        CFRetain(cfallocdef);
-    return retval;
-} /* macosxAllocatorInit */
-
-
-static void macosxAllocatorDeinit(void)
-{
-    if (cfallocdef != NULL)
-    {
-        CFRelease(cfallocdef);
-        cfallocdef = NULL;
-    } /* if */
-} /* macosxAllocatorDeinit */
-
-
-static void *macosxAllocatorMalloc(PHYSFS_uint64 s)
-{
-    if (!__PHYSFS_ui64FitsAddressSpace(s))
-        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    return CFAllocatorAllocate(cfallocdef, (CFIndex) s, 0);
-} /* macosxAllocatorMalloc */
-
-
-static void *macosxAllocatorRealloc(void *ptr, PHYSFS_uint64 s)
-{
-    if (!__PHYSFS_ui64FitsAddressSpace(s))
-        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    return CFAllocatorReallocate(cfallocdef, ptr, (CFIndex) s, 0);
-} /* macosxAllocatorRealloc */
-
-
-static void macosxAllocatorFree(void *ptr)
-{
-    CFAllocatorDeallocate(cfallocdef, ptr);
-} /* macosxAllocatorFree */
-
-
 int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
 {
-    allocator.Init = macosxAllocatorInit;
-    allocator.Deinit = macosxAllocatorDeinit;
-    allocator.Malloc = macosxAllocatorMalloc;
-    allocator.Realloc = macosxAllocatorRealloc;
-    allocator.Free = macosxAllocatorFree;
-    return 1;  /* return non-zero: we're supplying custom allocator. */
+    return 0;  /* just use malloc() and friends. */
 } /* __PHYSFS_platformSetDefaultAllocator */
 
 #endif /* PHYSFS_PLATFORM_MACOSX */
