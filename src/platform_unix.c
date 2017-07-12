@@ -24,11 +24,13 @@
 #include <limits.h>
 
 #if PHYSFS_NO_CDROM_SUPPORT
-#elif PHYSFS_PLATFORM_LINUX && !defined(PHYSFS_HAVE_MNTENT_H)
+#elif PHYSFS_PLATFORM_LINUX
 #  define PHYSFS_HAVE_MNTENT_H 1
-#elif PHYSFS_PLATFORM_SOLARIS && !defined(PHYSFS_HAVE_SYS_MNTTAB_H)
+#elif defined __CYGWIN__
+#  define PHYSFS_HAVE_MNTENT_H 1
+#elif PHYSFS_PLATFORM_SOLARIS
 #  define PHYSFS_HAVE_SYS_MNTTAB_H 1
-#elif PHYSFS_PLATFORM_BSD && !defined(PHYSFS_HAVE_SYS_UCRED_H)
+#elif PHYSFS_PLATFORM_BSD
 #  define PHYSFS_HAVE_SYS_UCRED_H 1
 #else
 #  warning No CD-ROM support included. Either define your platform here,
