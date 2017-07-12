@@ -25,8 +25,8 @@
 #define VDF_CRC16 0x8005
 #define VDF_HASHTABLE_SIZE 65536
 
-const char* VDF_SIGNATURE_G1 = "PSVDSC_V2.00\r\n\r\n";
-const char* VDF_SIGNATURE_G2 = "PSVDSC_V2.00\n\r\n\r";
+static const char* VDF_SIGNATURE_G1 = "PSVDSC_V2.00\r\n\r\n";
+static const char* VDF_SIGNATURE_G2 = "PSVDSC_V2.00\n\r\n\r";
 
 typedef union
 {
