@@ -144,9 +144,6 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
     } /* while */
 
     fclose(mounts);
-
-#else
-#error Unknown platform. Should have defined PHYSFS_NO_CDROM_SUPPORT, perhaps.
 #endif
 } /* __PHYSFS_platformDetectAvailableCDs */
 
