@@ -14,11 +14,9 @@
 
 #if (defined __HAIKU__)
 #  define PHYSFS_PLATFORM_HAIKU 1
-#  define PHYSFS_PLATFORM_BEOS 1
 #  define PHYSFS_PLATFORM_POSIX 1
 #elif ((defined __BEOS__) || (defined __beos__))
-#  define PHYSFS_PLATFORM_BEOS 1
-#  define PHYSFS_PLATFORM_POSIX 1
+#  error BeOS support was dropped from PhysicsFS 2.1. Sorry. Try Haiku!
 #elif (defined _WIN32_WCE) || (defined _WIN64_WCE)
 #  error PocketPC support was dropped from PhysicsFS 2.1. Sorry.
 #elif ((defined WINAPI_FAMILY) && WINAPI_FAMILY == WINAPI_FAMILY_APP)

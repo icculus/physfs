@@ -1,5 +1,5 @@
 /*
- * BeOS platform-dependent support routines for PhysicsFS.
+ * Haiku platform-dependent support routines for PhysicsFS.
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *
@@ -9,9 +9,8 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_platforms.h"
 
-#ifdef PHYSFS_PLATFORM_BEOS
-
 #ifdef PHYSFS_PLATFORM_HAIKU
+
 #include <os/kernel/OS.h>
 #include <os/app/Roster.h>
 #include <os/storage/Volume.h>
@@ -21,19 +20,6 @@
 #include <os/storage/Path.h>
 #include <os/kernel/fs_info.h>
 #include <os/device/scsi.h>
-#include <os/support/Locker.h>
-#else
-#include <be/kernel/OS.h>
-#include <be/app/Roster.h>
-#include <be/storage/Volume.h>
-#include <be/storage/VolumeRoster.h>
-#include <be/storage/Directory.h>
-#include <be/storage/Entry.h>
-#include <be/storage/Path.h>
-#include <be/kernel/fs_info.h>
-#include <be/device/scsi.h>
-#include <be/support/Locker.h>
-#endif
 
 #include <errno.h>
 #include <unistd.h>
@@ -197,37 +183,7 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */
 
-
-void *__PHYSFS_platformGetThreadID(void)
-{
-    return (void *) find_thread(NULL);
-} /* __PHYSFS_platformGetThreadID */
-
-
-void *__PHYSFS_platformCreateMutex(void)
-{
-    return new BLocker("PhysicsFS lock", true);
-} /* __PHYSFS_platformCreateMutex */
-
-
-void __PHYSFS_platformDestroyMutex(void *mutex)
-{
-    delete ((BLocker *) mutex);
-} /* __PHYSFS_platformDestroyMutex */
-
-
-int __PHYSFS_platformGrabMutex(void *mutex)
-{
-    return ((BLocker *) mutex)->Lock() ? 1 : 0;
-} /* __PHYSFS_platformGrabMutex */
-
-
-void __PHYSFS_platformReleaseMutex(void *mutex)
-{
-    ((BLocker *) mutex)->Unlock();
-} /* __PHYSFS_platformReleaseMutex */
-
-#endif  /* PHYSFS_PLATFORM_BEOS */
+#endif  /* PHYSFS_PLATFORM_HAIKU */
 
 /* end of beos.cpp ... */
 
