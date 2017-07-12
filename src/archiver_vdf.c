@@ -357,7 +357,8 @@ failed:
     return NULL;
 } /* vdfLoadList */
 
-void VDF_enumerateFiles(void *opaque, const char *dname,
+
+static void VDF_enumerateFiles(void *opaque, const char *dname,
     PHYSFS_EnumFilesCallback cb,
     const char *origdir, void *callbackdata)
 {
@@ -393,7 +394,7 @@ static int vdfFindFile(const VdfRecord *record, const char *filename, VdfEntryIn
     return 0;
 } /* vdfFindFile */
 
-int VDF_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
+static int VDF_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
 {
     const VdfRecord *record = (const VdfRecord *)opaque;
     VdfEntryInfo entry;
@@ -412,7 +413,7 @@ int VDF_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
     return 0;
 } /* VDF_stat */
 
-void *VDF_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
+static void *VDF_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     VdfHeader header;
     VdfRecord *record = NULL;
@@ -442,7 +443,7 @@ void *VDF_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     return record;
 } /* VDF_openArchive */
 
-void VDF_closeArchive(void *opaque)
+static void VDF_closeArchive(void *opaque)
 {
     VdfRecord *record = ((VdfRecord *)opaque);
     int i;
@@ -460,7 +461,7 @@ void VDF_closeArchive(void *opaque)
     allocator.Free(record);
 } /* VDF_closeArchive */
 
-PHYSFS_Io *VDF_openRead(void *opaque, const char *name)
+static PHYSFS_Io *VDF_openRead(void *opaque, const char *name)
 {
     PHYSFS_Io *retval = NULL;
     VdfRecord *record = (VdfRecord *)opaque;
