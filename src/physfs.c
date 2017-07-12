@@ -3002,14 +3002,11 @@ static void mallocAllocatorFree(void *ptr)
 static void setDefaultAllocator(void)
 {
     assert(!externalAllocator);
-    if (!__PHYSFS_platformSetDefaultAllocator(&allocator))
-    {
-        allocator.Init = NULL;
-        allocator.Deinit = NULL;
-        allocator.Malloc = mallocAllocatorMalloc;
-        allocator.Realloc = mallocAllocatorRealloc;
-        allocator.Free = mallocAllocatorFree;
-    } /* if */
+    allocator.Init = NULL;
+    allocator.Deinit = NULL;
+    allocator.Malloc = mallocAllocatorMalloc;
+    allocator.Realloc = mallocAllocatorRealloc;
+    allocator.Free = mallocAllocatorFree;
 } /* setDefaultAllocator */
 
 /* end of physfs.c ... */

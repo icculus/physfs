@@ -945,13 +945,6 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
     return 1;
 } /* __PHYSFS_platformStat */
 
-
-/* !!! FIXME: Don't use C runtime for allocators? */
-int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
-{
-    return 0;  /* just use malloc() and friends. */
-} /* __PHYSFS_platformSetDefaultAllocator */
-
 #endif  /* PHYSFS_PLATFORM_WINDOWS */
 #endif  /* PHYSFS_PLATFORM_WINRT */
 

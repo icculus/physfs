@@ -655,20 +655,6 @@ int __PHYSFS_platformGrabMutex(void *mutex);
  */
 void __PHYSFS_platformReleaseMutex(void *mutex);
 
-/*
- * Called at the start of PHYSFS_init() to prepare the allocator, if the user
- *  hasn't selected their own allocator via PHYSFS_setAllocator().
- *  If the platform has a custom allocator, it should fill in the fields of
- *  (a) with the proper function pointers and return non-zero.
- * If the platform just wants to use malloc()/free()/etc, return zero
- *  immediately and the higher level will handle it. The Init and Deinit
- *  fields of (a) are optional...set them to NULL if you don't need them.
- *  Everything else must be implemented. All rules follow those for
- *  PHYSFS_setAllocator(). If Init isn't NULL, it will be called shortly
- *  after this function returns non-zero.
- */
-int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a);
-
 #ifdef __cplusplus
 }
 #endif

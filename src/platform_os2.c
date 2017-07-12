@@ -773,13 +773,6 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
     DosReleaseMutexSem((HMTX) mutex);
 } /* __PHYSFS_platformReleaseMutex */
 
-
-/* !!! FIXME: Don't use C runtime for allocators? */
-int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
-{
-    return 0;  /* just use malloc() and friends. */
-} /* __PHYSFS_platformSetDefaultAllocator */
-
 #endif  /* PHYSFS_PLATFORM_OS2 */
 
 /* end of os2.c ... */
