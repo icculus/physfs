@@ -212,12 +212,6 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */
 
-
-int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
-{
-    return 0;  /* just use malloc() and friends. */
-} /* __PHYSFS_platformSetDefaultAllocator */
-
 #endif /* PHYSFS_PLATFORM_MACOSX */
 
 /* end of macosx.c ... */
