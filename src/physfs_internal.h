@@ -14,6 +14,18 @@
 #error Do not include this header from your applications.
 #endif
 
+/* Make sure everything that includes this header exports no symbols by
+   default. physfs.h uses function attributes to mark only the public API as
+   visible. */
+#if (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)
+#pragma GCC visibility push(hidden)
+#endif
+
+/* Turn off MSVC warnings that are aggressively anti-portability. */
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS 1
+#endif
+
 #include "physfs.h"
 
 /* The holy trinity. */
