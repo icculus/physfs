@@ -7,9 +7,8 @@ Building is (ahem) very easy.
 
 ALL PLATFORMS:
 
-Please understand your rights and mine: read the text file LICENSE.txt in the
- root of the source tree. If you can't abide by it, delete this source tree
- now. The license is extremely liberal, even to closed-source, commercial
+Please read the text file LICENSE.txt in the root of the source tree.
+ The license is extremely liberal, even to closed-source, commercial
  applications.
 
 If you've got Doxygen (http://www.doxygen.org/) installed, you can run it
@@ -18,7 +17,6 @@ If you've got Doxygen (http://www.doxygen.org/) installed, you can run it
  is optional. You can browse the API docs online here:
 
     https://icculus.org/physfs/docs/
-
 
 
 
@@ -31,12 +29,12 @@ Make a directory, wherever you like. This will be your build directory.
 Chdir to your build directory. Run "cmake /where/i/unpacked/physfs" to
  generate Makefiles. You can then run "ccmake ." and customize the build,
  but the defaults are probably okay. You can have CMake generate KDevelop
- project files if you prefer these.
+ or Ninja project files or whatever, if you prefer these.
 
 Run "make". PhysicsFS will now build.
 
 As root, run "make install".
- If you get sick of the library, run "xargs rm < install_manifest.txt" as root
+ If you get sick of the library, run "make uninstall" as root
  and it will remove all traces of the library from the system paths.
 
 Once you are satisfied, you can delete the build directory.
@@ -44,15 +42,6 @@ Once you are satisfied, you can delete the build directory.
 Primary Unix development is done with GNU/Linux, but PhysicsFS is known to
  work out of the box with several flavors of Unix. It it doesn't work, patches
  to get it running can be sent to icculus@icculus.org.
-
-
-
-BeOS, Zeta, and Haiku:
-
-Use the "Unix" instructions, above. The CMake port to BeOS is fairly new at
- the time of this writing, but it works. You can get a build of CMake from
- bebits.com or build it yourself from source from cmake.org.
-
 
 
 Windows:
@@ -73,17 +62,17 @@ If you want to use Visual Studio, nmake, or the Platform SDK, you will need
  Go there and use them to build PhysicsFS.
 
 PhysicsFS will only link directly against system libraries that have existed
- since Windows 95 and Windows NT 3.51. If there's a newer API we want to use,
- we try to dynamically load it at runtime and fallback to a reasonable
- behaviour when we can't find it...this is used for Unicode support and
- locating user-specific directories, etc.
+ since Windows NT 3.51. If there's a newer API we want to use, we try to
+ dynamically load it at runtime and fallback to a reasonable behaviour when
+ we can't find it...this is used for Unicode support and locating
+ user-specific directories, etc. Note that OSes based on Windows 95 _should_
+ work if you use the Microsoft Layer for Unicode (UNICOWS.DLL) to provide
+ some missing system APIs, but this is no longer tested as of PhysicsFS 2.1.0.
+ PhysicsFS 2.0.x still works with Windows 95 without UNICOWS.DLL.
 
 PhysicsFS works on 32-bit and 64-bit Windows. There is no 16-bit Windows
  support at all. Reports of success and problems can go to Ryan at
  icculus@icculus.org ...
-
-If someone is willing to maintain prebuilt PhysicsFS DLLs, I'd like to hear
-from you; send an email to icculus@icculus.org ...
 
 
 PocketPC/WindowsCE:
@@ -94,20 +83,7 @@ Support for PocketPC was removed in PhysicsFS 2.1.0. This was known to work
  time of this writing).
 
 
-MAC OS 8/9:
-
-Classic Mac OS support has been dropped in PhysicsFS 2.0. Apple hasn't updated
- pre-OSX versions in more than a decade at this point, none of the hardware
- they've shipped will boot it for almost as many years, and finding
- developer tools for it is becoming almost impossible. As the switch to Intel
- hardware has removed the "Classic" emulation environment, it was time to
- remove support from PhysicsFS. That being said, the PhysicsFS 1.0 branch can
- still target back to Mac OS 8.5, so you can use that if you need support for
- this legacy OS. We still very much support Mac OS X, though: see below.
-
-
-
-MAC OS X:
+macOS:
 
 You will need CMake (https://www.cmake.org/) 2.4 or later installed.
 
@@ -116,15 +92,41 @@ You can either generate a Unix makefile with CMake, or generate an Xcode
 
 PowerPC and Intel Macs should both be supported.
 
-If someone is willing to maintain prebuilt PhysicsFS Shared Libraries for
- Mac OS X, I'd like to hear from you; send an email to icculus@icculus.org.
 
+MAC OS 8/9 ("Mac OS Classic"):
+
+Classic Mac OS support has been dropped in PhysicsFS 2.0. Apple hasn't updated
+ pre-OSX versions in more than a decade at this point, none of the hardware
+ they've shipped will boot it for almost as many years, and finding
+ developer tools for it is becoming almost impossible. As the switch to Intel
+ hardware has removed the "Classic" emulation environment, it was time to
+ remove support from PhysicsFS. That being said, the PhysicsFS 1.0 branch can
+ still target back to Mac OS 8.5, so you can use that if you need support for
+ this legacy OS. We still very much support modern macOS, though: see below.
+
+
+
+BeOS, Zeta, YellowTab:
+
+BeOS support was dropped in PhysicsFS 2.1.0. Consider installing Haiku, which
+we still support.
+
+
+Haiku:
+
+Use the "Unix" instructions, above. The CMake port to BeOS is fairly new at
+ the time of this writing, but it works. You can get a build of CMake from
+ bebits.com or build it yourself from source from cmake.org.
 
 
 OS/2:
 
-Support for OS/2 was removed in PhysicsFS 2.1. PhysicsFS 2.0 can still target
-this platform.
+OS/2 is known to work with OpenWatcom and GCC-based compilers. I couldn't get
+an OS/2 port of CMake to generate OpenWatcom project files (although it should
+be able to do that in theory), it should be able to do Unix Makefiles with
+GCC. It might be easier to just compile PhysicsFS along with the rest of
+your project on this platform.
+
 
 
 OTHER PLATFORMS:
@@ -134,8 +136,8 @@ Many Unix-like platforms might "just work" with CMake. Some of these platforms
  tested at all. PhysicsFS is, as far as we know, 64-bit and byteorder clean,
  and is known to compile on several compilers across many platforms. To
  implement a new platform or archiver, please read the heavily-commented
- physfs_internal.h and look in the platform/ and archiver/ directories for
- examples.
+ physfs_internal.h and look at the platform_* and archiver_* source files
+ for examples.
 
 --ryan. (icculus@icculus.org)
 
