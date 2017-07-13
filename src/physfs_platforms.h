@@ -50,7 +50,7 @@
 #  define PHYSFS_PLATFORM_SOLARIS 1
 #  define PHYSFS_PLATFORM_UNIX 1
 #  define PHYSFS_PLATFORM_POSIX 1
-#elif defined(__FreeBSD__) || defined(__DragonFly__)
+#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
 #  define PHYSFS_PLATFORM_FREEBSD 1
 #  define PHYSFS_PLATFORM_BSD 1
 #  define PHYSFS_PLATFORM_UNIX 1
