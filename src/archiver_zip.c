@@ -1681,7 +1681,7 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
             const PHYSFS_uint64 len = (PHYSFS_uint64) (ptr - filename);
             char *str = (char *) __PHYSFS_smallAlloc(len + 1);
             BAIL_IF(!str, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-            memcpy(str, filename, len);
+            memcpy(str, filename, (size_t) len);
             str[len] = '\0';
             entry = zip_find_entry(info, str);
             __PHYSFS_smallFree(str);
