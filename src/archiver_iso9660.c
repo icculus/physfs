@@ -344,19 +344,19 @@ static int iso_extractfilename(ISO9660Handle *handle,
 static int iso_readimage(ISO9660Handle *handle, PHYSFS_uint64 where,
                          void *buffer, PHYSFS_uint64 len)
 {
-    int rc = -1;
+    PHYSFS_sint64 rc = -1;
     BAIL_IF_ERRPASS(!__PHYSFS_platformGrabMutex(handle->mutex), -1);
-    if (where != handle->currpos)
-        GOTO_IF_ERRPASS(!handle->io->seek(handle->io,where), unlockme);
+    if ((where != handle->currpos) && !handle->io->seek(handle->io,where))
+        BAIL_MUTEX_ERRPASS(handle->mutex, -1);
+
     rc = handle->io->read(handle->io, buffer, len);
     if (rc == -1)
     {
         handle->currpos = (PHYSFS_uint64) -1;
-        goto unlockme;
+        BAIL_MUTEX_ERRPASS(handle->mutex, -1);
     } /* if */
-    handle->currpos += rc;
+    handle->currpos += (PHYSFS_uint64) rc;
 
-    unlockme:
     __PHYSFS_platformReleaseMutex(handle->mutex);
     return rc;
 } /* iso_readimage */
@@ -653,7 +653,7 @@ static PHYSFS_uint32 iso_file_read_mem(ISO9660FileHandle *filehandle,
                                        void *buffer, PHYSFS_uint64 len)
 {
     /* check remaining bytes & max obj which can be fetched */
-    const PHYSFS_sint64 bytesleft = filehandle->filesize - filehandle->currpos;
+    const PHYSFS_uint64 bytesleft = filehandle->filesize - filehandle->currpos;
     if (bytesleft < len)
         len = bytesleft;
 
@@ -691,15 +691,15 @@ static PHYSFS_uint32 iso_file_read_foreign(ISO9660FileHandle *filehandle,
 
     /* check remaining bytes & max obj which can be fetched */
     const PHYSFS_sint64 bytesleft = filehandle->filesize - filehandle->currpos;
-    if (bytesleft < len)
+    if (((PHYSFS_uint64) bytesleft) < len)
         len = bytesleft;
 
     rc = filehandle->io->read(filehandle->io, buffer, len);
     BAIL_IF_ERRPASS(rc == -1, -1);
 
     filehandle->currpos += rc; /* i trust my internal book keeping */
-    BAIL_IF(rc < len, PHYSFS_ERR_CORRUPT, -1);
-    return rc;
+    BAIL_IF(((PHYSFS_uint64) rc) < len, PHYSFS_ERR_CORRUPT, -1);
+    return (PHYSFS_uint32) rc;
 } /* iso_file_read_foreign */
 
 
@@ -709,7 +709,7 @@ static int iso_file_seek_foreign(ISO9660FileHandle *fhandle,
     PHYSFS_sint64 pos;
 
     BAIL_IF(offset < 0, PHYSFS_ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF(offset >= fhandle->filesize, PHYSFS_ERR_PAST_EOF, 0);
+    BAIL_IF(((PHYSFS_uint64) offset) >= fhandle->filesize, PHYSFS_ERR_PAST_EOF, 0);
 
     pos = fhandle->startblock * 2048 + offset;
     BAIL_IF_ERRPASS(!fhandle->io->seek(fhandle->io, pos), -1);
