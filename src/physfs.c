@@ -85,8 +85,8 @@ static char *baseDir = NULL;
 static char *userDir = NULL;
 static char *prefDir = NULL;
 static int allowSymLinks = 0;
-static const PHYSFS_Archiver **archivers = NULL;
-static const PHYSFS_ArchiveInfo **archiveInfo = NULL;
+static PHYSFS_Archiver **archivers = NULL;
+static PHYSFS_ArchiveInfo **archiveInfo = NULL;
 static volatile size_t numArchivers = 0;
 
 /* mutexes ... */
@@ -855,7 +855,7 @@ static DirHandle *tryOpenDir(PHYSFS_Io *io, const PHYSFS_Archiver *funcs,
 static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
 {
     DirHandle *retval = NULL;
-    const PHYSFS_Archiver **i;
+    PHYSFS_Archiver **i;
     const char *ext;
     int created_io = 0;
 
@@ -864,7 +864,6 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
     if (io == NULL)
     {
         /* DIR gets first shot (unlike the rest, it doesn't deal with files). */
-        extern const PHYSFS_Archiver __PHYSFS_Archiver_DIR;
         retval = tryOpenDir(io, &__PHYSFS_Archiver_DIR, d, forWriting);
         if (retval != NULL)
             return retval;
@@ -1276,8 +1275,8 @@ static int archiverInUse(const PHYSFS_Archiver *arc, const DirHandle *list)
 static int doDeregisterArchiver(const size_t idx)
 {
     const size_t len = (numArchivers - idx) * sizeof (void *);
-    const PHYSFS_ArchiveInfo *info = archiveInfo[idx];
-    const PHYSFS_Archiver *arc = archivers[idx];
+    PHYSFS_ArchiveInfo *info = archiveInfo[idx];
+    PHYSFS_Archiver *arc = archivers[idx];
 
     /* make sure nothing is still using this archiver */
     if (archiverInUse(arc, searchPath) || archiverInUse(arc, writeDir))
@@ -1458,11 +1457,11 @@ static int doRegisterArchiver(const PHYSFS_Archiver *_archiver)
 
     ptr = allocator.Realloc(archiveInfo, len);
     GOTO_IF(!ptr, PHYSFS_ERR_OUT_OF_MEMORY, regfailed);
-    archiveInfo = (const PHYSFS_ArchiveInfo **) ptr;
+    archiveInfo = (PHYSFS_ArchiveInfo **) ptr;
 
     ptr = allocator.Realloc(archivers, len);
     GOTO_IF(!ptr, PHYSFS_ERR_OUT_OF_MEMORY, regfailed);
-    archivers = (const PHYSFS_Archiver **) ptr;
+    archivers = (PHYSFS_Archiver **) ptr;
 
     archiveInfo[numArchivers] = info;
     archiveInfo[numArchivers + 1] = NULL;
@@ -1525,7 +1524,7 @@ int PHYSFS_deregisterArchiver(const char *ext)
 const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void)
 {
     BAIL_IF(!initialized, PHYSFS_ERR_NOT_INITIALIZED, NULL);
-    return archiveInfo;
+    return (const PHYSFS_ArchiveInfo **) archiveInfo;
 } /* PHYSFS_supportedArchiveTypes */
 
 
