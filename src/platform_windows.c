@@ -7,7 +7,7 @@
  */
 
 #define __PHYSICSFS_INTERNAL__
-#include "physfs_platforms.h"
+#include "physfs_internal.h"
 
 #ifdef PHYSFS_PLATFORM_WINDOWS
 #ifndef PHYSFS_PLATFORM_WINRT
@@ -25,8 +25,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
-
-#include "physfs_internal.h"
 
 #define LOWORDER_UINT64(pos) ((PHYSFS_uint32) (pos & 0xFFFFFFFF))
 #define HIGHORDER_UINT64(pos) ((PHYSFS_uint32) ((pos >> 32) & 0xFFFFFFFF))
