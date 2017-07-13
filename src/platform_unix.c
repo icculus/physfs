@@ -271,14 +271,11 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     }
     #endif
 
-    if (retval)
-        return retval;   /* already got it. */
-
     /* If there's a Linux-like /proc filesystem, you can get the full path to
      *  the current process from a symlink in there.
      */
 
-    if (access("/proc", F_OK) == 0)
+    if (!retval && (access("/proc", F_OK) == 0))
     {
         retval = readSymLink("/proc/self/exe");
         if (!retval) retval = readSymLink("/proc/curproc/file");
