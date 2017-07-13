@@ -358,7 +358,7 @@ static int iso_readimage(ISO9660Handle *handle, PHYSFS_uint64 where,
     handle->currpos += (PHYSFS_uint64) rc;
 
     __PHYSFS_platformReleaseMutex(handle->mutex);
-    return rc;
+    return (int) rc;  /* !!! FIXME: should this return "int" ? */
 } /* iso_readimage */
 
 
@@ -709,7 +709,7 @@ static int iso_file_seek_foreign(ISO9660FileHandle *fhandle,
     PHYSFS_sint64 pos;
 
     BAIL_IF(offset < 0, PHYSFS_ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF(((PHYSFS_uint64) offset) >= fhandle->filesize, PHYSFS_ERR_PAST_EOF, 0);
+    BAIL_IF(offset >= fhandle->filesize, PHYSFS_ERR_PAST_EOF, 0);
 
     pos = fhandle->startblock * 2048 + offset;
     BAIL_IF_ERRPASS(!fhandle->io->seek(fhandle->io, pos), -1);
