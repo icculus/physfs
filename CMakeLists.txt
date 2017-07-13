@@ -109,7 +109,7 @@ if(NOT PHYSFS_ARCHIVE_ZIP)
 endif()
 
 option(PHYSFS_ARCHIVE_7Z "Enable 7zip support" TRUE)
-if(NOT PHYSFS_ARCHIVE_7Z)
+if(PHYSFS_ARCHIVE_7Z)   # !!! FIXME: this is DISABLED by default in the source because it needs LZMA SDK; clean that up and enable this by default.
     add_definitions(-DPHYSFS_SUPPORTS_7Z=0)
     # !!! FIXME: rename to 7z.c?
     set(PHYSFS_SRCS ${PHYSFS_SRCS} ${LZMA_SRCS})
