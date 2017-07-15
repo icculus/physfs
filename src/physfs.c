@@ -3007,5 +3007,175 @@ static void setDefaultAllocator(void)
     allocator.Free = mallocAllocatorFree;
 } /* setDefaultAllocator */
 
+
+int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt,
+                        const PHYSFS_uint64 entry_count,
+                        const size_t entrylen)
+{
+    static char rootpath[2] = { '/', '\0' };
+    size_t alloclen;
+
+    assert(entrylen >= sizeof (__PHYSFS_DirTreeEntry));
+
+    memset(dt, '\0', sizeof (*dt));
+
+    dt->root = (__PHYSFS_DirTreeEntry *) allocator.Malloc(entrylen);
+    BAIL_IF(!dt->root, PHYSFS_ERR_OUT_OF_MEMORY, 0);
+    memset(dt->root, '\0', entrylen);
+    dt->root->name = rootpath;
+    dt->root->isdir = 1;
+    dt->hashBuckets = (size_t) (entry_count / 5);
+    if (!dt->hashBuckets)
+        dt->hashBuckets = 1;
+    dt->entrylen = entrylen;
+
+    alloclen = dt->hashBuckets * sizeof (__PHYSFS_DirTreeEntry *);
+    dt->hash = (__PHYSFS_DirTreeEntry **) allocator.Malloc(alloclen);
+    BAIL_IF(!dt->hash, PHYSFS_ERR_OUT_OF_MEMORY, 0);
+    memset(dt->hash, '\0', alloclen);
+
+    return 1;
+} /* __PHYSFS_DirTreeInit */
+
+
+static inline PHYSFS_uint32 hashPathName(__PHYSFS_DirTree *dt, const char *name)
+{
+    return __PHYSFS_hashString(name, strlen(name)) % dt->hashBuckets;
+} /* hashPathName */
+
+
+/* Fill in missing parent directories. */
+static __PHYSFS_DirTreeEntry *addAncestors(__PHYSFS_DirTree *dt, char *name)
+{
+    __PHYSFS_DirTreeEntry *retval = dt->root;
+    char *sep = strrchr(name, '/');
+
+    if (sep)
+    {
+        const size_t namelen = (sep - name) + 1;
+
+        *sep = '\0';  /* chop off last piece. */
+        retval = (__PHYSFS_DirTreeEntry *) __PHYSFS_DirTreeFind(dt, name);
+
+        if (retval != NULL)
+        {
+            *sep = '/';
+            BAIL_IF(!retval->isdir, PHYSFS_ERR_CORRUPT, NULL);
+            return retval;  /* already hashed. */
+        } /* if */
+
+        /* okay, this is a new dir. Build and hash us. */
+        retval = (__PHYSFS_DirTreeEntry*)__PHYSFS_DirTreeAdd(dt, name, 1);
+        *sep = '/';
+    } /* if */
+
+    return retval;
+} /* addAncestors */
+
+
+void *__PHYSFS_DirTreeAdd(__PHYSFS_DirTree *dt, char *name, const int isdir)
+{
+    __PHYSFS_DirTreeEntry *retval = __PHYSFS_DirTreeFind(dt, name);
+    if (!retval)
+    {
+        const size_t alloclen = strlen(name) + 1 + dt->entrylen;
+        PHYSFS_uint32 hashval;
+        __PHYSFS_DirTreeEntry *parent = addAncestors(dt, name);
+        BAIL_IF_ERRPASS(!parent, NULL);
+        assert(dt->entrylen >= sizeof (__PHYSFS_DirTreeEntry));
+        retval = (__PHYSFS_DirTreeEntry *) allocator.Malloc(alloclen);
+        BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        memset(retval, '\0', dt->entrylen);
+        retval->name = ((char *) retval) + dt->entrylen;
+        strcpy(retval->name, name);
+        hashval = hashPathName(dt, name);
+        retval->hashnext = dt->hash[hashval];
+        dt->hash[hashval] = retval;
+        retval->sibling = parent->children;
+        retval->isdir = isdir;
+        parent->children = retval;
+    } /* if */
+
+    return retval;
+} /* __PHYSFS_DirTreeAdd */
+
+
+/* Find the __PHYSFS_DirTreeEntry for a path in platform-independent notation. */
+void *__PHYSFS_DirTreeFind(__PHYSFS_DirTree *dt, const char *path)
+{
+    PHYSFS_uint32 hashval;
+    __PHYSFS_DirTreeEntry *prev = NULL;
+    __PHYSFS_DirTreeEntry *retval;
+
+    if (*path == '\0')
+        return dt->root;
+
+    hashval = hashPathName(dt, path);
+    for (retval = dt->hash[hashval]; retval; retval = retval->hashnext)
+    {
+        if (strcmp(retval->name, path) == 0)
+        {
+            if (prev != NULL)  /* move this to the front of the list */
+            {
+                prev->hashnext = retval->hashnext;
+                retval->hashnext = dt->hash[hashval];
+                dt->hash[hashval] = retval;
+            } /* if */
+
+            return retval;
+        } /* if */
+
+        prev = retval;
+    } /* for */
+
+    BAIL(PHYSFS_ERR_NOT_FOUND, NULL);
+} /* __PHYSFS_DirTreeFind */
+
+void __PHYSFS_DirTreeEnumerateFiles(void *opaque, const char *dname,
+                                    PHYSFS_EnumFilesCallback cb,
+                                    const char *origdir, void *callbackdata)
+{
+    __PHYSFS_DirTree *tree = ((__PHYSFS_DirTree *) opaque);
+    const __PHYSFS_DirTreeEntry *entry = __PHYSFS_DirTreeFind(tree, dname);
+    if (entry && entry->isdir)
+    {
+        for (entry = entry->children; entry; entry = entry->sibling)
+        {
+            const char *ptr = strrchr(entry->name, '/');
+            cb(callbackdata, origdir, ptr ? ptr + 1 : entry->name);
+        } /* for */
+    } /* if */
+} /* __PHYSFS_DirTreeEnumerateFiles */
+
+
+void __PHYSFS_DirTreeDeinit(__PHYSFS_DirTree *dt)
+{
+    if (!dt)
+        return;
+
+    if (dt->root)
+    {
+        assert(dt->root->sibling == NULL);
+        assert(dt->hash || (dt->root->children == NULL));
+        allocator.Free(dt->root);
+    } /* if */
+
+    if (dt->hash)
+    {
+        size_t i;
+        for (i = 0; i < dt->hashBuckets; i++)
+        {
+            __PHYSFS_DirTreeEntry *entry;
+            __PHYSFS_DirTreeEntry *next;
+            for (entry = dt->hash[i]; entry; entry = next)
+            {
+                next = entry->hashnext;
+                allocator.Free(entry);
+            } /* for */
+        } /* for */
+        allocator.Free(dt->hash);
+    } /* if */
+} /* __PHYSFS_DirTreeDeinit */
+
 /* end of physfs.c ... */
 
