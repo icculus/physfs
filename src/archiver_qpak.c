@@ -2,8 +2,8 @@
  * QPAK support routines for PhysicsFS.
  *
  *  This archiver handles the archive format utilized by Quake 1 and 2.
- *  Quake3-based games use the PkZip/Info-Zip format (which our zip.c
- *  archiver handles).
+ *  Quake3-based games use the PkZip/Info-Zip format (which our
+ *  archiver_zip.c handles).
  *
  *  ========================================================================
  *

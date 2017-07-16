@@ -16,15 +16,15 @@
  *
  *  The header consists of three four-byte parts:
  *    (a) an ASCII string which must be either "IWAD" or "PWAD"
- *    (b) a 4-byte (long) integer which is the number of lumps in the wad
- *    (c) a long integer which is the file offset to the start of
+ *    (b) a uint32 which is the number of lumps in the wad
+ *    (c) a uint32 which is the file offset to the start of
  *    the directory
  *
  *  The directory has one 16-byte entry for every lump. Each entry consists
  *  of three parts:
  *
- *    (a) a long integer, the file offset to the start of the lump
- *    (b) a long integer, the size of the lump in bytes
+ *    (a) a uint32, the file offset to the start of the lump
+ *    (b) a uint32, the size of the lump in bytes
  *    (c) an 8-byte ASCII string, the name of the lump, padded with zeros.
  *        For example, the "DEMO1" entry in hexadecimal would be
  *        (44 45 4D 4F 31 00 00 00)
