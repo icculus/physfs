@@ -155,6 +155,9 @@ void __PHYSFS_smallFree(void *ptr);
 #ifndef PHYSFS_SUPPORTS_WAD
 #define PHYSFS_SUPPORTS_WAD 1
 #endif
+#ifndef PHYSFS_SUPPORTS_QPAK
+#define PHYSFS_SUPPORTS_QPAK 1
+#endif
 #ifndef PHYSFS_SUPPORTS_SLB
 #define PHYSFS_SUPPORTS_SLB 1
 #endif
