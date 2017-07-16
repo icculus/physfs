@@ -34,43 +34,30 @@
 
 #if PHYSFS_SUPPORTS_HOG
 
-static UNPKentry *hogLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 *_entCount)
+static int hogLoadEntries(PHYSFS_Io *io, void *unpkarc)
 {
     const PHYSFS_uint64 iolen = io->length(io);
-    PHYSFS_uint32 entCount = 0;
-    void *ptr = NULL;
-    UNPKentry *entries = NULL;
-    UNPKentry *entry = NULL;
-    PHYSFS_uint32 size = 0;
     PHYSFS_uint32 pos = 3;
 
     while (pos < iolen)
     {
-        entCount++;
-        ptr = allocator.Realloc(ptr, sizeof (UNPKentry) * entCount);
-        GOTO_IF(ptr == NULL, PHYSFS_ERR_OUT_OF_MEMORY, failed);
-        entries = (UNPKentry *) ptr;
-        entry = &entries[entCount-1];
+        PHYSFS_uint32 size;
+        char name[13];
 
-        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->name, 13), failed);
-        pos += 13;
-        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), failed);
-        pos += 4;
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, name, 13), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), 0);
+        name[12] = '\0';  /* just in case. */
+        pos += 13 + 4;
 
-        entry->size = PHYSFS_swapULE32(size);
-        entry->startPos = pos;
+        size = PHYSFS_swapULE32(size);
+        BAIL_IF_ERRPASS(!UNPK_addEntry(unpkarc, name, 0, pos, size), 0);
         pos += size;
 
         /* skip over entry */
-        GOTO_IF_ERRPASS(!io->seek(io, pos), failed);
+        BAIL_IF_ERRPASS(!io->seek(io, pos), 0);
     } /* while */
 
-    *_entCount = entCount;
-    return entries;
-
-failed:
-    allocator.Free(entries);
-    return NULL;
+    return 1;
 } /* hogLoadEntries */
 
 
@@ -78,16 +65,23 @@ static void *HOG_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_uint8 buf[3];
     PHYSFS_uint32 count = 0;
-    UNPKentry *entries = NULL;
+    void *unpkarc = NULL;
 
     assert(io != NULL);  /* shouldn't ever happen. */
     BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, buf, 3), NULL);
     BAIL_IF(memcmp(buf, "DHF", 3) != 0, PHYSFS_ERR_UNSUPPORTED, NULL);
 
-    entries = hogLoadEntries(io, &count);
-    BAIL_IF_ERRPASS(!entries, NULL);
-    return UNPK_openArchive(io, entries, count);
+    unpkarc = UNPK_openArchive(io, count);
+    BAIL_IF_ERRPASS(!unpkarc, NULL);
+
+    if (!hogLoadEntries(io, unpkarc))
+    {
+        UNPK_closeArchive(unpkarc);
+        return NULL;
+    } /* if */
+
+    return unpkarc;
 } /* HOG_openArchive */
 
 

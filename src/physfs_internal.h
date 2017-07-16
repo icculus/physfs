@@ -342,24 +342,17 @@ int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len);
 
 /* These are shared between some archivers. */
 
-typedef struct
-{
-    char name[64];
-    PHYSFS_uint32 startPos;
-    PHYSFS_uint32 size;
-} UNPKentry;
-
 void UNPK_closeArchive(void *opaque);
-void *UNPK_openArchive(PHYSFS_Io *io,UNPKentry *e,const PHYSFS_uint32 n);
-void UNPK_enumerateFiles(void *opaque, const char *dname,
-                         PHYSFS_EnumFilesCallback cb,
-                         const char *origdir, void *callbackdata);
+void *UNPK_openArchive(PHYSFS_Io *io, const PHYSFS_uint64 entry_count);
+void *UNPK_addEntry(void *opaque, char *name, const int isdir,
+                    const PHYSFS_uint64 pos, const PHYSFS_uint64 len);
 PHYSFS_Io *UNPK_openRead(void *opaque, const char *name);
 PHYSFS_Io *UNPK_openWrite(void *opaque, const char *name);
 PHYSFS_Io *UNPK_openAppend(void *opaque, const char *name);
 int UNPK_remove(void *opaque, const char *name);
 int UNPK_mkdir(void *opaque, const char *name);
 int UNPK_stat(void *opaque, const char *fn, PHYSFS_Stat *st);
+#define UNPK_enumerateFiles __PHYSFS_DirTreeEnumerateFiles
 
 
 

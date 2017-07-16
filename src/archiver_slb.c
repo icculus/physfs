@@ -20,79 +20,80 @@
 
 #if PHYSFS_SUPPORTS_SLB
 
-static UNPKentry *slbLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
+static int slbLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
 {
-    UNPKentry *entries = NULL;
-    UNPKentry *entry = NULL;
-
-    entries = (UNPKentry *) allocator.Malloc(sizeof (UNPKentry) * fileCount);
-    BAIL_IF(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-
-    for (entry = entries; fileCount > 0; fileCount--, entry++)
+    PHYSFS_uint32 i;
+    for (i = 0; i < count; i++)
     {
+        PHYSFS_uint32 location;
+        PHYSFS_uint32 size;
+        char name[64];
+        char backslash;
         char *ptr;
 
         /* don't include the '\' in the beginning */
-        char backslash;
-        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &backslash, 1), failed);
-        GOTO_IF_ERRPASS(backslash != '\\', failed);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &backslash, 1), 0);
+        BAIL_IF(backslash != '\\', PHYSFS_ERR_CORRUPT, 0);
 
         /* read the rest of the buffer, 63 bytes */
-        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->name, 63), failed);
-        entry->name[63] = '\0'; /* in case the name lacks the null terminator */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &name, 63), 0);
+        name[63] = '\0'; /* in case the name lacks the null terminator */
 
         /* convert backslashes */
-        for (ptr = entry->name; *ptr; ptr++)
+        for (ptr = name; *ptr; ptr++)
         {
             if (*ptr == '\\')
                 *ptr = '/';
         } /* for */
 
-        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->startPos, 4), failed);
-        entry->startPos = PHYSFS_swapULE32(entry->startPos);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &location, 4), 0);
+        location = PHYSFS_swapULE32(location);
 
-        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->size, 4), failed);
-        entry->size = PHYSFS_swapULE32(entry->size);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), 0);
+        size = PHYSFS_swapULE32(size);
+
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, location, size), 0);
     } /* for */
-    
-    return entries;
 
-failed:
-    allocator.Free(entries);
-    return NULL;
-
+    return 1;
 } /* slbLoadEntries */
 
 
 static void *SLB_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_uint32 version;
-    PHYSFS_uint32 count = 0;
-    PHYSFS_uint32 tocPos = 0;
-    UNPKentry *entries = NULL;
+    PHYSFS_uint32 count;
+    PHYSFS_uint32 tocPos;
+    void *unpkarc;
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
     BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
 
-    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &version, sizeof(version)), NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &version, sizeof (version)), NULL);
     version = PHYSFS_swapULE32(version);
     BAIL_IF(version != 0, PHYSFS_ERR_UNSUPPORTED, NULL);
 
-    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &count, sizeof(count)), NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &count, sizeof (count)), NULL);
     count = PHYSFS_swapULE32(count);
 
     /* offset of the table of contents */
-    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &tocPos, sizeof(tocPos)), NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &tocPos, sizeof (tocPos)), NULL);
     tocPos = PHYSFS_swapULE32(tocPos);
     
     /* seek to the table of contents */
     BAIL_IF_ERRPASS(!io->seek(io, tocPos), NULL);
 
-    entries = slbLoadEntries(io, count);
-    BAIL_IF_ERRPASS(!entries, NULL);
+    unpkarc = UNPK_openArchive(io, count);
+    BAIL_IF_ERRPASS(!unpkarc, NULL);
 
-    return UNPK_openArchive(io, entries, count);
+    if (!slbLoadEntries(io, count, unpkarc))
+    {
+        UNPK_closeArchive(unpkarc);
+        return NULL;
+    } /* if */
+
+    return unpkarc;
 } /* SLB_openArchive */
 
 
@@ -120,4 +121,3 @@ const PHYSFS_Archiver __PHYSFS_Archiver_SLB =
 #endif  /* defined PHYSFS_SUPPORTS_SLB */
 
 /* end of archiver_slb.c ... */
-
