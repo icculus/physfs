@@ -36,37 +36,32 @@
 
 #define QPAK_SIG 0x4B434150   /* "PACK" in ASCII. */
 
-static UNPKentry *qpakLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
+static int qpakLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
 {
-    UNPKentry *entries = NULL;
-    UNPKentry *entry = NULL;
-
-    entries = (UNPKentry *) allocator.Malloc(sizeof (UNPKentry) * fileCount);
-    BAIL_IF(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-
-    for (entry = entries; fileCount > 0; fileCount--, entry++)
+    PHYSFS_uint32 i;
+    for (i = 0; i < count; i++)
     {
-        if (!__PHYSFS_readAll(io, &entry->name, 56)) goto failed;
-        if (!__PHYSFS_readAll(io, &entry->startPos, 4)) goto failed;
-        if (!__PHYSFS_readAll(io, &entry->size, 4)) goto failed;
-        entry->size = PHYSFS_swapULE32(entry->size);
-        entry->startPos = PHYSFS_swapULE32(entry->startPos);
+        PHYSFS_uint32 size;
+        PHYSFS_uint32 location;
+        char name[56];
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, name, 56), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &location, 4), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), 0);
+        size = PHYSFS_swapULE32(size);
+        location = PHYSFS_swapULE32(location);
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, location, size), 0);
     } /* for */
 
-    return entries;
-
-failed:
-    allocator.Free(entries);
-    return NULL;
+    return 1;
 } /* qpakLoadEntries */
 
 
 static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
-    UNPKentry *entries = NULL;
     PHYSFS_uint32 val = 0;
     PHYSFS_uint32 pos = 0;
     PHYSFS_uint32 count = 0;
+    void *unpkarc;
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
@@ -88,9 +83,16 @@ static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     BAIL_IF_ERRPASS(!io->seek(io, pos), NULL);
 
-    entries = qpakLoadEntries(io, count);
-    BAIL_IF_ERRPASS(!entries, NULL);
-    return UNPK_openArchive(io, entries, count);
+    unpkarc = UNPK_openArchive(io, count);
+    BAIL_IF_ERRPASS(!unpkarc, NULL);
+
+    if (!qpakLoadEntries(io, count, unpkarc))
+    {
+        UNPK_closeArchive(unpkarc);
+        return NULL;
+    } /* if */
+
+    return unpkarc;
 } /* QPAK_openArchive */
 
 

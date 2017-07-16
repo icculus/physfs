@@ -29,36 +29,30 @@
 
 #if PHYSFS_SUPPORTS_GRP
 
-static UNPKentry *grpLoadEntries(PHYSFS_Io *io, PHYSFS_uint32 fileCount)
+static int grpLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
 {
-    PHYSFS_uint32 location = 16;  /* sizeof sig. */
-    UNPKentry *entries = NULL;
-    UNPKentry *entry = NULL;
-    char *ptr = NULL;
+    PHYSFS_uint32 location = 16 + (16 * count);  /* past sig+metadata. */
+    PHYSFS_uint32 i;
 
-    entries = (UNPKentry *) allocator.Malloc(sizeof (UNPKentry) * fileCount);
-    BAIL_IF(entries == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-
-    location += (16 * fileCount);
-
-    for (entry = entries; fileCount > 0; fileCount--, entry++)
+    for (i = 0; i < count; i++)
     {
-        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->name, 12), failed);
-        GOTO_IF_ERRPASS(!__PHYSFS_readAll(io, &entry->size, 4), failed);
-        entry->name[12] = '\0';  /* name isn't null-terminated in file. */
-        if ((ptr = strchr(entry->name, ' ')) != NULL)
+        char *ptr;
+        char name[13];
+        PHYSFS_uint32 size;
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, name, 12), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), 0);
+
+        name[12] = '\0';  /* name isn't null-terminated in file. */
+        if ((ptr = strchr(name, ' ')) != NULL)
             *ptr = '\0';  /* trim extra spaces. */
 
-        entry->size = PHYSFS_swapULE32(entry->size);
-        entry->startPos = location;
-        location += entry->size;
+        size = PHYSFS_swapULE32(size);
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, location, size), 0);
+
+        location += size;
     } /* for */
 
-    return entries;
-
-failed:
-    allocator.Free(entries);
-    return NULL;
+    return 1;
 } /* grpLoadEntries */
 
 
@@ -66,7 +60,7 @@ static void *GRP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 {
     PHYSFS_uint8 buf[12];
     PHYSFS_uint32 count = 0;
-    UNPKentry *entries = NULL;
+    void *unpkarc = NULL;
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
@@ -79,9 +73,16 @@ static void *GRP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &count, sizeof(count)), NULL);
     count = PHYSFS_swapULE32(count);
 
-    entries = grpLoadEntries(io, count);
-    BAIL_IF_ERRPASS(!entries, NULL);
-    return UNPK_openArchive(io, entries, count);
+    unpkarc = UNPK_openArchive(io, count);
+    BAIL_IF_ERRPASS(!unpkarc, NULL);
+
+    if (!grpLoadEntries(io, count, unpkarc))
+    {
+        UNPK_closeArchive(unpkarc);
+        return NULL;
+    } /* if */
+
+    return unpkarc;
 } /* GRP_openArchive */
 
 
