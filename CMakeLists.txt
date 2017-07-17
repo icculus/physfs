@@ -39,22 +39,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
 endif()
 
 
-# Basic chunks of source code ...
-
-set(LZMA_SRCS
-    src/lzma/C/7zCrc.c
-    src/lzma/C/Archive/7z/7zBuffer.c
-    src/lzma/C/Archive/7z/7zDecode.c
-    src/lzma/C/Archive/7z/7zExtract.c
-    src/lzma/C/Archive/7z/7zHeader.c
-    src/lzma/C/Archive/7z/7zIn.c
-    src/lzma/C/Archive/7z/7zItem.c
-    src/lzma/C/Archive/7z/7zMethodID.c
-    src/lzma/C/Compress/Branch/BranchX86.c
-    src/lzma/C/Compress/Branch/BranchX86_2.c
-    src/lzma/C/Compress/Lzma/LzmaDecode.c
-)
-
 if(HAIKU)
     # We add this explicitly, since we don't want CMake to think this
     #  is a C++ project unless we're on Haiku.
@@ -87,7 +71,7 @@ set(PHYSFS_SRCS
     src/archiver_unpacked.c
     src/archiver_grp.c
     src/archiver_hog.c
-    src/archiver_lzma.c
+    src/archiver_7z.c
     src/archiver_mvl.c
     src/archiver_qpak.c
     src/archiver_wad.c
@@ -109,10 +93,8 @@ if(NOT PHYSFS_ARCHIVE_ZIP)
 endif()
 
 option(PHYSFS_ARCHIVE_7Z "Enable 7zip support" TRUE)
-if(PHYSFS_ARCHIVE_7Z)   # !!! FIXME: this is DISABLED by default in the source because it needs LZMA SDK; clean that up and enable this by default.
+if(NOT PHYSFS_ARCHIVE_7Z)
     add_definitions(-DPHYSFS_SUPPORTS_7Z=0)
-    # !!! FIXME: rename to 7z.c?
-    set(PHYSFS_SRCS ${PHYSFS_SRCS} ${LZMA_SRCS})
 endif()
 
 option(PHYSFS_ARCHIVE_GRP "Enable Build Engine GRP support" TRUE)

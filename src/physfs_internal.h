@@ -79,7 +79,7 @@ extern "C" {
    wrapped in PHYSFS_SUPPORTS_* checks before actually referencing them. */
 extern const PHYSFS_Archiver __PHYSFS_Archiver_DIR;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_ZIP;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_LZMA;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_SZIP;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_GRP;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_QPAK;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_HOG;
@@ -141,7 +141,7 @@ void __PHYSFS_smallFree(void *ptr);
 #define PHYSFS_SUPPORTS_ZIP 1
 #endif
 #ifndef PHYSFS_SUPPORTS_7Z
-#define PHYSFS_SUPPORTS_7Z 0
+#define PHYSFS_SUPPORTS_7Z 1
 #endif
 #ifndef PHYSFS_SUPPORTS_GRP
 #define PHYSFS_SUPPORTS_GRP 1

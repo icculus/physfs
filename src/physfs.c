@@ -1131,7 +1131,7 @@ static int initStaticArchivers(void)
         REGISTER_STATIC_ARCHIVER(ZIP);
     #endif
     #if PHYSFS_SUPPORTS_7Z
-        REGISTER_STATIC_ARCHIVER(LZMA);
+        REGISTER_STATIC_ARCHIVER(SZIP);
     #endif
     #if PHYSFS_SUPPORTS_GRP
         REGISTER_STATIC_ARCHIVER(GRP);
