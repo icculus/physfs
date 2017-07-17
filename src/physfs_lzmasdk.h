@@ -323,7 +323,7 @@ typedef struct
 typedef struct
 {
   Byte *Defs; /* MSB 0 bit numbering */
-  // UInt64 *Vals;
+  /* UInt64 *Vals; */
   CNtfsFileTime *Vals;
 } CSzBitUi64s;
 
@@ -336,14 +336,14 @@ typedef struct
   UInt32 NumPackStreams;
   UInt32 NumFolders;
 
-  UInt64 *PackPositions;          // NumPackStreams + 1
-  CSzBitUi32s FolderCRCs;         // NumFolders
+  UInt64 *PackPositions;          /* NumPackStreams + 1 */
+  CSzBitUi32s FolderCRCs;         /* NumFolders */
 
-  size_t *FoCodersOffsets;        // NumFolders + 1
-  UInt32 *FoStartPackStreamIndex; // NumFolders + 1
-  UInt32 *FoToCoderUnpackSizes;   // NumFolders + 1
-  Byte *FoToMainUnpackSizeIndex;  // NumFolders
-  UInt64 *CoderUnpackSizes;       // for all coders in all folders
+  size_t *FoCodersOffsets;        /* NumFolders + 1 */
+  UInt32 *FoStartPackStreamIndex; /* NumFolders + 1 */
+  UInt32 *FoToCoderUnpackSizes;   /* NumFolders + 1 */
+  Byte *FoToMainUnpackSizeIndex;  /* NumFolders */
+  UInt64 *CoderUnpackSizes;       /* for all coders in all folders */
 
   Byte *CodersData;
 } CSzAr;
@@ -364,18 +364,18 @@ typedef struct
   
   UInt32 NumFiles;
 
-  UInt64 *UnpackPositions;  // NumFiles + 1
-  // Byte *IsEmptyFiles;
+  UInt64 *UnpackPositions;  /* NumFiles + 1 */
+  /* Byte *IsEmptyFiles; */
   Byte *IsDirs;
   CSzBitUi32s CRCs;
 
   CSzBitUi32s Attribs;
-  // CSzBitUi32s Parents;
+  /* CSzBitUi32s Parents; */
   CSzBitUi64s MTime;
   CSzBitUi64s CTime;
 
-  UInt32 *FolderToFile;   // NumFolders + 1
-  UInt32 *FileToFolder;   // NumFiles
+  UInt32 *FolderToFile;   /* NumFolders + 1 */
+  UInt32 *FileToFolder;   /* NumFiles */
 
   size_t *FileNameOffsets; /* in 2-byte steps */
   Byte *FileNames;  /* UTF-16-LE */
@@ -1247,7 +1247,7 @@ static void MY_FAST_CALL CrcGenerateTable()
       g_CrcUpdate = CrcUpdateT4;
       #if CRC_NUM_TABLES >= 8
       g_CrcUpdateT8 = CrcUpdateT8;
-      // g_CrcUpdate = CrcUpdateT8;
+      /* g_CrcUpdate = CrcUpdateT8; */
       #endif
     }
     else if (p[0] != 1 || p[1] != 2)
@@ -1264,7 +1264,7 @@ static void MY_FAST_CALL CrcGenerateTable()
       g_CrcUpdate = CrcUpdateT1_BeT4;
       #if CRC_NUM_TABLES >= 8
       g_CrcUpdateT8 = CrcUpdateT1_BeT8;
-      // g_CrcUpdate = CrcUpdateT1_BeT8;
+      /* g_CrcUpdate = CrcUpdateT1_BeT8; */
       #endif
     }
   }
@@ -1743,9 +1743,9 @@ enum EIdEnum
   k7zIdEncodedHeader,
   k7zIdStartPos,
   k7zIdDummy
-  // k7zNtSecure,
-  // k7zParent,
-  // k7zIsReal
+  /* k7zNtSecure, */
+  /* k7zParent, */
+  /* k7zIsReal */
 };
 
 static const Byte k7zSignature[k7zSignatureSize] = {'7', 'z', 0xBC, 0xAF, 0x27, 0x1C};
@@ -1834,7 +1834,7 @@ static void SzArEx_Init(CSzArEx *p)
   
   SzBitUi32s_Init(&p->CRCs);
   SzBitUi32s_Init(&p->Attribs);
-  // SzBitUi32s_Init(&p->Parents);
+  /* SzBitUi32s_Init(&p->Parents); */
   SzBitUi64s_Init(&p->MTime);
   SzBitUi64s_Init(&p->CTime);
 }
@@ -1852,7 +1852,7 @@ static void SzArEx_Free(CSzArEx *p, ISzAlloc *alloc)
 
   SzBitUi32s_Free(&p->CRCs, alloc);
   SzBitUi32s_Free(&p->Attribs, alloc);
-  // SzBitUi32s_Free(&p->Parents, alloc);
+  /* SzBitUi32s_Free(&p->Parents, alloc); */
   SzBitUi64s_Free(&p->MTime, alloc);
   SzBitUi64s_Free(&p->CTime, alloc);
   
@@ -2655,7 +2655,7 @@ static SRes SzReadStreamsInfo(CSzAr *p,
   else
   {
     ssi->NumTotalSubStreams = p->NumFolders;
-    // ssi->NumSubDigests = 0;
+    /* ssi->NumSubDigests = 0; */
   }
 
   return (type == k7zIdEnd ? SZ_OK : SZ_ERROR_UNSUPPORTED);
