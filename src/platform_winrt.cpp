@@ -16,7 +16,7 @@
 *  5. In the Solution Explorer (to the right typically), delete all .cpp and .h files in
 *     PhysFS-WinRT.Shared except targetver.h.
 *  6. In Windows Explorer, find the "src" folder of the PhysFS source code. Select all files
-* 	  in the folder (ignore the "lzma" folder, we're not including 7Zip support because it's messy to compile).
+* 	  in the folder.
 *	  Drag and drop all of the source files onto PhysFS-WinRT-Shared in Visual Studio.
 *  7. In Windows Explorer, find the file called "physfs.h". Copy this file into a folder of its own somewhere.
 *	  I suggest naming that folder "include". This will be your "include" folder for any projects using PhysFS.
