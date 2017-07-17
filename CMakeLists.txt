@@ -155,7 +155,7 @@ if(PHYSFS_BUILD_STATIC)
     #  library named "physfs.lib" which would conflict; Unix tend to like the
     #  same library name with a different extension for static libs, but
     #  Windows can just have a separate name.
-    if(NOT WINDOWS)
+    if(NOT MSVC)
         set_target_properties(physfs-static PROPERTIES OUTPUT_NAME "physfs")
     endif()
     if(WINRT)
@@ -258,7 +258,7 @@ if(UNIX)
     )
 endif()
 
-if(UNIX AND NOT APPLE)
+if(NOT MSVC)
     configure_file(
         "extras/physfs.pc.in"
         "extras/physfs.pc"
