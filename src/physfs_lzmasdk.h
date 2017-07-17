@@ -5663,12 +5663,6 @@ static void LzmaDec_FreeProbs(CLzmaDec *p, ISzAlloc *alloc)
   p->probs = NULL;
 }
 
-static void LzmaDec_FreeDict(CLzmaDec *p, ISzAlloc *alloc)
-{
-  alloc->Free(alloc, p->dic);
-  p->dic = NULL;
-}
-
 static SRes LzmaProps_Decode(CLzmaProps *p, const Byte *data, unsigned size)
 {
   UInt32 dicSize;
