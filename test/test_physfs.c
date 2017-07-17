@@ -921,7 +921,7 @@ static int cmd_cat2(char *args)
         char *buffer2 = NULL;
         size_t buffer2len = 0;
         char *ptr = NULL;
-        PHYSFS_sint64 i;
+        size_t i;
 
         if (do_buffer_size)
         {
