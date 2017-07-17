@@ -871,6 +871,157 @@ static int cmd_cat(char *args)
     return 1;
 } /* cmd_cat */
 
+static int cmd_cat2(char *args)
+{
+    PHYSFS_File *f1;
+    PHYSFS_File *f2;
+    char *fname1;
+    char *fname2;
+    char *ptr;
+
+    fname1 = args;
+    if (*fname1 == '\"')
+    {
+        fname1++;
+        ptr = strchr(fname1, '\"');
+        if (ptr == NULL)
+        {
+            printf("missing string terminator in argument.\n");
+            return 1;
+        } /* if */
+        *(ptr) = '\0';
+    } /* if */
+    else
+    {
+        ptr = strchr(fname1, ' ');
+        *ptr = '\0';
+    } /* else */
+
+    fname2 = ptr + 1;
+    if (*fname2 == '\"')
+    {
+        fname2++;
+        ptr = strchr(fname2, '\"');
+        if (ptr == NULL)
+        {
+            printf("missing string terminator in argument.\n");
+            return 1;
+        } /* if */
+        *(ptr) = '\0';
+    } /* if */
+
+    if ((f1 = PHYSFS_openRead(fname1)) == NULL)
+        printf("failed to open '%s'. Reason: [%s].\n", fname1, PHYSFS_getLastError());
+    else if ((f2 = PHYSFS_openRead(fname2)) == NULL)
+        printf("failed to open '%s'. Reason: [%s].\n", fname2, PHYSFS_getLastError());
+    else
+    {
+        char *buffer1 = NULL;
+        size_t buffer1len = 0;
+        char *buffer2 = NULL;
+        size_t buffer2len = 0;
+        char *ptr = NULL;
+        PHYSFS_sint64 i;
+
+        if (do_buffer_size)
+        {
+            if (!PHYSFS_setBuffer(f1, do_buffer_size))
+            {
+                printf("failed to set file buffer for '%s'. Reason: [%s].\n",
+                        fname1, PHYSFS_getLastError());
+                PHYSFS_close(f1);
+                PHYSFS_close(f2);
+                return 1;
+            } /* if */
+            else if (!PHYSFS_setBuffer(f2, do_buffer_size))
+            {
+                printf("failed to set file buffer for '%s'. Reason: [%s].\n",
+                        fname2, PHYSFS_getLastError());
+                PHYSFS_close(f1);
+                PHYSFS_close(f2);
+                return 1;
+            } /* if */
+        } /* if */
+
+
+        do
+        {
+            int readlen = 128;
+            PHYSFS_sint64 rc;
+
+            ptr = realloc(buffer1, buffer1len + readlen);
+            if (!ptr)
+            {
+                printf("(Out of memory.)\n\n");
+                free(buffer1);
+                free(buffer2);
+                PHYSFS_close(f1);
+                PHYSFS_close(f2);
+                return 1;
+            } /* if */
+
+            buffer1 = ptr;
+            rc = PHYSFS_readBytes(f1, buffer1 + buffer1len, readlen);
+            if (rc < 0)
+            {
+                printf("(Error condition in reading '%s'. Reason: [%s])\n\n",
+                       fname1, PHYSFS_getLastError());
+                free(buffer1);
+                free(buffer2);
+                PHYSFS_close(f1);
+                PHYSFS_close(f2);
+                return 1;
+            } /* if */
+            buffer1len += rc;
+
+            ptr = realloc(buffer2, buffer2len + readlen);
+            if (!ptr)
+            {
+                printf("(Out of memory.)\n\n");
+                free(buffer1);
+                free(buffer2);
+                PHYSFS_close(f1);
+                PHYSFS_close(f2);
+                return 1;
+            } /* if */
+
+            buffer2 = ptr;
+            rc = PHYSFS_readBytes(f2, buffer2 + buffer2len, readlen);
+            if (rc < 0)
+            {
+                printf("(Error condition in reading '%s'. Reason: [%s])\n\n",
+                       fname2, PHYSFS_getLastError());
+                free(buffer1);
+                free(buffer2);
+                PHYSFS_close(f1);
+                PHYSFS_close(f2);
+                return 1;
+            } /* if */
+            buffer2len += rc;
+        } while (!PHYSFS_eof(f1) || !PHYSFS_eof(f2));
+
+        printf("file '%s' ...\n\n", fname1);
+        for (i = 0; i < buffer1len; i++)
+            fputc((int) buffer1[i], stdout);
+        free(buffer1);
+
+        printf("\n\nfile '%s' ...\n\n", fname2);
+        for (i = 0; i < buffer2len; i++)
+            fputc((int) buffer2[i], stdout);
+        free(buffer2);
+
+        printf("\n\n");
+    } /* else */
+
+    if (f1)
+        PHYSFS_close(f1);
+
+    if (f2)
+        PHYSFS_close(f2);
+
+    return 1;
+} /* cmd_cat2 */
+
 
 #define CRC32_BUFFERSIZE 512
 static int cmd_crc32(char *args)
@@ -1179,6 +1330,7 @@ static const command_info commands[] =
     { "isdir",          cmd_isdir,          1, "<fileToCheck>"              },
     { "issymlink",      cmd_issymlink,      1, "<fileToCheck>"              },
     { "cat",            cmd_cat,            1, "<fileToCat>"                },
+    { "cat2",           cmd_cat2,           2, "<fileToCat1> <fileToCat2>"  },
     { "filelength",     cmd_filelength,     1, "<fileToCheck>"              },
     { "stat",           cmd_stat,           1, "<fileToStat>"               },
     { "append",         cmd_append,         1, "<fileToAppend>"             },
