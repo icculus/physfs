@@ -2908,17 +2908,22 @@ static SRes SzReadAndDecodePackedStreams(
   UInt64 dataStartPos = 0;
   UInt32 fo;
   CSubStreamInfo ssi;
+  UInt32 numFolders;
 
   RINOK(SzReadStreamsInfo(p, sd, numFoldersMax, NULL, 0, &dataStartPos, &ssi, allocTemp));
-  
-  dataStartPos += baseOffset;
-  if (p->NumFolders == 0)
+
+  numFolders = p->NumFolders;
+  if (numFolders == 0)
     return SZ_ERROR_ARCHIVE;
- 
-  for (fo = 0; fo < p->NumFolders; fo++)
+  else if (numFolders > numFoldersMax)
+    return SZ_ERROR_UNSUPPORTED;
+
+  dataStartPos += baseOffset;
+
+  for (fo = 0; fo < numFolders; fo++)
     Buf_Init(tempBufs + fo);
   
-  for (fo = 0; fo < p->NumFolders; fo++)
+  for (fo = 0; fo < numFolders; fo++)
   {
     CBuf *tempBuf = tempBufs + fo;
     UInt64 unpackSize = SzAr_GetFolderUnpackSize(p, fo);
@@ -2928,7 +2933,7 @@ static SRes SzReadAndDecodePackedStreams(
       return SZ_ERROR_MEM;
   }
   
-  for (fo = 0; fo < p->NumFolders; fo++)
+  for (fo = 0; fo < numFolders; fo++)
   {
     const CBuf *tempBuf = tempBufs + fo;
     RINOK(LookInStream_SeekTo(inStream, dataStartPos));
