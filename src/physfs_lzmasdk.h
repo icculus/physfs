@@ -86,7 +86,7 @@ typedef unsigned long UInt64;
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__WATCOMC__)
 typedef __int64 Int64;
 typedef unsigned __int64 UInt64;
-#define UINT64_CONST(n) n
+#define UINT64_CONST(n) n ## ui64
 #else
 typedef long long int Int64;
 typedef unsigned long long int UInt64;
@@ -2174,7 +2174,7 @@ static SRes SzGetNextFolderItem(CSzFolder *f, CSzData *sd)
       sd->Data++;
       sd->Size--;
     }
-    if (id > (UInt32)0xFFFFFFFF)
+    if (id > UINT64_CONST(0xFFFFFFFF))
       return SZ_ERROR_UNSUPPORTED;
     coder->MethodID = (UInt32)id;
     
