@@ -151,9 +151,6 @@ typedef struct
        (output(*size) < input(*size)) is allowed */
 } ISeqInStream;
 
-/* it can return SZ_ERROR_INPUT_EOF */
-static SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType);
-
 typedef struct
 {
   size_t (*Write)(void *p, const void *buf, size_t size);
@@ -188,7 +185,6 @@ typedef struct
   SRes (*Seek)(void *p, Int64 *pos, ESzSeek origin);
 } ILookInStream;
 
-static SRes LookInStream_LookRead(ILookInStream *stream, void *buf, size_t *size);
 static SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset);
 
 /* reads via ILookInStream::Read */
@@ -467,8 +463,6 @@ EXTERN_C_END
 /*#include "7zTypes.h" */
 
 EXTERN_C_BEGIN
-
-/*static UInt32 g_CrcTable[];*/
 
 /* Call CrcGenerateTable one time before other CRC functions */
 static void MY_FAST_CALL CrcGenerateTable(void);
@@ -1603,34 +1597,10 @@ static Bool CPU_Sys_Is_SSE_Supported()
 
 /*#include "7zTypes.h"*/
 
-static SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType)
-{
-  while (size != 0)
-  {
-    size_t processed = size;
-    RINOK(stream->Read(stream, buf, &processed));
-    if (processed == 0)
-      return errorType;
-    buf = (void *)((Byte *)buf + processed);
-    size -= processed;
-  }
-  return SZ_OK;
-}
-
 static SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset)
 {
   Int64 t = offset;
   return stream->Seek(stream, &t, SZ_SEEK_SET);
-}
-
-static SRes LookInStream_LookRead(ILookInStream *stream, void *buf, size_t *size)
-{
-  const void *lookBuf;
-  if (*size == 0)
-    return SZ_OK;
-  RINOK(stream->Look(stream, &lookBuf, size));
-  memcpy(buf, lookBuf, *size);
-  return stream->Skip(stream, *size);
 }
 
 static SRes LookInStream_Read2(ILookInStream *stream, void *buf, size_t size, SRes errorType)
@@ -5744,38 +5714,6 @@ static SRes LzmaDec_AllocateProbs(CLzmaDec *p, const Byte *props, unsigned props
   CLzmaProps propNew;
   RINOK(LzmaProps_Decode(&propNew, props, propsSize));
   RINOK(LzmaDec_AllocateProbs2(p, &propNew, alloc));
-  p->prop = propNew;
-  return SZ_OK;
-}
-
-static SRes LzmaDec_Allocate(CLzmaDec *p, const Byte *props, unsigned propsSize, ISzAlloc *alloc)
-{
-  CLzmaProps propNew;
-  SizeT dicBufSize;
-  RINOK(LzmaProps_Decode(&propNew, props, propsSize));
-  RINOK(LzmaDec_AllocateProbs2(p, &propNew, alloc));
-
-  {
-    UInt32 dictSize = propNew.dicSize;
-    SizeT mask = ((UInt32)1 << 12) - 1;
-         if (dictSize >= ((UInt32)1 << 30)) mask = ((UInt32)1 << 22) - 1;
-    else if (dictSize >= ((UInt32)1 << 22)) mask = ((UInt32)1 << 20) - 1;;
-    dicBufSize = ((SizeT)dictSize + mask) & ~mask;
-    if (dicBufSize < dictSize)
-      dicBufSize = dictSize;
-  }
-
-  if (!p->dic || dicBufSize != p->dicBufSize)
-  {
-    LzmaDec_FreeDict(p, alloc);
-    p->dic = (Byte *)alloc->Alloc(alloc, dicBufSize);
-    if (!p->dic)
-    {
-      LzmaDec_FreeProbs(p, alloc);
-      return SZ_ERROR_MEM;
-    }
-  }
-  p->dicBufSize = dicBufSize;
   p->prop = propNew;
   return SZ_OK;
 }
