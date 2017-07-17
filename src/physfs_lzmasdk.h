@@ -2905,7 +2905,7 @@ static SRes SzReadAndDecodePackedStreams(
     CSzAr *p,
     ISzAlloc *allocTemp)
 {
-  UInt64 dataStartPos;
+  UInt64 dataStartPos = 0;
   UInt32 fo;
   CSubStreamInfo ssi;
 
