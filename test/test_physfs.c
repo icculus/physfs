@@ -972,7 +972,7 @@ static int cmd_cat2(char *args)
                 PHYSFS_close(f2);
                 return 1;
             } /* if */
-            buffer1len += rc;
+            buffer1len += (size_t) rc;
 
             ptr = realloc(buffer2, buffer2len + readlen);
             if (!ptr)
@@ -997,7 +997,7 @@ static int cmd_cat2(char *args)
                 PHYSFS_close(f2);
                 return 1;
             } /* if */
-            buffer2len += rc;
+            buffer2len += (size_t) rc;
         } while (!PHYSFS_eof(f1) || !PHYSFS_eof(f2));
 
         printf("file '%s' ...\n\n", fname1);
