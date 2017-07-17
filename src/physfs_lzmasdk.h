@@ -468,7 +468,7 @@ EXTERN_C_END
 
 EXTERN_C_BEGIN
 
-static UInt32 g_CrcTable[];
+/*static UInt32 g_CrcTable[];*/
 
 /* Call CrcGenerateTable one time before other CRC functions */
 static void MY_FAST_CALL CrcGenerateTable(void);
