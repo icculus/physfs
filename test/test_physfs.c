@@ -873,8 +873,8 @@ static int cmd_cat(char *args)
 
 static int cmd_cat2(char *args)
 {
-    PHYSFS_File *f1;
-    PHYSFS_File *f2;
+    PHYSFS_File *f1 = NULL;
+    PHYSFS_File *f2 = NULL;
     char *fname1;
     char *fname2;
     char *ptr;
