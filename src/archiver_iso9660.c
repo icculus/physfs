@@ -884,14 +884,14 @@ static int ISO9660_stat(void *opaque, const char *name, PHYSFS_Stat *stat)
                 descriptor.extentpos, &extattr), -1);
         stat->createtime = iso_volume_mktime(&extattr.create_time);
         stat->modtime = iso_volume_mktime(&extattr.mod_time);
-        stat->accesstime = iso_volume_mktime(&extattr.mod_time);
     } /* if */
     else
     {
         stat->createtime = iso_mktime(&descriptor.recordtime);
         stat->modtime = iso_mktime(&descriptor.recordtime);
-        stat->accesstime = iso_mktime(&descriptor.recordtime);
     } /* else */
+
+    stat->accesstime = -1;
 
     if (descriptor.flags.directory)
     {
