@@ -21,13 +21,3 @@
 
        Ryan C. Gordon <icculus@icculus.org>
 
-
-
-
-Notes, separate from the license. This is not legal advice.
-
-Versions of PhysicsFS prior to 0.1.9 are licensed under the GNU Lesser General
- Public License, which restricts you significantly more. For your own safety,
- please make sure you've got 0.1.9 or later if you plan to use physfs in a
- commercial or closed-source project.
-
