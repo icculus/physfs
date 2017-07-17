@@ -584,9 +584,9 @@ Stop_Compiling_Bad_Endian
 #define GetUi32(p) (*(const UInt32 *)(const void *)(p))
 #define GetUi64(p) (*(const UInt64 *)(const void *)(p))
 
-#define SetUi16(p, v) { *(UInt16 *)(p) = (v); }
-#define SetUi32(p, v) { *(UInt32 *)(p) = (v); }
-#define SetUi64(p, v) { *(UInt64 *)(p) = (v); }
+#define SetUi16(p, v) { *(UInt16 *)((char *)(p)) = (v); }
+#define SetUi32(p, v) { *(UInt32 *)((char *)(p)) = (v); }
+#define SetUi64(p, v) { *(UInt64 *)((char *)(p)) = (v); }
 
 #else
 
