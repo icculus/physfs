@@ -3052,8 +3052,6 @@ static __PHYSFS_DirTreeEntry *addAncestors(__PHYSFS_DirTree *dt, char *name)
 
     if (sep)
     {
-        const size_t namelen = (sep - name) + 1;
-
         *sep = '\0';  /* chop off last piece. */
         retval = (__PHYSFS_DirTreeEntry *) __PHYSFS_DirTreeFind(dt, name);
 
