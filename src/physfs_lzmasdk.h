@@ -1571,21 +1571,6 @@ static Bool CPU_Is_InOrder()
   return True;
 }
 
-#if !defined(MY_CPU_AMD64) && defined(_WIN32)
-#include <windows.h>
-static Bool CPU_Sys_Is_SSE_Supported()
-{
-  OSVERSIONINFO vi;
-  vi.dwOSVersionInfoSize = sizeof(vi);
-  if (!GetVersionEx(&vi))
-    return False;
-  return (vi.dwMajorVersion >= 5);
-}
-#define CHECK_SYS_SSE_SUPPORT if (!CPU_Sys_Is_SSE_Supported()) return False;
-#else
-#define CHECK_SYS_SSE_SUPPORT
-#endif
-
 #endif
 
 /* 7zStream.c -- 7z Stream functions
