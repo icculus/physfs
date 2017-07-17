@@ -350,8 +350,6 @@ static int SZIP_stat(void *opaque, const char *path, PHYSFS_Stat *stat)
     SZIPinfo *info = (SZIPinfo *) opaque;
     SZIPentry *entry;
     PHYSFS_uint32 idx;
-    const CNtfsFileTime *ctimeval = NULL;
-    const CNtfsFileTime *mtimeval = NULL;
 
     entry = (SZIPentry *) __PHYSFS_DirTreeFind(&info->tree, path);
     BAIL_IF_ERRPASS(!entry, 0);
