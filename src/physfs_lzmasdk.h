@@ -152,9 +152,7 @@ typedef struct
 } ISeqInStream;
 
 /* it can return SZ_ERROR_INPUT_EOF */
-static SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size);
 static SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes errorType);
-static SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf);
 
 typedef struct
 {
@@ -397,8 +395,6 @@ typedef struct
 
 static void SzArEx_Init(CSzArEx *p);
 static void SzArEx_Free(CSzArEx *p, ISzAlloc *alloc);
-static UInt64 SzArEx_GetFolderStreamPos(const CSzArEx *p, UInt32 folderIndex, UInt32 indexInFolder);
-static int SzArEx_GetFolderFullPackSize(const CSzArEx *p, UInt32 folderIndex, UInt64 *resSize);
 
 /*
 if dest == NULL, the return value specifies the required size of the buffer,
@@ -708,7 +704,6 @@ static int x86cpuid_GetFirm(const Cx86cpuid *p);
 #define x86cpuid_GetStepping(ver) (ver & 0xF)
 
 static Bool CPU_Is_InOrder();
-static Bool CPU_Is_Aes_Supported();
 
 #endif
 
@@ -735,18 +730,6 @@ typedef struct
 static void Buf_Init(CBuf *p);
 static int Buf_Create(CBuf *p, size_t size, ISzAlloc *alloc);
 static void Buf_Free(CBuf *p, ISzAlloc *alloc);
-
-typedef struct
-{
-  Byte *data;
-  size_t size;
-  size_t pos;
-} CDynBuf;
-
-static void DynBuf_Construct(CDynBuf *p);
-static void DynBuf_SeekToBeg(CDynBuf *p);
-static int DynBuf_Write(CDynBuf *p, const Byte *buf, size_t size, ISzAlloc *alloc);
-static void DynBuf_Free(CDynBuf *p, ISzAlloc *alloc);
 
 EXTERN_C_END
 
@@ -837,59 +820,6 @@ static SRes Bcj2Dec_Decode(CBcj2Dec *p);
 
 #define Bcj2Dec_IsFinished(_p_) ((_p_)->code == 0)
 
-
-
-typedef enum
-{
-  BCJ2_ENC_FINISH_MODE_CONTINUE,
-  BCJ2_ENC_FINISH_MODE_END_BLOCK,
-  BCJ2_ENC_FINISH_MODE_END_STREAM
-} EBcj2Enc_FinishMode;
-
-typedef struct
-{
-  Byte *bufs[BCJ2_NUM_STREAMS];
-  const Byte *lims[BCJ2_NUM_STREAMS];
-  const Byte *src;
-  const Byte *srcLim;
-
-  unsigned state;
-  EBcj2Enc_FinishMode finishMode;
-
-  Byte prevByte;
-
-  Byte cache;
-  UInt32 range;
-  UInt64 low;
-  UInt64 cacheSize;
-
-  UInt32 ip;
-
-  /* 32-bit ralative offset in JUMP/CALL commands is
-       - (mod 4 GB)   in 32-bit mode
-       - signed Int32 in 64-bit mode
-     We use (mod 4 GB) check for fileSize.
-     Use fileSize up to 2 GB, if you want to support 32-bit and 64-bit code conversion. */
-  UInt32 fileIp;
-  UInt32 fileSize;    /* (fileSize <= ((UInt32)1 << 31)), 0 means no_limit */
-  UInt32 relatLimit;  /* (relatLimit <= ((UInt32)1 << 31)), 0 means desable_conversion */
-
-  UInt32 tempTarget;
-  unsigned tempPos;
-  Byte temp[4 * 2];
-
-  unsigned flushPos;
-  
-  UInt16 probs[2 + 256];
-} CBcj2Enc;
-
-static void Bcj2Enc_Init(CBcj2Enc *p);
-static void Bcj2Enc_Encode(CBcj2Enc *p);
-
-#define Bcj2Enc_Get_InputData_Size(p) ((SizeT)((p)->srcLim - (p)->src) + (p)->tempPos)
-#define Bcj2Enc_IsFinished(p) ((p)->flushPos == 5)
-
-
 #define BCJ2_RELAT_LIMIT_NUM_BITS 26
 #define BCJ2_RELAT_LIMIT ((UInt32)1 << BCJ2_RELAT_LIMIT_NUM_BITS)
 
@@ -978,7 +908,6 @@ EXTERN_C_BEGIN
 #define DELTA_STATE_SIZE 256
 
 static void Delta_Init(Byte *state);
-static void Delta_Encode(Byte *state, unsigned delta, Byte *data, SizeT size);
 static void Delta_Decode(Byte *state, unsigned delta, Byte *data, SizeT size);
 
 EXTERN_C_END
@@ -1119,9 +1048,6 @@ LzmaDec_Allocate* can return:
 static SRes LzmaDec_AllocateProbs(CLzmaDec *p, const Byte *props, unsigned propsSize, ISzAlloc *alloc);
 static void LzmaDec_FreeProbs(CLzmaDec *p, ISzAlloc *alloc);
 
-static SRes LzmaDec_Allocate(CLzmaDec *state, const Byte *prop, unsigned propsSize, ISzAlloc *alloc);
-static void LzmaDec_Free(CLzmaDec *state, ISzAlloc *alloc);
-
 /* ---------- Dictionary Interface ---------- */
 
 /* You can use it, if you want to eliminate the overhead for data copying from
@@ -1166,49 +1092,6 @@ Returns:
 static SRes LzmaDec_DecodeToDic(CLzmaDec *p, SizeT dicLimit,
     const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
 
-
-/* ---------- Buffer Interface ---------- */
-
-/* It's zlib-like interface.
-   See LzmaDec_DecodeToDic description for information about STEPS and return results,
-   but you must use LzmaDec_DecodeToBuf instead of LzmaDec_DecodeToDic and you don't need
-   to work with CLzmaDec variables manually.
-
-finishMode:
-  It has meaning only if the decoding reaches output limit (*destLen).
-  LZMA_FINISH_ANY - Decode just destLen bytes.
-  LZMA_FINISH_END - Stream must be finished after (*destLen).
-*/
-
-static SRes LzmaDec_DecodeToBuf(CLzmaDec *p, Byte *dest, SizeT *destLen,
-    const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
-
-
-/* ---------- One Call Interface ---------- */
-
-/* LzmaDecode
-
-finishMode:
-  It has meaning only if the decoding reaches output limit (*destLen).
-  LZMA_FINISH_ANY - Decode just destLen bytes.
-  LZMA_FINISH_END - Stream must be finished after (*destLen).
-
-Returns:
-  SZ_OK
-    status:
-      LZMA_STATUS_FINISHED_WITH_MARK
-      LZMA_STATUS_NOT_FINISHED
-      LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK
-  SZ_ERROR_DATA - Data error
-  SZ_ERROR_MEM  - Memory allocation error
-  SZ_ERROR_UNSUPPORTED - Unsupported properties
-  SZ_ERROR_INPUT_EOF - It needs more bytes in input buffer (src).
-*/
-
-static SRes LzmaDecode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
-    const Byte *propData, unsigned propSize, ELzmaFinishMode finishMode,
-    ELzmaStatus *status, ISzAlloc *alloc);
-
 EXTERN_C_END
 
 #endif
@@ -1242,7 +1125,6 @@ typedef struct
 #define Lzma2Dec_Free(p, alloc) LzmaDec_Free(&(p)->decoder, alloc);
 
 static SRes Lzma2Dec_AllocateProbs(CLzma2Dec *p, Byte prop, ISzAlloc *alloc);
-static SRes Lzma2Dec_Allocate(CLzma2Dec *p, Byte prop, ISzAlloc *alloc);
 static void Lzma2Dec_Init(CLzma2Dec *p);
 
 
@@ -1264,31 +1146,6 @@ Returns:
 static SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
     const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
 
-static SRes Lzma2Dec_DecodeToBuf(CLzma2Dec *p, Byte *dest, SizeT *destLen,
-    const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status);
-
-
-/* ---------- One Call Interface ---------- */
-
-/*
-finishMode:
-  It has meaning only if the decoding reaches output limit (*destLen).
-  LZMA_FINISH_ANY - use smallest number of input bytes
-  LZMA_FINISH_END - read EndOfStream marker after decoding
-
-Returns:
-  SZ_OK
-    status:
-      LZMA_STATUS_FINISHED_WITH_MARK
-      LZMA_STATUS_NOT_FINISHED
-  SZ_ERROR_DATA - Data error
-  SZ_ERROR_MEM  - Memory allocation error
-  SZ_ERROR_UNSUPPORTED - Unsupported properties
-  SZ_ERROR_INPUT_EOF - It needs more bytes in input buffer (src).
-*/
-
-static SRes Lzma2Decode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
-    Byte prop, ELzmaFinishMode finishMode, ELzmaStatus *status, ISzAlloc *alloc);
 
 EXTERN_C_END
 
@@ -1335,11 +1192,6 @@ static CRC_FUNC g_CrcUpdate;
 
 static UInt32 g_CrcTable[256 * CRC_NUM_TABLES];
 
-static UInt32 MY_FAST_CALL CrcUpdate(UInt32 v, const void *data, size_t size)
-{
-  return g_CrcUpdate(v, data, size, g_CrcTable);
-}
-
 static UInt32 MY_FAST_CALL CrcCalc(const void *data, size_t size)
 {
   return g_CrcUpdate(CRC_INIT_VAL, data, size, g_CrcTable) ^ CRC_INIT_VAL;
@@ -1347,6 +1199,7 @@ static UInt32 MY_FAST_CALL CrcCalc(const void *data, size_t size)
 
 #define CRC_UPDATE_BYTE_2(crc, b) (table[((crc) ^ (b)) & 0xFF] ^ ((crc) >> 8))
 
+#if CRC_NUM_TABLES < 4
 static UInt32 MY_FAST_CALL CrcUpdateT1(UInt32 v, const void *data, size_t size, const UInt32 *table)
 {
   const Byte *p = (const Byte *)data;
@@ -1355,6 +1208,7 @@ static UInt32 MY_FAST_CALL CrcUpdateT1(UInt32 v, const void *data, size_t size, 
     v = CRC_UPDATE_BYTE_2(v, *p);
   return v;
 }
+#endif
 
 static void MY_FAST_CALL CrcGenerateTable()
 {
@@ -1740,15 +1594,6 @@ static Bool CPU_Sys_Is_SSE_Supported()
 #define CHECK_SYS_SSE_SUPPORT
 #endif
 
-static Bool CPU_Is_Aes_Supported()
-{
-  Cx86cpuid p;
-  CHECK_SYS_SSE_SUPPORT
-  if (!x86cpuid_CheckAndRead(&p))
-    return False;
-  return (p.c >> 25) & 1;
-}
-
 #endif
 
 /* 7zStream.c -- 7z Stream functions
@@ -1907,20 +1752,10 @@ static SRes SecToLook_Read(void *pp, void *buf, size_t *size)
   return LookInStream_LookRead(p->realStream, buf, size);
 }
 
-static void SecToLook_CreateVTable(CSecToLook *p)
-{
-  p->s.Read = SecToLook_Read;
-}
-
 static SRes SecToRead_Read(void *pp, void *buf, size_t *size)
 {
   CSecToRead *p = (CSecToRead *)pp;
   return p->realStream->Read(p->realStream, buf, size);
-}
-
-static void SecToRead_CreateVTable(CSecToRead *p)
-{
-  p->s.Read = SecToRead_Read;
 }
 
 /* 7zArcIn.c -- 7z Input functions
@@ -4917,29 +4752,6 @@ static void MyMemCpy(Byte *dest, const Byte *src, unsigned size)
     dest[i] = src[i];
 }
 
-static void Delta_Encode(Byte *state, unsigned delta, Byte *data, SizeT size)
-{
-  Byte buf[DELTA_STATE_SIZE];
-  unsigned j = 0;
-  MyMemCpy(buf, state, delta);
-  {
-    SizeT i;
-    for (i = 0; i < size;)
-    {
-      for (j = 0; j < delta && i < size; i++, j++)
-      {
-        Byte b = data[i];
-        data[i] = (Byte)(b - buf[j]);
-        buf[j] = b;
-      }
-    }
-  }
-  if (j == delta)
-    j = 0;
-  MyMemCpy(state, buf + j, delta - j);
-  MyMemCpy(state + delta - j, buf, j);
-}
-
 static void Delta_Decode(Byte *state, unsigned delta, Byte *data, SizeT size)
 {
   Byte buf[DELTA_STATE_SIZE];
@@ -6421,28 +6233,6 @@ static SRes Lzma2Dec_DecodeToBuf(CLzma2Dec *p, Byte *dest, SizeT *destLen, const
     if (outSizeCur == 0 || outSize == 0)
       return SZ_OK;
   }
-}
-
-static SRes Lzma2Decode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
-    Byte prop, ELzmaFinishMode finishMode, ELzmaStatus *status, ISzAlloc *alloc)
-{
-  CLzma2Dec p;
-  SRes res;
-  SizeT outSize = *destLen, inSize = *srcLen;
-  *destLen = *srcLen = 0;
-  *status = LZMA_STATUS_NOT_SPECIFIED;
-  Lzma2Dec_Construct(&p);
-  RINOK(Lzma2Dec_AllocateProbs(&p, prop, alloc));
-  p.decoder.dic = dest;
-  p.decoder.dicBufSize = outSize;
-  Lzma2Dec_Init(&p);
-  *srcLen = inSize;
-  res = Lzma2Dec_DecodeToDic(&p, outSize, src, srcLen, finishMode, status);
-  *destLen = p.decoder.dicPos;
-  if (res == SZ_OK && *status == LZMA_STATUS_NEEDS_MORE_INPUT)
-    res = SZ_ERROR_INPUT_EOF;
-  Lzma2Dec_FreeProbs(&p, alloc);
-  return res;
 }
 
 #endif
