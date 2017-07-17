@@ -1503,7 +1503,10 @@ static void MyCPUID(UInt32 function, UInt32 *a, UInt32 *b, UInt32 *c, UInt32 *d)
     : "0" (function)) ;
 
   #endif
-  
+
+  #elif defined(__WATCOMC__)
+  *a = *b = *c = *d = 0;  /* !!! FIXME: oh well for now. */
+
   #else
 
   int CPUInfo[4];
