@@ -1545,6 +1545,7 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
     } /* if */
 
     BAIL_IF_ERRPASS(!entry, NULL);
+    BAIL_IF(entry->tree.isdir, PHYSFS_ERR_NOT_A_FILE, NULL);
 
     retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
     GOTO_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, ZIP_openRead_failed);
