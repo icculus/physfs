@@ -215,15 +215,11 @@ typedef struct
   ILookInStream *realStream;
 } CSecToLook;
 
-static void SecToLook_CreateVTable(CSecToLook *p);
-
 typedef struct
 {
   ISeqInStream s;
   ILookInStream *realStream;
 } CSecToRead;
-
-static void SecToRead_CreateVTable(CSecToRead *p);
 
 typedef struct
 {
@@ -481,7 +477,6 @@ static void MY_FAST_CALL CrcGenerateTable(void);
 #define CRC_GET_DIGEST(crc) ((crc) ^ CRC_INIT_VAL)
 #define CRC_UPDATE_BYTE(crc, b) (g_CrcTable[((crc) ^ (b)) & 0xFF] ^ ((crc) >> 8))
 
-static UInt32 MY_FAST_CALL CrcUpdate(UInt32 crc, const void *data, size_t size);
 static UInt32 MY_FAST_CALL CrcCalc(const void *data, size_t size);
 
 EXTERN_C_END
@@ -1619,18 +1614,6 @@ static SRes SeqInStream_Read2(ISeqInStream *stream, void *buf, size_t size, SRes
   return SZ_OK;
 }
 
-static SRes SeqInStream_Read(ISeqInStream *stream, void *buf, size_t size)
-{
-  return SeqInStream_Read2(stream, buf, size, SZ_ERROR_INPUT_EOF);
-}
-
-static SRes SeqInStream_ReadByte(ISeqInStream *stream, Byte *buf)
-{
-  size_t processed = 1;
-  RINOK(stream->Read(stream, buf, &processed));
-  return (processed == 1) ? SZ_OK : SZ_ERROR_INPUT_EOF;
-}
-
 static SRes LookInStream_SeekTo(ILookInStream *stream, UInt64 offset)
 {
   Int64 t = offset;
@@ -1746,17 +1729,6 @@ static void LookToRead_Init(CLookToRead *p)
   p->pos = p->size = 0;
 }
 
-static SRes SecToLook_Read(void *pp, void *buf, size_t *size)
-{
-  CSecToLook *p = (CSecToLook *)pp;
-  return LookInStream_LookRead(p->realStream, buf, size);
-}
-
-static SRes SecToRead_Read(void *pp, void *buf, size_t *size)
-{
-  CSecToRead *p = (CSecToRead *)pp;
-  return p->realStream->Read(p->realStream, buf, size);
-}
 
 /* 7zArcIn.c -- 7z Input functions
 2016-05-16 : Igor Pavlov : Public domain */
@@ -5712,46 +5684,6 @@ static SRes LzmaDec_DecodeToDic(CLzmaDec *p, SizeT dicLimit, const Byte *src, Si
   return (p->code == 0) ? SZ_OK : SZ_ERROR_DATA;
 }
 
-static SRes LzmaDec_DecodeToBuf(CLzmaDec *p, Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status)
-{
-  SizeT outSize = *destLen;
-  SizeT inSize = *srcLen;
-  *srcLen = *destLen = 0;
-  for (;;)
-  {
-    SizeT inSizeCur = inSize, outSizeCur, dicPos;
-    ELzmaFinishMode curFinishMode;
-    SRes res;
-    if (p->dicPos == p->dicBufSize)
-      p->dicPos = 0;
-    dicPos = p->dicPos;
-    if (outSize > p->dicBufSize - dicPos)
-    {
-      outSizeCur = p->dicBufSize;
-      curFinishMode = LZMA_FINISH_ANY;
-    }
-    else
-    {
-      outSizeCur = dicPos + outSize;
-      curFinishMode = finishMode;
-    }
-
-    res = LzmaDec_DecodeToDic(p, outSizeCur, src, &inSizeCur, curFinishMode, status);
-    src += inSizeCur;
-    inSize -= inSizeCur;
-    *srcLen += inSizeCur;
-    outSizeCur = p->dicPos - dicPos;
-    memcpy(dest, p->dic + dicPos, outSizeCur);
-    dest += outSizeCur;
-    outSize -= outSizeCur;
-    *destLen += outSizeCur;
-    if (res != 0)
-      return res;
-    if (outSizeCur == 0 || outSize == 0)
-      return SZ_OK;
-  }
-}
-
 static void LzmaDec_FreeProbs(CLzmaDec *p, ISzAlloc *alloc)
 {
   alloc->Free(alloc, p->probs);
@@ -5762,12 +5694,6 @@ static void LzmaDec_FreeDict(CLzmaDec *p, ISzAlloc *alloc)
 {
   alloc->Free(alloc, p->dic);
   p->dic = NULL;
-}
-
-static void LzmaDec_Free(CLzmaDec *p, ISzAlloc *alloc)
-{
-  LzmaDec_FreeProbs(p, alloc);
-  LzmaDec_FreeDict(p, alloc);
 }
 
 static SRes LzmaProps_Decode(CLzmaProps *p, const Byte *data, unsigned size)
@@ -5849,31 +5775,6 @@ static SRes LzmaDec_Allocate(CLzmaDec *p, const Byte *props, unsigned propsSize,
   p->dicBufSize = dicBufSize;
   p->prop = propNew;
   return SZ_OK;
-}
-
-static SRes LzmaDecode(Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen,
-    const Byte *propData, unsigned propSize, ELzmaFinishMode finishMode,
-    ELzmaStatus *status, ISzAlloc *alloc)
-{
-  CLzmaDec p;
-  SRes res;
-  SizeT outSize = *destLen, inSize = *srcLen;
-  *destLen = *srcLen = 0;
-  *status = LZMA_STATUS_NOT_SPECIFIED;
-  if (inSize < RC_INIT_SIZE)
-    return SZ_ERROR_INPUT_EOF;
-  LzmaDec_Construct(&p);
-  RINOK(LzmaDec_AllocateProbs(&p, propData, propSize, alloc));
-  p.dic = dest;
-  p.dicBufSize = outSize;
-  LzmaDec_Init(&p);
-  *srcLen = inSize;
-  res = LzmaDec_DecodeToDic(&p, outSize, src, srcLen, finishMode, status);
-  *destLen = p.dicPos;
-  if (res == SZ_OK && *status == LZMA_STATUS_NEEDS_MORE_INPUT)
-    res = SZ_ERROR_INPUT_EOF;
-  LzmaDec_FreeProbs(&p, alloc);
-  return res;
 }
 
 /* Lzma2Dec.c -- LZMA2 Decoder
@@ -5959,13 +5860,6 @@ static SRes Lzma2Dec_AllocateProbs(CLzma2Dec *p, Byte prop, ISzAlloc *alloc)
   Byte props[LZMA_PROPS_SIZE];
   RINOK(Lzma2Dec_GetOldProps(prop, props));
   return LzmaDec_AllocateProbs(&p->decoder, props, LZMA_PROPS_SIZE, alloc);
-}
-
-static SRes Lzma2Dec_Allocate(CLzma2Dec *p, Byte prop, ISzAlloc *alloc)
-{
-  Byte props[LZMA_PROPS_SIZE];
-  RINOK(Lzma2Dec_GetOldProps(prop, props));
-  return LzmaDec_Allocate(&p->decoder, props, LZMA_PROPS_SIZE, alloc);
 }
 
 static void Lzma2Dec_Init(CLzma2Dec *p)
@@ -6194,45 +6088,6 @@ static SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
   
   *status = LZMA_STATUS_FINISHED_WITH_MARK;
   return SZ_OK;
-}
-
-static SRes Lzma2Dec_DecodeToBuf(CLzma2Dec *p, Byte *dest, SizeT *destLen, const Byte *src, SizeT *srcLen, ELzmaFinishMode finishMode, ELzmaStatus *status)
-{
-  SizeT outSize = *destLen, inSize = *srcLen;
-  *srcLen = *destLen = 0;
-  for (;;)
-  {
-    SizeT srcSizeCur = inSize, outSizeCur, dicPos;
-    ELzmaFinishMode curFinishMode;
-    SRes res;
-    if (p->decoder.dicPos == p->decoder.dicBufSize)
-      p->decoder.dicPos = 0;
-    dicPos = p->decoder.dicPos;
-    if (outSize > p->decoder.dicBufSize - dicPos)
-    {
-      outSizeCur = p->decoder.dicBufSize;
-      curFinishMode = LZMA_FINISH_ANY;
-    }
-    else
-    {
-      outSizeCur = dicPos + outSize;
-      curFinishMode = finishMode;
-    }
-
-    res = Lzma2Dec_DecodeToDic(p, outSizeCur, src, &srcSizeCur, curFinishMode, status);
-    src += srcSizeCur;
-    inSize -= srcSizeCur;
-    *srcLen += srcSizeCur;
-    outSizeCur = p->decoder.dicPos - dicPos;
-    memcpy(dest, p->decoder.dic + dicPos, outSizeCur);
-    dest += outSizeCur;
-    outSize -= outSizeCur;
-    *destLen += outSizeCur;
-    if (res != 0)
-      return res;
-    if (outSizeCur == 0 || outSize == 0)
-      return SZ_OK;
-  }
 }
 
 #endif
