@@ -1661,7 +1661,7 @@ static int ZIP_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
 
     stat->modtime = ((entry) ? entry->last_mod_time : 0);
     stat->createtime = stat->modtime;
-    stat->accesstime = 0;
+    stat->accesstime = -1;
     stat->readonly = 1; /* .zip files are always read only */
 
     return 1;
