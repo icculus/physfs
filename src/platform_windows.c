@@ -17,6 +17,9 @@
 #undef UNICODE
 #endif
 
+/* !!! FIXME: maybe clean out the "allocator" macro, eventually. */
+#undef allocator  /* apparently Windows 10 SDK conflicts here. */
+
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 #include <userenv.h>
@@ -25,6 +28,11 @@
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
+
+#ifdef allocator  /* apparently Windows 10 SDK conflicts here. */
+#undef allocator
+#endif
+#define allocator __PHYSFS_AllocatorHooks
 
 #define LOWORDER_UINT64(pos) ((PHYSFS_uint32) (pos & 0xFFFFFFFF))
 #define HIGHORDER_UINT64(pos) ((PHYSFS_uint32) ((pos >> 32) & 0xFFFFFFFF))
