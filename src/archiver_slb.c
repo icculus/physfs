@@ -66,6 +66,13 @@ static void *SLB_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     PHYSFS_uint32 tocPos;
     void *unpkarc;
 
+    /* There's no identifier on an SLB file, so we assume it's _not_ if the
+       file count or tocPos is zero. Beyond that, we'll assume it's
+       bogus/corrupt if the entries' filenames don't start with '\' or the
+       tocPos is past the end of the file (seek will fail). This probably
+       covers all meaningful cases where we would accidentally accept a non-SLB
+       file with this archiver. */
+
     assert(io != NULL);  /* shouldn't ever happen. */
 
     BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
@@ -76,10 +83,12 @@ static void *SLB_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &count, sizeof (count)), NULL);
     count = PHYSFS_swapULE32(count);
+    BAIL_IF(!count, PHYSFS_ERR_UNSUPPORTED, NULL);
 
     /* offset of the table of contents */
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &tocPos, sizeof (tocPos)), NULL);
     tocPos = PHYSFS_swapULE32(tocPos);
+    BAIL_IF(!tocPos, PHYSFS_ERR_UNSUPPORTED, NULL);
     
     /* seek to the table of contents */
     BAIL_IF_ERRPASS(!io->seek(io, tocPos), NULL);
