@@ -264,8 +264,8 @@ void *UNPK_addEntry(void *opaque, char *name, const int isdir,
     entry = (UNPKentry *) __PHYSFS_DirTreeAdd(&info->tree, name, isdir);
     BAIL_IF_ERRPASS(!entry, NULL);
 
-    entry->startPos = pos;
-    entry->size = len;
+    entry->startPos = isdir ? 0 : pos;
+    entry->size = isdir ? 0 : len;
 
     return entry;
 } /* UNPK_addEntry */
