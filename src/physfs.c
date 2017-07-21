@@ -3008,9 +3008,7 @@ static void setDefaultAllocator(void)
 } /* setDefaultAllocator */
 
 
-int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt,
-                        const PHYSFS_uint64 entry_count,
-                        const size_t entrylen)
+int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen)
 {
     static char rootpath[2] = { '/', '\0' };
     size_t alloclen;
@@ -3024,7 +3022,7 @@ int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt,
     memset(dt->root, '\0', entrylen);
     dt->root->name = rootpath;
     dt->root->isdir = 1;
-    dt->hashBuckets = (size_t) (entry_count / 5);
+    dt->hashBuckets = 64;
     if (!dt->hashBuckets)
         dt->hashBuckets = 1;
     dt->entrylen = entrylen;

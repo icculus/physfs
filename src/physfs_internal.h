@@ -343,7 +343,7 @@ int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len);
 /* These are shared between some archivers. */
 
 void UNPK_closeArchive(void *opaque);
-void *UNPK_openArchive(PHYSFS_Io *io, const PHYSFS_uint64 entry_count);
+void *UNPK_openArchive(PHYSFS_Io *io);
 void *UNPK_addEntry(void *opaque, char *name, const int isdir,
                     const PHYSFS_uint64 pos, const PHYSFS_uint64 len);
 PHYSFS_Io *UNPK_openRead(void *opaque, const char *name);
@@ -377,9 +377,7 @@ typedef struct __PHYSFS_DirTree
 } __PHYSFS_DirTree;
 
 
-int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt,
-                         const PHYSFS_uint64 entry_count,
-                         const size_t entrylen);
+int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen);
 void *__PHYSFS_DirTreeAdd(__PHYSFS_DirTree *dt, char *name, const int isdir);
 void *__PHYSFS_DirTreeFind(__PHYSFS_DirTree *dt, const char *path);
 void __PHYSFS_DirTreeEnumerateFiles(void *opaque, const char *dname,

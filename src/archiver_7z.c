@@ -183,11 +183,11 @@ static int szipLoadEntry(SZIPinfo *info, const PHYSFS_uint32 idx)
 
 static int szipLoadEntries(SZIPinfo *info)
 {
-    const PHYSFS_uint32 count = info->db.NumFiles;
     int retval = 0;
 
-    if (__PHYSFS_DirTreeInit(&info->tree, count, sizeof (SZIPentry)))
+    if (__PHYSFS_DirTreeInit(&info->tree, sizeof (SZIPentry)))
     {
+        const PHYSFS_uint32 count = info->db.NumFiles;
         PHYSFS_uint32 i;
         for (i = 0; i < count; i++)
             BAIL_IF_ERRPASS(!szipLoadEntry(info, i), 0);

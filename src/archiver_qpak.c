@@ -83,7 +83,7 @@ static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     BAIL_IF_ERRPASS(!io->seek(io, pos), NULL);
 
-    unpkarc = UNPK_openArchive(io, count);
+    unpkarc = UNPK_openArchive(io);
     BAIL_IF_ERRPASS(!unpkarc, NULL);
 
     if (!qpakLoadEntries(io, count, unpkarc))

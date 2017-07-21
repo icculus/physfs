@@ -93,7 +93,7 @@ static void *SLB_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     /* seek to the table of contents */
     BAIL_IF_ERRPASS(!io->seek(io, tocPos), NULL);
 
-    unpkarc = UNPK_openArchive(io, count);
+    unpkarc = UNPK_openArchive(io);
     BAIL_IF_ERRPASS(!unpkarc, NULL);
 
     if (!slbLoadEntries(io, count, unpkarc))
