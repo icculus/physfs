@@ -315,7 +315,7 @@ static void *ISO9660_openArchive(PHYSFS_Io *io, const char *filename, int forWri
 
     if (!iso9660LoadEntries(io, joliet, "", rootpos, rootpos + len, unpkarc))
     {
-        UNPK_closeArchive(unpkarc);
+        UNPK_abandonArchive(unpkarc);
         return NULL;
     } /* if */
 

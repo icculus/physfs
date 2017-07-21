@@ -342,6 +342,7 @@ int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len);
 
 /* These are shared between some archivers. */
 
+void UNPK_abandonArchive(void *opaque);
 void UNPK_closeArchive(void *opaque);
 void *UNPK_openArchive(PHYSFS_Io *io);
 void *UNPK_addEntry(void *opaque, char *name, const int isdir,

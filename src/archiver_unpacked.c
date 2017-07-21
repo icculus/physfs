@@ -51,6 +51,15 @@ void UNPK_closeArchive(void *opaque)
     } /* if */
 } /* UNPK_closeArchive */
 
+void UNPK_abandonArchive(void *opaque)
+{
+    UNPKinfo *info = ((UNPKinfo *) opaque);
+    if (info)
+    {
+        info->io = NULL;
+        UNPK_closeArchive(info);
+    } /* if */
+} /* UNPK_abandonArchive */
 
 static PHYSFS_sint64 UNPK_read(PHYSFS_Io *io, void *buffer, PHYSFS_uint64 len)
 {
