@@ -72,7 +72,7 @@ static void *HOG_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, buf, 3), NULL);
     BAIL_IF(memcmp(buf, "DHF", 3) != 0, PHYSFS_ERR_UNSUPPORTED, NULL);
 
-    unpkarc = UNPK_openArchive(io, count);
+    unpkarc = UNPK_openArchive(io);
     BAIL_IF_ERRPASS(!unpkarc, NULL);
 
     if (!hogLoadEntries(io, unpkarc))
