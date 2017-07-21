@@ -72,7 +72,7 @@ static void *MVL_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     if (!mvlLoadEntries(io, count, unpkarc))
     {
-        UNPK_closeArchive(unpkarc);
+        UNPK_abandonArchive(unpkarc);
         return NULL;
     } /* if */
 
