@@ -3,17 +3,18 @@
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *
- *  This file written by Christoph Nelles.
+ *  This file originally written by Christoph Nelles, but was largely
+ *  rewritten by Ryan C. Gordon (so please harass Ryan about bugs and not
+ *  Christoph).
  */
-
-/* !!! FIXME: this file needs Ryanification. */
 
 /*
  * Handles CD-ROM disk images (and raw CD-ROM devices).
  *
  * Not supported:
- * - RockRidge
+ * - Rock Ridge (needed for sparse files, device nodes and symlinks, etc).
  * - Non 2048 Sectors
+ * - Multiextents (4gb max file size without it).
  * - UDF
  *
  * Deviations from the standard
@@ -29,399 +30,117 @@
 
 #if PHYSFS_SUPPORTS_ISO9660
 
-#include <time.h>
+/* ISO9660 often stores values in both big and little endian formats: little
+   first, followed by big. While technically there might be different values
+   in each, we just always use the littleendian ones and swap ourselves. The
+   fields aren't aligned anyhow, so you have to serialize them in any case
+   to avoid crashes on many CPU archs in any case. */
 
-/* cache files smaller than this completely in memory */
-#define ISO9660_FULLCACHEMAXSIZE 2048
+static int iso9660LoadEntries(PHYSFS_Io *io, const int joliet,
+                              const char *base, const PHYSFS_uint64 dirstart,
+                              const PHYSFS_uint64 dirend, void *unpkarc);
 
-#pragma pack(1)     /* set alignment to 1 byte boundary */
-
-/* This is the format as defined by the standard
-typedef struct
+static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
+                           const char *base, PHYSFS_uint8 *fname,
+                           const int fnamelen, const PHYSFS_uint64 pos,
+                           const PHYSFS_uint64 len, void *unpkarc)
 {
-    PHYSFS_uint32 lsb;
-    PHYSFS_uint32 msb;
-} ISOBB32bit; // 32byte Both Byte type, means the value first in LSB then in MSB
+    char *fullpath;
+    char *fnamecpy;
+    size_t baselen;
+    size_t fullpathlen;
+    void *entry;
 
-typedef struct
-{
-    PHYSFS_uint16 lsb;
-    PHYSFS_uint16 msb;
-} ISOBB16bit; // 16byte Both Byte type, means the value first in LSB then in MSB
-*/
+    if (fnamelen == 1 && ((fname[0] == 0) || (fname[0] == 1)))
+        return 1;  /* Magic that represents "." and "..", ignore */
 
-/* define better ones to simplify coding (less if's) */
-#if PHYSFS_BYTEORDER == PHYSFS_LIL_ENDIAN
-#define ISOBB32bit(name) PHYSFS_uint32 name; PHYSFS_uint32 __dummy_##name;
-#define ISOBB16bit(name) PHYSFS_uint16 name; PHYSFS_uint16 __dummy_##name;
-#else
-#define ISOBB32bit(name) PHYSFS_uint32 __dummy_##name; PHYSFS_uint32 name;
-#define ISOBB16bit(name) PHYSFS_uint16 __dummy_##name; PHYSFS_uint16 name;
-#endif
+    BAIL_IF(fnamelen == 0, PHYSFS_ERR_CORRUPT, 0);
+    assert(fnamelen > 0);
+    assert(fnamelen <= 255);
+    BAIL_IF(joliet && (fnamelen % 2), PHYSFS_ERR_CORRUPT, 0);
 
-typedef struct
-{
-    char year[4];
-    char month[2];
-    char day[2];
-    char hour[2];
-    char minute[2];
-    char second[2];
-    char centisec[2];
-    PHYSFS_sint8 offset; /* in 15min from GMT */
-} ISO9660VolumeTimestamp;
-
-typedef struct
-{
-    PHYSFS_uint8 year;
-    PHYSFS_uint8 month;
-    PHYSFS_uint8 day;
-    PHYSFS_uint8 hour;
-    PHYSFS_uint8 minute;
-    PHYSFS_uint8 second;
-    PHYSFS_sint8 offset;
-} ISO9660FileTimestamp;
-
-typedef struct
-{
-  unsigned existence:1;
-  unsigned directory:1;
-  unsigned associated_file:1;
-  unsigned record:1;
-  unsigned protection:1;
-  unsigned reserved:2;
-  unsigned multiextent:1;
-} ISO9660FileFlags;
-
-typedef struct
-{
-    PHYSFS_uint8 length;
-    PHYSFS_uint8 attribute_length;
-    ISOBB32bit(extent_location)
-    ISOBB32bit(data_length)
-    ISO9660FileTimestamp timestamp;
-    ISO9660FileFlags file_flags;
-    PHYSFS_uint8 file_unit_size;
-    PHYSFS_uint8 gap_size;
-    ISOBB16bit(vol_seq_no)
-    PHYSFS_uint8 len_fi;
-    char unused;
-} ISO9660RootDirectoryRecord;
-
-/* this structure is combined for all Volume descriptor types */
-typedef struct
-{
-    PHYSFS_uint8 type;
-    char identifier[5];
-    PHYSFS_uint8 version;
-    PHYSFS_uint8 flags;
-    char system_identifier[32];
-    char volume_identifier[32];
-    char unused2[8];
-    ISOBB32bit(space_size)
-    PHYSFS_uint8 escape_sequences[32];
-    ISOBB16bit(vol_set_size)
-    ISOBB16bit(vol_seq_no)
-    ISOBB16bit(block_size)
-    ISOBB32bit(path_table_size)
-/*    PHYSFS_uint32 path_table_start_lsb; // why didn't they use both byte type?
-    PHYSFS_uint32 opt_path_table_start_lsb;
-    PHYSFS_uint32 path_table_start_msb;
-    PHYSFS_uint32 opt_path_table_start_msb;*/
-#if PHYSFS_BYTEORDER == PHYSFS_LIL_ENDIAN
-    PHYSFS_uint32 path_table_start;
-    PHYSFS_uint32 opt_path_table_start;
-    PHYSFS_uint32 unused6;
-    PHYSFS_uint32 unused7;
-#else
-    PHYSFS_uint32 unused6;
-    PHYSFS_uint32 unused7;
-    PHYSFS_uint32 path_table_start;
-    PHYSFS_uint32 opt_path_table_start;
-#endif
-    ISO9660RootDirectoryRecord rootdirectory;
-    char set_identifier[128];
-    char publisher_identifier[128];
-    char preparer_identifer[128];
-    char application_identifier[128];
-    char copyright_file_identifier[37];
-    char abstract_file_identifier[37];
-    char bibliographic_file_identifier[37];
-    ISO9660VolumeTimestamp creation_timestamp;
-    ISO9660VolumeTimestamp modification_timestamp;
-    ISO9660VolumeTimestamp expiration_timestamp;
-    ISO9660VolumeTimestamp effective_timestamp;
-    PHYSFS_uint8 file_structure_version;
-    char unused4;
-    char application_use[512];
-    char unused5[653];
-} ISO9660VolumeDescriptor;
-
-typedef struct
-{
-    PHYSFS_uint8 recordlen;
-    PHYSFS_uint8 extattributelen;
-    ISOBB32bit(extentpos)
-    ISOBB32bit(datalen)
-    ISO9660FileTimestamp recordtime;
-    ISO9660FileFlags flags;
-    PHYSFS_uint8 file_unit_size;
-    PHYSFS_uint8 interleave_gap;
-    ISOBB16bit(volseqno)
-    PHYSFS_uint8 filenamelen;
-    char filename[222]; /* This is not exact, but makes reading easier */
-} ISO9660FileDescriptor;
-
-typedef struct
-{
-    ISOBB16bit(owner)
-    ISOBB16bit(group)
-    PHYSFS_uint16 flags; /* not implemented*/
-    ISO9660VolumeTimestamp create_time; /* yes, not file timestamp */
-    ISO9660VolumeTimestamp mod_time;
-    ISO9660VolumeTimestamp expire_time;
-    ISO9660VolumeTimestamp effective_time;
-    PHYSFS_uint8 record_format;
-    PHYSFS_uint8 record_attributes;
-    ISOBB16bit(record_len)
-    char system_identifier[32];
-    char system_use[64];
-    PHYSFS_uint8 version;
-    ISOBB16bit(escape_len)
-    char reserved[64];
-    /** further fields not implemented */
-} ISO9660ExtAttributeRec;
-
-#pragma pack()   /* restore original alignment from stack */
-
-
-typedef struct
-{
-    PHYSFS_Io *io;
-    PHYSFS_uint32 rootdirstart;
-    PHYSFS_uint32 rootdirsize;
-    PHYSFS_uint64 currpos;
-    int isjoliet;
-    char *path;
-    void *mutex;
-} ISO9660Handle;
-
-
-typedef struct __ISO9660FileHandle
-{
-    PHYSFS_sint64 filesize;
-    PHYSFS_uint64 currpos;
-    PHYSFS_uint64 startblock;
-    ISO9660Handle *isohandle;
-    PHYSFS_uint32 (*read) (struct __ISO9660FileHandle *filehandle, void *buffer,
-            PHYSFS_uint64 len);
-    int (*seek)(struct __ISO9660FileHandle *filehandle,  PHYSFS_sint64 offset);
-    void (*close)(struct __ISO9660FileHandle *filehandle);
-    /* !!! FIXME: anonymous union is going to cause problems. */
-    union
+    /* Joliet is UCS-2, so at most UTF-8 will double the byte size */
+    baselen = strlen(base);
+    fullpathlen = baselen + (fnamelen * (joliet ? 2 : 1)) + 2;
+    fullpath = (char *) __PHYSFS_smallAlloc(fullpathlen);
+    BAIL_IF(!fullpath, PHYSFS_ERR_OUT_OF_MEMORY, 0);
+    fnamecpy = fullpath;
+    if (baselen > 0)
     {
-        /* !!! FIXME: just use a memory PHYSFS_Io here, unify all this code. */
-        char *cacheddata; /* data of file when cached */
-        PHYSFS_Io *io; /* handle to separate opened file */
-    };
-} ISO9660FileHandle;
+        snprintf(fullpath, fullpathlen, "%s/", base);
+        fnamecpy += baselen + 1;
+        fullpathlen -= baselen - 1;
+    } /* if */
 
-/*******************************************************************************
- * Time conversion functions
- ******************************************************************************/
-
-static PHYSFS_sint64 iso_mktime(ISO9660FileTimestamp *timestamp)
-{
-    struct tm tm;
-    tm.tm_year = timestamp->year;
-    tm.tm_mon = timestamp->month - 1;
-    tm.tm_mday = timestamp->day;
-    tm.tm_hour = timestamp->hour;
-    tm.tm_min = timestamp->minute;
-    tm.tm_sec = timestamp->second;
-    /* Ignore GMT offset for now... */
-    return mktime(&tm);
-} /* iso_mktime */
-
-static int iso_atoi2(char *text)
-{
-    return ((text[0] - 40) * 10) + (text[1] - 40);
-} /* iso_atoi2 */
-
-static int iso_atoi4(char *text)
-{
-    return ((text[0] - 40) * 1000) + ((text[1] - 40) * 100) +
-           ((text[2] - 40) * 10) + (text[3] - 40);
-} /* iso_atoi4 */
-
-static PHYSFS_sint64 iso_volume_mktime(ISO9660VolumeTimestamp *timestamp)
-{
-    PHYSFS_sint64 value;
-    struct tm tm;
-    tm.tm_year = iso_atoi4(timestamp->year);
-    tm.tm_mon = iso_atoi2(timestamp->month) - 1;
-    tm.tm_mday = iso_atoi2(timestamp->day);
-    tm.tm_hour = iso_atoi2(timestamp->hour);
-    tm.tm_min = iso_atoi2(timestamp->minute);
-    tm.tm_sec = iso_atoi2(timestamp->second);
-    /* this allows values outside the range of a unix timestamp... sanitize them */
-    value = mktime(&tm);     
-    return value == -1 ? 0 : value;
-} /* iso_volume_mktime */
-
-/*******************************************************************************
- * Filename extraction
- ******************************************************************************/
-
-static int iso_extractfilenameISO(ISO9660FileDescriptor *descriptor,
-        char *filename, int *version)
-{
-    *filename = '\0';
-    if (descriptor->flags.directory)
+    if (joliet)
     {
-        strncpy(filename, descriptor->filename, descriptor->filenamelen);
-        filename[descriptor->filenamelen] = '\0';
-        *version = 0;
+        PHYSFS_uint16 *ucs2 = (PHYSFS_uint16 *) fname;
+        int total = fnamelen / 2;
+        int i;
+        for (i = 0; i < total; i++)
+            ucs2[i] = PHYSFS_swapUBE16(ucs2[i]);
+        ucs2[total] = '\0';
+        PHYSFS_utf8FromUcs2(ucs2, fnamecpy, fullpathlen);
     } /* if */
     else
     {
-        /* find last SEPARATOR2 */
-        int pos = 0;
-        int lastfound = -1;
-        for(;pos < descriptor->filenamelen; pos++)
-            if (descriptor->filename[pos] == ';')
-                lastfound = pos;
-        BAIL_IF(lastfound < 1, PHYSFS_ERR_NOT_FOUND /* !!! FIXME: PHYSFS_ERR_BAD_FILENAME */, -1);
-        BAIL_IF(lastfound == (descriptor->filenamelen -1), PHYSFS_ERR_NOT_FOUND /* !!! PHYSFS_ERR_BAD_FILENAME */, -1);
-        strncpy(filename, descriptor->filename, lastfound);
-        if (filename[lastfound - 1] == '.')
-            filename[lastfound - 1] = '\0'; /* consume trailing ., as done in all implementations */
-        else
-            filename[lastfound] = '\0';
-        *version = atoi(descriptor->filename + lastfound);
+        memcpy(fnamecpy, fname, fnamelen);
+        fnamecpy[fnamelen] = '\0';
+        if (!isdir)
+        {
+            /* find last SEPARATOR2 */
+            char *ptr = strrchr(fnamecpy, ';');
+            if (ptr && (ptr != fnamecpy))
+                *(ptr--) = '\0';
+            else
+                ptr = fnamecpy + (fnamelen - 1);
+
+            /* chop out any trailing '.', as done in all implementations */
+            if (*ptr == '.')
+                *ptr = '\0';
+        } /* if */
     } /* else */
 
-    return 0;
-} /* iso_extractfilenameISO */
+    entry = UNPK_addEntry(unpkarc, fullpath, isdir, pos, len);
 
-
-static int iso_extractfilenameUCS2(ISO9660FileDescriptor *descriptor,
-        char *filename, int *version)
-{
-    PHYSFS_uint16 tmp[128];
-    PHYSFS_uint16 *src;
-    int len;
-
-    *filename = '\0';
-    *version = 1; /* Joliet does not have versions.. at least not on my images */
-
-    src = (PHYSFS_uint16*) descriptor->filename;
-    len = descriptor->filenamelen / 2;
-    tmp[len] = 0;
-
-    while(len--)
-        tmp[len] = PHYSFS_swapUBE16(src[len]);
-
-    PHYSFS_utf8FromUcs2(tmp, filename, 255);
-
-    return 0;
-} /* iso_extractfilenameUCS2 */
-
-
-static int iso_extractfilename(ISO9660Handle *handle,
-        ISO9660FileDescriptor *descriptor, char *filename,int *version)
-{
-    if (handle->isjoliet)
-        return iso_extractfilenameUCS2(descriptor, filename, version);
-    else
-        return iso_extractfilenameISO(descriptor, filename, version);
-} /* iso_extractfilename */
-
-/*******************************************************************************
- * Basic image read functions
- ******************************************************************************/
-
-static int iso_readimage(ISO9660Handle *handle, PHYSFS_uint64 where,
-                         void *buffer, PHYSFS_uint64 len)
-{
-    PHYSFS_sint64 rc = -1;
-    BAIL_IF_ERRPASS(!__PHYSFS_platformGrabMutex(handle->mutex), -1);
-    if ((where != handle->currpos) && !handle->io->seek(handle->io,where))
-        BAIL_MUTEX_ERRPASS(handle->mutex, -1);
-
-    rc = handle->io->read(handle->io, buffer, len);
-    if (rc == -1)
+    if ((entry) && (isdir))
     {
-        handle->currpos = (PHYSFS_uint64) -1;
-        BAIL_MUTEX_ERRPASS(handle->mutex, -1);
+        if (!iso9660LoadEntries(io, joliet, fullpath, pos, pos + len, unpkarc))
+            entry = NULL;  /* so we report a failure later. */
     } /* if */
-    handle->currpos += (PHYSFS_uint64) rc;
 
-    __PHYSFS_platformReleaseMutex(handle->mutex);
-    return (int) rc;  /* !!! FIXME: should this return "int" ? */
-} /* iso_readimage */
+    __PHYSFS_smallFree(fullpath);
+    return entry != NULL;
+} /* iso9660AddEntry */
 
-
-static PHYSFS_sint64 iso_readfiledescriptor(ISO9660Handle *handle,
-                                            PHYSFS_uint64 where,
-                                            ISO9660FileDescriptor *descriptor)
+static int iso9660LoadEntries(PHYSFS_Io *io, const int joliet,
+                              const char *base, const PHYSFS_uint64 dirstart,
+                              const PHYSFS_uint64 dirend, void *unpkarc)
 {
-    PHYSFS_sint64 rc = iso_readimage(handle, where, descriptor,
-                                     sizeof (descriptor->recordlen));
-    BAIL_IF_ERRPASS(rc == -1, -1);
-    BAIL_IF(rc != 1, PHYSFS_ERR_CORRUPT, -1);
+    PHYSFS_uint64 readpos = dirstart;
 
-    if (descriptor->recordlen == 0)
-        return 0; /* fill bytes at the end of a sector */
-
-    rc = iso_readimage(handle, where + 1, &descriptor->extattributelen,
-            descriptor->recordlen - sizeof(descriptor->recordlen));
-    BAIL_IF_ERRPASS(rc == -1, -1);
-    BAIL_IF(rc != 1, PHYSFS_ERR_CORRUPT, -1);
-
-    return 0;
-} /* iso_readfiledescriptor */
-
-static void iso_extractsubpath(char *path, char **subpath)
-{
-    *subpath = strchr(path,'/');
-    if (*subpath != 0)
-    {
-        **subpath = 0;
-        *subpath +=1;
-    } /* if */
-} /* iso_extractsubpath */
-
-/*
- * Don't use path tables, they are not necessarily faster, but more complicated
- * to implement as they store only directories and not files, so searching for
- * a file needs to branch to the directory extent sooner or later.
- */
-static int iso_find_dir_entry(ISO9660Handle *handle,const char *path,
-                              ISO9660FileDescriptor *descriptor)
-{
-    char *subpath = 0;
-    PHYSFS_uint64 readpos, end_of_dir;
-    char filename[255];
-    char pathcopy[256];
-    char *mypath;
-    int version = 0;
-
-    strcpy(pathcopy, path);
-    mypath = pathcopy;
-
-    readpos = handle->rootdirstart;
-    end_of_dir = handle->rootdirstart + handle->rootdirsize;
-    iso_extractsubpath(mypath, &subpath);
     while (1)
     {
-        BAIL_IF_ERRPASS(iso_readfiledescriptor(handle, readpos, descriptor), -1);
+        PHYSFS_uint8 recordlen;
+        PHYSFS_uint8 extattrlen;
+        PHYSFS_uint32 extent;
+        PHYSFS_uint32 datalen;
+        PHYSFS_uint8 ignore[4];
+        PHYSFS_uint8 year, month, day, hour, minute, second, offset;
+        PHYSFS_uint8 flags;
+        PHYSFS_uint8 fnamelen;
+        PHYSFS_uint8 fname[256];
+        int isdir;
+        int multiextent;
+
+        BAIL_IF_ERRPASS(!io->seek(io, readpos), 0);
 
         /* recordlen = 0 -> no more entries or fill entry */
-        if (!descriptor->recordlen)
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &recordlen, 1), 0);
+        if (recordlen == 0)
         {
             /* if we are in the last sector of the directory & it's 0 -> end */
-            if ((end_of_dir - 2048) <= (readpos -1))
+            if ((dirend - 2048) <= (readpos - 1))
                 break; /* finished */
 
             /* else skip to the next sector & continue; */
@@ -429,511 +148,179 @@ static int iso_find_dir_entry(ISO9660Handle *handle,const char *path,
             continue;
         } /* if */
 
-        readpos += descriptor->recordlen;
-        if (descriptor->filenamelen == 1 && (descriptor->filename[0] == 0
-                || descriptor->filename[0] == 1))
-            continue; /* special ones, ignore */
+        readpos += recordlen;  /* ready to seek to next record. */
 
-        BAIL_IF_ERRPASS(iso_extractfilename(handle, descriptor, filename, &version), -1);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &extattrlen, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &extent, 4), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* extent be */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &datalen, 4), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* datalen be */
 
-        if (strcmp(filename, mypath) == 0)
+        /* record timestamp */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &year, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &month, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &day, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &hour, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &minute, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &second, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &offset, 1), 0);
+
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &flags, 1), 0);
+        isdir = (flags & (1 << 1)) != 0;
+        multiextent = (flags & (1 << 7)) != 0;
+        BAIL_IF(multiextent, PHYSFS_ERR_UNSUPPORTED, 0);  /* !!! FIXME */
+
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 1), 0); /* unit size */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 1), 0); /* interleave gap */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 2), 0); /* seqnum le */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 2), 0); /* seqnum be */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &fnamelen, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, fname, fnamelen), 0);
+
+        /* !!! FIXME: we lost timestamps here. Add support into the unpacked
+           !!! FIXME:  archiver, parse them out here (and parse them out of
+           !!! FIXME:  extended attributes too?). */
+
+        extent += extattrlen;  /* skip extended attribute record. */
+        if (!iso9660AddEntry(io, joliet, isdir, base, fname, fnamelen,
+                             extent * 2048, datalen, unpkarc))
         {
-            if ( (subpath == 0) || (subpath[0] == 0) )
-                return 0;  /* no subpaths left and we found the entry */
-
-            if (descriptor->flags.directory)
-            {
-                /* shorten the path to the subpath */
-                mypath = subpath;
-                iso_extractsubpath(mypath, &subpath);
-                /* gosub to the new directory extent */
-                readpos = descriptor->extentpos * 2048;
-                end_of_dir = readpos + descriptor->datalen;
-            } /* if */
-            else
-            {
-                /* !!! FIXME: set PHYSFS_ERR_NOT_FOUND? */
-                /* we're at a file but have a remaining subpath -> no match */
-                return 0;
-            } /* else */
+            return 0;
         } /* if */
     } /* while */
 
-    /* !!! FIXME: set PHYSFS_ERR_NOT_FOUND? */
-    return 0;
-} /* iso_find_dir_entry */
+    return 1;
+} /* iso9660LoadEntries */
 
 
-static int iso_read_ext_attributes(ISO9660Handle *handle, int block,
-                                   ISO9660ExtAttributeRec *attributes)
+static int parseVolumeDescriptor(PHYSFS_Io *io, PHYSFS_uint64 *_rootpos,
+                                 PHYSFS_uint64 *_rootlen, int *_joliet)
 {
-    return iso_readimage(handle, block * 2048, attributes,
-                         sizeof(ISO9660ExtAttributeRec));
-} /* iso_read_ext_attributes */
+    PHYSFS_uint64 pos = 32768; /* start at the Primary Volume Descriptor */
+    int found = 0;
+    int first = 1;
+    int done = 0;
 
+    *_joliet = 0;
 
-static int ISO9660_flush(PHYSFS_Io *io) { return 1;  /* no write support. */ }
+    while (!done)
+    {
+        PHYSFS_uint8 type;
+        PHYSFS_uint8 identifier[5];
+        PHYSFS_uint8 version;
+        PHYSFS_uint8 flags;
+        PHYSFS_uint8 escapeseqs[32];
+        PHYSFS_uint8 ignore[32];
+        PHYSFS_uint16 blocksize;
+        PHYSFS_uint32 extent;
+        PHYSFS_uint32 datalen;
 
-static PHYSFS_Io *ISO9660_duplicate(PHYSFS_Io *_io)
-{
-    BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);  /* !!! FIXME: write me. */
-} /* ISO9660_duplicate */
+        BAIL_IF_ERRPASS(!io->seek(io, pos), 0);
+        pos += 2048;  /* each volume descriptor is 2048 bytes */
 
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &type, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &identifier, 5), 0);
 
-static void ISO9660_destroy(PHYSFS_Io *io)
-{
-    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) io->opaque;
-    fhandle->close(fhandle);
-    allocator.Free(io);
-} /* ISO9660_destroy */
+        if (memcmp(identifier, "CD001", 5) != 0)
+        {
+            BAIL_IF(first, PHYSFS_ERR_UNSUPPORTED, 0);  /* maybe not an iso? */
+            continue;  /* just skip this one */
+        } /* if */
 
+        first = 0; /* okay, this is probably an iso. */
 
-static PHYSFS_sint64 ISO9660_read(PHYSFS_Io *io, void *buf, PHYSFS_uint64 len)
-{
-    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) io->opaque;
-    return fhandle->read(fhandle, buf, len);
-} /* ISO9660_read */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &version, 1), 0);  /* version */
+        BAIL_IF(version != 1, PHYSFS_ERR_UNSUPPORTED, 0);
 
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &flags, 1), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 32), 0);  /* system id */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 32), 0);  /* volume id */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 8), 0);  /* reserved */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0);  /* space le */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0);  /* space be */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, escapeseqs, 32), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 2), 0);  /* setsize le */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 2), 0);  /* setsize be */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 2), 0);  /* seq num le */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 2), 0);  /* seq num be */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &blocksize, 2), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 2), 0); /* blocklen be */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* pthtablen le */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* pthtablen be */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* pthtabpos le */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* optpthtabpos le */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* pthtabpos be */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* optpthtabpos be */
 
-static PHYSFS_sint64 ISO9660_write(PHYSFS_Io *io, const void *b, PHYSFS_uint64 l)
-{
-    BAIL(PHYSFS_ERR_READ_ONLY, -1);
-} /* ISO9660_write */
+        /* root directory record... */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 1), 0); /* len */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 1), 0); /* attr len */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &extent, 4), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* extent be */
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &datalen, 4), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), 0); /* datalen be */
 
+        /* !!! FIXME: deal with this properly. */
+        blocksize = PHYSFS_swapULE32(blocksize);
+        BAIL_IF(blocksize && (blocksize != 2048), PHYSFS_ERR_UNSUPPORTED, 0);
 
-static PHYSFS_sint64 ISO9660_tell(PHYSFS_Io *io)
-{
-    return ((ISO9660FileHandle*) io->opaque)->currpos;
-} /* ISO9660_tell */
+        switch (type)
+        {
+            case 1:  /* Primary Volume Descriptor */
+            case 2:  /* Supplementary Volume Descriptor */
+                if (found < type)
+                {
+                    *_rootpos = PHYSFS_swapULE32(extent) * 2048;
+                    *_rootlen = PHYSFS_swapULE32(datalen);
+                    found = type;
 
+                    if (found == 2)  /* possible Joliet volume */
+                    {
+                        const PHYSFS_uint8 *s = escapeseqs;
+                        *_joliet = !(flags & 1) &&
+                            (s[0] == 0x25) && (s[1] == 0x2F) &&
+                            ((s[2] == 0x40) || (s[2] == 0x43) || (s[2] == 0x45));
+                    } /* if */
+                } /* if */
+                break;
 
-static int ISO9660_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
-{
-    ISO9660FileHandle *fhandle = (ISO9660FileHandle*) io->opaque;
-    return fhandle->seek(fhandle, offset);
-} /* ISO9660_seek */
+            case 255: /* type 255 terminates the volume descriptor list */
+                done = 1;
+                break;
 
+            default:
+                break;  /* skip unknown types. */
+        } /* switch */
+    } /* while */
 
-static PHYSFS_sint64 ISO9660_length(PHYSFS_Io *io)
-{
-    return ((ISO9660FileHandle*) io->opaque)->filesize;
-} /* ISO9660_length */
+    BAIL_IF(!found, PHYSFS_ERR_CORRUPT, 0);
 
+    return 1;
+} /* parseVolumeDescriptor */
 
-static const PHYSFS_Io ISO9660_Io =
-{
-    CURRENT_PHYSFS_IO_API_VERSION, NULL,
-    ISO9660_read,
-    ISO9660_write,
-    ISO9660_seek,
-    ISO9660_tell,
-    ISO9660_length,
-    ISO9660_duplicate,
-    ISO9660_flush,
-    ISO9660_destroy
-};
-
-
-/*******************************************************************************
- * Archive management functions
- ******************************************************************************/
 
 static void *ISO9660_openArchive(PHYSFS_Io *io, const char *filename, int forWriting)
 {
-    char magicnumber[6];
-    ISO9660Handle *handle;
-    int founddescriptor = 0;
-    int foundjoliet = 0;
+    PHYSFS_uint64 rootpos, len;
+    int joliet = 0;
+    void *unpkarc = NULL;
 
     assert(io != NULL);  /* shouldn't ever happen. */
 
     BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    BAIL_IF_ERRPASS(!parseVolumeDescriptor(io, &rootpos, &len, &joliet), NULL);
 
-    /* Skip system area to magic number in Volume descriptor */
-    BAIL_IF_ERRPASS(!io->seek(io, 32769), NULL);
-    BAIL_IF_ERRPASS(io->read(io, magicnumber, 5) != 5, NULL);
-    if (memcmp(magicnumber, "CD001", 6) != 0)
-        BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
+    unpkarc = UNPK_openArchive(io);
+    BAIL_IF_ERRPASS(!unpkarc, NULL);
 
-    handle = allocator.Malloc(sizeof(ISO9660Handle));
-    GOTO_IF(!handle, PHYSFS_ERR_OUT_OF_MEMORY, errorcleanup);
-    handle->path = 0;
-    handle->mutex= 0;
-    handle->io = NULL;
-
-    handle->path = allocator.Malloc(strlen(filename) + 1);
-    GOTO_IF(!handle->path, PHYSFS_ERR_OUT_OF_MEMORY, errorcleanup);
-    strcpy(handle->path, filename);
-
-    handle->mutex = __PHYSFS_platformCreateMutex();
-    GOTO_IF_ERRPASS(!handle->mutex, errorcleanup);
-
-    handle->io = io;
-
-    /* seek Primary Volume Descriptor */
-    GOTO_IF_ERRPASS(!io->seek(io, 32768), errorcleanup);
-
-    while (1)
+    if (!iso9660LoadEntries(io, joliet, "", rootpos, rootpos + len, unpkarc))
     {
-        ISO9660VolumeDescriptor descriptor;
-        GOTO_IF_ERRPASS(io->read(io, &descriptor, sizeof(ISO9660VolumeDescriptor)) != sizeof(ISO9660VolumeDescriptor), errorcleanup);
-        GOTO_IF(strncmp(descriptor.identifier, "CD001", 5) != 0, PHYSFS_ERR_UNSUPPORTED, errorcleanup);
-
-        if (descriptor.type == 255)
-        {
-            /* type 255 terminates the volume descriptor list */
-            if (founddescriptor)
-                return handle; /* ok, we've found one volume descriptor */
-            else
-                GOTO(PHYSFS_ERR_CORRUPT, errorcleanup);
-        } /* if */
-        if (descriptor.type == 1 && !founddescriptor)
-        {
-            handle->currpos = io->tell(io);
-            handle->rootdirstart =
-                    descriptor.rootdirectory.extent_location * 2048;
-            handle->rootdirsize =
-                    descriptor.rootdirectory.data_length;
-            handle->isjoliet = 0;
-            founddescriptor = 1; /* continue search for joliet */
-        } /* if */
-        if (descriptor.type == 2 && !foundjoliet)
-        {
-            /* check if is joliet */
-            PHYSFS_uint8 *s = descriptor.escape_sequences;
-            int joliet = !(descriptor.flags & 1)
-                    && (s[0] == 0x25)
-                    && (s[1] == 0x2F)
-                    && ((s[2] == 0x40) || (s[2] == 0x43) || (s[2] == 0x45));
-            if (!joliet)
-                continue;
-
-            handle->currpos = io->tell(io);
-            handle->rootdirstart =
-                    descriptor.rootdirectory.extent_location * 2048;
-            handle->rootdirsize =
-                    descriptor.rootdirectory.data_length;
-            handle->isjoliet = 1;
-            founddescriptor = 1;
-            foundjoliet = 1;
-        } /* if */
-    } /* while */
-
-    GOTO(PHYSFS_ERR_CORRUPT, errorcleanup);  /* not found. */
-
-errorcleanup:
-    if (handle)
-    {
-        if (handle->path)
-            allocator.Free(handle->path);
-        if (handle->mutex)
-            __PHYSFS_platformDestroyMutex(handle->mutex);
-        allocator.Free(handle);
+        UNPK_closeArchive(unpkarc);
+        return NULL;
     } /* if */
-    return NULL;
+
+    return unpkarc;
 } /* ISO9660_openArchive */
-
-
-static void ISO9660_closeArchive(void *opaque)
-{
-    ISO9660Handle *handle = (ISO9660Handle*) opaque;
-    handle->io->destroy(handle->io);
-    __PHYSFS_platformDestroyMutex(handle->mutex);
-    allocator.Free(handle->path);
-    allocator.Free(handle);
-} /* ISO9660_closeArchive */
-
-
-/*******************************************************************************
- * Read functions
- ******************************************************************************/
-
-
-static PHYSFS_uint32 iso_file_read_mem(ISO9660FileHandle *filehandle,
-                                       void *buffer, PHYSFS_uint64 len)
-{
-    /* check remaining bytes & max obj which can be fetched */
-    const PHYSFS_uint64 bytesleft = filehandle->filesize - filehandle->currpos;
-    if (bytesleft < len)
-        len = bytesleft;
-
-    if (len == 0)
-        return 0;
-
-    memcpy(buffer, filehandle->cacheddata + filehandle->currpos, (size_t) len);
-
-    filehandle->currpos += len;
-    return (PHYSFS_uint32) len;
-} /* iso_file_read_mem */
-
-
-static int iso_file_seek_mem(ISO9660FileHandle *fhandle, PHYSFS_sint64 offset)
-{
-    BAIL_IF(offset < 0, PHYSFS_ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF(offset >= fhandle->filesize, PHYSFS_ERR_PAST_EOF, 0);
-
-    fhandle->currpos = offset;
-    return 0;
-} /* iso_file_seek_mem */
-
-
-static void iso_file_close_mem(ISO9660FileHandle *fhandle)
-{
-    allocator.Free(fhandle->cacheddata);
-    allocator.Free(fhandle);
-} /* iso_file_close_mem */
-
-
-static PHYSFS_uint32 iso_file_read_foreign(ISO9660FileHandle *filehandle,
-                                           void *buffer, PHYSFS_uint64 len)
-{
-    PHYSFS_sint64 rc;
-
-    /* check remaining bytes & max obj which can be fetched */
-    const PHYSFS_sint64 bytesleft = filehandle->filesize - filehandle->currpos;
-    if (((PHYSFS_uint64) bytesleft) < len)
-        len = bytesleft;
-
-    rc = filehandle->io->read(filehandle->io, buffer, len);
-    BAIL_IF_ERRPASS(rc == -1, -1);
-
-    filehandle->currpos += rc; /* i trust my internal book keeping */
-    BAIL_IF(((PHYSFS_uint64) rc) < len, PHYSFS_ERR_CORRUPT, -1);
-    return (PHYSFS_uint32) rc;
-} /* iso_file_read_foreign */
-
-
-static int iso_file_seek_foreign(ISO9660FileHandle *fhandle,
-                                 PHYSFS_sint64 offset)
-{
-    PHYSFS_sint64 pos;
-
-    BAIL_IF(offset < 0, PHYSFS_ERR_INVALID_ARGUMENT, 0);
-    BAIL_IF(offset >= fhandle->filesize, PHYSFS_ERR_PAST_EOF, 0);
-
-    pos = fhandle->startblock * 2048 + offset;
-    BAIL_IF_ERRPASS(!fhandle->io->seek(fhandle->io, pos), -1);
-
-    fhandle->currpos = offset;
-    return 0;
-} /* iso_file_seek_foreign */
-
-
-static void iso_file_close_foreign(ISO9660FileHandle *fhandle)
-{
-    fhandle->io->destroy(fhandle->io);
-    allocator.Free(fhandle);
-} /* iso_file_close_foreign */
-
-
-static int iso_file_open_mem(ISO9660Handle *handle, ISO9660FileHandle *fhandle)
-{
-    int rc;
-    fhandle->cacheddata = allocator.Malloc(fhandle->filesize);
-    BAIL_IF(!fhandle->cacheddata, PHYSFS_ERR_OUT_OF_MEMORY, -1);
-    rc = iso_readimage(handle, fhandle->startblock * 2048,
-                           fhandle->cacheddata, fhandle->filesize);
-    GOTO_IF_ERRPASS(rc < 0, freemem);
-    GOTO_IF(rc == 0, PHYSFS_ERR_CORRUPT, freemem);
-
-    fhandle->read = iso_file_read_mem;
-    fhandle->seek = iso_file_seek_mem;
-    fhandle->close = iso_file_close_mem;
-    return 0;
-
-freemem:
-    allocator.Free(fhandle->cacheddata);
-    return -1;
-} /* iso_file_open_mem */
-
-
-static int iso_file_open_foreign(ISO9660Handle *handle,
-                                 ISO9660FileHandle *fhandle)
-{
-    fhandle->io = __PHYSFS_createNativeIo(handle->path, 'r');
-    BAIL_IF_ERRPASS(!fhandle->io, -1);
-
-    if (!fhandle->io->seek(fhandle->io, fhandle->startblock * 2048))
-    {
-        fhandle->io->destroy(fhandle->io);
-        return -1;
-    } /* if */
-
-    fhandle->read = iso_file_read_foreign;
-    fhandle->seek = iso_file_seek_foreign;
-    fhandle->close = iso_file_close_foreign;
-    return 0;
-} /* iso_file_open_foreign */
-
-
-static PHYSFS_Io *ISO9660_openRead(void *opaque, const char *filename)
-{
-    PHYSFS_Io *retval = NULL;
-    ISO9660Handle *handle = (ISO9660Handle*) opaque;
-    ISO9660FileHandle *fhandle;
-    ISO9660FileDescriptor descriptor;
-    int rc;
-
-    fhandle = allocator.Malloc(sizeof(ISO9660FileHandle));
-    BAIL_IF(fhandle == 0, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    fhandle->cacheddata = 0;
-
-    retval = allocator.Malloc(sizeof(PHYSFS_Io));
-    GOTO_IF(retval == 0, PHYSFS_ERR_OUT_OF_MEMORY, errorhandling);
-
-    /* find file descriptor */
-    rc = iso_find_dir_entry(handle, filename, &descriptor);
-    GOTO_IF_ERRPASS(rc, errorhandling);
-
-    fhandle->startblock = descriptor.extentpos + descriptor.extattributelen;
-    fhandle->filesize = descriptor.datalen;
-    fhandle->currpos = 0;
-    fhandle->isohandle = handle;
-    fhandle->cacheddata = NULL;
-    fhandle->io = NULL;
-
-    if (descriptor.datalen <= ISO9660_FULLCACHEMAXSIZE)
-        rc = iso_file_open_mem(handle, fhandle);
-    else
-        rc = iso_file_open_foreign(handle, fhandle);
-    GOTO_IF_ERRPASS(rc, errorhandling);
-
-    memcpy(retval, &ISO9660_Io, sizeof (PHYSFS_Io));
-    retval->opaque = fhandle;
-    return retval;
-
-errorhandling:
-    if (retval) allocator.Free(retval);
-    if (fhandle) allocator.Free(fhandle);
-    return NULL;
-} /* ISO9660_openRead */
-
-
-
-/*******************************************************************************
- * Information gathering functions
- ******************************************************************************/
-
-static void ISO9660_enumerateFiles(void *opaque, const char *dname,
-                                   PHYSFS_EnumFilesCallback cb,
-                                   const char *origdir, void *callbackdata)
-{
-    ISO9660Handle *handle = (ISO9660Handle*) opaque;
-    ISO9660FileDescriptor descriptor;
-    PHYSFS_uint64 readpos;
-    PHYSFS_uint64 end_of_dir;
-    char filename[130]; /* ISO allows 31, Joliet 128 -> 128 + 2 eol bytes */
-    int version = 0;
-
-    if (*dname == '\0')
-    {
-        readpos = handle->rootdirstart;
-        end_of_dir = readpos + handle->rootdirsize;
-    } /* if */
-    else
-    {
-        printf("pfad %s\n",dname);
-        BAIL_IF_ERRPASS(iso_find_dir_entry(handle,dname, &descriptor),);
-        BAIL_IF_ERRPASS(!descriptor.flags.directory,);
-
-        readpos = descriptor.extentpos * 2048;
-        end_of_dir = readpos + descriptor.datalen;
-    } /* else */
-
-    while (1)
-    {
-        BAIL_IF_ERRPASS(iso_readfiledescriptor(handle, readpos, &descriptor), );
-
-        /* recordlen = 0 -> no more entries or fill entry */
-        if (!descriptor.recordlen)
-        {
-            /* if we are in the last sector of the directory & it's 0 -> end */
-            if ((end_of_dir - 2048) <= (readpos -1))
-                break;  /* finished */
-
-            /* else skip to the next sector & continue; */
-            readpos = (((readpos - 1) / 2048) + 1) * 2048;
-            continue;
-        } /* if */
-
-        readpos +=  descriptor.recordlen;
-        if (descriptor.filenamelen == 1 && (descriptor.filename[0] == 0
-                || descriptor.filename[0] == 1))
-            continue; /* special ones, ignore */
-
-        strncpy(filename,descriptor.filename,descriptor.filenamelen);
-        iso_extractfilename(handle, &descriptor, filename, &version);
-        cb(callbackdata, origdir,filename);
-    } /* while */
-} /* ISO9660_enumerateFiles */
-
-
-static int ISO9660_stat(void *opaque, const char *name, PHYSFS_Stat *stat)
-{
-    ISO9660Handle *handle = (ISO9660Handle*) opaque;
-    ISO9660FileDescriptor descriptor;
-    ISO9660ExtAttributeRec extattr;
-    BAIL_IF_ERRPASS(iso_find_dir_entry(handle, name, &descriptor), -1);
-
-    stat->readonly = 1;
-
-    /* try to get extended info */
-    if (descriptor.extattributelen)
-    {
-        BAIL_IF_ERRPASS(iso_read_ext_attributes(handle,
-                descriptor.extentpos, &extattr), -1);
-        stat->createtime = iso_volume_mktime(&extattr.create_time);
-        stat->modtime = iso_volume_mktime(&extattr.mod_time);
-    } /* if */
-    else
-    {
-        stat->createtime = iso_mktime(&descriptor.recordtime);
-        stat->modtime = iso_mktime(&descriptor.recordtime);
-    } /* else */
-
-    stat->accesstime = -1;
-
-    if (descriptor.flags.directory)
-    {
-        stat->filesize = 0;
-        stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
-    } /* if */
-    else
-    {
-        stat->filesize = descriptor.datalen;
-        stat->filetype = PHYSFS_FILETYPE_REGULAR;
-    } /* else */
-
-    return 1;
-} /* ISO9660_stat */
-
-
-/*******************************************************************************
- * Not supported functions
- ******************************************************************************/
-
-static PHYSFS_Io *ISO9660_openWrite(void *opaque, const char *name)
-{
-    BAIL(PHYSFS_ERR_READ_ONLY, NULL);
-} /* ISO9660_openWrite */
-
-
-static PHYSFS_Io *ISO9660_openAppend(void *opaque, const char *name)
-{
-    BAIL(PHYSFS_ERR_READ_ONLY, NULL);
-} /* ISO9660_openAppend */
-
-
-static int ISO9660_remove(void *opaque, const char *name)
-{
-    BAIL(PHYSFS_ERR_READ_ONLY, 0);
-} /* ISO9660_remove */
-
-
-static int ISO9660_mkdir(void *opaque, const char *name)
-{
-    BAIL(PHYSFS_ERR_READ_ONLY, 0);
-} /* ISO9660_mkdir */
 
 
 const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
@@ -942,19 +329,19 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
     {
         "ISO",
         "ISO9660 image file",
-        "Christoph Nelles <evilazrael@evilazrael.de>",
-        "https://www.evilazrael.de/",
+        "Ryan C. Gordon <icculus@icculus.org>",
+        "https://icculus.org/physfs/",
         0,  /* supportsSymlinks */
     },
     ISO9660_openArchive,
-    ISO9660_enumerateFiles,
-    ISO9660_openRead,
-    ISO9660_openWrite,
-    ISO9660_openAppend,
-    ISO9660_remove,
-    ISO9660_mkdir,
-    ISO9660_stat,
-    ISO9660_closeArchive
+    UNPK_enumerateFiles,
+    UNPK_openRead,
+    UNPK_openWrite,
+    UNPK_openAppend,
+    UNPK_remove,
+    UNPK_mkdir,
+    UNPK_stat,
+    UNPK_closeArchive
 };
 
 #endif  /* defined PHYSFS_SUPPORTS_ISO9660 */
