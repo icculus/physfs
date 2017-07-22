@@ -67,6 +67,7 @@ set(PHYSFS_SRCS
     src/platform_unix.c
     src/platform_macosx.c
     src/platform_windows.c
+    src/platform_os2.c
     src/archiver_dir.c
     src/archiver_unpacked.c
     src/archiver_grp.c
