@@ -63,7 +63,7 @@ static int wadLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
         name[8] = '\0'; /* name might not be null-terminated in file. */
         size = PHYSFS_swapULE32(size);
         location = PHYSFS_swapULE32(location);
-        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, location, size), 0);
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0,  -1, -1, location, size), 0);
     } /* for */
 
     return 1;

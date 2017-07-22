@@ -27,6 +27,8 @@ typedef struct
     __PHYSFS_DirTreeEntry tree;
     PHYSFS_uint64 startPos;
     PHYSFS_uint64 size;
+    PHYSFS_sint64 ctime;
+    PHYSFS_sint64 mtime;
 } UNPKentry;
 
 typedef struct
@@ -255,8 +257,8 @@ int UNPK_stat(void *opaque, const char *path, PHYSFS_Stat *stat)
         stat->filesize = entry->size;
     } /* else */
 
-    stat->modtime = -1;
-    stat->createtime = -1;
+    stat->modtime = entry->mtime;
+    stat->createtime = entry->ctime;
     stat->accesstime = -1;
     stat->readonly = 1;
 
@@ -265,6 +267,7 @@ int UNPK_stat(void *opaque, const char *path, PHYSFS_Stat *stat)
 
 
 void *UNPK_addEntry(void *opaque, char *name, const int isdir,
+                    const PHYSFS_sint64 ctime, const PHYSFS_sint64 mtime,
                     const PHYSFS_uint64 pos, const PHYSFS_uint64 len)
 {
     UNPKinfo *info = (UNPKinfo *) opaque;
@@ -275,6 +278,8 @@ void *UNPK_addEntry(void *opaque, char *name, const int isdir,
 
     entry->startPos = isdir ? 0 : pos;
     entry->size = isdir ? 0 : len;
+    entry->ctime = ctime;
+    entry->mtime = mtime;
 
     return entry;
 } /* UNPK_addEntry */

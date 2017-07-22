@@ -346,6 +346,7 @@ void UNPK_abandonArchive(void *opaque);
 void UNPK_closeArchive(void *opaque);
 void *UNPK_openArchive(PHYSFS_Io *io);
 void *UNPK_addEntry(void *opaque, char *name, const int isdir,
+                    const PHYSFS_sint64 ctime, const PHYSFS_sint64 mtime,
                     const PHYSFS_uint64 pos, const PHYSFS_uint64 len);
 PHYSFS_Io *UNPK_openRead(void *opaque, const char *name);
 PHYSFS_Io *UNPK_openWrite(void *opaque, const char *name);
