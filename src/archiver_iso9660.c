@@ -14,6 +14,7 @@
  * Not supported:
  * - Rock Ridge (needed for sparse files, device nodes and symlinks, etc).
  * - Non 2048 Sectors
+ * - TRANS.TBL (maps 8.3 filenames on old discs to long filenames).
  * - Multiextents (4gb max file size without it).
  * - UDF
  *
@@ -87,6 +88,8 @@ static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
     } /* if */
     else
     {
+        /* !!! FIXME: we assume the filenames are low-ASCII; if they use
+           any high-ASCII chars, they will be invalid UTF-8. */
         memcpy(fnamecpy, fname, fnamelen);
         fnamecpy[fnamelen] = '\0';
         if (!isdir)
