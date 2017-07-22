@@ -9,7 +9,7 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-#ifdef PHYSFS_PLATFORM_MACOSX
+#ifdef PHYSFS_PLATFORM_MACOS
 
 #include <CoreFoundation/CoreFoundation.h>
 
@@ -212,7 +212,7 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */
 
-#endif /* PHYSFS_PLATFORM_MACOSX */
+#endif /* PHYSFS_PLATFORM_MACOS */
 
 /* end of physfs_platform_macos.c ... */
 
