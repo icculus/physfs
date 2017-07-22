@@ -107,5 +107,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
 
 #endif  /* defined PHYSFS_SUPPORTS_HOG */
 
-/* end of archiver_hog.c ... */
+/* end of physfs_archiver_hog.c ... */
 

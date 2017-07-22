@@ -361,5 +361,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660 =
 
 #endif  /* defined PHYSFS_SUPPORTS_ISO9660 */
 
-/* end of archiver_iso9660.c ... */
+/* end of physfs_archiver_iso9660.c ... */
 

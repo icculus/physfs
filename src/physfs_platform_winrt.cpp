@@ -667,3 +667,5 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
 
 #endif /* PHYSFS_PLATFORM_WINRT */
 
+/* end of physfs_platform_winrt.cpp ... */
+

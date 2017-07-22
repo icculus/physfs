@@ -365,5 +365,5 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 
 #endif /* PHYSFS_PLATFORM_UNIX */
 
-/* end of platform_unix.c ... */
+/* end of physfs_platform_unix.c ... */
 

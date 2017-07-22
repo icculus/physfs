@@ -1692,5 +1692,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
 
 #endif  /* defined PHYSFS_SUPPORTS_ZIP */
 
-/* end of archiver_zip.c ... */
+/* end of physfs_archiver_zip.c ... */
 

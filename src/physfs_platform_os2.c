@@ -775,4 +775,4 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 
 #endif  /* PHYSFS_PLATFORM_OS2 */
 
-/* end of platform_os2.c ... */
+/* end of physfs_platform_os2.c ... */

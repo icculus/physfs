@@ -109,5 +109,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_GRP =
 
 #endif  /* defined PHYSFS_SUPPORTS_GRP */
 
-/* end of archiver_grp.c ... */
+/* end of physfs_archiver_grp.c ... */
 

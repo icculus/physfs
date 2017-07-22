@@ -188,5 +188,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
     DIR_closeArchive
 };
 
-/* end of archiver_dir.c ... */
+/* end of physfs_archiver_dir.c ... */
 

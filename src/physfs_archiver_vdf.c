@@ -156,4 +156,4 @@ const PHYSFS_Archiver __PHYSFS_Archiver_VDF =
 
 #endif /* defined PHYSFS_SUPPORTS_VDF */
 
-/* end of archiver_vdf.c ... */
+/* end of physfs_archiver_vdf.c ... */
