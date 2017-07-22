@@ -31,7 +31,7 @@
 
 static int grpLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
 {
-    PHYSFS_uint32 location = 16 + (16 * count);  /* past sig+metadata. */
+    PHYSFS_uint32 pos = 16 + (16 * count);  /* past sig+metadata. */
     PHYSFS_uint32 i;
 
     for (i = 0; i < count; i++)
@@ -47,9 +47,9 @@ static int grpLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
             *ptr = '\0';  /* trim extra spaces. */
 
         size = PHYSFS_swapULE32(size);
-        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, -1, -1, location, size), 0);
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, -1, -1, pos, size), 0);
 
-        location += size;
+        pos += size;
     } /* for */
 
     return 1;

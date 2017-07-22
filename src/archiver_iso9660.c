@@ -45,7 +45,7 @@ static int iso9660LoadEntries(PHYSFS_Io *io, const int joliet,
 
 static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
                            const char *base, PHYSFS_uint8 *fname,
-                           const int fnamelen, const PHYSFS_sint64 timestamp,
+                           const int fnamelen, const PHYSFS_sint64 ts,
                            const PHYSFS_uint64 pos, const PHYSFS_uint64 len,
                            void *unpkarc)
 {
@@ -107,9 +107,7 @@ static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
         } /* if */
     } /* else */
 
-    entry = UNPK_addEntry(unpkarc, fullpath, isdir,
-                          timestamp, timestamp, pos, len);
-
+    entry = UNPK_addEntry(unpkarc, fullpath, isdir, ts, ts, pos, len);
     if ((entry) && (isdir))
     {
         if (!iso9660LoadEntries(io, joliet, fullpath, pos, pos + len, unpkarc))

@@ -50,7 +50,7 @@ static PHYSFS_sint64 vdfDosTimeToEpoch(const PHYSFS_uint32 dostime)
 
 
 static int vdfLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count,
-                          const PHYSFS_sint64 t, void *arc)
+                          const PHYSFS_sint64 ts, void *arc)
 {
     PHYSFS_uint32 i;
 
@@ -81,7 +81,7 @@ static int vdfLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count,
         /* !!! FIXME: we assume the filenames are low-ASCII; if they use
            any high-ASCII chars, they will be invalid UTF-8. */
 
-        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, t, t, jump, size), 0);
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, ts, ts, jump, size), 0);
     } /* for */
 
     return 1;

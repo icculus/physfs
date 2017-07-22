@@ -34,7 +34,7 @@
 
 static int mvlLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
 {
-    PHYSFS_uint32 location = 8 + (17 * count);   /* past sig+metadata. */
+    PHYSFS_uint32 pos = 8 + (17 * count);   /* past sig+metadata. */
     PHYSFS_uint32 i;
 
     for (i = 0; i < count; i++)
@@ -45,8 +45,8 @@ static int mvlLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), 0);
         name[12] = '\0';  /* just in case. */
         size = PHYSFS_swapULE32(size);
-        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0,  -1, -1, location, size), 0);
-        location += size;
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, -1, -1, pos, size), 0);
+        pos += size;
     } /* for */
 
     return 1;

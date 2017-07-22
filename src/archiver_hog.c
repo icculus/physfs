@@ -34,7 +34,7 @@
 
 #if PHYSFS_SUPPORTS_HOG
 
-static int hogLoadEntries(PHYSFS_Io *io, void *unpkarc)
+static int hogLoadEntries(PHYSFS_Io *io, void *arc)
 {
     const PHYSFS_uint64 iolen = io->length(io);
     PHYSFS_uint32 pos = 3;
@@ -50,7 +50,7 @@ static int hogLoadEntries(PHYSFS_Io *io, void *unpkarc)
         pos += 13 + 4;
 
         size = PHYSFS_swapULE32(size);
-        BAIL_IF_ERRPASS(!UNPK_addEntry(unpkarc, name, 0, -1, -1, pos, size), 0);
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, -1, -1, pos, size), 0);
         pos += size;
 
         /* skip over entry */

@@ -954,6 +954,6 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
 #endif  /* PHYSFS_PLATFORM_WINDOWS */
 #endif  /* PHYSFS_PLATFORM_WINRT */
 
-/* end of windows.c ... */
+/* end of platform_windows.c ... */
 
 
