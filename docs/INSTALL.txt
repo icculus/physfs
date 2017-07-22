@@ -20,6 +20,17 @@ If you've got Doxygen (http://www.doxygen.org/) installed, you can run it
 
 
 
+BUILD IT WITH YOUR OWN PROGRAM:
+
+If you don't care about formal packaging: just add everything in the "src"
+directory to whatever you use to build your program and compile it along with
+everything else, and you're done. It should compile with any reasonable
+ANSI C compiler, should build cleanly even with excessive compiler warnings
+enabled, needs no extra configuration, and allows static linking. If this
+works for your specific project, you can stop reading now.
+
+
+
 UNIX:
 
 You will need CMake (https://www.cmake.org/) 2.4 or later installed.
@@ -64,23 +75,25 @@ If you want to use Visual Studio, nmake, or the Platform SDK, you will need
 PhysicsFS will only link directly against system libraries that have existed
  since Windows NT 3.51. If there's a newer API we want to use, we try to
  dynamically load it at runtime and fallback to a reasonable behaviour when
- we can't find it...this is used for Unicode support and locating
- user-specific directories, etc. Note that OSes based on Windows 95 _should_
+ we can't find it. Note that OSes based on Windows 95 _should_
  work if you use the Microsoft Layer for Unicode (UNICOWS.DLL) to provide
  some missing system APIs, but this is no longer tested as of PhysicsFS 2.1.0.
- PhysicsFS 2.0.x still works with Windows 95 without UNICOWS.DLL.
+ PhysicsFS 2.0.x is known to work with Windows 95 without UNICOWS.DLL.
 
 PhysicsFS works on 32-bit and 64-bit Windows. There is no 16-bit Windows
- support at all. Reports of success and problems can go to Ryan at
- icculus@icculus.org ...
+ support at all. Windows RT (Windows Phone, UWP) is covered below.
+
+
+Windows RT:
+
+This supposedly works, but isn't tested recently.
 
 
 PocketPC/WindowsCE:
 
 Support for PocketPC was removed in PhysicsFS 2.1.0. This was known to work
- in the 1.0 releases, but wasn't tested in 2.0 and later. PhysicsFS is not
- known to work on Windows Phone 7 (the latest Microsoft mobile tech at the
- time of this writing).
+ in the 1.0 releases, but wasn't tested in 2.0 and later. PhysicsFS should
+ work on modern Windows Phones (see "Windows RT" section).
 
 
 macOS:
@@ -102,8 +115,13 @@ Classic Mac OS support has been dropped in PhysicsFS 2.0. Apple hasn't updated
  hardware has removed the "Classic" emulation environment, it was time to
  remove support from PhysicsFS. That being said, the PhysicsFS 1.0 branch can
  still target back to Mac OS 8.5, so you can use that if you need support for
- this legacy OS. We still very much support modern macOS, though: see below.
+ this legacy OS. We still very much support modern macOS, though: see above.
 
+
+Emscripten:
+
+Use the "Unix" instructions, above. You can install the Emscripten SDK and use
+ the extras/buildbot-emscripten.sh script to automate this for you.
 
 
 BeOS, Zeta, YellowTab:
@@ -114,9 +132,7 @@ we still support.
 
 Haiku:
 
-Use the "Unix" instructions, above. The CMake port to BeOS is fairly new at
- the time of this writing, but it works. You can get a build of CMake from
- bebits.com or build it yourself from source from cmake.org.
+Use the "Unix" instructions, above.
 
 
 OS/2:
