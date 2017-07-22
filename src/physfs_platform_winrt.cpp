@@ -3,7 +3,7 @@
 *
 * Please see the file LICENSE.txt in the source's root directory.
 *
-*  This file is based on "platform_windows.c" by Ryan C. Gordon and Gregory S. Read.
+*  This file is based on "physfs_platform_windows.c" by Ryan C. Gordon and Gregory S. Read.
 *  Windows Runtime-specific additions and changes are made by Martin "T-Bone" Ahrnbom. 
 *
 * Instructions for setting up PhysFS in a WinRT Universal 8.1 app in Visual Studio 2013:
@@ -26,7 +26,7 @@
 * 10. On the left, navigate to Configuration Properties -> C/C++ -> Preprocessor. In Preprocessor Definitions, add "_CRT_SECURE_NO_WARNINGS"
 * 11. Hit the OK button.
 * 12. Repeat steps 8-11 but for PhysFS-WinRT.WindowsPhone.
-* 13. In the Solution Explorer, find "platform_winrt.cpp" in PhysFS-WinRT.Shared. Right click on it and select "Properties". 
+* 13. In the Solution Explorer, find "physfs_platform_winrt.cpp" in PhysFS-WinRT.Shared. Right click on it and select "Properties".
 * 14. On the left, navigate to Configuration Properties -> C/C++ -> General. On the right, change "Consume Windows Runtime Extensions"
 *	  from "No" to "Yes (/ZW)". Hit "OK".
 * 15. Near the top of the Visual Studio window, select BUILD -> Batch Build... Hit "Select All", and then "Build".
