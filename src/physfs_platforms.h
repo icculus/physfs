@@ -33,7 +33,7 @@
 #  if ((TARGET_IPHONE_SIMULATOR) || (TARGET_OS_IPHONE))
 #     define PHYSFS_NO_CDROM_SUPPORT 1
 #  endif
-#  define PHYSFS_PLATFORM_MACOSX 1
+#  define PHYSFS_PLATFORM_MACOS 1
 #  define PHYSFS_PLATFORM_POSIX 1
 #elif defined(macintosh)
 #  error Classic Mac OS support was dropped from PhysicsFS 2.0. Move to OS X.
