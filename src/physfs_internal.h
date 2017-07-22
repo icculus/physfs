@@ -79,7 +79,7 @@ extern "C" {
    wrapped in PHYSFS_SUPPORTS_* checks before actually referencing them. */
 extern const PHYSFS_Archiver __PHYSFS_Archiver_DIR;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_ZIP;
-extern const PHYSFS_Archiver __PHYSFS_Archiver_SZIP;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_7Z;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_GRP;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_QPAK;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_HOG;
