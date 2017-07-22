@@ -45,7 +45,7 @@ static int mvlLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), 0);
         name[12] = '\0';  /* just in case. */
         size = PHYSFS_swapULE32(size);
-        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, location, size), 0);
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0,  -1, -1, location, size), 0);
         location += size;
     } /* for */
 

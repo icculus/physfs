@@ -30,6 +30,8 @@
 
 #if PHYSFS_SUPPORTS_ISO9660
 
+#include <time.h>
+
 /* ISO9660 often stores values in both big and little endian formats: little
    first, followed by big. While technically there might be different values
    in each, we just always use the littleendian ones and swap ourselves. The
@@ -42,8 +44,9 @@ static int iso9660LoadEntries(PHYSFS_Io *io, const int joliet,
 
 static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
                            const char *base, PHYSFS_uint8 *fname,
-                           const int fnamelen, const PHYSFS_uint64 pos,
-                           const PHYSFS_uint64 len, void *unpkarc)
+                           const int fnamelen, const PHYSFS_sint64 timestamp,
+                           const PHYSFS_uint64 pos, const PHYSFS_uint64 len,
+                           void *unpkarc)
 {
     char *fullpath;
     char *fnamecpy;
@@ -101,7 +104,8 @@ static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
         } /* if */
     } /* else */
 
-    entry = UNPK_addEntry(unpkarc, fullpath, isdir, pos, len);
+    entry = UNPK_addEntry(unpkarc, fullpath, isdir,
+                          timestamp, timestamp, pos, len);
 
     if ((entry) && (isdir))
     {
@@ -130,6 +134,8 @@ static int iso9660LoadEntries(PHYSFS_Io *io, const int joliet,
         PHYSFS_uint8 flags;
         PHYSFS_uint8 fnamelen;
         PHYSFS_uint8 fname[256];
+        PHYSFS_sint64 timestamp;
+        struct tm t;
         int isdir;
         int multiextent;
 
@@ -177,13 +183,20 @@ static int iso9660LoadEntries(PHYSFS_Io *io, const int joliet,
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &fnamelen, 1), 0);
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, fname, fnamelen), 0);
 
-        /* !!! FIXME: we lost timestamps here. Add support into the unpacked
-           !!! FIXME:  archiver, parse them out here (and parse them out of
-           !!! FIXME:  extended attributes too?). */
+        t.tm_sec = second;
+        t.tm_min = minute;
+        t.tm_hour = hour;
+        t.tm_mday = day;
+        t.tm_mon = month - 1;
+        t.tm_year = year;
+        t.tm_wday = 0;
+        t.tm_yday = 0;
+        t.tm_isdst = -1;
+        timestamp = (PHYSFS_sint64) mktime(&t);
 
         extent += extattrlen;  /* skip extended attribute record. */
         if (!iso9660AddEntry(io, joliet, isdir, base, fname, fnamelen,
-                             extent * 2048, datalen, unpkarc))
+                             timestamp, extent * 2048, datalen, unpkarc))
         {
             return 0;
         } /* if */
