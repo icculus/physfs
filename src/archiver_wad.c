@@ -52,18 +52,18 @@ static int wadLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
     PHYSFS_uint32 i;
     for (i = 0; i < count; i++)
     {
-        PHYSFS_uint32 location;
+        PHYSFS_uint32 pos;
         PHYSFS_uint32 size;
         char name[9];
 
-        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &location, 4), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &pos, 4), 0);
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), 0);
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, name, 8), 0);
 
         name[8] = '\0'; /* name might not be null-terminated in file. */
         size = PHYSFS_swapULE32(size);
-        location = PHYSFS_swapULE32(location);
-        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0,  -1, -1, location, size), 0);
+        pos = PHYSFS_swapULE32(pos);
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, -1, -1, pos, size), 0);
     } /* for */
 
     return 1;

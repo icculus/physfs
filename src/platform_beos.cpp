@@ -185,5 +185,5 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 
 #endif  /* PHYSFS_PLATFORM_HAIKU */
 
-/* end of beos.cpp ... */
+/* end of platform_beos.cpp ... */
 

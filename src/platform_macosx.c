@@ -214,5 +214,5 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 
 #endif /* PHYSFS_PLATFORM_MACOSX */
 
-/* end of macosx.c ... */
+/* end of platform_macosx.c ... */
 
