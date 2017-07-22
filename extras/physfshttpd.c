@@ -7,7 +7,7 @@
  *   ./physfshttpd archive1.zip archive2.zip /path/to/a/real/dir etc...
  *
  * The files are appended in order to the PhysicsFS search path, and when
- *  a client request comes it, it looks for the file in said search path.
+ *  a client request comes in, it looks for the file in said search path.
  *
  * My goal was to make this work in less than 300 lines of C, so again, it's
  *  not to be used for any serious purpose. Patches to make this application
@@ -54,7 +54,7 @@
 #include "physfs.h"
 
 
-#define DEFAULT_PORTNUM  6667
+#define DEFAULT_PORTNUM 8080
 
 typedef struct
 {
@@ -72,6 +72,11 @@ static char *txt404 =
 "<html><head><title>404 Not Found</title></head>\n"
 "<body>Can't find that.</body></html>\n\n";
 
+static char *txt200 =
+"HTTP/1.0 200 OK\n"
+"Connection: close\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"\n";
 
 static void feed_file_http(const char *ipstr, int sock, const char *fname)
 {
@@ -86,9 +91,10 @@ static void feed_file_http(const char *ipstr, int sock, const char *fname)
     } /* if */
     else
     {
+        write(sock, txt200, strlen(txt200));  /* !!! FIXME: Check retval */
         do
         {
-            PHYSFS_sint64 br = PHYSFS_read(in, buffer, 1, sizeof (buffer));
+            PHYSFS_sint64 br = PHYSFS_readBytes(in, buffer, sizeof (buffer));
             if (br == -1)
             {
                 printf("%s: Read error: %s.\n", ipstr, PHYSFS_getLastError());
@@ -194,7 +200,7 @@ static int create_listen_socket(short portnum)
         addr.sin_family = AF_INET;
         addr.sin_port = htons(portnum);
         addr.sin_addr.s_addr = INADDR_ANY;
-        if ((bind(retval, &addr, (socklen_t) sizeof (addr)) == -1) ||
+        if ((bind(retval, (struct sockaddr *) &addr, (socklen_t) sizeof (addr)) == -1) ||
             (listen(retval, 5) == -1))
         {
             close(retval);
@@ -258,7 +264,7 @@ int main(int argc, char **argv)
 
     for (i = 1; i < argc; i++)
     {
-        if (!PHYSFS_addToSearchPath(argv[i], 1))
+        if (!PHYSFS_mount(argv[i], NULL, 1))
             printf(" WARNING: failed to add [%s] to search path.\n", argv[i]);
     } /* else */
 
