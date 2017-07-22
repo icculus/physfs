@@ -415,5 +415,5 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 
 #endif  /* PHYSFS_PLATFORM_POSIX */
 
-/* end of platform_posix.c ... */
+/* end of physfs_platform_posix.c ... */
 

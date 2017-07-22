@@ -119,5 +119,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_QPAK =
 
 #endif  /* defined PHYSFS_SUPPORTS_QPAK */
 
-/* end of archiver_qpak.c ... */
+/* end of physfs_archiver_qpak.c ... */
 

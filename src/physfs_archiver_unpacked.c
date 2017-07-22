@@ -301,5 +301,5 @@ void *UNPK_openArchive(PHYSFS_Io *io)
     return info;
 } /* UNPK_openArchive */
 
-/* end of archiver_unpacked.c ... */
+/* end of physfs_archiver_unpacked.c ... */
 

@@ -410,5 +410,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_SZIP =
 
 #endif  /* defined PHYSFS_SUPPORTS_7Z */
 
-/* end of archiver_7z.c ... */
+/* end of physfs_archiver_7z.c ... */
 

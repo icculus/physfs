@@ -103,5 +103,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
 
 #endif  /* defined PHYSFS_SUPPORTS_MVL */
 
-/* end of archiver_mvl.c ... */
+/* end of physfs_archiver_mvl.c ... */
 

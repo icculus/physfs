@@ -128,5 +128,5 @@ const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
 
 #endif  /* defined PHYSFS_SUPPORTS_WAD */
 
-/* end of archiver_wad.c ... */
+/* end of physfs_archiver_wad.c ... */
 
