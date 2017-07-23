@@ -80,7 +80,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 #elif (defined PHYSFS_HAVE_SYS_UCRED_H)
     int i;
     struct statfs *mntbufp = NULL;
-    int mounts = getmntinfo(&mntbufp, MNT_WAIT);
+    int mounts = getmntinfo(&mntbufp, MNT_NOWAIT);
 
     for (i = 0; i < mounts; i++)
     {
