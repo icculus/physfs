@@ -35,7 +35,7 @@
 #include <malloc.h>
 #endif
 
-#if PHYSFS_PLATFORM_SOLARIS
+#ifdef PHYSFS_PLATFORM_SOLARIS
 #include <alloca.h>
 #endif
 
@@ -58,7 +58,7 @@ extern "C" {
 #   define inline __inline
 #endif
 
-#if PHYSFS_PLATFORM_LINUX && !defined(_FILE_OFFSET_BITS)
+#if defined(PHYSFS_PLATFORM_LINUX) && !defined(_FILE_OFFSET_BITS)
 #define _FILE_OFFSET_BITS 64
 #endif
 
@@ -405,7 +405,7 @@ void __PHYSFS_DirTreeDeinit(__PHYSFS_DirTree *dt);
  *  Obviously, this isn't a function. If you need more than one char for this,
  *  you'll need to pull some old pieces of PhysicsFS out of revision control.
  */
-#if PHYSFS_PLATFORM_WINDOWS || PHYSFS_PLATFORM_OS2
+#if defined(PHYSFS_PLATFORM_WINDOWS) || defined(PHYSFS_PLATFORM_OS2)
 #define __PHYSFS_platformDirSeparator '\\'
 #else
 #define __PHYSFS_platformDirSeparator '/'

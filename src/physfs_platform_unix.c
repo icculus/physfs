@@ -53,7 +53,7 @@
 #include <sys/mnttab.h>
 #endif
 
-#if PHYSFS_PLATFORM_FREEBSD
+#ifdef PHYSFS_PLATFORM_FREEBSD
 #include <sys/sysctl.h>
 #endif
 
@@ -254,8 +254,8 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     const char *envr = NULL;
 
     /* Try to avoid using argv0 unless forced to. Try system-specific stuff. */
-    
-    #if PHYSFS_PLATFORM_FREEBSD
+
+    #if defined(PHYSFS_PLATFORM_FREEBSD)
     {
         char fullpath[PATH_MAX];
         size_t buflen = sizeof (fullpath);
@@ -263,7 +263,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
         if (sysctl(mib, 4, fullpath, &buflen, NULL, 0) != -1)
             retval = __PHYSFS_strdup(fullpath);
     }
-    #elif PHYSFS_PLATFORM_SOLARIS
+    #elif defined(PHYSFS_PLATFORM_SOLARIS)
     {
         const char *path = getexecname();
         if ((path != NULL) && (path[0] == '/'))  /* must be absolute path... */
