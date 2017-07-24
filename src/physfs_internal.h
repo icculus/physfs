@@ -98,6 +98,12 @@ int __PHYSFS_msvc_snprintf(char *outBuf, size_t size, const char *format, ...);
 #define snprintf __PHYSFS_msvc_snprintf
 #endif
 
+/* Some simple wrappers around WinRT C++ interfaces we can call from C. */
+#ifdef PHYSFS_PLATFORM_WINRT
+const void *__PHYSFS_winrtCalcBaseDir(void);
+const void *__PHYSFS_winrtCalcPrefDir(void);
+#endif
+
 /*
  * Interface for small allocations. If you need a little scratch space for
  *  a throwaway buffer or string, use this. It will make small allocations

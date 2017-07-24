@@ -26,8 +26,12 @@ If you don't care about formal packaging: just add everything in the "src"
 directory to whatever you use to build your program and compile it along with
 everything else, and you're done. It should compile with any reasonable
 ANSI C compiler, should build cleanly even with excessive compiler warnings
-enabled, needs no extra configuration, and allows static linking. If this
-works for your specific project, you can stop reading now.
+enabled, needs no extra configuration, and allows static linking.
+WinRT and Haiku need C++ compilers for their system APIs, but if you aren't on
+these platforms and don't have a C++ compiler, don't build the .cpp files.
+Everything you need is in the .c sources.
+
+If this all worked for your specific project, you can stop reading now.
 
 
 
@@ -75,18 +79,27 @@ If you want to use Visual Studio, nmake, or the Platform SDK, you will need
 PhysicsFS will only link directly against system libraries that have existed
  since Windows NT 3.51. If there's a newer API we want to use, we try to
  dynamically load it at runtime and fallback to a reasonable behaviour when
- we can't find it. Note that OSes based on Windows 95 _should_
+ we can't find it. Note that Windows 98 and later _should_
  work if you use the Microsoft Layer for Unicode (UNICOWS.DLL) to provide
  some missing system APIs, but this is no longer tested as of PhysicsFS 2.1.0.
  PhysicsFS 2.0.x is known to work with Windows 95 without UNICOWS.DLL.
 
 PhysicsFS works on 32-bit and 64-bit Windows. There is no 16-bit Windows
- support at all. Windows RT (Windows Phone, UWP) is covered below.
+ support at all. Windows RT is covered below.
 
 
 Windows RT:
 
-This supposedly works, but isn't tested recently.
+Windows RT (Windows Phone, Windows Store, UWP) 8.0 and later are supported.
+Make sure you include both physfs_platform_windows.c _and_
+physfs_platform_winrt.cpp in your build, and that the C++ file has
+"Consume Windows Runtime Extension" set to "Yes" in its Visual Studio
+properties (from the command line, you want to compile this file with the
+"/ZW" compiler switch). CMake can, in theory, generate a project file for
+WinRT if you pick a recent Visual Studio target, choose manual cross-compile
+options, and set the system name to "WindowsPhone" or "WindowsStore" and the
+correct OS version (8.0 or later).
+
 
 
 PocketPC/WindowsCE:

@@ -42,10 +42,14 @@ endif()
 if(HAIKU)
     # We add this explicitly, since we don't want CMake to think this
     #  is a C++ project unless we're on Haiku.
-    set(PHYSFS_HAIKU_SRCS src/physfs_platform_haiku.cpp)
+    set(PHYSFS_CPP_SRCS src/physfs_platform_haiku.cpp)
     find_library(BE_LIBRARY be)
     find_library(ROOT_LIBRARY root)
     set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${BE_LIBRARY} ${ROOT_LIBRARY})
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "WindowsPhone" OR CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
+    set(PHYSFS_CPP_SRCS src/physfs_platform_winrt.cpp)
 endif()
 
 if(UNIX AND NOT WINDOWS AND NOT APPLE)  # (MingW and such might be UNIX _and_ WINDOWS!)
@@ -80,7 +84,7 @@ set(PHYSFS_SRCS
     src/physfs_archiver_slb.c
     src/physfs_archiver_iso9660.c
     src/physfs_archiver_vdf.c
-    ${PHYSFS_HAIKU_SRCS}
+    ${PHYSFS_CPP_SRCS}
 )
 
 
