@@ -10,7 +10,6 @@
 #include "physfs_internal.h"
 
 #ifdef PHYSFS_PLATFORM_WINDOWS
-#ifndef PHYSFS_PLATFORM_WINRT
 
 /* Forcibly disable UNICODE macro, since we manage this ourselves. */
 #ifdef UNICODE
@@ -22,9 +21,16 @@
 
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
+
+#ifndef PHYSFS_PLATFORM_WINRT
 #include <userenv.h>
 #include <shlobj.h>
+#endif
+
+#if !defined(PHYSFS_NO_CDROM_SUPPORT)
 #include <dbt.h>
+#endif
+
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
@@ -33,9 +39,6 @@
 #undef allocator
 #endif
 #define allocator __PHYSFS_AllocatorHooks
-
-#define LOWORDER_UINT64(pos) ((PHYSFS_uint32) (pos & 0xFFFFFFFF))
-#define HIGHORDER_UINT64(pos) ((PHYSFS_uint32) ((pos >> 32) & 0xFFFFFFFF))
 
 /*
  * Users without the platform SDK don't have this defined.  The original docs
@@ -96,10 +99,83 @@ typedef struct
     int readonly;
 } WinApiFile;
 
-static HANDLE detectCDThreadHandle = NULL;
-static HWND detectCDHwnd = 0;
-static volatile int initialDiscDetectionComplete = 0;
-static volatile DWORD drivesWithMediaBitmap = 0;
+
+/* Some older APIs aren't in WinRT (only the "Ex" version, etc).
+   Since non-WinRT might not have the "Ex" version, we tapdance to use
+   the perfectly-fine-and-available-even-on-Win95 API on non-WinRT targets. */
+
+static inline HANDLE winFindFirstFileW(const WCHAR *path, LPWIN32_FIND_DATAW d)
+{
+    #ifdef PHYSFS_PLATFORM_WINRT
+    return FindFirstFileExW(path, FindExInfoStandard, d,
+                            FindExSearchNameMatch, NULL, 0);
+    #else
+    return FindFirstFileW(path, d);
+    #endif
+} /* winFindFirstFileW */
+
+static inline BOOL winInitializeCriticalSection(LPCRITICAL_SECTION lpcs)
+{
+    #ifdef PHYSFS_PLATFORM_WINRT
+    return InitializeCriticalSectionEx(lpcs, 2000, 0);
+    #else
+    InitializeCriticalSection(lpcs);
+    return TRUE;
+    #endif
+} /* winInitializeCriticalSection */
+
+static inline HANDLE winCreateFileW(const WCHAR *wfname, const DWORD mode,
+                                    const DWORD creation)
+{
+    const DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    #ifdef PHYSFS_PLATFORM_WINRT
+    return CreateFile2(wfname, mode, share, creation, NULL);
+    #else
+    return CreateFileW(wfname, mode, share, NULL, creation,
+                       FILE_ATTRIBUTE_NORMAL, NULL);
+    #endif
+} /* winCreateFileW */
+
+static BOOL winSetFilePointer(HANDLE h, const PHYSFS_sint64 pos,
+                              PHYSFS_sint64 *_newpos, const DWORD whence)
+{
+    #ifdef PHYSFS_PLATFORM_WINRT
+    LARGE_INTEGER lipos;
+    LARGE_INTEGER linewpos;
+    BOOL rc;
+    lipos.QuadPart = (LONGLONG) pos;
+    rc = SetFilePointerEx(h, lipos, &linewpos, whence);
+    if (_newpos)
+        *_newpos = (PHYSFS_sint64) linewpos.QuadPart;
+    return rc;
+    #else
+    const LONG low = (LONG) (pos & 0xFFFFFFFF);
+    LONG high = (LONG) ((pos >> 32) & 0xFFFFFFFF);
+    const DWORD rc = SetFilePointer(h, low, &high, whence);
+    /* 0xFFFFFFFF could be valid, so you have to check GetLastError too! */
+    if (_newpos)
+        *_newpos = ((PHYSFS_sint64) rc) | (((PHYSFS_sint64) high) << 32);
+    if ((rc == PHYSFS_INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
+        return FALSE;
+    return TRUE;
+    #endif
+} /* winSetFilePointer */
+
+static PHYSFS_sint64 winGetFileSize(HANDLE h)
+{
+    #ifdef PHYSFS_PLATFORM_WINRT
+    FILE_STANDARD_INFO info;
+    const BOOL rc = GetFileInformationByHandleEx(h, FileStandardInfo,
+                                                 &info, sizeof (info));
+    return rc ? (PHYSFS_sint64) info.EndOfFile.QuadPart : -1;
+    #else
+    DWORD high = 0;
+    const DWORD rc = GetFileSize(h, &high);
+    if ((rc == PHYSFS_INVALID_SET_FILE_POINTER) && (GetLastError() != NO_ERROR))
+        return -1;
+    return (PHYSFS_sint64) ((((PHYSFS_uint64) high) << 32) | rc);
+    #endif
+} /* winGetFileSize */
 
 
 static PHYSFS_ErrorCode errcodeFromWinApiError(const DWORD err)
@@ -159,6 +235,15 @@ static inline PHYSFS_ErrorCode errcodeFromWinApi(void)
     return errcodeFromWinApiError(GetLastError());
 } /* errcodeFromWinApi */
 
+
+#if defined(PHYSFS_NO_CDROM_SUPPORT)
+#define detectAvailableCDs(cb, data)
+#define deinitCDThread()
+#else
+static HANDLE detectCDThreadHandle = NULL;
+static HWND detectCDHwnd = 0;
+static volatile int initialDiscDetectionComplete = 0;
+static volatile DWORD drivesWithMediaBitmap = 0;
 
 typedef BOOL (WINAPI *fnSTEM)(DWORD, LPDWORD b);
 
@@ -267,6 +352,7 @@ static DWORD WINAPI detectCDThread(LPVOID lpParameter)
 
     /* Do initial detection, possibly blocking awhile... */
     drivesWithMediaBitmap = pollDiscDrives();
+    /* !!! FIXME: atomic operation, please. */
     initialDiscDetectionComplete = 1;  /* let main thread go on. */
 
     do
@@ -281,6 +367,7 @@ static DWORD WINAPI detectCDThread(LPVOID lpParameter)
     /* we've been asked to quit. */
     DestroyWindow(detectCDHwnd);
 
+    /* !!! FIXME: why is this here? Was this a copy/paste error? */
     do
     {
         const BOOL rc = GetMessage(&msg, detectCDHwnd, 0, 0);
@@ -295,8 +382,7 @@ static DWORD WINAPI detectCDThread(LPVOID lpParameter)
     return 0;
 } /* detectCDThread */
 
-
-void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
+static void detectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
     char drive_str[4] = { 'x', ':', '\\', '\0' };
     DWORD drives = 0;
@@ -329,14 +415,59 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
             cb(data, drive_str);
         } /* if */
     } /* for */
+} /* detectAvailableCDs */
+
+static void deinitCDThread(void)
+{
+    if (detectCDThreadHandle)
+    {
+        if (detectCDHwnd)
+            PostMessageW(detectCDHwnd, WM_QUIT, 0, 0);
+        CloseHandle(detectCDThreadHandle);
+        detectCDThreadHandle = NULL;
+        initialDiscDetectionComplete = 0;
+        drivesWithMediaBitmap = 0;
+    } /* if */
+} /* deinitCDThread */
+#endif
+
+
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
+{
+    detectAvailableCDs(cb, data);
 } /* __PHYSFS_platformDetectAvailableCDs */
 
+#ifdef PHYSFS_PLATFORM_WINRT
+static char *calcDirAppendSep(const WCHAR *wdir)
+{
+    size_t len;
+    void *ptr;
+    char *retval;
+    BAIL_IF(!wdir, errcodeFromWinApi(), NULL);
+    retval = unicodeToUtf8Heap(wdir);
+    BAIL_IF_ERRPASS(!retval, NULL);
+    len = strlen(retval);
+    ptr = allocator.Realloc(retval, len + 2);
+    if (!ptr)
+    {
+        allocator.Free(retval);
+        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    } /* if */
+    retval = (char *) ptr;
+    retval[len] = '\\';
+    retval[len+1] = '\0';
+    return retval;
+} /* calcDirAppendSep */
+#endif
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
+#ifdef PHYSFS_PLATFORM_WINRT
+    return calcDirAppendSep((const WCHAR *) __PHYSFS_winrtCalcBaseDir());
+#else
+    char *retval = NULL;
     DWORD buflen = 64;
     LPWSTR modpath = NULL;
-    char *retval = NULL;
 
     while (1)
     {
@@ -387,11 +518,15 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     allocator.Free(modpath);
 
     return retval;   /* w00t. */
+#endif
 } /* __PHYSFS_platformCalcBaseDir */
 
 
 char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 {
+#ifdef PHYSFS_PLATFORM_WINRT
+    return calcDirAppendSep((const WCHAR *) __PHYSFS_winrtCalcPrefDir());
+#else
     /*
      * Vista and later has a new API for this, but SHGetFolderPath works there,
      *  and apparently just wraps the new API. This is the new way to do it:
@@ -422,11 +557,15 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     snprintf(retval, len, "%s\\%s\\%s\\", utf8, org, app);
     allocator.Free(utf8);
     return retval;
+#endif
 } /* __PHYSFS_platformCalcPrefDir */
 
 
 char *__PHYSFS_platformCalcUserDir(void)
 {
+#ifdef PHYSFS_PLATFORM_WINRT
+    return calcDirAppendSep((const WCHAR *) __PHYSFS_winrtCalcPrefDir());
+#else
     typedef BOOL (WINAPI *fnGetUserProfDirW)(HANDLE, LPWSTR, LPDWORD);
     fnGetUserProfDirW pGetDir = NULL;
     HANDLE lib = NULL;
@@ -452,7 +591,7 @@ char *__PHYSFS_platformCalcUserDir(void)
          *  psize. Also note that the second parameter can't be
          *  NULL or the function fails.
          */
-    	rc = pGetDir(accessToken, &dummy, &psize);
+        rc = pGetDir(accessToken, &dummy, &psize);
         assert(!rc);  /* !!! FIXME: handle this gracefully. */
         (void) rc;
 
@@ -479,13 +618,28 @@ char *__PHYSFS_platformCalcUserDir(void)
 done:
     FreeLibrary(lib);
     return retval;  /* We made it: hit the showers. */
+#endif
 } /* __PHYSFS_platformCalcUserDir */
+
+
+int __PHYSFS_platformInit(void)
+{
+    return 1;  /* It's all good */
+} /* __PHYSFS_platformInit */
+
+
+int __PHYSFS_platformDeinit(void)
+{
+    deinitCDThread();
+    return 1; /* It's all good */
+} /* __PHYSFS_platformDeinit */
 
 
 void *__PHYSFS_platformGetThreadID(void)
 {
     return ( (void *) ((size_t) GetCurrentThreadId()) );
 } /* __PHYSFS_platformGetThreadID */
+
 
 void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      PHYSFS_EnumFilesCallback callback,
@@ -520,7 +674,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     if (!wSearchPath)
         return;  /* oh well. */
 
-    dir = FindFirstFileW(wSearchPath, &entw);
+    dir = winFindFirstFileW(wSearchPath, &entw);
 
     __PHYSFS_smallFree(wSearchPath);
     __PHYSFS_smallFree(searchPath);
@@ -561,28 +715,6 @@ int __PHYSFS_platformMkDir(const char *path)
 } /* __PHYSFS_platformMkDir */
 
 
-int __PHYSFS_platformInit(void)
-{
-    return 1;  /* It's all good */
-} /* __PHYSFS_platformInit */
-
-
-int __PHYSFS_platformDeinit(void)
-{
-    if (detectCDThreadHandle)
-    {
-        if (detectCDHwnd)
-            PostMessageW(detectCDHwnd, WM_QUIT, 0, 0);
-        CloseHandle(detectCDThreadHandle);
-        detectCDThreadHandle = NULL;
-        initialDiscDetectionComplete = 0;
-        drivesWithMediaBitmap = 0;
-    } /* if */
-
-    return 1; /* It's all good */
-} /* __PHYSFS_platformDeinit */
-
-
 static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 {
     HANDLE fileh;
@@ -591,11 +723,11 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
 
     UTF8_TO_UNICODE_STACK(wfname, fname);
     BAIL_IF(!wfname, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    fileh = CreateFileW(wfname, mode, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                             NULL, creation, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    fileh = winCreateFileW(wfname, mode, creation);
     __PHYSFS_smallFree(wfname);
 
-    BAIL_IF(fileh == INVALID_HANDLE_VALUE,errcodeFromWinApi(), NULL);
+    BAIL_IF(fileh == INVALID_HANDLE_VALUE, errcodeFromWinApi(), NULL);
 
     retval = (WinApiFile *) allocator.Malloc(sizeof (WinApiFile));
     if (!retval)
@@ -628,8 +760,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
     if (retval != NULL)
     {
         HANDLE h = ((WinApiFile *) retval)->handle;
-        DWORD rc = SetFilePointer(h, 0, NULL, FILE_END);
-        if (rc == PHYSFS_INVALID_SET_FILE_POINTER)
+        if (!winSetFilePointer(h, 0, NULL, FILE_END))
         {
             const PHYSFS_ErrorCode err = errcodeFromWinApi();
             CloseHandle(h);
@@ -693,79 +824,27 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
-    HANDLE Handle = ((WinApiFile *) opaque)->handle;
-    LONG HighOrderPos;
-    PLONG pHighOrderPos;
-    DWORD rc;
-
-    /* Get the high order 32-bits of the position */
-    HighOrderPos = HIGHORDER_UINT64(pos);
-
-    /*
-     * MSDN: "If you do not need the high-order 32 bits, this
-     *         pointer must be set to NULL."
-     */
-    pHighOrderPos = (HighOrderPos) ? &HighOrderPos : NULL;
-
-    /* Move pointer "pos" count from start of file */
-    rc = SetFilePointer(Handle, LOWORDER_UINT64(pos),
-                        pHighOrderPos, FILE_BEGIN);
-
-    if ( (rc == PHYSFS_INVALID_SET_FILE_POINTER) &&
-         (GetLastError() != NO_ERROR) )
-    {
-        BAIL(errcodeFromWinApi(), 0);
-    } /* if */
-    
+    HANDLE h = ((WinApiFile *) opaque)->handle;
+    const PHYSFS_sint64 spos = (PHYSFS_sint64) pos;
+    BAIL_IF(winSetFilePointer(h,spos,NULL,FILE_BEGIN), errcodeFromWinApi(), 0);
     return 1;  /* No error occured */
 } /* __PHYSFS_platformSeek */
 
 
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
-    HANDLE Handle = ((WinApiFile *) opaque)->handle;
-    LONG HighPos = 0;
-    DWORD LowPos;
-    PHYSFS_sint64 retval;
-
-    /* Get current position */
-    LowPos = SetFilePointer(Handle, 0, &HighPos, FILE_CURRENT);
-    if ( (LowPos == PHYSFS_INVALID_SET_FILE_POINTER) &&
-         (GetLastError() != NO_ERROR) )
-    {
-        BAIL(errcodeFromWinApi(), -1);
-    } /* if */
-    else
-    {
-        /* Combine the high/low order to create the 64-bit position value */
-        retval = (((PHYSFS_uint64) HighPos) << 32) | LowPos;
-        assert(retval >= 0);
-    } /* else */
-
-    return retval;
+    HANDLE h = ((WinApiFile *) opaque)->handle;
+    PHYSFS_sint64 pos = 0;
+    BAIL_IF(winSetFilePointer(h,0,&pos,FILE_CURRENT), errcodeFromWinApi(), -1);
+    return pos;
 } /* __PHYSFS_platformTell */
 
 
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
-    HANDLE Handle = ((WinApiFile *) opaque)->handle;
-    DWORD SizeHigh;
-    DWORD SizeLow;
-    PHYSFS_sint64 retval;
-
-    SizeLow = GetFileSize(Handle, &SizeHigh);
-    if ( (SizeLow == PHYSFS_INVALID_SET_FILE_POINTER) &&
-         (GetLastError() != NO_ERROR) )
-    {
-        BAIL(errcodeFromWinApi(), -1);
-    } /* if */
-    else
-    {
-        /* Combine the high/low order to create the 64-bit position value */
-        retval = (((PHYSFS_uint64) SizeHigh) << 32) | SizeLow;
-        assert(retval >= 0);
-    } /* else */
-
+    HANDLE h = ((WinApiFile *) opaque)->handle;
+    const PHYSFS_sint64 retval = winGetFileSize(h);
+    BAIL_IF(retval < 0, errcodeFromWinApi(), -1);
     return retval;
 } /* __PHYSFS_platformFileLength */
 
@@ -790,9 +869,15 @@ void __PHYSFS_platformClose(void *opaque)
 
 static int doPlatformDelete(LPWSTR wpath)
 {
-    const int isdir = (GetFileAttributesW(wpath) & FILE_ATTRIBUTE_DIRECTORY);
-    const BOOL rc = (isdir) ? RemoveDirectoryW(wpath) : DeleteFileW(wpath);
-    BAIL_IF(!rc, errcodeFromWinApi(), 0);
+    WIN32_FILE_ATTRIBUTE_DATA info;
+    if (!GetFileAttributesExW(wpath, GetFileExInfoStandard, &info))
+        BAIL(errcodeFromWinApi(), 0);
+    else
+    {
+        const int isdir = (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+        const BOOL rc = isdir ? RemoveDirectoryW(wpath) : DeleteFileW(wpath);
+        BAIL_IF(!rc, errcodeFromWinApi(), 0);
+    } /* else */
     return 1;   /* if you made it here, it worked. */
 } /* doPlatformDelete */
 
@@ -814,7 +899,13 @@ void *__PHYSFS_platformCreateMutex(void)
     LPCRITICAL_SECTION lpcs;
     lpcs = (LPCRITICAL_SECTION) allocator.Malloc(sizeof (CRITICAL_SECTION));
     BAIL_IF(!lpcs, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    InitializeCriticalSection(lpcs);
+
+    if (!winInitializeCriticalSection(lpcs))
+    {
+        allocator.Free(lpcs);
+        BAIL(errcodeFromWinApi(), NULL);
+    } /* if */
+
     return lpcs;
 } /* __PHYSFS_platformCreateMutex */
 
@@ -888,7 +979,7 @@ static int isSymlink(const WCHAR *wpath, const DWORD attr)
     if ((attr & PHYSFS_FILE_ATTRIBUTE_REPARSE_POINT) == 0)
         return 0;  /* not a reparse point? Definitely not a symlink. */
 
-    h = FindFirstFileW(wpath, &w32dw);
+    h = winFindFirstFileW(wpath, &w32dw);
     if (h == INVALID_HANDLE_VALUE)
         return 0;  /* ...maybe the file just vanished...? */
 
@@ -952,7 +1043,6 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
 } /* __PHYSFS_platformStat */
 
 #endif  /* PHYSFS_PLATFORM_WINDOWS */
-#endif  /* PHYSFS_PLATFORM_WINRT */
 
 /* end of physfs_platform_windows.c ... */
 
