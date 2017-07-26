@@ -322,7 +322,7 @@ static PHYSFS_sint64 ZIP_read(PHYSFS_Io *_io, void *buf, PHYSFS_uint64 len)
 
         while (retval < maxread)
         {
-            PHYSFS_uint32 before = finfo->stream.total_out;
+            const PHYSFS_uint32 before = (PHYSFS_uint32) finfo->stream.total_out;
             int rc;
 
             if (finfo->stream.avail_in == 0)
