@@ -158,7 +158,9 @@ if(PHYSFS_BUILD_STATIC)
         set_target_properties(physfs-static PROPERTIES OUTPUT_NAME "physfs")
     endif()
     if(WINRT)
+        # Ignore LNK4264 warnings; we don't author any WinRT components, just consume them, so we're okay in a static library.
 		set_target_properties(physfs-static PROPERTIES VS_WINRT_COMPONENT True)
+        set_target_properties(physfs-static PROPERTIES STATIC_LIBRARY_FLAGS "/ignore:4264")
     endif()
 
     set(PHYSFS_LIB_TARGET physfs-static)
