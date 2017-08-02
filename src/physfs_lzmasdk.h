@@ -1451,8 +1451,8 @@ static UInt32 CheckFlag(UInt32 flag)
 #endif
 
 #if defined(__WATCOMC__)
-static void __cpuid( int cpuinfo[4], uint32_t infotype );
-#pragma aux __cpuid =      \
+static void __cpuid(int *cpuinfo, const UInt32 infotype);
+#pragma aux __cpuid =     \
     ".586"                \
     "cpuid"               \
     "mov  [esi+0],eax"    \
