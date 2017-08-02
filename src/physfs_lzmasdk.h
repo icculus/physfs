@@ -1450,6 +1450,19 @@ static UInt32 CheckFlag(UInt32 flag)
 #define CHECK_CPUID_IS_SUPPORTED
 #endif
 
+#if defined(__WATCOMC__)
+static void __cpuid( int cpuinfo[4], uint32_t infotype );
+#pragma aux __cpuid =      \
+    ".586"                \
+    "cpuid"               \
+    "mov  [esi+0],eax"    \
+    "mov  [esi+4],ebx"    \
+    "mov  [esi+8],ecx"    \
+    "mov  [esi+12],edx"   \
+    parm [esi] [eax] modify [ebx ecx edx];
+#endif
+
+
 static void MyCPUID(UInt32 function, UInt32 *a, UInt32 *b, UInt32 *c, UInt32 *d)
 {
   #ifdef USE_ASM
@@ -1497,9 +1510,6 @@ static void MyCPUID(UInt32 function, UInt32 *a, UInt32 *b, UInt32 *c, UInt32 *d)
     : "0" (function)) ;
 
   #endif
-
-  #elif defined(__WATCOMC__)
-  *a = *b = *c = *d = 0;  /* !!! FIXME: oh well for now. */
 
   #else
 
