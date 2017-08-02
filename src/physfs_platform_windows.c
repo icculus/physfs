@@ -749,7 +749,6 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
     {
         const PHYSFS_ErrorCode err = errcodeFromWinApi();
         CloseHandle(h);
-        allocator.Free(retval);
         BAIL(err, NULL);
     } /* if */
 
