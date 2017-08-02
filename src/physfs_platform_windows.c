@@ -826,7 +826,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
     HANDLE h = ((WinApiFile *) opaque)->handle;
     const PHYSFS_sint64 spos = (PHYSFS_sint64) pos;
-    BAIL_IF(winSetFilePointer(h,spos,NULL,FILE_BEGIN), errcodeFromWinApi(), 0);
+    BAIL_IF(!winSetFilePointer(h,spos,NULL,FILE_BEGIN), errcodeFromWinApi(), 0);
     return 1;  /* No error occured */
 } /* __PHYSFS_platformSeek */
 
@@ -835,7 +835,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
     HANDLE h = ((WinApiFile *) opaque)->handle;
     PHYSFS_sint64 pos = 0;
-    BAIL_IF(winSetFilePointer(h,0,&pos,FILE_CURRENT), errcodeFromWinApi(), -1);
+    BAIL_IF(!winSetFilePointer(h,0,&pos,FILE_CURRENT), errcodeFromWinApi(), -1);
     return pos;
 } /* __PHYSFS_platformTell */
 
