@@ -92,13 +92,6 @@ static char *unicodeToUtf8Heap(const WCHAR *w_str)
     return retval;
 } /* unicodeToUtf8Heap */
 
-/* !!! FIXME: do we really need readonly? If not, do we need this struct? */
-typedef struct
-{
-    HANDLE handle;
-    int readonly;
-} WinApiFile;
-
 
 /* Some older APIs aren't in WinRT (only the "Ex" version, etc).
    Since non-WinRT might not have the "Ex" version, we tapdance to use
@@ -715,10 +708,9 @@ int __PHYSFS_platformMkDir(const char *path)
 } /* __PHYSFS_platformMkDir */
 
 
-static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
+static HANDLE doOpen(const char *fname, DWORD mode, DWORD creation)
 {
     HANDLE fileh;
-    WinApiFile *retval;
     WCHAR *wfname;
 
     UTF8_TO_UNICODE_STACK(wfname, fname);
@@ -727,55 +719,47 @@ static void *doOpen(const char *fname, DWORD mode, DWORD creation, int rdonly)
     fileh = winCreateFileW(wfname, mode, creation);
     __PHYSFS_smallFree(wfname);
 
-    BAIL_IF(fileh == INVALID_HANDLE_VALUE, errcodeFromWinApi(), NULL);
+    if (fileh == INVALID_HANDLE_VALUE)
+        BAIL(errcodeFromWinApi(), INVALID_HANDLE_VALUE);
 
-    retval = (WinApiFile *) allocator.Malloc(sizeof (WinApiFile));
-    if (!retval)
-    {
-        CloseHandle(fileh);
-        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    } /* if */
-
-    retval->readonly = rdonly;
-    retval->handle = fileh;
-    return retval;
+    return fileh;
 } /* doOpen */
 
 
 void *__PHYSFS_platformOpenRead(const char *filename)
 {
-    return doOpen(filename, GENERIC_READ, OPEN_EXISTING, 1);
+    HANDLE h = doOpen(filename, GENERIC_READ, OPEN_EXISTING);
+    return (h == INVALID_HANDLE_VALUE) ? NULL : (void *) h;
 } /* __PHYSFS_platformOpenRead */
 
 
 void *__PHYSFS_platformOpenWrite(const char *filename)
 {
-    return doOpen(filename, GENERIC_WRITE, CREATE_ALWAYS, 0);
+    HANDLE h = doOpen(filename, GENERIC_WRITE, CREATE_ALWAYS);
+    return (h == INVALID_HANDLE_VALUE) ? NULL : (void *) h;
 } /* __PHYSFS_platformOpenWrite */
 
 
 void *__PHYSFS_platformOpenAppend(const char *filename)
 {
-    void *retval = doOpen(filename, GENERIC_WRITE, OPEN_ALWAYS, 0);
-    if (retval != NULL)
+    HANDLE h = doOpen(filename, GENERIC_WRITE, OPEN_ALWAYS);
+    BAIL_IF_ERRPASS(h == INVALID_HANDLE_VALUE, NULL);
+
+    if (!winSetFilePointer(h, 0, NULL, FILE_END))
     {
-        HANDLE h = ((WinApiFile *) retval)->handle;
-        if (!winSetFilePointer(h, 0, NULL, FILE_END))
-        {
-            const PHYSFS_ErrorCode err = errcodeFromWinApi();
-            CloseHandle(h);
-            allocator.Free(retval);
-            BAIL(err, NULL);
-        } /* if */
+        const PHYSFS_ErrorCode err = errcodeFromWinApi();
+        CloseHandle(h);
+        allocator.Free(retval);
+        BAIL(err, NULL);
     } /* if */
 
-    return retval;
+    return (void *) h;
 } /* __PHYSFS_platformOpenAppend */
 
 
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 {
-    HANDLE Handle = ((WinApiFile *) opaque)->handle;
+    HANDLE h = (HANDLE) opaque;
     PHYSFS_sint64 totalRead = 0;
 
     if (!__PHYSFS_ui64FitsAddressSpace(len))
@@ -785,7 +769,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
     {
         const DWORD thislen = (len > 0xFFFFFFFF) ? 0xFFFFFFFF : (DWORD) len;
         DWORD numRead = 0;
-        if (!ReadFile(Handle, buf, thislen, &numRead, NULL))
+        if (!ReadFile(h, buf, thislen, &numRead, NULL))
             BAIL(errcodeFromWinApi(), -1);
         len -= (PHYSFS_uint64) numRead;
         totalRead += (PHYSFS_sint64) numRead;
@@ -800,7 +784,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buf, PHYSFS_uint64 len)
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint64 len)
 {
-    HANDLE Handle = ((WinApiFile *) opaque)->handle;
+    HANDLE h = (HANDLE) opaque;
     PHYSFS_sint64 totalWritten = 0;
 
     if (!__PHYSFS_ui64FitsAddressSpace(len))
@@ -810,7 +794,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
     {
         const DWORD thislen = (len > 0xFFFFFFFF) ? 0xFFFFFFFF : (DWORD) len;
         DWORD numWritten = 0;
-        if (!WriteFile(Handle, buffer, thislen, &numWritten, NULL))
+        if (!WriteFile(h, buffer, thislen, &numWritten, NULL))
             BAIL(errcodeFromWinApi(), -1);
         len -= (PHYSFS_uint64) numWritten;
         totalWritten += (PHYSFS_sint64) numWritten;
@@ -824,7 +808,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
-    HANDLE h = ((WinApiFile *) opaque)->handle;
+    HANDLE h = (HANDLE) opaque;
     const PHYSFS_sint64 spos = (PHYSFS_sint64) pos;
     BAIL_IF(!winSetFilePointer(h,spos,NULL,FILE_BEGIN), errcodeFromWinApi(), 0);
     return 1;  /* No error occured */
@@ -833,7 +817,7 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
-    HANDLE h = ((WinApiFile *) opaque)->handle;
+    HANDLE h = (HANDLE) opaque;
     PHYSFS_sint64 pos = 0;
     BAIL_IF(!winSetFilePointer(h,0,&pos,FILE_CURRENT), errcodeFromWinApi(), -1);
     return pos;
@@ -842,7 +826,7 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
-    HANDLE h = ((WinApiFile *) opaque)->handle;
+    HANDLE h = (HANDLE) opaque;
     const PHYSFS_sint64 retval = winGetFileSize(h);
     BAIL_IF(retval < 0, errcodeFromWinApi(), -1);
     return retval;
@@ -851,19 +835,16 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 
 int __PHYSFS_platformFlush(void *opaque)
 {
-    WinApiFile *fh = ((WinApiFile *) opaque);
-    if (!fh->readonly)
-        BAIL_IF(!FlushFileBuffers(fh->handle), errcodeFromWinApi(), 0);
-
+    HANDLE h = (HANDLE) opaque;
+    BAIL_IF(!FlushFileBuffers(h), errcodeFromWinApi(), 0);
     return 1;
 } /* __PHYSFS_platformFlush */
 
 
 void __PHYSFS_platformClose(void *opaque)
 {
-    HANDLE Handle = ((WinApiFile *) opaque)->handle;
-    (void) CloseHandle(Handle); /* ignore errors. You should have flushed! */
-    allocator.Free(opaque);
+    HANDLE h = (HANDLE) opaque;
+    (void) CloseHandle(h); /* ignore errors. You should have flushed! */
 } /* __PHYSFS_platformClose */
 
 
