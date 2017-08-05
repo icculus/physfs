@@ -234,8 +234,7 @@ static inline PHYSFS_ErrorCode errcodeFromWinApi(void)
 #define deinitCDThread()
 #else
 static HANDLE detectCDThreadHandle = NULL;
-static HWND detectCDHwnd = 0;
-static volatile int initialDiscDetectionComplete = 0;
+static HWND detectCDHwnd = NULL;
 static volatile DWORD drivesWithMediaBitmap = 0;
 
 typedef BOOL (WINAPI *fnSTEM)(DWORD, LPDWORD b);
@@ -309,8 +308,9 @@ static LRESULT CALLBACK detectCDWndProc(HWND hwnd, UINT msg,
 } /* detectCDWndProc */
 
 
-static DWORD WINAPI detectCDThread(LPVOID lpParameter)
+static DWORD WINAPI detectCDThread(LPVOID arg)
 {
+    HANDLE initialDiscDetectionComplete = *((HANDLE *) arg);
     const char *classname = "PhysicsFSDetectCDCatcher";
     const char *winname = "PhysicsFSDetectCDMsgWindow";
     HINSTANCE hInstance = GetModuleHandleW(NULL);
@@ -326,7 +326,7 @@ static DWORD WINAPI detectCDThread(LPVOID lpParameter)
     class_atom = RegisterClassExA(&wce);
     if (class_atom == 0)
     {
-        initialDiscDetectionComplete = 1;  /* let main thread go on. */
+        SetEvent(initialDiscDetectionComplete);  /* let main thread go on. */
         return 0;
     } /* if */
 
@@ -336,7 +336,7 @@ static DWORD WINAPI detectCDThread(LPVOID lpParameter)
 
     if (detectCDHwnd == NULL)
     {
-        initialDiscDetectionComplete = 1;  /* let main thread go on. */
+        SetEvent(initialDiscDetectionComplete);  /* let main thread go on. */
         UnregisterClassA(classname, hInstance);
         return 0;
     } /* if */
@@ -345,8 +345,8 @@ static DWORD WINAPI detectCDThread(LPVOID lpParameter)
 
     /* Do initial detection, possibly blocking awhile... */
     drivesWithMediaBitmap = pollDiscDrives();
-    /* !!! FIXME: atomic operation, please. */
-    initialDiscDetectionComplete = 1;  /* let main thread go on. */
+
+    SetEvent(initialDiscDetectionComplete);  /* let main thread go on. */
 
     do
     {
@@ -390,13 +390,18 @@ static void detectAvailableCDs(PHYSFS_StringCallback cb, void *data)
      */
     if (!detectCDThreadHandle)
     {
-        initialDiscDetectionComplete = 0;
-        detectCDThreadHandle = CreateThread(NULL,0,detectCDThread,NULL,0,NULL);
-        if (detectCDThreadHandle == NULL)
+        HANDLE initialDetectDone = CreateEvent(NULL, TRUE, FALSE, NULL);
+        if (!initialDetectDone)
             return;  /* oh well. */
 
-        while (!initialDiscDetectionComplete)
-            Sleep(50);
+        detectCDThreadHandle = CreateThread(NULL, 0, detectCDThread,
+                                            &initialDetectDone, 0, NULL);
+        if (detectCDThreadHandle)
+            WaitForSingleObject(initialDetectDone, INFINITE);
+        CloseHandle(initialDetectDone);
+
+        if (!detectCDThreadHandle)
+            return;  /* oh well. */
     } /* if */
 
     drives = drivesWithMediaBitmap; /* whatever the thread has seen, we take. */
@@ -418,7 +423,6 @@ static void deinitCDThread(void)
             PostMessageW(detectCDHwnd, WM_QUIT, 0, 0);
         CloseHandle(detectCDThreadHandle);
         detectCDThreadHandle = NULL;
-        initialDiscDetectionComplete = 0;
         drivesWithMediaBitmap = 0;
     } /* if */
 } /* deinitCDThread */
