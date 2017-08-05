@@ -320,7 +320,7 @@ typedef signed long long      PHYSFS_sint64;
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 /* Make sure the types really have the right sizes */
 #define PHYSFS_COMPILE_TIME_ASSERT(name, x)               \
-       typedef int PHYSFS_dummy_ ## name[(x) * 2 - 1]
+       typedef int PHYSFS_compile_time_assert_ ## name[(x) * 2 - 1]
 
 PHYSFS_COMPILE_TIME_ASSERT(uint8, sizeof(PHYSFS_uint8) == 1);
 PHYSFS_COMPILE_TIME_ASSERT(sint8, sizeof(PHYSFS_sint8) == 1);
