@@ -359,19 +359,7 @@ static DWORD WINAPI detectCDThread(LPVOID arg)
 
     /* we've been asked to quit. */
     DestroyWindow(detectCDHwnd);
-
-    /* !!! FIXME: why is this here? Was this a copy/paste error? */
-    do
-    {
-        const BOOL rc = GetMessage(&msg, detectCDHwnd, 0, 0);
-        if ((rc == 0) || (rc == -1))
-            break;
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    } while (1);
-
     UnregisterClassA(classname, hInstance);
-
     return 0;
 } /* detectCDThread */
 
