@@ -585,8 +585,7 @@ char *__PHYSFS_platformCalcUserDir(void)
          *  NULL or the function fails.
          */
         rc = pGetDir(accessToken, &dummy, &psize);
-        assert(!rc);  /* !!! FIXME: handle this gracefully. */
-        (void) rc;
+        GOTO_IF(rc, PHYSFS_ERR_OS_ERROR, done);  /* should have failed! */
 
         /* Allocate memory for the profile directory */
         wstr = (LPWSTR) __PHYSFS_smallAlloc((psize + 1) * sizeof (WCHAR));
@@ -604,11 +603,11 @@ char *__PHYSFS_platformCalcUserDir(void)
             } /* if */
             __PHYSFS_smallFree(wstr);
         } /* if */
-
-        CloseHandle(accessToken);
     } /* if */
 
 done:
+    if (accessToken)
+        CloseHandle(accessToken);
     FreeLibrary(lib);
     return retval;  /* We made it: hit the showers. */
 #endif
