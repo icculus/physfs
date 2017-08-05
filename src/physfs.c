@@ -8,8 +8,6 @@
  *  This file written by Ryan C. Gordon.
  */
 
-/* !!! FIXME: ERR_PAST_EOF shouldn't trigger for reads. Just return zero. */
-
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
