@@ -705,7 +705,6 @@ PHYSFS_DECL const char *PHYSFS_getDirSeparator(void);
 PHYSFS_DECL void PHYSFS_permitSymbolicLinks(int allow);
 
 
-/* !!! FIXME: const this? */
 /**
  * \fn char **PHYSFS_getCdRomDirs(void)
  * \brief Get an array of paths to available CD-ROM drives.
@@ -2605,9 +2604,10 @@ typedef enum PHYSFS_FileType
  *  data will be either the number of seconds since the Unix epoch (midnight,
  *  Jan 1, 1970), or -1 if the information isn't available or applicable.
  *  The (filesize) field is measured in bytes.
- *  The (readonly) field tells you whether when you open a file for writing you
- *  are writing to the same file as if you were opening it, given you have
- *  enough filesystem rights to do that.  !!! FIXME: this might change.
+ *  The (readonly) field tells you whether the archive thinks a file is
+ *  not writable, but tends to be only an estimate (for example, your write
+ *  dir might overlap with a .zip file, meaning you _can_ successfully open
+ *  that path for writing, as it gets created elsewhere.
  *
  * \sa PHYSFS_stat
  * \sa PHYSFS_FileType
@@ -2783,7 +2783,11 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle,
  *
  * ...in short, you're probably not going to write an HTTP implementation.
  *
- * Thread safety: TO BE DECIDED.  !!! FIXME
+ * Thread safety: PHYSFS_Io implementations are not guaranteed to be thread
+ *  safe in themselves. Under the hood where PhysicsFS uses them, the library
+ *  provides its own locks. If you plan to use them directly from separate
+ *  threads, you should either use mutexes to protect them, or don't use the
+ *  same PHYSFS_Io from two threads at the same time.
  *
  * \sa PHYSFS_mountIo
  */
@@ -3335,7 +3339,14 @@ PHYSFS_DECL const char *PHYSFS_getPrefDir(const char *org, const char *app);
  *  PHYSFS_setErrorCode() before returning. PhysicsFS will pass these errors
  *  back to the application unmolested in most cases.
  *
- * Thread safety: TO BE DECIDED.  !!! FIXME
+ * Thread safety: PHYSFS_Archiver implementations are not guaranteed to be
+ *  thread safe in themselves. PhysicsFS provides thread safety when it calls
+ *  into a given archiver inside the library, but it does not promise that
+ *  using the same PHYSFS_File from two threads at once is thread-safe; as
+ *  such, your PHYSFS_Archiver can assume that locking is handled for you
+ *  so long as the PHYSFS_Io you return from PHYSFS_open* doesn't change any
+ *  of your Archiver state, as the PHYSFS_Io won't be as aggressively
+ *  protected.
  *
  * \sa PHYSFS_registerArchiver
  * \sa PHYSFS_deregisterArchiver
@@ -3343,9 +3354,6 @@ PHYSFS_DECL const char *PHYSFS_getPrefDir(const char *org, const char *app);
  */
 typedef struct PHYSFS_Archiver
 {
-
-// !!! FIXME: split read/write interfaces?
-
     /**
      * \brief Binary compatibility information.
      *

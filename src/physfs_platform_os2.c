@@ -63,7 +63,6 @@ static PHYSFS_ErrorCode errcodeFromAPIRET(const APIRET rc)
         case ERROR_NO_MORE_SEARCH_HANDLES: return PHYSFS_ERR_IO;
         case ERROR_SEEK_ON_DEVICE: return PHYSFS_ERR_IO;
         case ERROR_NEGATIVE_SEEK: return PHYSFS_ERR_INVALID_ARGUMENT;
-        /*!!! FIXME: Where did this go?  case ERROR_DEL_CURRENT_DIRECTORY: return ERR_DEL_CWD;*/
         case ERROR_WRITE_PROTECT: return PHYSFS_ERR_PERMISSION;
         case ERROR_WRITE_FAULT: return PHYSFS_ERR_IO;
         case ERROR_UNCERTAIN_MEDIA: return PHYSFS_ERR_IO;
