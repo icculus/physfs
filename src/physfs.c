@@ -244,7 +244,7 @@ typedef struct __PHYSFS_MemoryIoInfo
     PHYSFS_uint64 len;
     PHYSFS_uint64 pos;
     PHYSFS_Io *parent;
-    volatile PHYSFS_uint32 refcount;
+    int refcount;
     void (*destruct)(void *);
 } MemoryIoInfo;
 
