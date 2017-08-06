@@ -28,7 +28,7 @@
  */
 
 /* I'm not screwing around with stricmp vs. strcasecmp... */
-/* !!! FIXME: this will NOT work with UTF-8 strings in physfs2.0 */
+/* !!! FIXME-3.0: this will NOT work with UTF-8 strings in physfs2.0 */
 static int caseInsensitiveStringCompare(const char *x, const char *y)
 {
     int ux, uy;

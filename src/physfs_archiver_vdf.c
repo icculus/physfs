@@ -78,7 +78,7 @@ static int vdfLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count,
 
         BAIL_IF(!name[0], PHYSFS_ERR_CORRUPT, 0);
 
-        /* !!! FIXME: we assume the filenames are low-ASCII; if they use
+        /* !!! FIXME-3.0: we assume the filenames are low-ASCII; if they use
            any high-ASCII chars, they will be invalid UTF-8. */
 
         BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, ts, ts, jump, size), 0);

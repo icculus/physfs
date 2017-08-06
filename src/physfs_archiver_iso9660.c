@@ -88,7 +88,7 @@ static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
     } /* if */
     else
     {
-        /* !!! FIXME: we assume the filenames are low-ASCII; if they use
+        /* !!! FIXME-3.0: we assume the filenames are low-ASCII; if they use
            any high-ASCII chars, they will be invalid UTF-8. */
         memcpy(fnamecpy, fname, fnamelen);
         fnamecpy[fnamelen] = '\0';

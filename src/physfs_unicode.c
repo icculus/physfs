@@ -444,6 +444,10 @@ static void locate_case_fold_mapping(const PHYSFS_uint32 from,
 } /* locate_case_fold_mapping */
 
 
+/* !!! FIXME-3.0: this doesn't actually work (for example, it folds the German Eszett
+   into 's' 's', but if you have two 'S' chars in a row, it'll fail on the first one,
+   since it'll fold into a single 's'. This needs to be able to lurch along with a
+   variable number of codepoints at a time. */
 static int utf8codepointcmp(const PHYSFS_uint32 cp1, const PHYSFS_uint32 cp2)
 {
     PHYSFS_uint32 folded1[3], folded2[3];
