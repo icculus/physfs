@@ -974,7 +974,7 @@ static int sanitizePlatformIndependentPath(const char *src, char *dst)
  */
 static int partOfMountPoint(DirHandle *h, char *fname)
 {
-    /* !!! FIXME: This code feels gross. */
+    /* !!! FIXME-3.0: This code feels gross. */
     int rc;
     size_t len, mntpntlen;
 
@@ -1661,7 +1661,7 @@ int PHYSFS_setWriteDir(const char *newDir)
 
     if (newDir != NULL)
     {
-        /* !!! FIXME: PHYSFS_Io shouldn't be NULL */
+        /* !!! FIXME-3.0: PHYSFS_Io shouldn't be NULL */
         writeDir = createDirHandle(NULL, newDir, NULL, 1);
         retval = (writeDir != NULL);
     } /* if */
@@ -2295,7 +2295,7 @@ typedef struct SymlinkFilterData
     DirHandle *dirhandle;
 } SymlinkFilterData;
 
-/* !!! FIXME: broken if in a virtual mountpoint (stat call fails). */
+/* !!! FIXME-3.0: broken if in a virtual mountpoint (stat call fails). */
 static void enumCallbackFilterSymLinks(void *_data, const char *origdir,
                                        const char *fname)
 {
@@ -2322,7 +2322,7 @@ static void enumCallbackFilterSymLinks(void *_data, const char *origdir,
 } /* enumCallbackFilterSymLinks */
 
 
-/* !!! FIXME: this should report error conditions. */
+/* !!! FIXME-3.0: this should report error conditions. */
 void PHYSFS_enumerateFilesCallback(const char *_fname,
                                    PHYSFS_EnumFilesCallback callback,
                                    void *data)
@@ -2695,6 +2695,7 @@ static PHYSFS_sint64 doBufferedWrite(PHYSFS_File *handle, const void *buffer,
     } /* if */
 
     /* would overflow buffer. Flush and then write the new objects, too. */
+    /* !!! FIXME-3.0: this should refill the buffer, not flush everything down. */
     BAIL_IF_ERRPASS(!PHYSFS_flush(handle), -1);
     return fh->io->write(fh->io, buffer, len);
 } /* doBufferedWrite */
@@ -2909,7 +2910,7 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
                 } /* if */
                 else if (verifyPath(i, &arcfname, 0))
                 {
-                    /* !!! FIXME: this test is wrong and should be elsewhere. */
+                    /* !!! FIXME-3.0: this test is wrong and should be elsewhere. */
                     stat->readonly = !(writeDir &&
                                  (strcmp(writeDir->dirName, i->dirName) == 0));
                     retval = i->funcs->stat(i->opaque, arcfname, stat);

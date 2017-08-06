@@ -217,7 +217,7 @@ static void *SZIP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     SZIPinfo *info = NULL;
     SRes rc;
 
-    /* !!! FIXME: this is a race condition; we need a global init method that gets called when registering new archivers. */
+    /* !!! FIXME-3.0: this is a race condition; we need a global init method that gets called when registering new archivers. */
     static int generatedTable = 0;
     if (!generatedTable)
     {

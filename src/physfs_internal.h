@@ -384,7 +384,7 @@ int UNPK_stat(void *opaque, const char *fn, PHYSFS_Stat *st);
 
 
 /* Optional API many archivers use this to manage their directory tree. */
-/* !!! FIXME: document this better. */
+/* !!! FIXME-3.0: document this better. */
 
 typedef struct __PHYSFS_DirTreeEntry
 {
@@ -572,7 +572,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle);
 
 
 /*
- * !!! FIXME: comment me.
+ * !!! FIXME-3.0: comment me.
  */
 int __PHYSFS_platformStat(const char *fn, PHYSFS_Stat *stat);
 

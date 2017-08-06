@@ -2364,7 +2364,7 @@ PHYSFS_DECL void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback c, void *d);
  * PHYSFS_enumerateFilesCallback("/some/path", printDir, NULL);
  * \endcode
  *
- * !!! FIXME: enumerateFiles() does not promise alphabetical sorting by
+ * !!! FIXME-3.0: enumerateFiles() does not promise alphabetical sorting by
  * !!! FIXME:  case-sensitivity in the code, and doesn't promise sorting at
  * !!! FIXME:  all in the above docs.
  *
@@ -2900,7 +2900,7 @@ typedef struct PHYSFS_Io
     /**
      * \brief Duplicate this i/o instance.
      *
-     *  // !!! FIXME: write me.
+     *  // !!! FIXME-3.0: write me.
      *
      *   \param io The i/o instance to duplicate.
      *  \return A new value for a stream's (opaque) field, or NULL on error.
@@ -3372,7 +3372,7 @@ typedef struct PHYSFS_Archiver
      */
     PHYSFS_ArchiveInfo info;
 
-// !!! FIXME: documentation: \brief?
+// !!! FIXME-3.0: documentation: \brief?
     /**
      * \brief
      *
@@ -3385,7 +3385,7 @@ typedef struct PHYSFS_Archiver
      *  element of the search path.
      * Return NULL on failure. We ignore any error code you set here;
      *  when PHYSFS_mount() returns, the error will be PHYSFS_ERR_UNSUPPORTED
-     *  (no Archivers could handle this data).  // !!! FIXME: yeah?
+     *  (no Archivers could handle this data).  // !!! FIXME-3.0: yeah?
      *  Returns non-NULL on success. The pointer returned will be
      *  passed as the "opaque" parameter for later calls.
      */
@@ -3482,7 +3482,7 @@ typedef struct PHYSFS_Archiver
  * \fn int PHYSFS_registerArchiver(const PHYSFS_Archiver *archiver)
  * \brief Add a new archiver to the system.
  *
- * !!! FIXME: write me.
+ * !!! FIXME-3.0: write me.
  *
  * You may not have two archivers that handle the same extension. If you are
  *  going to have a clash, you can deregister the other archiver (including
@@ -3503,7 +3503,7 @@ PHYSFS_DECL int PHYSFS_registerArchiver(const PHYSFS_Archiver *archiver);
  * \fn int PHYSFS_deregisterArchiver(const char *ext)
  * \brief Remove an archiver from the system.
  *
- * !!! FIXME: write me.
+ * !!! FIXME-3.0: write me.
  *
  * This fails if there are any archives still open that use this archiver.
  *
