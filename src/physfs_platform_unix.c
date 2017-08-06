@@ -118,8 +118,6 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
         else if (strcmp(ent->mnt_type, "supermount") == 0)
             add_it = 1;
 
-        /* !!! FIXME: udf? automount? */
-
         /* add other mount types here */
 
         if (add_it)

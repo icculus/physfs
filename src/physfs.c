@@ -2882,7 +2882,7 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
     stat->createtime = -1;
     stat->accesstime = -1;
     stat->filetype = PHYSFS_FILETYPE_OTHER;
-    stat->readonly = 1;  /* !!! FIXME */
+    stat->readonly = 1;
 
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
@@ -2904,7 +2904,7 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
                 if (exists)
                 {
                     stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
-                    stat->readonly = 1;  /* !!! FIXME */
+                    stat->readonly = 1;
                     retval = 1;
                 } /* if */
                 else if (verifyPath(i, &arcfname, 0))

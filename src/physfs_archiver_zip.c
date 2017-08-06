@@ -1637,8 +1637,6 @@ static int ZIP_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
     ZIPinfo *info = (ZIPinfo *) opaque;
     const ZIPentry *entry = zip_find_entry(info, filename);
 
-    /* !!! FIXME: does this need to resolve entries here? */
-
     if (entry == NULL)
         return 0;
 
