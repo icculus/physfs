@@ -1,5 +1,5 @@
 /*
- * Mac OS X support routines for PhysicsFS.
+ * macOS (iOS, etc) support routines for PhysicsFS.
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *

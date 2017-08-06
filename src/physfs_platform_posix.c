@@ -331,8 +331,7 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
     st->createtime = statbuf.st_ctime;
     st->accesstime = statbuf.st_atime;
 
-    /* !!! FIXME: maybe we should just report full permissions? */
-    st->readonly = access(filename, W_OK);
+    st->readonly = (access(filename, W_OK) == -1);
     return 1;
 } /* __PHYSFS_platformStat */
 

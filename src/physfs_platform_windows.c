@@ -196,7 +196,6 @@ static PHYSFS_ErrorCode errcodeFromWinApiError(const DWORD err)
         case ERROR_WRITE_FAULT: return PHYSFS_ERR_IO;
         case ERROR_READ_FAULT: return PHYSFS_ERR_IO;
         case ERROR_DEV_NOT_EXIST: return PHYSFS_ERR_IO;
-        /* !!! FIXME: ?? case ELOOP: return PHYSFS_ERR_SYMLINK_LOOP; */
         case ERROR_BUFFER_OVERFLOW: return PHYSFS_ERR_BAD_FILENAME;
         case ERROR_INVALID_NAME: return PHYSFS_ERR_BAD_FILENAME;
         case ERROR_BAD_PATHNAME: return PHYSFS_ERR_BAD_FILENAME;
@@ -207,8 +206,6 @@ static PHYSFS_ErrorCode errcodeFromWinApiError(const DWORD err)
         case ERROR_INVALID_DRIVE: return PHYSFS_ERR_NOT_FOUND;
         case ERROR_HANDLE_DISK_FULL: return PHYSFS_ERR_NO_SPACE;
         case ERROR_DISK_FULL: return PHYSFS_ERR_NO_SPACE;
-        /* !!! FIXME: ?? case ENOTDIR: return PHYSFS_ERR_NOT_FOUND; */
-        /* !!! FIXME: ?? case EISDIR: return PHYSFS_ERR_NOT_A_FILE; */
         case ERROR_WRITE_PROTECT: return PHYSFS_ERR_READ_ONLY;
         case ERROR_LOCK_VIOLATION: return PHYSFS_ERR_BUSY;
         case ERROR_SHARING_VIOLATION: return PHYSFS_ERR_BUSY;
