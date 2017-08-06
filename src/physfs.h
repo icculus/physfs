@@ -319,19 +319,19 @@ typedef signed long long      PHYSFS_sint64;
 
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
 /* Make sure the types really have the right sizes */
-#define PHYSFS_COMPILE_TIME_ASSERT(name, x)               \
-       typedef int PHYSFS_compile_time_assert_ ## name[(x) * 2 - 1]
+#define PHYSFS_COMPILE_TIME_ASSERT(name, x) \
+       typedef int PHYSFS_compile_time_assert_##name[(x) * 2 - 1]
 
-PHYSFS_COMPILE_TIME_ASSERT(uint8, sizeof(PHYSFS_uint8) == 1);
-PHYSFS_COMPILE_TIME_ASSERT(sint8, sizeof(PHYSFS_sint8) == 1);
-PHYSFS_COMPILE_TIME_ASSERT(uint16, sizeof(PHYSFS_uint16) == 2);
-PHYSFS_COMPILE_TIME_ASSERT(sint16, sizeof(PHYSFS_sint16) == 2);
-PHYSFS_COMPILE_TIME_ASSERT(uint32, sizeof(PHYSFS_uint32) == 4);
-PHYSFS_COMPILE_TIME_ASSERT(sint32, sizeof(PHYSFS_sint32) == 4);
+PHYSFS_COMPILE_TIME_ASSERT(uint8IsOneByte, sizeof(PHYSFS_uint8) == 1);
+PHYSFS_COMPILE_TIME_ASSERT(sint8IsOneByte, sizeof(PHYSFS_sint8) == 1);
+PHYSFS_COMPILE_TIME_ASSERT(uint16IsTwoBytes, sizeof(PHYSFS_uint16) == 2);
+PHYSFS_COMPILE_TIME_ASSERT(sint16IsTwoBytes, sizeof(PHYSFS_sint16) == 2);
+PHYSFS_COMPILE_TIME_ASSERT(uint32IsFourBytes, sizeof(PHYSFS_uint32) == 4);
+PHYSFS_COMPILE_TIME_ASSERT(sint32IsFourBytes, sizeof(PHYSFS_sint32) == 4);
 
 #ifndef PHYSFS_NO_64BIT_SUPPORT
-PHYSFS_COMPILE_TIME_ASSERT(uint64, sizeof(PHYSFS_uint64) == 8);
-PHYSFS_COMPILE_TIME_ASSERT(sint64, sizeof(PHYSFS_sint64) == 8);
+PHYSFS_COMPILE_TIME_ASSERT(uint64IsEightBytes, sizeof(PHYSFS_uint64) == 8);
+PHYSFS_COMPILE_TIME_ASSERT(sint64IsEightBytes, sizeof(PHYSFS_sint64) == 8);
 #endif
 
 #undef PHYSFS_COMPILE_TIME_ASSERT

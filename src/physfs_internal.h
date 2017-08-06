@@ -30,6 +30,9 @@
 
 #include <assert.h>
 
+#define __PHYSFS_COMPILE_TIME_ASSERT(name, x) \
+       typedef int __PHYSFS_compile_time_assert_##name[(x) * 2 - 1]
+
 /* !!! FIXME: remove this when revamping stack allocation code... */
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WATCOMC__)
 #include <malloc.h>
@@ -107,9 +110,9 @@ const void *__PHYSFS_winrtCalcPrefDir(void);
 /* atomic operations. */
 #if defined(_MSC_VER) && (_MSC_VER >= 1500)
 #include <intrin.h>
-PHYSFS_COMPILE_TIME_ASSERT(LongEqualsInt, sizeof (int) == sizeof (long));
+__PHYSFS_COMPILE_TIME_ASSERT(LongEqualsInt, sizeof (int) == sizeof (long));
 #define __PHYSFS_ATOMIC_INCR(ptrval) _InterlockedIncrement((long*)(ptrval))
-#define __PHYSFS_ATOMIC_INCR(ptrval) _InterlockedDecrement((long*)(ptrval))
+#define __PHYSFS_ATOMIC_DECR(ptrval) _InterlockedDecrement((long*)(ptrval))
 #elif defined(__clang__) || (defined(__GNUC__) && (((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100)) >= 40100))
 #define __PHYSFS_ATOMIC_INCR(ptrval) __sync_fetch_and_add(ptrval, 1)
 #define __PHYSFS_ATOMIC_DECR(ptrval) __sync_fetch_and_add(ptrval, -1)
