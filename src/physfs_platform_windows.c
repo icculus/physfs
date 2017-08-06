@@ -997,8 +997,7 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
     else if (winstat.dwFileAttributes & (FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_DEVICE))
     {
         st->filetype = PHYSFS_FILETYPE_OTHER;
-        /* !!! FIXME: don't rely on this */
-        st->filesize = 0;
+        st->filesize = (((PHYSFS_uint64) winstat.nFileSizeHigh) << 32) | winstat.nFileSizeLow;
     } /* else if */
 
     else
