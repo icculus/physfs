@@ -2779,8 +2779,10 @@ int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos)
         /* avoid throwing away our precious buffer if seeking within it. */
         PHYSFS_sint64 offset = pos - PHYSFS_tell(handle);
         if ( /* seeking within the already-buffered range? */
-            ((offset >= 0) && (offset <= fh->buffill - fh->bufpos)) /* fwd */
-            || ((offset < 0) && (-offset <= fh->bufpos)) /* backward */ )
+             /* forward? */
+            ((offset >= 0) && (((size_t)offset) <= fh->buffill-fh->bufpos)) ||
+            /* backward? */
+            ((offset < 0) && (((size_t) -offset) <= fh->bufpos)) )
         {
             fh->bufpos += (PHYSFS_uint32) offset;
             return 1; /* successful seek */
