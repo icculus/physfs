@@ -104,6 +104,22 @@ const void *__PHYSFS_winrtCalcBaseDir(void);
 const void *__PHYSFS_winrtCalcPrefDir(void);
 #endif
 
+/* atomic operations. */
+#if defined(_MSC_VER) && (_MSC_VER >= 1500)
+#include <intrin.h>
+PHYSFS_COMPILE_TIME_ASSERT(LongEqualsInt, sizeof (int) == sizeof (long));
+#define __PHYSFS_ATOMIC_INCR(ptrval) _InterlockedIncrement((long*)ptrval)
+#define __PHYSFS_ATOMIC_INCR(ptrval) _InterlockedDecrement((long*)ptrval)
+#elif defined(__clang__) || (defined(__GNUC__) && (((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100)) >= 40100))
+#define __PHYSFS_ATOMIC_INCR(ptrval) __sync_fetch_and_add(ptrval, 1)
+#define __PHYSFS_ATOMIC_DECR(ptrval) __sync_fetch_and_add(ptrval, -1)
+#else
+#define PHYSFS_NEED_ATOMIC_OP_FALLBACK 1
+int __PHYSFS_ATOMIC_INCR(int *ptrval);
+int __PHYSFS_ATOMIC_DECR(int *ptrval);
+#endif
+
+
 /*
  * Interface for small allocations. If you need a little scratch space for
  *  a throwaway buffer or string, use this. It will make small allocations

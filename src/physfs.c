@@ -96,6 +96,30 @@ static int externalAllocator = 0;
 PHYSFS_Allocator allocator;
 
 
+#ifdef PHYSFS_NEED_ATOMIC_OP_FALLBACK
+static inline int __PHYSFS_atomicAdd(int *ptrval, const int val)
+{
+    int retval;
+    __PHYSFS_platformGrabMutex(stateLock);
+    retval = *ptrval;
+    *ptrval = retval + val;
+    __PHYSFS_platformReleaseMutex(stateLock);
+    return retval;
+} /* __PHYSFS_atomicAdd */
+
+int __PHYSFS_ATOMIC_INCR(int *ptrval)
+{
+    return __PHYSFS_atomicAdd(ptrval, 1);
+} /* __PHYSFS_ATOMIC_INCR */
+
+int __PHYSFS_ATOMIC_DECR(int *ptrval)
+{
+    return __PHYSFS_atomicAdd(ptrval, -1);
+} /* __PHYSFS_ATOMIC_DECR */
+#endif
+
+
+
 /* PHYSFS_Io implementation for i/o to physical filesystem... */
 
 /* !!! FIXME: maybe refcount the paths in a string pool? */
@@ -292,10 +316,7 @@ static PHYSFS_Io *memoryIo_duplicate(PHYSFS_Io *io)
         BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
-    /* !!! FIXME: want lockless atomic increment. */
-    __PHYSFS_platformGrabMutex(stateLock);
-    info->refcount++;
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_ATOMIC_INCR(&info->refcount);
 
     memset(newinfo, '\0', sizeof (*info));
     newinfo->buf = info->buf;
@@ -316,7 +337,6 @@ static void memoryIo_destroy(PHYSFS_Io *io)
 {
     MemoryIoInfo *info = (MemoryIoInfo *) io->opaque;
     PHYSFS_Io *parent = info->parent;
-    int should_die = 0;
 
     if (parent != NULL)
     {
@@ -333,13 +353,7 @@ static void memoryIo_destroy(PHYSFS_Io *io)
     /* we _are_ the parent. */
     assert(info->refcount > 0);  /* even in a race, we hold a reference. */
 
-    /* !!! FIXME: want lockless atomic decrement. */
-    __PHYSFS_platformGrabMutex(stateLock);
-    info->refcount--;
-    should_die = (info->refcount == 0);
-    __PHYSFS_platformReleaseMutex(stateLock);
-
-    if (should_die)
+    if (__PHYSFS_ATOMIC_DECR(&info->refcount) == 0)
     {
         void (*destruct)(void *) = info->destruct;
         void *buf = (void *) info->buf;
