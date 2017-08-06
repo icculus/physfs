@@ -612,10 +612,9 @@ int __PHYSFS_platformInit(void)
 } /* __PHYSFS_platformInit */
 
 
-int __PHYSFS_platformDeinit(void)
+void __PHYSFS_platformDeinit(void)
 {
     deinitCDThread();
-    return 1; /* It's all good */
 } /* __PHYSFS_platformDeinit */
 
 

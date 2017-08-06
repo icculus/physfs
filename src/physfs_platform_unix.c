@@ -65,9 +65,9 @@ int __PHYSFS_platformInit(void)
 } /* __PHYSFS_platformInit */
 
 
-int __PHYSFS_platformDeinit(void)
+void __PHYSFS_platformDeinit(void)
 {
-    return 1;  /* always succeed. */
+    /* no-op */
 } /* __PHYSFS_platformDeinit */
 
 
