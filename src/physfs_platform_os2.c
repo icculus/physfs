@@ -271,7 +271,7 @@ int __PHYSFS_platformInit(void)
 } /* __PHYSFS_platformInit */
 
 
-int __PHYSFS_platformDeinit(void)
+void __PHYSFS_platformDeinit(void)
 {
     if (uconvdll)
     {
@@ -280,8 +280,6 @@ int __PHYSFS_platformDeinit(void)
         DosFreeModule(uconvdll);
         uconvdll = 0;
     } /* if */
-
-    return 1;  /* success. */
 } /* __PHYSFS_platformDeinit */
 
 

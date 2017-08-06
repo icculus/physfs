@@ -1362,8 +1362,7 @@ static int doDeinit(void)
 
     errorLock = stateLock = NULL;
 
-    /* !!! FIXME: what on earth are you supposed to do if this fails? */
-    BAIL_IF_ERRPASS(!__PHYSFS_platformDeinit(), 0);
+    __PHYSFS_platformDeinit();
 
     return 1;
 } /* doDeinit */

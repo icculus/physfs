@@ -431,11 +431,8 @@ int __PHYSFS_platformInit(void);
  * Deinitialize the platform. This is called when PHYSFS_deinit() is called
  *  from the application. You can use this to clean up anything you've
  *  allocated in your platform driver.
- *
- * Return zero if there was a catastrophic failure (which prevents you from
- *  functioning at all), and non-zero otherwise.
  */
-int __PHYSFS_platformDeinit(void);
+void __PHYSFS_platformDeinit(void);
 
 
 /*
