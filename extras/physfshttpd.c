@@ -78,22 +78,30 @@ static char *txt200 =
 "Content-Type: text/plain; charset=utf-8\n"
 "\n";
 
+static int writeAll(const int fd, const void *buf, const size_t len)
+{
+    return (write(fd, buf, len) == len);
+} /* writeAll */
+
 static void feed_file_http(const char *ipstr, int sock, const char *fname)
 {
     PHYSFS_File *in = PHYSFS_openRead(fname);
-    char buffer[1024];
+
     printf("%s: requested [%s].\n", ipstr, fname);
     if (in == NULL)
     {
         printf("%s: Can't open [%s]: %s.\n",
                ipstr, fname, PHYSFS_getLastError());
-        write(sock, txt404, strlen(txt404));  /* !!! FIXME: Check retval */
+        if (!writeAll(sock, txt404, strlen(txt404)))
+            printf("%s: Write error to socket.\n", ipstr);
+        return;
     } /* if */
-    else
+
+    if (writeAll(sock, txt200, strlen(txt200)))
     {
-        write(sock, txt200, strlen(txt200));  /* !!! FIXME: Check retval */
         do
         {
+            char buffer[1024];
             PHYSFS_sint64 br = PHYSFS_readBytes(in, buffer, sizeof (buffer));
             if (br == -1)
             {
@@ -101,11 +109,15 @@ static void feed_file_http(const char *ipstr, int sock, const char *fname)
                 break;
             } /* if */
 
-            write(sock, buffer, (int) br);   /* !!! FIXME: CHECK THIS RETVAL! */
+            else if (!writeAll(sock, buffer, (size_t) br))
+            {
+                printf("%s: Write error to socket.\n", ipstr);
+                break;
+            } /* else if */
         } while (!PHYSFS_eof(in));
+    } /* if */
 
-        PHYSFS_close(in);
-    } /* else */
+    PHYSFS_close(in);
 } /* feed_file_http */
 
 
