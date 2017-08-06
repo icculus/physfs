@@ -108,8 +108,8 @@ const void *__PHYSFS_winrtCalcPrefDir(void);
 #if defined(_MSC_VER) && (_MSC_VER >= 1500)
 #include <intrin.h>
 PHYSFS_COMPILE_TIME_ASSERT(LongEqualsInt, sizeof (int) == sizeof (long));
-#define __PHYSFS_ATOMIC_INCR(ptrval) _InterlockedIncrement((long*)ptrval)
-#define __PHYSFS_ATOMIC_INCR(ptrval) _InterlockedDecrement((long*)ptrval)
+#define __PHYSFS_ATOMIC_INCR(ptrval) _InterlockedIncrement((long*)(ptrval))
+#define __PHYSFS_ATOMIC_INCR(ptrval) _InterlockedDecrement((long*)(ptrval))
 #elif defined(__clang__) || (defined(__GNUC__) && (((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100)) >= 40100))
 #define __PHYSFS_ATOMIC_INCR(ptrval) __sync_fetch_and_add(ptrval, 1)
 #define __PHYSFS_ATOMIC_DECR(ptrval) __sync_fetch_and_add(ptrval, -1)
