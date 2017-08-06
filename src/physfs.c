@@ -57,9 +57,9 @@ typedef struct __PHYSFS_FILEHANDLE__
     PHYSFS_uint8 forReading; /* Non-zero if reading, zero if write/append */
     const DirHandle *dirHandle;  /* Archiver instance that created this */
     PHYSFS_uint8 *buffer;  /* Buffer, if set (NULL otherwise). Don't touch! */
-    PHYSFS_uint32 bufsize;  /* Bufsize, if set (0 otherwise). Don't touch! */
-    PHYSFS_uint32 buffill;  /* Buffer fill size. Don't touch! */
-    PHYSFS_uint32 bufpos;  /* Buffer position. Don't touch! */
+    size_t bufsize;  /* Bufsize, if set (0 otherwise). Don't touch! */
+    size_t buffill;  /* Buffer fill size. Don't touch! */
+    size_t bufpos;  /* Buffer position. Don't touch! */
     struct __PHYSFS_FILEHANDLE__ *next;  /* linked list stuff. */
 } FileHandle;
 
@@ -2591,12 +2591,11 @@ int PHYSFS_close(PHYSFS_File *_handle)
 } /* PHYSFS_close */
 
 
-static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
-                                    PHYSFS_uint64 len)
+static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer, size_t len)
 {
     PHYSFS_Io *io = NULL;
     PHYSFS_sint64 retval = 0;
-    PHYSFS_uint32 buffered = 0;
+    size_t buffered = 0;
     PHYSFS_sint64 rc = 0;
 
     if (len == 0)
@@ -2605,17 +2604,17 @@ static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
     buffered = fh->buffill - fh->bufpos;
     if (buffered >= len)  /* totally in the buffer, just copy and return! */
     {
-        memcpy(buffer, fh->buffer + fh->bufpos, (size_t) len);
-        fh->bufpos += (PHYSFS_uint32) len;
+        memcpy(buffer, fh->buffer + fh->bufpos, len);
+        fh->bufpos += len;
         return (PHYSFS_sint64) len;
     } /* if */
 
     else if (buffered > 0) /* partially in the buffer... */
     {
-        memcpy(buffer, fh->buffer + fh->bufpos, (size_t) buffered);
+        memcpy(buffer, fh->buffer + fh->bufpos, buffered);
         buffer = ((PHYSFS_uint8 *) buffer) + buffered;
         len -= buffered;
-        retval = buffered;
+        retval = (PHYSFS_sint64) buffered;
     } /* if */
 
     /* if you got here, the buffer is drained and we still need bytes. */
@@ -2639,7 +2638,7 @@ static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer,
         return ((retval == 0) ? rc : retval);
 
     assert(fh->bufpos == 0);
-    fh->buffill = (PHYSFS_uint32) rc;
+    fh->buffill = (size_t) rc;
     rc = doBufferedRead(fh, buffer, len);  /* go from the start, again. */
     if (rc < 0)
         return ((retval == 0) ? rc : retval);
@@ -2658,8 +2657,9 @@ PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle, void *buffer,
 
 
 PHYSFS_sint64 PHYSFS_readBytes(PHYSFS_File *handle, void *buffer,
-                               PHYSFS_uint64 len)
+                               PHYSFS_uint64 _len)
 {
+    const size_t len = (size_t) _len;
     FileHandle *fh = (FileHandle *) handle;
 
 #ifdef PHYSFS_NO_64BIT_SUPPORT
@@ -2668,10 +2668,10 @@ PHYSFS_sint64 PHYSFS_readBytes(PHYSFS_File *handle, void *buffer,
     const PHYSFS_uint64 maxlen = __PHYSFS_UI64(0x7FFFFFFFFFFFFFFF);
 #endif
 
-    if (!__PHYSFS_ui64FitsAddressSpace(len))
+    if (!__PHYSFS_ui64FitsAddressSpace(_len))
         BAIL(PHYSFS_ERR_INVALID_ARGUMENT, -1);
 
-    BAIL_IF(len > maxlen, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+    BAIL_IF(_len > maxlen, PHYSFS_ERR_INVALID_ARGUMENT, -1);
     BAIL_IF(!fh->forReading, PHYSFS_ERR_OPEN_FOR_WRITING, -1);
     BAIL_IF_ERRPASS(len == 0, 0);
     if (fh->buffer)
@@ -2682,15 +2682,15 @@ PHYSFS_sint64 PHYSFS_readBytes(PHYSFS_File *handle, void *buffer,
 
 
 static PHYSFS_sint64 doBufferedWrite(PHYSFS_File *handle, const void *buffer,
-                                     PHYSFS_uint64 len)
+                                     const size_t len)
 {
     FileHandle *fh = (FileHandle *) handle;
 
     /* whole thing fits in the buffer? */
-    if ( (((PHYSFS_uint64) fh->buffill) + len) < fh->bufsize )
+    if ((fh->buffill + len) < fh->bufsize)
     {
-        memcpy(fh->buffer + fh->buffill, buffer, (size_t) len);
-        fh->buffill += (PHYSFS_uint32) len;
+        memcpy(fh->buffer + fh->buffill, buffer, len);
+        fh->buffill += len;
         return (PHYSFS_sint64) len;
     } /* if */
 
@@ -2710,8 +2710,9 @@ PHYSFS_sint64 PHYSFS_write(PHYSFS_File *handle, const void *buffer,
 
 
 PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle, const void *buffer,
-                                PHYSFS_uint64 len)
+                                PHYSFS_uint64 _len)
 {
+    const size_t len = (size_t) _len;
     FileHandle *fh = (FileHandle *) handle;
 
 #ifdef PHYSFS_NO_64BIT_SUPPORT
@@ -2720,10 +2721,10 @@ PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle, const void *buffer,
     const PHYSFS_uint64 maxlen = __PHYSFS_UI64(0x7FFFFFFFFFFFFFFF);
 #endif
 
-    if (!__PHYSFS_ui64FitsAddressSpace(len))
+    if (!__PHYSFS_ui64FitsAddressSpace(_len))
         BAIL(PHYSFS_ERR_INVALID_ARGUMENT, -1);
 
-    BAIL_IF(len > maxlen, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+    BAIL_IF(_len > maxlen, PHYSFS_ERR_INVALID_ARGUMENT, -1);
     BAIL_IF(fh->forReading, PHYSFS_ERR_OPEN_FOR_READING, -1);
     BAIL_IF_ERRPASS(len == 0, 0);
     if (fh->buffer)
@@ -2801,12 +2802,10 @@ PHYSFS_sint64 PHYSFS_fileLength(PHYSFS_File *handle)
 int PHYSFS_setBuffer(PHYSFS_File *handle, PHYSFS_uint64 _bufsize)
 {
     FileHandle *fh = (FileHandle *) handle;
-    PHYSFS_uint32 bufsize;
+    const size_t bufsize = (size_t) _bufsize;
 
-    /* !!! FIXME: actually, why use 32 bits here? */
-    /*BAIL_IF(_bufsize > 0xFFFFFFFF, "buffer must fit in 32-bits", 0);*/
-    BAIL_IF(_bufsize > __PHYSFS_UI64(0xFFFFFFFF), PHYSFS_ERR_INVALID_ARGUMENT, 0);
-    bufsize = (PHYSFS_uint32) _bufsize;
+    if (!__PHYSFS_ui64FitsAddressSpace(_bufsize))
+        BAIL(PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
     BAIL_IF_ERRPASS(!PHYSFS_flush(handle), 0);
 
