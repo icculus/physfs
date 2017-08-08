@@ -1661,7 +1661,6 @@ int PHYSFS_setWriteDir(const char *newDir)
 
     if (newDir != NULL)
     {
-        /* !!! FIXME-3.0: PHYSFS_Io shouldn't be NULL */
         writeDir = createDirHandle(NULL, newDir, NULL, 1);
         retval = (writeDir != NULL);
     } /* if */
