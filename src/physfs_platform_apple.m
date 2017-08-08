@@ -50,9 +50,9 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 {
     @autoreleasepool
     {
-        NSArray<NSString *> *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, TRUE);
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, TRUE);
         BAIL_IF(!paths, PHYSFS_ERR_OS_ERROR, NULL);
-        NSString *path = paths[0];
+        NSString *path = (NSString *) paths[0];
         BAIL_IF(!path, PHYSFS_ERR_OS_ERROR, NULL);
         size_t len = [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
         const size_t applen = strlen(app);
