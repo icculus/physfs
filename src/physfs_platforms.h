@@ -21,12 +21,10 @@
 #  error PocketPC support was dropped since PhysicsFS 2.1. Sorry. Try WinRT!
 #elif (defined(_MSC_VER) && (_MSC_VER >= 1700) && !_USING_V110_SDK71_)	/* _MSC_VER==1700 for MSVC 2012 */
 #  include <winapifamily.h>
+#  define PHYSFS_PLATFORM_WINDOWS 1
 #  if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #    define PHYSFS_NO_CDROM_SUPPORT 1
 #    define PHYSFS_PLATFORM_WINRT 1
-#    define PHYSFS_PLATFORM_WINDOWS 1
-#  else
-#    define PHYSFS_PLATFORM_WINDOWS 1
 #  endif
 #elif (((defined _WIN32) || (defined _WIN64)) && (!defined __CYGWIN__))
 #  define PHYSFS_PLATFORM_WINDOWS 1
