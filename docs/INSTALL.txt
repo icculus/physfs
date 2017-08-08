@@ -29,7 +29,9 @@ ANSI C compiler, should build cleanly even with excessive compiler warnings
 enabled, needs no extra configuration, and allows static linking.
 WinRT and Haiku need C++ compilers for their system APIs, but if you aren't on
 these platforms and don't have a C++ compiler, don't build the .cpp files.
-Everything you need is in the .c sources.
+Likewise: Apple platforms (macOS, iOS, etc) need an Objective-C compiler, but
+if you aren't on these platforms and don't have a Objective-C compiler, don't
+build the .m file. Everything you need is in the .c sources.
 
 If this all worked for your specific project, you can stop reading now.
 
@@ -99,7 +101,6 @@ properties (from the command line, you want to compile this file with the
 WinRT if you pick a recent Visual Studio target, choose manual cross-compile
 options, and set the system name to "WindowsPhone" or "WindowsStore" and the
 correct OS version (8.0 or later).
-
 
 
 PocketPC/WindowsCE:

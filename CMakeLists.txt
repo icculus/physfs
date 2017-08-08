@@ -25,7 +25,7 @@ endif()
 include_directories(./src)
 
 if(APPLE)
-    set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework CoreFoundation -framework IOKit")
+    set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework IOKit -framework Foundation")
     set(PHYSFS_M_SRCS src/physfs_platform_apple.m)
 endif()
 
