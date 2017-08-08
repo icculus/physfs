@@ -1,5 +1,5 @@
 /*
- * macOS (iOS, etc) support routines for PhysicsFS.
+ * Apple platform (macOS, iOS, watchOS, etc) support routines for PhysicsFS.
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *
@@ -9,17 +9,13 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
-#ifdef PHYSFS_PLATFORM_MACOS
+#ifdef PHYSFS_PLATFORM_APPLE
 
-#include <CoreFoundation/CoreFoundation.h>
+/* Foundation.h steps on these. :( */
+#undef malloc
+#undef free
 
-#if !defined(PHYSFS_NO_CDROM_SUPPORT)
-#include <IOKit/IOKitLib.h>
-#include <IOKit/storage/IOMedia.h>
-#include <IOKit/storage/IOCDMedia.h>
-#include <IOKit/storage/IODVDMedia.h>
-#include <sys/mount.h>
-#endif
+#include <Foundation/Foundation.h>
 
 int __PHYSFS_platformInit(void)
 {
@@ -33,6 +29,41 @@ void __PHYSFS_platformDeinit(void)
 } /* __PHYSFS_platformDeinit */
 
 
+char *__PHYSFS_platformCalcBaseDir(const char *argv0)
+{
+    @autoreleasepool
+    {
+        NSString *path = [[NSBundle mainBundle] bundlePath];
+        BAIL_IF(!path, PHYSFS_ERR_OS_ERROR, NULL);
+        size_t len = [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+        char *retval = (char *) allocator.Malloc(len + 2);
+        BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        [path getCString:retval maxLength:len+1 encoding:NSUTF8StringEncoding];
+        retval[len] = '/';
+        retval[len+1] = '\0';
+        return retval;  /* whew. */
+    } /* @autoreleasepool */
+} /* __PHYSFS_platformCalcBaseDir */
+
+
+char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
+{
+    @autoreleasepool
+    {
+        NSArray<NSString *> *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, TRUE);
+        BAIL_IF(!paths, PHYSFS_ERR_OS_ERROR, NULL);
+        NSString *path = paths[0];
+        BAIL_IF(!path, PHYSFS_ERR_OS_ERROR, NULL);
+        size_t len = [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+        const size_t applen = strlen(app);
+        char *retval = (char *) allocator.Malloc(len + applen + 3);
+        BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+        [path getCString:retval maxLength:len+1 encoding:NSUTF8StringEncoding];
+        snprintf(retval + len, applen + 3, "/%s/", app);
+        return retval;  /* whew. */
+    } /* @autoreleasepool */
+} /* __PHYSFS_platformCalcPrefDir */
+
 
 /* CD-ROM detection code... */
 
@@ -42,6 +73,12 @@ void __PHYSFS_platformDeinit(void)
  */
 
 #if !defined(PHYSFS_NO_CDROM_SUPPORT)
+
+#include <IOKit/IOKitLib.h>
+#include <IOKit/storage/IOMedia.h>
+#include <IOKit/storage/IOCDMedia.h>
+#include <IOKit/storage/IODVDMedia.h>
+#include <sys/mount.h>
 
 static int darwinIsWholeMedia(io_service_t service)
 {
@@ -147,72 +184,7 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 #endif /* !defined(PHYSFS_NO_CDROM_SUPPORT) */
 } /* __PHYSFS_platformDetectAvailableCDs */
 
+#endif /* PHYSFS_PLATFORM_APPLE */
 
-static char *convertCFString(CFStringRef cfstr)
-{
-    CFIndex len = CFStringGetMaximumSizeForEncoding(CFStringGetLength(cfstr),
-                                                    kCFStringEncodingUTF8) + 1;
-    char *retval = (char *) allocator.Malloc(len);
-    BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-
-    if (CFStringGetCString(cfstr, retval, len, kCFStringEncodingUTF8))
-    {
-        /* shrink overallocated buffer if possible... */
-        CFIndex newlen = strlen(retval) + 1;
-        if (newlen < len)
-        {
-            void *ptr = allocator.Realloc(retval, newlen);
-            if (ptr != NULL)
-                retval = (char *) ptr;
-        } /* if */
-    } /* if */
-
-    else  /* probably shouldn't fail, but just in case... */
-    {
-        allocator.Free(retval);
-        BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    } /* else */
-
-    return retval;
-} /* convertCFString */
-
-
-char *__PHYSFS_platformCalcBaseDir(const char *argv0)
-{
-    CFURLRef cfurl = NULL;
-    CFStringRef cfstr = NULL;
-    CFMutableStringRef cfmutstr = NULL;
-    char *retval = NULL;
-
-    cfurl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    BAIL_IF(cfurl == NULL, PHYSFS_ERR_OS_ERROR, NULL);
-    cfstr = CFURLCopyFileSystemPath(cfurl, kCFURLPOSIXPathStyle);
-    CFRelease(cfurl);
-    BAIL_IF(!cfstr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    cfmutstr = CFStringCreateMutableCopy(NULL, 0, cfstr);
-    CFRelease(cfstr);
-    BAIL_IF(!cfmutstr, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    CFStringAppendCString(cfmutstr, "/", kCFStringEncodingUTF8);
-    retval = convertCFString(cfmutstr);
-    CFRelease(cfmutstr);
-
-    return retval;  /* whew. */
-} /* __PHYSFS_platformCalcBaseDir */
-
-
-char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
-{
-    /* !!! FIXME-3.0: there's a real API to determine this */
-    const char *userdir = __PHYSFS_getUserDir();
-    const char *append = "Library/Application Support/";
-    const size_t len = strlen(userdir) + strlen(append) + strlen(app) + 2;
-    char *retval = allocator.Malloc(len);
-    BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-    snprintf(retval, len, "%s%s%s/", userdir, append, app);
-    return retval;
-} /* __PHYSFS_platformCalcPrefDir */
-
-#endif /* PHYSFS_PLATFORM_MACOS */
-
-/* end of physfs_platform_macos.c ... */
+/* end of physfs_platform_apple.m ... */
 
