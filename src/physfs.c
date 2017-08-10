@@ -974,7 +974,6 @@ static int sanitizePlatformIndependentPath(const char *src, char *dst)
  */
 static int partOfMountPoint(DirHandle *h, char *fname)
 {
-    /* !!! FIXME-3.0: This code feels gross. */
     int rc;
     size_t len, mntpntlen;
 
