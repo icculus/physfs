@@ -105,9 +105,6 @@ static void tryDir(const char *d, PHYSFS_StringCallback callback, void *data)
             continue;
         } /* if */
 
-        if (strcmp(e.name, "raw") != 0)  /* ignore partitions. */
-            continue;
-
         const int devfd = open(name, O_RDONLY);
         if (devfd < 0)
             continue;
