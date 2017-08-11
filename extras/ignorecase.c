@@ -27,25 +27,6 @@
  *  \author Ryan C. Gordon.
  */
 
-/* I'm not screwing around with stricmp vs. strcasecmp... */
-/* !!! FIXME-3.0: this will NOT work with UTF-8 strings in physfs2.0 */
-static int caseInsensitiveStringCompare(const char *x, const char *y)
-{
-    int ux, uy;
-    do
-    {
-        ux = toupper((int) *x);
-        uy = toupper((int) *y);
-        if (ux != uy)
-            return ((ux > uy) ? 1 : -1);
-        x++;
-        y++;
-    } while ((ux) && (uy));
-
-    return 0;
-} /* caseInsensitiveStringCompare */
-
-
 static int locateOneElement(char *buf)
 {
     char *ptr;
@@ -71,7 +52,7 @@ static int locateOneElement(char *buf)
 
     for (i = rc; *i != NULL; i++)
     {
-        if (caseInsensitiveStringCompare(*i, ptr) == 0)
+        if (PHYSFS_utf8stricmp(*i, ptr) == 0)
         {
             strcpy(ptr, *i); /* found a match. Overwrite with this case. */
             PHYSFS_freeList(rc);
