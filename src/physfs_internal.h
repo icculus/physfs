@@ -291,18 +291,6 @@ void __PHYSFS_sort(void *entries, size_t max,
 )
 
 /*
- * stricmp() that guarantees to only work with low ASCII. The C runtime
- *  stricmp() might try to apply a locale/codepage/etc, which we don't want.
- */
-int __PHYSFS_stricmpASCII(const char *s1, const char *s2);
-
-/*
- * strnicmp() that guarantees to only work with low ASCII. The C runtime
- *  strnicmp() might try to apply a locale/codepage/etc, which we don't want.
- */
-int __PHYSFS_strnicmpASCII(const char *s1, const char *s2, PHYSFS_uint32 l);
-
-/*
  * Like strdup(), but uses the current PhysicsFS allocator.
  */
 char *__PHYSFS_strdup(const char *str);
