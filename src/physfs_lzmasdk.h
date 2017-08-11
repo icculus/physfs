@@ -1,10 +1,12 @@
+#ifndef _INCLUDE_PHYSFS_LZMASDK_H_
+#define _INCLUDE_PHYSFS_LZMASDK_H_
+
 /* This is just a bunch of the LZMA SDK mushed together into one header.
 This code is all public domain, and mostly (if not entirely) written by
 Igor Pavlov. http://www.7-zip.org/sdk.html
 --ryan. */
 
-#ifndef _INCL_PHYSFS_LZMASDK_H_
-#define _INCL_PHYSFS_LZMASDK_H_
+
 
 /* 7zTypes.h -- Basic types
 2013-11-12 : Igor Pavlov : Public domain */
@@ -6020,4 +6022,7 @@ static SRes Lzma2Dec_DecodeToDic(CLzma2Dec *p, SizeT dicLimit,
   return SZ_OK;
 }
 
-#endif
+#endif  /* _INCLUDE_PHYSFS_LZMASDK_H_ */
+
+/* end of physfs_lzmasdk.h ... */
+
