@@ -891,14 +891,14 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
         /* Look for archivers with matching file extensions first... */
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
         {
-            if (__PHYSFS_utf8stricmp(ext, (*i)->info.extension) == 0)
+            if (PHYSFS_utf8stricmp(ext, (*i)->info.extension) == 0)
                 retval = tryOpenDir(io, *i, d, forWriting);
         } /* for */
 
         /* failing an exact file extension match, try all the others... */
         for (i = archivers; (*i != NULL) && (retval == NULL); i++)
         {
-            if (__PHYSFS_utf8stricmp(ext, (*i)->info.extension) != 0)
+            if (PHYSFS_utf8stricmp(ext, (*i)->info.extension) != 0)
                 retval = tryOpenDir(io, *i, d, forWriting);
         } /* for */
     } /* if */
@@ -1442,7 +1442,7 @@ static int doRegisterArchiver(const PHYSFS_Archiver *_archiver)
     ext = _archiver->info.extension;
     for (i = 0; i < numArchivers; i++)
     {
-        if (__PHYSFS_utf8stricmp(archiveInfo[i]->extension, ext) == 0)
+        if (PHYSFS_utf8stricmp(archiveInfo[i]->extension, ext) == 0)
             BAIL(PHYSFS_ERR_DUPLICATE, 0);
     } /* for */
 
@@ -1518,7 +1518,7 @@ int PHYSFS_deregisterArchiver(const char *ext)
     __PHYSFS_platformGrabMutex(stateLock);
     for (i = 0; i < numArchivers; i++)
     {
-        if (__PHYSFS_utf8stricmp(archiveInfo[i]->extension, ext) == 0)
+        if (PHYSFS_utf8stricmp(archiveInfo[i]->extension, ext) == 0)
         {
             const int retval = doDeregisterArchiver(i);
             __PHYSFS_platformReleaseMutex(stateLock);
@@ -1921,7 +1921,7 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
             if ((l > extlen) && ((*i)[l - extlen - 1] == '.'))
             {
                 ext = (*i) + (l - extlen);
-                if (__PHYSFS_utf8stricmp(ext, archiveExt) == 0)
+                if (PHYSFS_utf8stricmp(ext, archiveExt) == 0)
                     setSaneCfgAddPath(*i, l, dirsep, archivesFirst);
             } /* if */
         } /* for */

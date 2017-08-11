@@ -206,7 +206,7 @@ static char *cvtPathToCorrectCase(char *buf)
                     cmp = __PHYSFS_stricmpASCII(utf8, fname);
                 else
                 {
-                    cmp = __PHYSFS_utf8stricmp(utf8, fname);
+                    cmp = PHYSFS_utf8stricmp(utf8, fname);
                     allocator.Free(utf8);
                 } /* else */
 
