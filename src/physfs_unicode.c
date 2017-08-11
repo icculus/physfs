@@ -1,6 +1,8 @@
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
 
+#include "physfs_casefolding.h"
+
 
 /*
  * From rfc3629, the UTF-8 spec:
@@ -402,112 +404,134 @@ void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len
 } /* PHYSFS_utf8FromUtf16 */
 
 
-typedef struct CaseFoldMapping
+/* (to) should point to at least 3 PHYSFS_uint32 slots. */
+static int locate_casefold_mapping(const PHYSFS_uint32 from, PHYSFS_uint32 *to)
 {
-    PHYSFS_uint32 from;
-    PHYSFS_uint32 to0;
-    PHYSFS_uint32 to1;
-    PHYSFS_uint32 to2;
-} CaseFoldMapping;
+    int i;
 
-typedef struct CaseFoldHashBucket
-{
-    const PHYSFS_uint8 count;
-    const CaseFoldMapping *list;
-} CaseFoldHashBucket;
-
-#include "physfs_casefolding.h"
-
-static void locate_case_fold_mapping(const PHYSFS_uint32 from,
-                                     PHYSFS_uint32 *to)
-{
-    PHYSFS_uint32 i;
-    const PHYSFS_uint8 hashed = ((from ^ (from >> 8)) & 0xFF);
-    const CaseFoldHashBucket *bucket = &case_fold_hash[hashed];
-    const CaseFoldMapping *mapping = bucket->list;
-
-    for (i = 0; i < bucket->count; i++, mapping++)
+    if (from < 128)  /* low-ASCII, easy! */
     {
-        if (mapping->from == from)
+        if ((from >= 'A') && (from <= 'Z'))
+            *to = from - ('A' - 'a');
+        else
+            *to = from;
+        return 1;
+    } /* if */
+
+    else if (from <= 0xFFFF)
+    {
+        const PHYSFS_uint8 hash = ((from ^ (from >> 8)) & 0xFF);
+        const PHYSFS_uint16 from16 = (PHYSFS_uint16) from;
+
         {
-            to[0] = mapping->to0;
-            to[1] = mapping->to1;
-            to[2] = mapping->to2;
-            return;
-        } /* if */
-    } /* for */
+            const CaseFoldHashBucket1_16 *bucket = &case_fold_hash1_16[hash];
+            const int count = (int) bucket->count;
+            for (i = 0; i < count; i++)
+            {
+                const CaseFoldMapping1_16 *mapping = &bucket->list[i];
+                if (mapping->from == from16)
+                {
+                    *to = mapping->to0;
+                    return 1;
+                } /* if */
+            } /* for */
+        }
+
+        {
+            const CaseFoldHashBucket2_16 *bucket = &case_fold_hash2_16[hash & 15];
+            const int count = (int) bucket->count;
+            for (i = 0; i < count; i++)
+            {
+                const CaseFoldMapping2_16 *mapping = &bucket->list[i];
+                if (mapping->from == from16)
+                {
+                    to[0] = mapping->to0;
+                    to[1] = mapping->to1;
+                    return 2;
+                } /* if */
+            } /* for */
+        }
+
+        {
+            const CaseFoldHashBucket3_16 *bucket = &case_fold_hash3_16[hash & 3];
+            const int count = (int) bucket->count;
+            for (i = 0; i < count; i++)
+            {
+                const CaseFoldMapping3_16 *mapping = &bucket->list[i];
+                if (mapping->from == from16)
+                {
+                    to[0] = mapping->to0;
+                    to[1] = mapping->to1;
+                    to[2] = mapping->to2;
+                    return 3;
+                } /* if */
+            } /* for */
+        }
+    } /* else if */
+
+    else  /* codepoint that doesn't fit in 16 bits. */
+    {
+        const PHYSFS_uint8 hash = ((from ^ (from >> 8)) & 0xFF);
+        const CaseFoldHashBucket1_32 *bucket = &case_fold_hash1_32[hash & 15];
+        const int count = (int) bucket->count;
+        for (i = 0; i < count; i++)
+        {
+            const CaseFoldMapping1_32 *mapping = &bucket->list[i];
+            if (mapping->from == from)
+            {
+                *to = mapping->to0;
+                return 1;
+            } /* if */
+        } /* for */
+    } /* else */
+
 
     /* Not found...there's no remapping for this codepoint. */
-    to[0] = from;
-    to[1] = 0;
-    to[2] = 0;
-} /* locate_case_fold_mapping */
+    *to = from;
+    return 1;
+} /* locate_casefold_mapping */
 
 
-/* !!! FIXME-3.0: this doesn't actually work (for example, it folds the German Eszett
-   into 's' 's', but if you have two 'S' chars in a row, it'll fail on the first one,
-   since it'll fold into a single 's'. This needs to be able to lurch along with a
-   variable number of codepoints at a time. */
-static int utf8codepointcmp(const PHYSFS_uint32 cp1, const PHYSFS_uint32 cp2)
+int PHYSFS_utf8stricmp(const char *str1, const char *str2)
 {
     PHYSFS_uint32 folded1[3], folded2[3];
+    int head1 = 0;
+    int tail1 = 0;
+    int head2 = 0;
+    int tail2 = 0;
 
-    if (cp1 == cp2)
-        return 0;  /* obviously matches. */
-
-    locate_case_fold_mapping(cp1, folded1);
-    locate_case_fold_mapping(cp2, folded2);
-
-    if (folded1[0] < folded2[0])
-        return -1;
-    else if (folded1[0] > folded2[0])
-        return 1;
-    else if (folded1[1] < folded2[1])
-        return -1;
-    else if (folded1[1] > folded2[1])
-        return 1;
-    else if (folded1[2] < folded2[2])
-        return -1;
-    else if (folded1[2] > folded2[2])
-        return 1;
-
-    return 0;  /* complete match. */
-} /* utf8codepointcmp */
-
-
-int __PHYSFS_utf8stricmp(const char *str1, const char *str2)
-{
     while (1)
     {
-        const PHYSFS_uint32 cp1 = utf8codepoint(&str1);
-        const PHYSFS_uint32 cp2 = utf8codepoint(&str2);
-        const int rc = utf8codepointcmp(cp1, cp2);
-        if (rc != 0)
-            return rc;
+        PHYSFS_uint32 cp1, cp2;
+
+        if (head1 != tail1)
+            cp1 = folded1[tail1++];
+        else
+        {
+            head1 = locate_casefold_mapping(utf8codepoint(&str1), folded1);
+            cp1 = folded1[0];
+            tail1 = 1;
+        } /* else */
+
+        if (head2 != tail2)
+            cp2 = folded2[tail2++];
+        else
+        {
+            head2 = locate_casefold_mapping(utf8codepoint(&str2), folded2);
+            cp2 = folded2[0];
+            tail2 = 1;
+        } /* else */
+
+        if (cp1 < cp2)
+            return -1;
+        else if (cp1 > cp2)
+            return 1;
         else if (cp1 == 0)
-            break;  /* complete match. */
+            break;    /* complete match. */
     } /* while */
 
     return 0;
-} /* __PHYSFS_utf8stricmp */
-
-
-int __PHYSFS_utf8strnicmp(const char *str1, const char *str2, PHYSFS_uint32 n)
-{
-    while (n > 0)
-    {
-        const PHYSFS_uint32 cp1 = utf8codepoint(&str1);
-        const PHYSFS_uint32 cp2 = utf8codepoint(&str2);
-        const int rc = utf8codepointcmp(cp1, cp2);
-        if (rc != 0)
-            return rc;
-        else if (cp1 == 0)
-            return 0;
-        n--;
-    } /* while */
-
-    return 0;  /* matched to n chars. */
-} /* __PHYSFS_utf8strnicmp */
+} /* PHYSFS_utf8stricmp */
 
 
 int __PHYSFS_stricmpASCII(const char *str1, const char *str2)

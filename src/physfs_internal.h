@@ -290,27 +290,6 @@ void __PHYSFS_sort(void *entries, size_t max,
     ((s) < (__PHYSFS_UI64(0xFFFFFFFFFFFFFFFF) >> (64-(sizeof(size_t)*8)))) \
 )
 
-
-/*
- * This is a strcasecmp() or stricmp() replacement that expects both strings
- *  to be in UTF-8 encoding. It will do "case folding" to decide if the
- *  Unicode codepoints in the strings match.
- *
- * It will report which string is "greater than" the other, but be aware that
- *  this doesn't necessarily mean anything: 'a' may be "less than" 'b', but
- *  a random Kanji codepoint has no meaningful alphabetically relationship to
- *  a Greek Lambda, but being able to assign a reliable "value" makes sorting
- *  algorithms possible, if not entirely sane. Most cases should treat the
- *  return value as "equal" or "not equal".
- */
-int __PHYSFS_utf8stricmp(const char *s1, const char *s2);
-
-/*
- * This works like __PHYSFS_utf8stricmp(), but takes a character (NOT BYTE
- *  COUNT) argument, like strcasencmp().
- */
-int __PHYSFS_utf8strnicmp(const char *s1, const char *s2, PHYSFS_uint32 l);
-
 /*
  * stricmp() that guarantees to only work with low ASCII. The C runtime
  *  stricmp() might try to apply a locale/codepage/etc, which we don't want.
