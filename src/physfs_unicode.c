@@ -533,46 +533,5 @@ int PHYSFS_utf8stricmp(const char *str1, const char *str2)
     return 0;
 } /* PHYSFS_utf8stricmp */
 
-
-int __PHYSFS_stricmpASCII(const char *str1, const char *str2)
-{
-    while (1)
-    {
-        const char ch1 = *(str1++);
-        const char ch2 = *(str2++);
-        const char cp1 = ((ch1 >= 'A') && (ch1 <= 'Z')) ? (ch1+32) : ch1;
-        const char cp2 = ((ch2 >= 'A') && (ch2 <= 'Z')) ? (ch2+32) : ch2;
-        if (cp1 < cp2)
-            return -1;
-        else if (cp1 > cp2)
-            return 1;
-        else if (cp1 == 0)  /* they're both null chars? */
-            break;
-    } /* while */
-
-    return 0;
-} /* __PHYSFS_stricmpASCII */
-
-
-int __PHYSFS_strnicmpASCII(const char *str1, const char *str2, PHYSFS_uint32 n)
-{
-    while (n-- > 0)
-    {
-        const char ch1 = *(str1++);
-        const char ch2 = *(str2++);
-        const char cp1 = ((ch1 >= 'A') && (ch1 <= 'Z')) ? (ch1+32) : ch1;
-        const char cp2 = ((ch2 >= 'A') && (ch2 <= 'Z')) ? (ch2+32) : ch2;
-        if (cp1 < cp2)
-            return -1;
-        else if (cp1 > cp2)
-            return 1;
-        else if (cp1 == 0)  /* they're both null chars? */
-            return 0;
-    } /* while */
-
-    return 0;
-} /* __PHYSFS_strnicmpASCII */
-
-
 /* end of physfs_unicode.c ... */
 

@@ -202,8 +202,8 @@ static char *cvtPathToCorrectCase(char *buf)
             {
                 int cmp;
                 char *utf8 = cvtCodepageToUtf8(fb.achName);
-                if (!utf8) /* ugh, maybe we'll get lucky and it's ASCII */
-                    cmp = __PHYSFS_stricmpASCII(utf8, fname);
+                if (!utf8) /* ugh, maybe we'll get lucky with the C runtime. */
+                    cmp = stricmp(utf8, fname);
                 else
                 {
                     cmp = PHYSFS_utf8stricmp(utf8, fname);
