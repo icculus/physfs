@@ -2288,7 +2288,7 @@ typedef void (*PHYSFS_StringCallback)(void *data, const char *str);
  * \sa PHYSFS_enumerateFilesCallback
  */
 typedef void (*PHYSFS_EnumFilesCallback)(void *data, const char *origdir,
-                                         const char *fname) PHYSFS_DEPRECATED;
+                                         const char *fname);
 
 
 /**
