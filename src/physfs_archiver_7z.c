@@ -398,7 +398,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_7Z =
         0,  /* supportsSymlinks */
     },
     SZIP_openArchive,
-    __PHYSFS_DirTreeEnumerateFiles,
+    __PHYSFS_DirTreeEnumerate,
     SZIP_openRead,
     SZIP_openWrite,
     SZIP_openAppend,

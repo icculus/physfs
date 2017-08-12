@@ -91,7 +91,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_MVL =
         0,  /* supportsSymlinks */
     },
     MVL_openArchive,
-    UNPK_enumerateFiles,
+    UNPK_enumerate,
     UNPK_openRead,
     UNPK_openWrite,
     UNPK_openAppend,

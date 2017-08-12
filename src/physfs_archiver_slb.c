@@ -117,7 +117,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_SLB =
         0,  /* supportsSymlinks */
     },
     SLB_openArchive,
-    UNPK_enumerateFiles,
+    UNPK_enumerate,
     UNPK_openRead,
     UNPK_openWrite,
     UNPK_openAppend,

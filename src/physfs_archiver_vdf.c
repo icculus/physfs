@@ -144,7 +144,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_VDF =
         0,  /* supportsSymlinks */
     },
     VDF_openArchive,
-    UNPK_enumerateFiles,
+    UNPK_enumerate,
     UNPK_openRead,
     UNPK_openWrite,
     UNPK_openAppend,
