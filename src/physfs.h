@@ -1107,7 +1107,7 @@ PHYSFS_DECL const char *PHYSFS_getRealDir(const char *filename);
  *
  * Feel free to sort the list however you like. However, the returned data
  *  will always contain no duplicates, and will be always sorted in alphabetic
- *  (rather: Unicode) order for you.
+ *  (rather: case-sensitive Unicode) order for you.
  *
  * Don't forget to call PHYSFS_freeList() with the return value from this
  *  function when you are done with it.
@@ -2591,10 +2591,6 @@ typedef int (*PHYSFS_EnumerateCallback)(void *data, const char *origdir,
  * // ...
  * PHYSFS_enumerate("/some/path", printDir, NULL);
  * \endcode
- *
- * !!! FIXME-3.0: enumerateFiles() does not promise alphabetical sorting by
- * !!! FIXME:  case-sensitivity in the code, and doesn't promise sorting at
- * !!! FIXME:  all in the above docs.
  *
  * Items sent to the callback are not guaranteed to be in any order whatsoever.
  *  There is no sorting done at this level, and if you need that, you should
