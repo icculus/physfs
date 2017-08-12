@@ -621,9 +621,9 @@ void *__PHYSFS_platformGetThreadID(void)
 } /* __PHYSFS_platformGetThreadID */
 
 
-void __PHYSFS_platformEnumerate(const char *dirname,
-                                PHYSFS_EnumerateCallback callback,
-                                const char *origdir, void *callbackdata)
+int __PHYSFS_platformEnumerate(const char *dirname,
+                               PHYSFS_EnumerateCallback callback,
+                               const char *origdir, void *callbackdata)
 {
     HANDLE dir = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW entw;
@@ -676,7 +676,7 @@ void __PHYSFS_platformEnumerate(const char *dirname,
             retval = callback(callbackdata, origdir, utf8);
             allocator.Free(utf8);
             if (retval == -1)
-                PHYSFS_SetErrorCode(PHYSFS_ERR_APP_CALLBACK);
+                PHYSFS_setErrorCode(PHYSFS_ERR_APP_CALLBACK);
         } /* else */
     } while ((retval == 1) && (FindNextFileW(dir, &entw) != 0));
 
