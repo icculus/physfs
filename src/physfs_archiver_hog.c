@@ -95,7 +95,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_HOG =
         0,  /* supportsSymlinks */
     },
     HOG_openArchive,
-    UNPK_enumerateFiles,
+    UNPK_enumerate,
     UNPK_openRead,
     UNPK_openWrite,
     UNPK_openAppend,

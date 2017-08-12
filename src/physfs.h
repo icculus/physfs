@@ -1066,6 +1066,17 @@ PHYSFS_DECL const char *PHYSFS_getRealDir(const char *filename);
  * \fn char **PHYSFS_enumerateFiles(const char *dir)
  * \brief Get a file listing of a search path's directory.
  *
+ * \warning In PhysicsFS versions prior to 2.1, this function would return
+ *          as many items as it could in the face of a failure condition
+ *          (out of memory, disk i/o error, etc). Since this meant apps
+ *          couldn't distinguish between complete success and partial failure,
+ *          and since the function could always return NULL to report
+ *          catastrophic failures anyway, in PhysicsFS 2.1 this function's
+ *          policy changed: it will either return a list of complete results
+ *          or it will return NULL for any failure of any kind, so we can
+ *          guarantee that the enumeration ran to completion and has no gaps
+ *          in its results.
+ *
  * Matching directories are interpolated. That is, if "C:\mydir" is in the
  *  search path and contains a directory "savegames" that contains "x.sav",
  *  "y.sav", and "z.sav", and there is also a "C:\userdir" in the search path
@@ -1097,9 +1108,10 @@ PHYSFS_DECL const char *PHYSFS_getRealDir(const char *filename);
  *  function when you are done with it.
  *
  *    \param dir directory in platform-independent notation to enumerate.
- *   \return Null-terminated array of null-terminated strings.
+ *   \return Null-terminated array of null-terminated strings, or NULL for
+ *           failure cases.
  *
- * \sa PHYSFS_enumerateFilesCallback
+ * \sa PHYSFS_enumerate
  */
 PHYSFS_DECL char **PHYSFS_enumerateFiles(const char *dir);
 
@@ -2240,6 +2252,9 @@ typedef void (*PHYSFS_StringCallback)(void *data, const char *str);
  * \typedef PHYSFS_EnumFilesCallback
  * \brief Function signature for callbacks that enumerate files.
  *
+ * \deprecated As of PhysicsFS 2.1, Use PHYSFS_EnumerateCallback with
+ *  PHYSFS_enumerate() instead; it gives you more control over the process.
+ *
  * These are used to report a list of directory entries to an original caller,
  *  one file/dir/symlink per callback. All strings are UTF-8 encoded.
  *  Functions should not try to modify or free any string's memory.
@@ -2249,9 +2264,10 @@ typedef void (*PHYSFS_StringCallback)(void *data, const char *str);
  *  PHYSFS_freeList(). The callback means that the library doesn't need to
  *  allocate an entire list and all the strings up front.
  *
- * Be aware that promises data ordering in the list versions are not
+ * Be aware that promised data ordering in the list versions are not
  *  necessarily so in the callback versions. Check the documentation on
- *  specific APIs, but strings may not be sorted as you expect.
+ *  specific APIs, but strings may not be sorted as you expect and you might
+ *  get duplicate strings.
  *
  *    \param data User-defined data pointer, passed through from the API
  *                that eventually called the callback.
@@ -2268,7 +2284,7 @@ typedef void (*PHYSFS_StringCallback)(void *data, const char *str);
  * \sa PHYSFS_enumerateFilesCallback
  */
 typedef void (*PHYSFS_EnumFilesCallback)(void *data, const char *origdir,
-                                         const char *fname);
+                                         const char *fname) PHYSFS_DEPRECATED;
 
 
 /**
@@ -2345,48 +2361,22 @@ PHYSFS_DECL void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback c, void *d);
  * \fn void PHYSFS_enumerateFilesCallback(const char *dir, PHYSFS_EnumFilesCallback c, void *d)
  * \brief Get a file listing of a search path's directory, using an application-defined callback.
  *
- * Internally, PHYSFS_enumerateFiles() just calls this function and then builds
- *  a list before returning to the application, so functionality is identical
- *  except for how the information is represented to the application.
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_enumerate() instead. This
+ *  function has no way to report errors (or to have the callback signal an
+ *  error or request a stop), so if data will be lost, your callback has no
+ *  way to direct the process, and your calling app has no way to know.
  *
- * Unlike PHYSFS_enumerateFiles(), this function does not return an array.
- *  Rather, it calls a function specified by the application once per
- *  element of the search path:
+ * As of PhysicsFS 2.1, this function just wraps PHYSFS_enumerate() and
+ *  ignores errors. Consider using PHYSFS_enumerate() or
+ *  PHYSFS_enumerateFiles() instead.
  *
- * \code
- *
- * static void printDir(void *data, const char *origdir, const char *fname)
- * {
- *     printf(" * We've got [%s] in [%s].\n", fname, origdir);
- * }
- *
- * // ...
- * PHYSFS_enumerateFilesCallback("/some/path", printDir, NULL);
- * \endcode
- *
- * !!! FIXME-3.0: enumerateFiles() does not promise alphabetical sorting by
- * !!! FIXME:  case-sensitivity in the code, and doesn't promise sorting at
- * !!! FIXME:  all in the above docs.
- *
- * Items sent to the callback are not guaranteed to be in any order whatsoever.
- *  There is no sorting done at this level, and if you need that, you should
- *  probably use PHYSFS_enumerateFiles() instead, which guarantees
- *  alphabetical sorting. This form reports whatever is discovered in each
- *  archive before moving on to the next. Even within one archive, we can't
- *  guarantee what order it will discover data. <em>Any sorting you find in
- *  these callbacks is just pure luck. Do not rely on it.</em> As this walks
- *  the entire list of archives, you may receive duplicate filenames.
- *
- *    \param dir Directory, in platform-independent notation, to enumerate.
- *    \param c Callback function to notify about search path elements.
- *    \param d Application-defined data passed to callback. Can be NULL.
- *
- * \sa PHYSFS_EnumFilesCallback
+ * \sa PHYSFS_enumerate
  * \sa PHYSFS_enumerateFiles
+ * \sa PHYSFS_EnumFilesCallback
  */
 PHYSFS_DECL void PHYSFS_enumerateFilesCallback(const char *dir,
                                                PHYSFS_EnumFilesCallback c,
-                                               void *d);
+                                               void *d) PHYSFS_DEPRECATED;
 
 /**
  * \fn void PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst, PHYSFS_uint64 len)
@@ -2543,6 +2533,99 @@ PHYSFS_DECL void PHYSFS_utf8FromLatin1(const char *src, char *dst,
  *  \return -1 if str1 is "less than" str2, 1 if "greater than", 0 if equal.
  */
 PHYSFS_DECL int PHYSFS_utf8stricmp(const char *str1, const char *str2);
+
+/**
+ * \typedef PHYSFS_EnumerateCallback
+ * \brief Function signature for callbacks that enumerate and return results.
+ *
+ * This is the same thing as PHYSFS_EnumFilesCallback from PhysicsFS 2.0,
+ *  except it can return a result from the callback: namely: if you're looking
+ *  for something specific, once you find it, you can tell PhysicsFS to stop
+ *  enumerating further. This is used with PHYSFS_enumerate(), which we
+ *  hopefully got right this time.  :)
+ *
+ *    \param data User-defined data pointer, passed through from the API
+ *                that eventually called the callback.
+ *    \param origdir A string containing the full path, in platform-independent
+ *                   notation, of the directory containing this file. In most
+ *                   cases, this is the directory on which you requested
+ *                   enumeration, passed in the callback for your convenience.
+ *    \param fname The filename that is being enumerated. It may not be in
+ *                 alphabetical order compared to other callbacks that have
+ *                 fired, and it will not contain the full path. You can
+ *                 recreate the fullpath with $origdir/$fname ... The file
+ *                 can be a subdirectory, a file, a symlink, etc.
+ *   \return 1 to keep enumerating, 0 to stop (no error), -1 to stop (error).
+ *           All other values are (currently) undefined; don't use them.
+ *
+ * \sa PHYSFS_enumerate
+ */
+typedef int (*PHYSFS_EnumerateCallback)(void *data, const char *origdir,
+                                         const char *fname);
+
+/**
+ * \fn int PHYSFS_enumerate(const char *dir, PHYSFS_EnumerateCallback c, void *d)
+ * \brief Get a file listing of a search path's directory, using an application-defined callback, with errors reported.
+ *
+ * Internally, PHYSFS_enumerateFiles() just calls this function and then builds
+ *  a list before returning to the application, so functionality is identical
+ *  except for how the information is represented to the application.
+ *
+ * Unlike PHYSFS_enumerateFiles(), this function does not return an array.
+ *  Rather, it calls a function specified by the application once per
+ *  element of the search path:
+ *
+ * \code
+ *
+ * static int printDir(void *data, const char *origdir, const char *fname)
+ * {
+ *     printf(" * We've got [%s] in [%s].\n", fname, origdir);
+ *     return 1;  // give me more data, please.
+ * }
+ *
+ * // ...
+ * PHYSFS_enumerate("/some/path", printDir, NULL);
+ * \endcode
+ *
+ * !!! FIXME-3.0: enumerateFiles() does not promise alphabetical sorting by
+ * !!! FIXME:  case-sensitivity in the code, and doesn't promise sorting at
+ * !!! FIXME:  all in the above docs.
+ *
+ * Items sent to the callback are not guaranteed to be in any order whatsoever.
+ *  There is no sorting done at this level, and if you need that, you should
+ *  probably use PHYSFS_enumerateFiles() instead, which guarantees
+ *  alphabetical sorting. This form reports whatever is discovered in each
+ *  archive before moving on to the next. Even within one archive, we can't
+ *  guarantee what order it will discover data. <em>Any sorting you find in
+ *  these callbacks is just pure luck. Do not rely on it.</em> As this walks
+ *  the entire list of archives, you may receive duplicate filenames.
+ *
+ * This API and the callbacks themselves are capable of reporting errors.
+ *  Prior to this API, callbacks had to accept every enumerated item, even if
+ *  they were only looking for a specific thing and wanted to stop after that,
+ *  or had a serious error and couldn't alert anyone. Furthermore, if
+ *  PhysicsFS itself had a problem (disk error or whatnot), it couldn't report
+ *  it to the calling app, it would just have to skip items or stop
+ *  enumerating outright, and the caller wouldn't know it had lost some data
+ *  along the way.
+ *
+ * Now the caller can be sure it got a complete data set, and its callback has
+ *  control if it wants enumeration to stop early. See the documentation for
+ *  PHYSFS_EnumerateCallback for details on how your callback should behave.
+ *
+ *    \param dir Directory, in platform-independent notation, to enumerate.
+ *    \param c Callback function to notify about search path elements.
+ *    \param d Application-defined data passed to callback. Can be NULL.
+ *   \return non-zero on success, zero on failure. Specifics of the error can
+ *           be gleaned from PHYSFS_getLastError(). If the callback returns
+ *           zero to stop early, this will considered success. Callbacks
+ *           returning -1 will result in PHYSFS_ERR_APP_CALLBACK.
+ *
+ * \sa PHYSFS_EnumerateCallback
+ * \sa PHYSFS_enumerateFiles
+ */
+PHYSFS_DECL int PHYSFS_enumerate(const char *dir, PHYSFS_EnumerateCallback c,
+                                 void *d);
 
 
 /**
@@ -3157,7 +3240,8 @@ typedef enum PHYSFS_ErrorCode
     PHYSFS_ERR_DIR_NOT_EMPTY,    /**< Tried to delete dir with files in it. */
     PHYSFS_ERR_OS_ERROR,         /**< Unspecified OS-level error.           */
     PHYSFS_ERR_DUPLICATE,        /**< Duplicate entry.                      */
-    PHYSFS_ERR_BAD_PASSWORD      /**< Bad password.                         */
+    PHYSFS_ERR_BAD_PASSWORD,     /**< Bad password.                         */
+    PHYSFS_ERR_APP_CALLBACK      /**< Application callback reported error.  */
 } PHYSFS_ErrorCode;
 
 
@@ -3417,14 +3501,28 @@ typedef struct PHYSFS_Archiver
 
     /**
      * List all files in (dirname). Each file is passed to (cb),
-     *  where a copy is made if appropriate, so you should dispose of
-     *  it properly upon return from the callback.
-     * If you have a failure, report as much as you can.
+     *  where a copy is made if appropriate, so you can dispose of
+     *  it, if appropriate, upon return from the callback.
      *  (dirname) is in platform-independent notation.
+     * If you have a failure, call PHYSFS_SetErrorCode() with whatever code
+     *  seem appropriate and return -1.
+     * If the callback returns -1, please call
+     *  PHYSFS_SetErrorCode(PHYSFS_ERR_APP_CALLBACK) and then return -1.
+     * If the callback returns 0, stop enumerating and return 0. Don't call
+     *  the callback again in any circumstances. Don't set an error code in
+     *  this case.
+     * Callbacks are (currently) only supposed to return -1, 0, or 1. Any
+     *  other result has undefined behavior.
+     * As long as the callback returned 1 and you haven't experienced any
+     *  errors of your own, keep enumerating until you're done and then return
+     *  1 without setting an error code.
+     *
+     * \warning PHYSFS_enumerate returns zero or non-zero (success or failure),
+     *          so be aware this function pointer returns different values!
      */
-    void (*enumerateFiles)(void *opaque, const char *dirname,
-                           PHYSFS_EnumFilesCallback cb,
-                           const char *origdir, void *callbackdata);
+    int (*enumerate)(void *opaque, const char *dirname,
+                     PHYSFS_EnumerateCallback cb,
+                     const char *origdir, void *callbackdata);
 
     /**
      * Open file for reading.

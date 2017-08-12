@@ -1678,7 +1678,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_ZIP =
         1,  /* supportsSymlinks */
     },
     ZIP_openArchive,
-    __PHYSFS_DirTreeEnumerateFiles,
+    __PHYSFS_DirTreeEnumerate,
     ZIP_openRead,
     ZIP_openWrite,
     ZIP_openAppend,

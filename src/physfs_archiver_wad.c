@@ -116,7 +116,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_WAD =
         0,  /* supportsSymlinks */
     },
     WAD_openArchive,
-    UNPK_enumerateFiles,
+    UNPK_enumerate,
     UNPK_openRead,
     UNPK_openWrite,
     UNPK_openAppend,

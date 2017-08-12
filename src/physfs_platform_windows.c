@@ -621,21 +621,20 @@ void *__PHYSFS_platformGetThreadID(void)
 } /* __PHYSFS_platformGetThreadID */
 
 
-void __PHYSFS_platformEnumerateFiles(const char *dirname,
-                                     PHYSFS_EnumFilesCallback callback,
-                                     const char *origdir,
-                                     void *callbackdata)
+void __PHYSFS_platformEnumerate(const char *dirname,
+                                PHYSFS_EnumerateCallback callback,
+                                const char *origdir, void *callbackdata)
 {
     HANDLE dir = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW entw;
     size_t len = strlen(dirname);
     char *searchPath = NULL;
     WCHAR *wSearchPath = NULL;
+    int retval = 1;
 
     /* Allocate a new string for path, maybe '\\', "*", and NULL terminator */
     searchPath = (char *) __PHYSFS_smallAlloc(len + 3);
-    if (searchPath == NULL)
-        return;
+    BAIL_IF(!searchPath, PHYSFS_ERR_OUT_OF_MEMORY, -1);
 
     /* Copy current dirname */
     strcpy(searchPath, dirname);
@@ -651,36 +650,40 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     strcat(searchPath, "*");
 
     UTF8_TO_UNICODE_STACK(wSearchPath, searchPath);
-    if (!wSearchPath)
-        return;  /* oh well. */
+    __PHYSFS_smallFree(searchPath);
+    BAIL_IF_ERRPASS(!wSearchPath, -1);
 
     dir = winFindFirstFileW(wSearchPath, &entw);
-
     __PHYSFS_smallFree(wSearchPath);
-    __PHYSFS_smallFree(searchPath);
-    if (dir == INVALID_HANDLE_VALUE)
-        return;
+    BAIL_IF(dir == INVALID_HANDLE_VALUE, errcodeFromWinApi(), -1);
 
     do
     {
         const WCHAR *fn = entw.cFileName;
         char *utf8;
 
-        if ((fn[0] == '.') && (fn[1] == '\0'))
-            continue;
-        if ((fn[0] == '.') && (fn[1] == '.') && (fn[2] == '\0'))
-            continue;
+        if (fn[0] == '.')  /* ignore "." and ".." */
+        {
+            if ((fn[1] == '\0') || ((fn[1] == '.') && (fn[2] == '\0')))
+                continue;
+        } /* if */
 
         utf8 = unicodeToUtf8Heap(fn);
-        if (utf8 != NULL)
+        if (utf8 == NULL)
+            retval = -1;
+        else
         {
-            callback(callbackdata, origdir, utf8);
+            retval = callback(callbackdata, origdir, utf8);
             allocator.Free(utf8);
-        } /* if */
-    } while (FindNextFileW(dir, &entw) != 0);
+            if (retval == -1)
+                PHYSFS_SetErrorCode(PHYSFS_ERR_APP_CALLBACK);
+        } /* else */
+    } while ((retval == 1) && (FindNextFileW(dir, &entw) != 0));
 
     FindClose(dir);
-} /* __PHYSFS_platformEnumerateFiles */
+
+    return retval;
+} /* __PHYSFS_platformEnumerate */
 
 
 int __PHYSFS_platformMkDir(const char *path)

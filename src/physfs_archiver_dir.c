@@ -66,19 +66,18 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 } /* DIR_openArchive */
 
 
-static void DIR_enumerateFiles(void *opaque, const char *dname,
-                               PHYSFS_EnumFilesCallback cb,
-                               const char *origdir, void *callbackdata)
+static int DIR_enumerate(void *opaque, const char *dname,
+                         PHYSFS_EnumerateCallback cb,
+                         const char *origdir, void *callbackdata)
 {
     char *d;
-
+    int retval;
     CVT_TO_DEPENDENT(d, opaque, dname);
-    if (d != NULL)
-    {
-        __PHYSFS_platformEnumerateFiles(d, cb, origdir, callbackdata);
-        __PHYSFS_smallFree(d);
-    } /* if */
-} /* DIR_enumerateFiles */
+    BAIL_IF_ERRPASS(!d, -1);
+    retval = __PHYSFS_platformEnumerate(d, cb, origdir, callbackdata);
+    __PHYSFS_smallFree(d);
+    return retval;
+} /* DIR_enumerate */
 
 
 static PHYSFS_Io *doOpen(void *opaque, const char *name, const int mode)
@@ -178,7 +177,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_DIR =
         1,  /* supportsSymlinks */
     },
     DIR_openArchive,
-    DIR_enumerateFiles,
+    DIR_enumerate,
     DIR_openRead,
     DIR_openWrite,
     DIR_openAppend,

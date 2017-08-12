@@ -346,7 +346,7 @@ PHYSFS_Io *UNPK_openAppend(void *opaque, const char *name);
 int UNPK_remove(void *opaque, const char *name);
 int UNPK_mkdir(void *opaque, const char *name);
 int UNPK_stat(void *opaque, const char *fn, PHYSFS_Stat *st);
-#define UNPK_enumerateFiles __PHYSFS_DirTreeEnumerateFiles
+#define UNPK_enumerate __PHYSFS_DirTreeEnumerate
 
 
 
@@ -374,9 +374,9 @@ typedef struct __PHYSFS_DirTree
 int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen);
 void *__PHYSFS_DirTreeAdd(__PHYSFS_DirTree *dt, char *name, const int isdir);
 void *__PHYSFS_DirTreeFind(__PHYSFS_DirTree *dt, const char *path);
-void __PHYSFS_DirTreeEnumerateFiles(void *opaque, const char *dname,
-                                    PHYSFS_EnumFilesCallback cb,
-                                    const char *origdir, void *callbackdata);
+int __PHYSFS_DirTreeEnumerate(void *opaque, const char *dname,
+                              PHYSFS_EnumerateCallback cb,
+                              const char *origdir, void *callbackdata);
 void __PHYSFS_DirTreeDeinit(__PHYSFS_DirTree *dt);
 
 
@@ -615,16 +615,15 @@ void *__PHYSFS_platformGetThreadID(void);
 
 /*
  * Enumerate a directory of files. This follows the rules for the
- *  PHYSFS_Archiver::enumerateFiles() method, except that the
- *  (dirName) that is passed to this function is converted to
- *  platform-DEPENDENT notation by the caller. The PHYSFS_Archiver version
- *  uses platform-independent notation. Note that ".", "..", and other
- *  meta-entries should always be ignored.
+ *  PHYSFS_Archiver::enumerate() method, except that the (dirName) that is
+ *  passed to this function is converted to platform-DEPENDENT notation by
+ *  the caller. The PHYSFS_Archiver version uses platform-independent
+ *  notation. Note that ".", "..", and other meta-entries should always
+ *  be ignored.
  */
-void __PHYSFS_platformEnumerateFiles(const char *dirname,
-                                     PHYSFS_EnumFilesCallback callback,
-                                     const char *origdir,
-                                     void *callbackdata);
+int __PHYSFS_platformEnumerate(const char *dirname,
+                               PHYSFS_EnumerateCallback callback,
+                               const char *origdir, void *callbackdata);
 
 /*
  * Make a directory in the actual filesystem. (path) is specified in
