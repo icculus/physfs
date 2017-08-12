@@ -401,7 +401,6 @@ int __PHYSFS_platformEnumerate(const char *dirname,
     HDIR hdir = HDIR_CREATE;
     ULONG count = 1;
     APIRET rc;
-    int cbrc;
     int retval = 1;
 
     BAIL_IF(!utf8, PHYSFS_ERR_OUT_OF_MEMORY, -1);
@@ -436,7 +435,7 @@ int __PHYSFS_platformEnumerate(const char *dirname,
                 retval = callback(callbackdata, origdir, utf8);
                 allocator.Free(utf8);
                 if (retval == -1)
-                    PHYSFS_SetErrorCode(PHYSFS_ERR_APP_CALLBACK);
+                    PHYSFS_setErrorCode(PHYSFS_ERR_APP_CALLBACK);
             } /* else */
         } /* if */
 

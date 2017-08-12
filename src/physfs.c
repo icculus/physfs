@@ -2445,7 +2445,9 @@ void PHYSFS_enumerateFilesCallback(const char *fname,
                                    PHYSFS_EnumFilesCallback callback,
                                    void *data)
 {
-    LegacyEnumFilesCallbackData cbdata = { callback, data };
+    LegacyEnumFilesCallbackData cbdata;
+    cbdata.callback = callback;
+    cbdata.data = data;
     (void) PHYSFS_enumerate(fname, enumFilesCallbackAlwaysSucceed, &cbdata);
 } /* PHYSFS_enumerateFilesCallback */
 
