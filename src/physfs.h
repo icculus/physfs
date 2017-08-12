@@ -4,9 +4,6 @@
  * Main header file for PhysicsFS.
  */
 
-// !!! FIXME-3.0: all the "you can get the error from getLastError()" should
-// !!! FIXME-3.0:  be updated for getLastErrorCode.
-
 /**
  * \mainpage PhysicsFS
  *
@@ -125,16 +122,17 @@
  *  game...keeping external content on a tight leash in this manner can be of
  *  utmost importance to some applications.
  *
- * PhysicsFS is mostly thread safe. The error messages returned by
- *  PHYSFS_getLastError() are unique by thread, and library-state-setting
+ * PhysicsFS is mostly thread safe. The errors returned by
+ *  PHYSFS_getLastErrorCode() are unique by thread, and library-state-setting
  *  functions are mutex'd. For efficiency, individual file accesses are 
  *  not locked, so you can not safely read/write/seek/close/etc the same 
  *  file from two threads at the same time. Other race conditions are bugs 
  *  that should be reported/patched.
  *
  * While you CAN use stdio/syscall file access in a program that has PHYSFS_*
- *  calls, doing so is not recommended, and you can not use system
- *  filehandles with PhysicsFS and vice versa.
+ *  calls, doing so is not recommended, and you can not directly use system
+ *  filehandles with PhysicsFS and vice versa (but as of PhysicsFS 2.1, you
+ *  can wrap them in a PHYSFS_Io interface yourself if you wanted to).
  *
  * Note that archives need not be named as such: if you have a ZIP file and
  *  rename it with a .PKG extension, the file will still be recognized as a
@@ -823,7 +821,7 @@ PHYSFS_DECL const char *PHYSFS_getWriteDir(void);
  *                   writing via PhysicsFS.
  *  \return non-zero on success, zero on failure. All attempts to open a file
  *           for writing via PhysicsFS will fail until this call succeeds.
- *           Specifics of the error can be gleaned from PHYSFS_getLastError().
+ *           Use PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \sa PHYSFS_getWriteDir
  */
@@ -965,8 +963,8 @@ PHYSFS_DECL char **PHYSFS_getSearchPath(void);
  *    \param archivesFirst Non-zero to prepend the archives to the search path.
  *                         Zero to append them. Ignored if !(archiveExt).
  *
- *  \return nonzero on success, zero on error. Specifics of the error can be
- *          gleaned from PHYSFS_getLastError().
+ *  \return nonzero on success, zero on error. Use PHYSFS_getLastErrorCode()
+ *          to obtain the specific error.
  */
 PHYSFS_DECL int PHYSFS_setSaneConfig(const char *organization,
                                      const char *appName,
@@ -993,8 +991,8 @@ PHYSFS_DECL int PHYSFS_setSaneConfig(const char *organization,
  *  created directory behind and reports failure.
  *
  *   \param dirName New dir to create.
- *  \return nonzero on success, zero on error. Specifics of the error can be
- *          gleaned from PHYSFS_getLastError().
+ *  \return nonzero on success, zero on error. Use
+ *          PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \sa PHYSFS_delete
  */
@@ -1028,8 +1026,8 @@ PHYSFS_DECL int PHYSFS_mkdir(const char *dirName);
  *  a security method or anything.  :)
  *
  *   \param filename Filename to delete.
- *  \return nonzero on success, zero on error. Specifics of the error can be
- *          gleaned from PHYSFS_getLastError().
+ *  \return nonzero on success, zero on error. Use PHYSFS_getLastErrorCode()
+ *          to obtain the specific error.
  */
 PHYSFS_DECL int PHYSFS_delete(const char *filename);
 
@@ -1225,8 +1223,8 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_getLastModTime(const char *filename)
  *  symlink with this function will fail in such a case.
  *
  *   \param filename File to open.
- *  \return A valid PhysicsFS filehandle on success, NULL on error. Specifics
- *           of the error can be gleaned from PHYSFS_getLastError().
+ *  \return A valid PhysicsFS filehandle on success, NULL on error. Use
+ *          PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \sa PHYSFS_openRead
  * \sa PHYSFS_openAppend
@@ -1251,8 +1249,8 @@ PHYSFS_DECL PHYSFS_File *PHYSFS_openWrite(const char *filename);
  *  symlink with this function will fail in such a case.
  *
  *   \param filename File to open.
- *  \return A valid PhysicsFS filehandle on success, NULL on error. Specifics
- *           of the error can be gleaned from PHYSFS_getLastError().
+ *  \return A valid PhysicsFS filehandle on success, NULL on error. Use
+ *          PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \sa PHYSFS_openRead
  * \sa PHYSFS_openWrite
@@ -1276,8 +1274,8 @@ PHYSFS_DECL PHYSFS_File *PHYSFS_openAppend(const char *filename);
  *  symlink with this function will fail in such a case.
  *
  *   \param filename File to open.
- *  \return A valid PhysicsFS filehandle on success, NULL on error. Specifics
- *           of the error can be gleaned from PHYSFS_getLastError().
+ *  \return A valid PhysicsFS filehandle on success, NULL on error.
+ *          Use PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \sa PHYSFS_openWrite
  * \sa PHYSFS_openAppend
@@ -1298,8 +1296,8 @@ PHYSFS_DECL PHYSFS_File *PHYSFS_openRead(const char *filename);
  *  return value from the close call in addition to every writing call!
  *
  *   \param handle handle returned from PHYSFS_open*().
- *  \return nonzero on success, zero on error. Specifics of the error can be
- *          gleaned from PHYSFS_getLastError().
+ *  \return nonzero on success, zero on error. Use PHYSFS_getLastErrorCode()
+ *          to obtain the specific error.
  *
  * \sa PHYSFS_openRead
  * \sa PHYSFS_openWrite
@@ -1325,9 +1323,9 @@ PHYSFS_DECL int PHYSFS_close(PHYSFS_File *handle);
  *   \param buffer buffer to store read data into.
  *   \param objSize size in bytes of objects being read from (handle).
  *   \param objCount number of (objSize) objects to read from (handle).
- *  \return number of objects read. PHYSFS_getLastError() can shed light on
- *           the reason this might be < (objCount), as can PHYSFS_eof().
- *            -1 if complete failure.
+ *  \return number of objects read. PHYSFS_getLastErrorCode() can shed light
+ *          on the reason this might be < (objCount), as can PHYSFS_eof().
+ *          -1 if complete failure.
  *
  * \sa PHYSFS_readBytes
  * \sa PHYSFS_eof
@@ -1355,8 +1353,9 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_read(PHYSFS_File *handle,
  *   \param buffer buffer of bytes to write to (handle).
  *   \param objSize size in bytes of objects being written to (handle).
  *   \param objCount number of (objSize) objects to write to (handle).
- *  \return number of objects written. PHYSFS_getLastError() can shed light on
- *           the reason this might be < (objCount). -1 if complete failure.
+ *  \return number of objects written. PHYSFS_getLastErrorCode() can shed
+ *          light on the reason this might be < (objCount). -1 if complete
+ *          failure.
  *
  * \sa PHYSFS_writeBytes
  */
@@ -1390,7 +1389,7 @@ PHYSFS_DECL int PHYSFS_eof(PHYSFS_File *handle);
  *
  *   \param handle handle returned from PHYSFS_open*().
  *  \return offset in bytes from start of file. -1 if error occurred.
- *           Specifics of the error can be gleaned from PHYSFS_getLastError().
+ *           Use PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \sa PHYSFS_seek
  */
@@ -1406,8 +1405,8 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_tell(PHYSFS_File *handle);
  *
  *   \param handle handle returned from PHYSFS_open*().
  *   \param pos number of bytes from start of file to seek to.
- *  \return nonzero on success, zero on error. Specifics of the error can be
- *          gleaned from PHYSFS_getLastError().
+ *  \return nonzero on success, zero on error. Use PHYSFS_getLastErrorCode()
+ *          to obtain the specific error.
  *
  * \sa PHYSFS_tell
  */
@@ -1673,7 +1672,7 @@ PHYSFS_DECL PHYSFS_uint64 PHYSFS_swapUBE64(PHYSFS_uint64 val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_readSLE16(PHYSFS_File *file, PHYSFS_sint16 *val);
 
@@ -1689,7 +1688,7 @@ PHYSFS_DECL int PHYSFS_readSLE16(PHYSFS_File *file, PHYSFS_sint16 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  *
  */
 PHYSFS_DECL int PHYSFS_readULE16(PHYSFS_File *file, PHYSFS_uint16 *val);
@@ -1706,7 +1705,7 @@ PHYSFS_DECL int PHYSFS_readULE16(PHYSFS_File *file, PHYSFS_uint16 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_readSBE16(PHYSFS_File *file, PHYSFS_sint16 *val);
 
@@ -1722,7 +1721,7 @@ PHYSFS_DECL int PHYSFS_readSBE16(PHYSFS_File *file, PHYSFS_sint16 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  *
  */
 PHYSFS_DECL int PHYSFS_readUBE16(PHYSFS_File *file, PHYSFS_uint16 *val);
@@ -1739,7 +1738,7 @@ PHYSFS_DECL int PHYSFS_readUBE16(PHYSFS_File *file, PHYSFS_uint16 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_readSLE32(PHYSFS_File *file, PHYSFS_sint32 *val);
 
@@ -1755,7 +1754,7 @@ PHYSFS_DECL int PHYSFS_readSLE32(PHYSFS_File *file, PHYSFS_sint32 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  *
  */
 PHYSFS_DECL int PHYSFS_readULE32(PHYSFS_File *file, PHYSFS_uint32 *val);
@@ -1772,7 +1771,7 @@ PHYSFS_DECL int PHYSFS_readULE32(PHYSFS_File *file, PHYSFS_uint32 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_readSBE32(PHYSFS_File *file, PHYSFS_sint32 *val);
 
@@ -1788,7 +1787,7 @@ PHYSFS_DECL int PHYSFS_readSBE32(PHYSFS_File *file, PHYSFS_sint32 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  *
  */
 PHYSFS_DECL int PHYSFS_readUBE32(PHYSFS_File *file, PHYSFS_uint32 *val);
@@ -1805,7 +1804,7 @@ PHYSFS_DECL int PHYSFS_readUBE32(PHYSFS_File *file, PHYSFS_uint32 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  *
  * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1824,7 +1823,7 @@ PHYSFS_DECL int PHYSFS_readSLE64(PHYSFS_File *file, PHYSFS_sint64 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1843,7 +1842,7 @@ PHYSFS_DECL int PHYSFS_readULE64(PHYSFS_File *file, PHYSFS_uint64 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  *
  * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1862,7 +1861,7 @@ PHYSFS_DECL int PHYSFS_readSBE64(PHYSFS_File *file, PHYSFS_sint64 *val);
  *    \param val pointer to where value should be stored.
  *   \return zero on failure, non-zero on success. If successful, (*val) will
  *           store the result. On failure, you can find out what went wrong
- *           from PHYSFS_getLastError().
+ *           from PHYSFS_getLastErrorCode().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -1880,7 +1879,7 @@ PHYSFS_DECL int PHYSFS_readUBE64(PHYSFS_File *file, PHYSFS_uint64 *val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_writeSLE16(PHYSFS_File *file, PHYSFS_sint16 val);
 
@@ -1895,7 +1894,7 @@ PHYSFS_DECL int PHYSFS_writeSLE16(PHYSFS_File *file, PHYSFS_sint16 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_writeULE16(PHYSFS_File *file, PHYSFS_uint16 val);
 
@@ -1910,7 +1909,7 @@ PHYSFS_DECL int PHYSFS_writeULE16(PHYSFS_File *file, PHYSFS_uint16 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_writeSBE16(PHYSFS_File *file, PHYSFS_sint16 val);
 
@@ -1925,7 +1924,7 @@ PHYSFS_DECL int PHYSFS_writeSBE16(PHYSFS_File *file, PHYSFS_sint16 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_writeUBE16(PHYSFS_File *file, PHYSFS_uint16 val);
 
@@ -1940,7 +1939,7 @@ PHYSFS_DECL int PHYSFS_writeUBE16(PHYSFS_File *file, PHYSFS_uint16 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_writeSLE32(PHYSFS_File *file, PHYSFS_sint32 val);
 
@@ -1955,7 +1954,7 @@ PHYSFS_DECL int PHYSFS_writeSLE32(PHYSFS_File *file, PHYSFS_sint32 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_writeULE32(PHYSFS_File *file, PHYSFS_uint32 val);
 
@@ -1970,7 +1969,7 @@ PHYSFS_DECL int PHYSFS_writeULE32(PHYSFS_File *file, PHYSFS_uint32 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_writeSBE32(PHYSFS_File *file, PHYSFS_sint32 val);
 
@@ -1985,7 +1984,7 @@ PHYSFS_DECL int PHYSFS_writeSBE32(PHYSFS_File *file, PHYSFS_sint32 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  */
 PHYSFS_DECL int PHYSFS_writeUBE32(PHYSFS_File *file, PHYSFS_uint32 val);
 
@@ -2000,7 +1999,7 @@ PHYSFS_DECL int PHYSFS_writeUBE32(PHYSFS_File *file, PHYSFS_uint32 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  *
  * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -2018,7 +2017,7 @@ PHYSFS_DECL int PHYSFS_writeSLE64(PHYSFS_File *file, PHYSFS_sint64 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -2036,7 +2035,7 @@ PHYSFS_DECL int PHYSFS_writeULE64(PHYSFS_File *file, PHYSFS_uint64 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  *
  * \warning Remember, PHYSFS_sint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -2054,7 +2053,7 @@ PHYSFS_DECL int PHYSFS_writeSBE64(PHYSFS_File *file, PHYSFS_sint64 val);
  *    \param file PhysicsFS file handle to which to write.
  *    \param val Value to convert and write.
  *   \return zero on failure, non-zero on success. On failure, you can
- *           find out what went wrong from PHYSFS_getLastError().
+ *           find out what went wrong from PHYSFS_getLastErrorCode().
  *
  * \warning Remember, PHYSFS_uint64 is only 32 bits on platforms without
  *          any sort of 64-bit support.
@@ -2189,8 +2188,8 @@ PHYSFS_DECL int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
  *                     NULL or "" is equivalent to "/".
  *   \param appendToPath nonzero to append to search path, zero to prepend.
  *  \return nonzero if added to path, zero on failure (bogus archive, dir
- *                   missing, etc). Specifics of the error can be
- *                   gleaned from PHYSFS_getLastError().
+ *          missing, etc). Use PHYSFS_getLastErrorCode() to obtain
+ *          the specific error.
  *
  * \sa PHYSFS_removeFromSearchPath
  * \sa PHYSFS_getSearchPath
@@ -2216,8 +2215,8 @@ PHYSFS_DECL int PHYSFS_mount(const char *newDir,
  *              used when adding, even if your string would also reference
  *              the same file with a different string of characters.
  *  \return READ-ONLY string of mount point if added to path, NULL on failure
- *          (bogus archive, etc) Specifics of the error can be gleaned from
- *          PHYSFS_getLastError().
+ *          (bogus archive, etc). Use PHYSFS_getLastErrorCode() to obtain the
+ *          specific error.
  *
  * \sa PHYSFS_removeFromSearchPath
  * \sa PHYSFS_getSearchPath
@@ -2617,10 +2616,11 @@ typedef int (*PHYSFS_EnumerateCallback)(void *data, const char *origdir,
  *    \param dir Directory, in platform-independent notation, to enumerate.
  *    \param c Callback function to notify about search path elements.
  *    \param d Application-defined data passed to callback. Can be NULL.
- *   \return non-zero on success, zero on failure. Specifics of the error can
- *           be gleaned from PHYSFS_getLastError(). If the callback returns
- *           zero to stop early, this will considered success. Callbacks
- *           returning -1 will result in PHYSFS_ERR_APP_CALLBACK.
+ *   \return non-zero on success, zero on failure. Use
+ *           PHYSFS_getLastErrorCode() to obtain the specific error. If the
+ *           callback returns zero to stop early, this will be considered
+ *           success. Callbacks returning -1 will result in
+ *           PHYSFS_ERR_APP_CALLBACK.
  *
  * \sa PHYSFS_EnumerateCallback
  * \sa PHYSFS_enumerateFiles
@@ -2643,13 +2643,14 @@ PHYSFS_DECL int PHYSFS_enumerate(const char *dir, PHYSFS_EnumerateCallback c,
  *  has files open in it.
  *
  *    \param oldDir dir/archive to remove.
- *   \return nonzero on success, zero on failure.
- *            Specifics of the error can be gleaned from PHYSFS_getLastError().
+ *   \return nonzero on success, zero on failure. Use
+ *           PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \sa PHYSFS_getSearchPath
  * \sa PHYSFS_mount
  */
 PHYSFS_DECL int PHYSFS_unmount(const char *oldDir);
+
 
 /**
  * \fn const PHYSFS_Allocator *PHYSFS_getAllocator(void)
@@ -2823,7 +2824,7 @@ PHYSFS_DECL void PHYSFS_utf8ToUtf16(const char *src, PHYSFS_uint16 *dst,
  *   \param len number of bytes being read from (handle).
  *  \return number of bytes read. This may be less than (len); this does not
  *          signify an error, necessarily (a short read may mean EOF).
- *          PHYSFS_getLastError() can shed light on the reason this might
+ *          PHYSFS_getLastErrorCode() can shed light on the reason this might
  *          be < (len), as can PHYSFS_eof(). -1 if complete failure.
  *
  * \sa PHYSFS_eof
@@ -2850,8 +2851,9 @@ PHYSFS_DECL PHYSFS_sint64 PHYSFS_readBytes(PHYSFS_File *handle, void *buffer,
  *   \param len number of bytes being written to (handle).
  *  \return number of bytes written. This may be less than (len); in the case
  *          of an error, the system may try to write as many bytes as possible,
- *          so an incomplete write might occur. PHYSFS_getLastError() can shed
- *          light on the reason this might be < (len). -1 if complete failure.
+ *          so an incomplete write might occur. PHYSFS_getLastErrorCode() can
+ *          shed light on the reason this might be < (len). -1 if complete
+ *          failure.
  */
 PHYSFS_DECL PHYSFS_sint64 PHYSFS_writeBytes(PHYSFS_File *handle,
                                             const void *buffer,
@@ -3081,8 +3083,8 @@ typedef struct PHYSFS_Io
  *                     NULL or "" is equivalent to "/".
  *   \param appendToPath nonzero to append to search path, zero to prepend.
  *  \return nonzero if added to path, zero on failure (bogus archive, stream
- *                   i/o issue, etc). Specifics of the error can be
- *                   gleaned from PHYSFS_getLastError().
+ *                   i/o issue, etc). Use PHYSFS_getLastErrorCode() to obtain
+ *                   the specific error.
  *
  * \sa PHYSFS_unmount
  * \sa PHYSFS_getSearchPath
@@ -3126,8 +3128,7 @@ PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
  *                     NULL or "" is equivalent to "/".
  *   \param appendToPath nonzero to append to search path, zero to prepend.
  *  \return nonzero if added to path, zero on failure (bogus archive, etc).
- *                  Specifics of the error can be gleaned from
- *                  PHYSFS_getLastError().
+ *          Use PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \sa PHYSFS_unmount
  * \sa PHYSFS_getSearchPath
@@ -3182,8 +3183,7 @@ PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
  *                     NULL or "" is equivalent to "/".
  *   \param appendToPath nonzero to append to search path, zero to prepend.
  *  \return nonzero if added to path, zero on failure (bogus archive, etc).
- *                  Specifics of the error can be gleaned from
- *                  PHYSFS_getLastError().
+ *          Use PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \sa PHYSFS_unmount
  * \sa PHYSFS_getSearchPath
@@ -3268,7 +3268,7 @@ typedef enum PHYSFS_ErrorCode
  *  you're expecting and plan to handle. But with most things that involve
  *  file systems, the best course of action is usually to give up, report the
  *  problem to the user, and let them figure out what should be done about it.
- *  For that, you might prefer PHYSFS_getLastError() instead.
+ *  For that, you might prefer PHYSFS_getErrorByCode() instead.
  *
  *   \return Enumeration value that represents last reported error.
  *
