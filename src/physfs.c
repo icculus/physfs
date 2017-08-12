@@ -2429,8 +2429,7 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
 
 typedef struct
 {
-    /* can't use the typedef because it might trigger deprecation warnings. */
-    void (*callback)(void *data, const char *origdir, const char *fname);
+    PHYSFS_EnumFilesCallback callback;
     void *data;
 } LegacyEnumFilesCallbackData;
 
