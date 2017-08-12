@@ -4,6 +4,9 @@
  * Main header file for PhysicsFS.
  */
 
+// !!! FIXME-3.0: all the "you can get the error from getLastError()" should
+// !!! FIXME-3.0:  be updated for getLastErrorCode.
+
 /**
  * \mainpage PhysicsFS
  *
@@ -604,6 +607,8 @@ PHYSFS_DECL void PHYSFS_freeList(void *listVar);
  * \fn const char *PHYSFS_getLastError(void)
  * \brief Get human-readable error information.
  *
+ * \deprecated Use PHYSFS_getLastErrorCode() and PHYSFS_getErrorByCode() instead.
+ *
  * \warning As of PhysicsFS 2.1, this function has been nerfed.
  *          Before PhysicsFS 2.1, this function was the only way to get
  *          error details beyond a given function's basic return value.
@@ -648,7 +653,7 @@ PHYSFS_DECL void PHYSFS_freeList(void *listVar);
  * \sa PHYSFS_getLastErrorCode
  * \sa PHYSFS_getErrorByCode
  */
-PHYSFS_DECL const char *PHYSFS_getLastError(void);
+PHYSFS_DECL const char *PHYSFS_getLastError(void) PHYSFS_DEPRECATED;
 
 
 /**
@@ -958,7 +963,7 @@ PHYSFS_DECL char **PHYSFS_getSearchPath(void);
  *                         yourself.
  *
  *    \param archivesFirst Non-zero to prepend the archives to the search path.
- *                          Zero to append them. Ignored if !(archiveExt).
+ *                         Zero to append them. Ignored if !(archiveExt).
  *
  *  \return nonzero on success, zero on error. Specifics of the error can be
  *          gleaned from PHYSFS_getLastError().
