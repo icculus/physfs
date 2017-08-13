@@ -1858,27 +1858,53 @@ void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback callback, void *data)
 } /* PHYSFS_getSearchPathCallback */
 
 
-/* Split out to avoid stack allocation in a loop. */
-static void setSaneCfgAddPath(const char *i, const size_t l, const char *dirsep,
-                              int archivesFirst)
+typedef struct setSaneCfgEnumData
 {
-    const char *d = PHYSFS_getRealDir(i);
-    const size_t allocsize = strlen(d) + strlen(dirsep) + l + 1;
-    char *str = (char *) __PHYSFS_smallAlloc(allocsize);
-    if (str != NULL)
+    const char *archiveExt;
+    size_t archiveExtLen;
+    int archivesFirst;
+    PHYSFS_ErrorCode errcode;
+} setSaneCfgEnumData;
+
+static int setSaneCfgEnumCallback(void *_data, const char *dir, const char *f)
+{
+    setSaneCfgEnumData *data = (setSaneCfgEnumData *) _data;
+    const size_t extlen = data->archiveExtLen;
+    const size_t l = strlen(f);
+    const char *ext;
+
+    if ((l > extlen) && (f[l - extlen - 1] == '.'))
     {
-        snprintf(str, allocsize, "%s%s%s", d, dirsep, i);
-        PHYSFS_mount(str, NULL, archivesFirst == 0);
-        __PHYSFS_smallFree(str);
+        ext = f + (l - extlen);
+        if (PHYSFS_utf8stricmp(ext, data->archiveExt) == 0)
+        {
+            const char dirsep = __PHYSFS_platformDirSeparator;
+            const char *d = PHYSFS_getRealDir(f);
+            const size_t allocsize = strlen(d) + l + 2;
+            char *str = (char *) __PHYSFS_smallAlloc(allocsize);
+            if (str == NULL)
+                data->errcode = PHYSFS_ERR_OUT_OF_MEMORY;
+            else
+            {
+                snprintf(str, allocsize, "%s%c%s", d, dirsep, f);
+                if (!PHYSFS_mount(str, NULL, data->archivesFirst == 0))
+                    data->errcode = currentErrorCode();
+                __PHYSFS_smallFree(str);
+            } /* else */
+        } /* if */
     } /* if */
-} /* setSaneCfgAddPath */
+
+    /* !!! FIXME: if we want to abort on errors... */
+    /* return (data->errcode != PHYSFS_ERR_OK) ? -1 : 1; */
+
+    return 1;  /* keep going */
+} /* setSaneCfgEnumCallback */
 
 
 int PHYSFS_setSaneConfig(const char *organization, const char *appName,
                          const char *archiveExt, int includeCdRoms,
                          int archivesFirst)
 {
-    const char *dirsep = PHYSFS_getDirSeparator();
     const char *basedir;
     const char *prefdir;
 
@@ -1892,7 +1918,7 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
 
     BAIL_IF(!PHYSFS_setWriteDir(prefdir), PHYSFS_ERR_NO_WRITE_DIR, 0);
 
-    /* !!! FIXME-3.0: these can fail... */
+    /* !!! FIXME: these can fail and we should report that... */
 
     /* Put write dir first in search path... */
     PHYSFS_mount(prefdir, NULL, 0);
@@ -1913,24 +1939,19 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
     /* Root out archives, and add them to search path... */
     if (archiveExt != NULL)
     {
-        /* !!! FIXME-3.0: turn this into a callback */
-        char **rc = PHYSFS_enumerateFiles("/");
-        char **i;
-        size_t extlen = strlen(archiveExt);
-        char *ext;
-
-        for (i = rc; *i != NULL; i++)
+        setSaneCfgEnumData data;
+        memset(&data, '\0', sizeof (data));
+        data.archiveExt = archiveExt;
+        data.archiveExtLen = strlen(archiveExt);
+        data.archivesFirst = archivesFirst;
+        data.errcode = PHYSFS_ERR_OK;
+        if (!PHYSFS_enumerate("/", setSaneCfgEnumCallback, &data))
         {
-            size_t l = strlen(*i);
-            if ((l > extlen) && ((*i)[l - extlen - 1] == '.'))
-            {
-                ext = (*i) + (l - extlen);
-                if (PHYSFS_utf8stricmp(ext, archiveExt) == 0)
-                    setSaneCfgAddPath(*i, l, dirsep, archivesFirst);
-            } /* if */
-        } /* for */
-
-        PHYSFS_freeList(rc);
+            /* !!! FIXME: use this if we're reporting errors.
+            PHYSFS_ErrorCode errcode = currentErrorCode();
+            if (errcode == PHYSFS_ERR_APP_CALLBACK)
+                errcode = data->errcode; */
+        } /* if */
     } /* if */
 
     return 1;
