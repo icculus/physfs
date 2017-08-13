@@ -3010,7 +3010,15 @@ typedef struct PHYSFS_Io
     /**
      * \brief Duplicate this i/o instance.
      *
-     *  // !!! FIXME-3.0: write me.
+     * This needs to result in a full copy of this PHYSFS_Io, that can live
+     *  completely independently. The copy needs to be able to perform all
+     *  its operations without altering the original, including either object
+     *  being destroyed separately (so, for example: they can't share a file
+     *  handle; they each need their own).
+     *
+     * If you can't duplicate a handle, it's legal to return NULL, but you
+     *  almost certainly need this functionality if you want to use this to
+     *  PHYSFS_Io to back an archive.
      *
      *   \param io The i/o instance to duplicate.
      *  \return A new value for a stream's (opaque) field, or NULL on error.
@@ -3481,11 +3489,10 @@ typedef struct PHYSFS_Archiver
      */
     PHYSFS_ArchiveInfo info;
 
-// !!! FIXME-3.0: documentation: \brief?
     /**
-     * \brief
+     * \brief Open an archive provided by (io).
      *
-     * Open an archive provided by (io).
+     * This is where resources are allocated and data is parsed when mounting an archive.
      *  (name) is a filename associated with (io), but doesn't necessarily
      *  map to anything, let alone a real filename. This possibly-
      *  meaningless name is in platform-dependent notation.
@@ -3501,10 +3508,11 @@ typedef struct PHYSFS_Archiver
     void *(*openArchive)(PHYSFS_Io *io, const char *name, int forWrite);
 
     /**
-     * List all files in (dirname). Each file is passed to (cb),
-     *  where a copy is made if appropriate, so you can dispose of
-     *  it, if appropriate, upon return from the callback.
-     *  (dirname) is in platform-independent notation.
+     * \brief List all files in (dirname).
+     *
+     * Each file is passed to (cb), where a copy is made if appropriate, so
+     *  you can dispose of it upon return from the callback. (dirname) is in
+     *  platform-independent notation.
      * If you have a failure, call PHYSFS_SetErrorCode() with whatever code
      *  seem appropriate and return -1.
      * If the callback returns -1, please call
@@ -3526,10 +3534,9 @@ typedef struct PHYSFS_Archiver
                      const char *origdir, void *callbackdata);
 
     /**
-     * Open file for reading.
-     *  This filename, (fnm), is in platform-independent notation.
-     * If you can't handle multiple opens of the same file,
-     *  you can opt to fail for the second call.
+     * \brief Open a file in this archive for reading.
+     *
+     * This filename, (fnm), is in platform-independent notation.
      * Fail if the file does not exist.
      * Returns NULL on failure, and calls PHYSFS_setErrorCode().
      *  Returns non-NULL on success. The pointer returned will be
@@ -3538,13 +3545,13 @@ typedef struct PHYSFS_Archiver
     PHYSFS_Io *(*openRead)(void *opaque, const char *fnm);
 
     /**
-     * Open file for writing.
+     * \brief Open a file in this archive for writing.
+     *
      * If the file does not exist, it should be created. If it exists,
-     *  it should be truncated to zero bytes. The writing
-     *  offset should be the start of the file.
+     *  it should be truncated to zero bytes. The writing offset should
+     *  be the start of the file.
+     * If the archive is read-only, this operation should fail.
      * This filename is in platform-independent notation.
-     * If you can't handle multiple opens of the same file,
-     *  you can opt to fail for the second call.
      * Returns NULL on failure, and calls PHYSFS_setErrorCode().
      *  Returns non-NULL on success. The pointer returned will be
      *  passed as the "opaque" parameter for later file calls.
@@ -3552,12 +3559,12 @@ typedef struct PHYSFS_Archiver
     PHYSFS_Io *(*openWrite)(void *opaque, const char *filename);
 
     /**
-     * Open file for appending.
+     * \brief Open a file in this archive for appending.
+     *
      * If the file does not exist, it should be created. The writing
      *  offset should be the end of the file.
+     * If the archive is read-only, this operation should fail.
      * This filename is in platform-independent notation.
-     * If you can't handle multiple opens of the same file,
-     *  you can opt to fail for the second call.
      * Returns NULL on failure, and calls PHYSFS_setErrorCode().
      *  Returns non-NULL on success. The pointer returned will be
      *  passed as the "opaque" parameter for later file calls.
@@ -3565,35 +3572,48 @@ typedef struct PHYSFS_Archiver
     PHYSFS_Io *(*openAppend)(void *opaque, const char *filename);
 
     /**
-     * Delete a file in the archive/directory.
-     *  Return non-zero on success, zero on failure.
-     *  This filename is in platform-independent notation.
-     *  This method may be NULL.
+     * \brief Delete a file or directory in the archive.
+     *
+     * This same call is used for both files and directories; there is not a
+     *  separate rmdir() call. Directories are only meant to be removed if
+     *  they are empty.
+     * If the archive is read-only, this operation should fail.
+     *
+     * Return non-zero on success, zero on failure.
+     * This filename is in platform-independent notation.
      * On failure, call PHYSFS_setErrorCode().
      */
     int (*remove)(void *opaque, const char *filename);
 
     /**
-     * Create a directory in the archive/directory.
-     *  If the application is trying to make multiple dirs, PhysicsFS
+     * \brief Create a directory in the archive.
+     *
+     * If the application is trying to make multiple dirs, PhysicsFS
      *  will split them up into multiple calls before passing them to
      *  your driver.
-     *  Return non-zero on success, zero on failure.
+     * If the archive is read-only, this operation should fail.
+     * Return non-zero on success, zero on failure.
      *  This filename is in platform-independent notation.
-     *  This method may be NULL.
      * On failure, call PHYSFS_setErrorCode().
      */
     int (*mkdir)(void *opaque, const char *filename);
 
     /**
-     * Obtain basic file metadata.
-     *  Returns non-zero on success, zero on failure.
-     *  On failure, call PHYSFS_setErrorCode().
+     * \brief Obtain basic file metadata.
+     *
+     * On success, fill in all the fields in (stat), using
+     *  reasonable defaults for fields that apply to your archive.
+     *
+     * Returns non-zero on success, zero on failure.
+     * This filename is in platform-independent notation.
+     * On failure, call PHYSFS_setErrorCode().
      */
     int (*stat)(void *opaque, const char *fn, PHYSFS_Stat *stat);
 
     /**
-     * Close directories/archives, and free any associated memory,
+     * \brief Destruct a previously-opened archive.
+     *
+     * Close this archive, and free any associated memory,
      *  including the original PHYSFS_Io and (opaque) itself, if
      *  applicable. Implementation can assume that it won't be called if
      *  there are still files open from this archive.

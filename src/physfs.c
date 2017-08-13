@@ -1892,6 +1892,8 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
 
     BAIL_IF(!PHYSFS_setWriteDir(prefdir), PHYSFS_ERR_NO_WRITE_DIR, 0);
 
+    /* !!! FIXME-3.0: these can fail... */
+
     /* Put write dir first in search path... */
     PHYSFS_mount(prefdir, NULL, 0);
 
