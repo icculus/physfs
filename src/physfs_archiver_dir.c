@@ -19,12 +19,14 @@ static char *cvtToDependent(const char *prepend, const char *path,
     BAIL_IF(buf == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     snprintf(buf, buflen, "%s%s", prepend ? prepend : "", path);
 
-    if (__PHYSFS_platformDirSeparator != '/')
+    #if !__PHYSFS_STANDARD_DIRSEP
+    assert(__PHYSFS_platformDirSeparator != '/');
     {
         char *p;
         for (p = strchr(buf, '/'); p != NULL; p = strchr(p + 1, '/'))
             *p = __PHYSFS_platformDirSeparator;
     } /* if */
+    #endif
 
     return buf;
 } /* cvtToDependent */

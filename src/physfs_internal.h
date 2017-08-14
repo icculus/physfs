@@ -405,6 +405,7 @@ void __PHYSFS_DirTreeDeinit(__PHYSFS_DirTree *dt);
 #if defined(PHYSFS_PLATFORM_WINDOWS) || defined(PHYSFS_PLATFORM_OS2)
 #define __PHYSFS_platformDirSeparator '\\'
 #else
+#define __PHYSFS_STANDARD_DIRSEP 1
 #define __PHYSFS_platformDirSeparator '/'
 #endif
 
