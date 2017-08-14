@@ -2352,7 +2352,6 @@ typedef struct SymlinkFilterData
     PHYSFS_ErrorCode errcode;
 } SymlinkFilterData;
 
-/* !!! FIXME-3.0: broken if in a virtual mountpoint (stat call fails). */
 static int enumCallbackFilterSymLinks(void *_data, const char *origdir,
                                       const char *fname)
 {
