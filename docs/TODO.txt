@@ -6,7 +6,6 @@ Some might be dupes, some might be done already, some might be bad ideas.
 
 From https://icculus.org/pipermail/physfs/2009-March/000698.html ...
 
-- Archives formats provided by the implementation.
 - Write support for various archives. I haven't decided how to do this yet,
   but I'd like to.
 - Add an API to expose a file's extended attributes to the application?
@@ -14,10 +13,6 @@ From https://icculus.org/pipermail/physfs/2009-March/000698.html ...
   directory.
 - Clean up the sources to match my ever-changing coding style. :)
 
-
-From https://icculus.org/pipermail/physfs/2010-January/000821.html ...
-
-- Plugin system for the archive handlers
 
 
 From https://icculus.org/pipermail/physfs/2010-January/000826.html ...
@@ -37,21 +32,15 @@ From old TODO.txt...
   important, since streaming archives aren't of much value to games (which
   is why zipfiles are king: random access), but it could have uses for, say,
   an installer/updater.
-- profile string list interpolation.
-- We have two different ways to find dir entries in zip.c.
 - Do symlinks in zip archiver work when they point to dirs?
 - Enable more warnings?
 - Use __cdecl in physfs.h?
 - Look for FIXMEs (many marked with "!!!" in comments).
-- Find some way to relax or remove the security model for external tools.
 - fscanf and fprintf support in extras dir.
 - Sanity check byte order at runtime.
 - Memory locking?
 - General code audit.
 - Multiple write dirs with mount points?
-- Replace code from SDL...
-- Should file enumeration return an error or set error state?
-- Write up a simple HOWTO on embedding physicsfs in another project.
 
 
 Other stuff I thought of...
@@ -62,14 +51,9 @@ Other stuff I thought of...
 - Doxygen replacement? (manpages suck.)
 - Fix coding standards to match.
 - See if we can ditch some #include lines...
-- PHYSFS_exists() fails if you mountIo with a NULL filename. We need to decide
-  how this API should work.
 - LZMA support in zip archiver?
 - bzip2 support in zip archiver?
-- rewrite 7zip archiver.
-- ryanify iso9660 code.
 - Reduce the BAIL and GOTO macro use. A lot of these don't add anything.
-- Modernize CMakeLists.txt
 - Change the term "search path" to something less confusing.
 
 Probably other stuff. Requests and recommendations are welcome.
