@@ -3011,9 +3011,6 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
                 } /* if */
                 else if (verifyPath(i, &arcfname, 0))
                 {
-                    /* !!! FIXME-3.0: this test is wrong and should be elsewhere. */
-                    stat->readonly = !(writeDir &&
-                                 (strcmp(writeDir->dirName, i->dirName) == 0));
                     retval = i->funcs->stat(i->opaque, arcfname, stat);
                     if ((retval) || (currentErrorCode() != PHYSFS_ERR_NOT_FOUND))
                         exists = 1;
