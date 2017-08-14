@@ -382,12 +382,12 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 
 char *__PHYSFS_platformCalcUserDir(void)
 {
-    return __PHYSFS_platformCalcBaseDir(NULL);  /* !!! FIXME-3.0: ? */
+    return __PHYSFS_platformCalcBaseDir(NULL);  /* !!! FIXME: ? */
 } /* __PHYSFS_platformCalcUserDir */
 
 char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 {
-    return __PHYSFS_platformCalcBaseDir(NULL);  /* !!! FIXME-3.0: ? */
+    return __PHYSFS_platformCalcBaseDir(NULL);  /* !!! FIXME: ? */
 } /* __PHYSFS_platformCalcPrefDir */
 
 int __PHYSFS_platformEnumerate(const char *dirname,
