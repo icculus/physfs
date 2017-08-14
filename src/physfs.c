@@ -2348,6 +2348,7 @@ typedef struct SymlinkFilterData
     PHYSFS_EnumerateCallback callback;
     void *callbackData;
     DirHandle *dirhandle;
+    const char *arcfname;
     PHYSFS_ErrorCode errcode;
 } SymlinkFilterData;
 
@@ -2357,8 +2358,9 @@ static int enumCallbackFilterSymLinks(void *_data, const char *origdir,
 {
     SymlinkFilterData *data = (SymlinkFilterData *) _data;
     const DirHandle *dh = data->dirhandle;
+    const char *arcfname = data->arcfname;
     PHYSFS_Stat statbuf;
-    const char *trimmedDir = (*origdir == '/') ? (origdir+1) : origdir;
+    const char *trimmedDir = (*arcfname == '/') ? (arcfname + 1) : arcfname;
     const size_t slen = strlen(trimmedDir) + strlen(fname) + 2;
     char *path = (char *) __PHYSFS_smallAlloc(slen);
     int retval = 1;
@@ -2434,6 +2436,7 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
                 if ((!allowSymLinks) && (i->funcs->info.supportsSymlinks))
                 {
                     filterdata.dirhandle = i;
+                    filterdata.arcfname = arcfname;
                     filterdata.errcode = PHYSFS_ERR_OK;
                     retval = i->funcs->enumerate(i->opaque, arcfname,
                                                  enumCallbackFilterSymLinks,
