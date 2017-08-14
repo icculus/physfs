@@ -217,14 +217,6 @@ static void *SZIP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     SZIPinfo *info = NULL;
     SRes rc;
 
-    /* !!! FIXME-3.0: this is a race condition; we need a global init method that gets called when registering new archivers. */
-    static int generatedTable = 0;
-    if (!generatedTable)
-    {
-        generatedTable = 1;
-        CrcGenerateTable();
-    } /* if */
-
     BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
 
     info = (SZIPinfo *) allocator.Malloc(sizeof (SZIPinfo));
@@ -385,6 +377,19 @@ static int SZIP_stat(void *opaque, const char *path, PHYSFS_Stat *stat)
 
     return 1;
 } /* SZIP_stat */
+
+
+void SZIP_global_init(void)
+{
+    /* this just needs to calculate some things, so it only ever
+       has to run once, even after a deinit. */
+    static int generatedTable = 0;
+    if (!generatedTable)
+    {
+        generatedTable = 1;
+        CrcGenerateTable();
+    } /* if */
+} /* SZIP_global_init */
 
 
 const PHYSFS_Archiver __PHYSFS_Archiver_7Z =

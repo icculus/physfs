@@ -1143,6 +1143,7 @@ static int initStaticArchivers(void)
         REGISTER_STATIC_ARCHIVER(ZIP);
     #endif
     #if PHYSFS_SUPPORTS_7Z
+        SZIP_global_init();
         REGISTER_STATIC_ARCHIVER(7Z);
     #endif
     #if PHYSFS_SUPPORTS_GRP

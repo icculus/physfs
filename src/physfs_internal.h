@@ -193,6 +193,11 @@ void __PHYSFS_smallFree(void *ptr);
 #define PHYSFS_SUPPORTS_VDF 1
 #endif
 
+#if PHYSFS_SUPPORTS_7Z
+/* 7zip support needs a global init function called at startup (no deinit). */
+extern void SZIP_global_init(void);
+#endif
+
 /* The latest supported PHYSFS_Io::version value. */
 #define CURRENT_PHYSFS_IO_API_VERSION 0
 
