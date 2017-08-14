@@ -2795,7 +2795,6 @@ static PHYSFS_sint64 doBufferedWrite(PHYSFS_File *handle, const void *buffer,
     } /* if */
 
     /* would overflow buffer. Flush and then write the new objects, too. */
-    /* !!! FIXME-3.0: this should refill the buffer, not flush everything down. */
     BAIL_IF_ERRPASS(!PHYSFS_flush(handle), -1);
     return fh->io->write(fh->io, buffer, len);
 } /* doBufferedWrite */
