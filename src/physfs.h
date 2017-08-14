@@ -2256,7 +2256,7 @@ typedef void (*PHYSFS_StringCallback)(void *data, const char *str);
  * \typedef PHYSFS_EnumFilesCallback
  * \brief Function signature for callbacks that enumerate files.
  *
- * \deprecated As of PhysicsFS 2.1, Use PHYSFS_EnumerateCallback with
+ * \warning As of PhysicsFS 2.1, Use PHYSFS_EnumerateCallback with
  *  PHYSFS_enumerate() instead; it gives you more control over the process.
  *
  * These are used to report a list of directory entries to an original caller,
@@ -3127,7 +3127,7 @@ PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
  *
  * If this function fails, (del) is not called.
  *
- *   \param ptr Address of the memory buffer containing the archive data.
+ *   \param buf Address of the memory buffer containing the archive data.
  *   \param len Size of memory buffer, in bytes.
  *   \param del A callback that triggers upon unmount. Can be NULL.
  *   \param fname Filename that can represent this stream. Can be NULL.

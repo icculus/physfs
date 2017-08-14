@@ -247,7 +247,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
     const int fd = *((int *) opaque);
-    const int rc = lseek(fd, (off_t) pos, SEEK_SET);
+    const off_t rc = lseek(fd, (off_t) pos, SEEK_SET);
     BAIL_IF(rc == -1, errcodeFromErrno(), 0);
     return 1;
 } /* __PHYSFS_platformSeek */

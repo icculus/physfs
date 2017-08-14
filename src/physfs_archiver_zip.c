@@ -1081,7 +1081,8 @@ static ZIPentry *zip_load_entry(ZIPinfo *info, const int zip64,
           (retval->uncompressed_size == 0xFFFFFFFF)) )
     {
         int found = 0;
-        PHYSFS_uint16 sig, len;
+        PHYSFS_uint16 sig = 0;
+        PHYSFS_uint16 len = 0;
         while (extralen > 4)
         {
             BAIL_IF_ERRPASS(!readui16(io, &sig), NULL);
