@@ -709,6 +709,7 @@ static void zip_expand_symlink_path(char *path)
     } /* while */
 } /* zip_expand_symlink_path */
 
+
 static inline ZIPentry *zip_find_entry(ZIPinfo *info, const char *path)
 {
     return (ZIPentry *) __PHYSFS_DirTreeFind(&info->tree, path);
@@ -879,7 +880,11 @@ static int zip_resolve(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
      */
     if (resolve_type != ZIP_RESOLVED)
     {
-        entry->resolved = ZIP_RESOLVING;
+        if (entry->tree.isdir)  /* an ancestor dir that DirTree filled in? */
+        {
+            entry->resolved = ZIP_DIRECTORY;
+            return 1;
+        } /* if */
 
         retval = zip_parse_local(io, entry);
         if (retval)
@@ -1548,6 +1553,9 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
     } /* if */
 
     BAIL_IF_ERRPASS(!entry, NULL);
+
+    BAIL_IF_ERRPASS(!zip_resolve(info->io, info, entry), NULL);
+
     BAIL_IF(entry->tree.isdir, PHYSFS_ERR_NOT_A_FILE, NULL);
 
     retval = (PHYSFS_Io *) allocator.Malloc(sizeof (PHYSFS_Io));
@@ -1638,9 +1646,12 @@ static int ZIP_mkdir(void *opaque, const char *name)
 static int ZIP_stat(void *opaque, const char *filename, PHYSFS_Stat *stat)
 {
     ZIPinfo *info = (ZIPinfo *) opaque;
-    const ZIPentry *entry = zip_find_entry(info, filename);
+    ZIPentry *entry = zip_find_entry(info, filename);
 
     if (entry == NULL)
+        return 0;
+
+    else if (!zip_resolve(info->io, info, entry))
         return 0;
 
     else if (entry->resolved == ZIP_DIRECTORY)
