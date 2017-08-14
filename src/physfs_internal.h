@@ -145,7 +145,7 @@ int __PHYSFS_ATOMIC_DECR(int *ptrval);
  * NEVER forget to check for NULL...allocation can fail here, of course!
  */
 #define __PHYSFS_SMALLALLOCTHRESHOLD 256
-void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len);
+void *__PHYSFS_initSmallAlloc(void *ptr, const size_t len);
 
 #define __PHYSFS_smallAlloc(bytes) ( \
     __PHYSFS_initSmallAlloc( \

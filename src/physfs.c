@@ -3040,7 +3040,7 @@ int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
 } /* __PHYSFS_readAll */
 
 
-void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len)
+void *__PHYSFS_initSmallAlloc(void *ptr, const size_t len)
 {
     void *useHeap = ((ptr == NULL) ? ((void *) 1) : ((void *) 0));
     if (useHeap)  /* too large for stack allocation or alloca() failed. */
@@ -3049,8 +3049,8 @@ void *__PHYSFS_initSmallAlloc(void *ptr, PHYSFS_uint64 len)
     if (ptr != NULL)
     {
         void **retval = (void **) ptr;
-        /*printf("%s alloc'd (%d) bytes at (%p).\n",
-                useHeap ? "heap" : "stack", (int) len, ptr);*/
+        /*printf("%s alloc'd (%lld) bytes at (%p).\n",
+                useHeap ? "heap" : "stack", (long long) len, ptr);*/
         *retval = useHeap;
         return retval + 1;
     } /* if */
@@ -3064,7 +3064,7 @@ void __PHYSFS_smallFree(void *ptr)
     if (ptr != NULL)
     {
         void **block = ((void **) ptr) - 1;
-        const int useHeap = (*block != 0);
+        const int useHeap = (*block != NULL);
         if (useHeap)
             allocator.Free(block);
         /*printf("%s free'd (%p).\n", useHeap ? "heap" : "stack", block);*/
