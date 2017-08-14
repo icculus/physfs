@@ -3625,7 +3625,17 @@ typedef struct PHYSFS_Archiver
  * \fn int PHYSFS_registerArchiver(const PHYSFS_Archiver *archiver)
  * \brief Add a new archiver to the system.
  *
- * !!! FIXME-3.0: write me.
+ * \warning This is advanced, hardcore stuff. You don't need this unless you
+ *          really know what you're doing. Most apps will not need this.
+ *
+ * If you want to provide your own archiver (for example, a custom archive
+ *  file format, or some virtual thing you want to make look like a filesystem
+ *  that you can access through the usual PhysicsFS APIs), this is where you
+ *  start. Once an archiver is successfully registered, then you can use
+ *  PHYSFS_mount() to add archives that your archiver supports to the
+ *  search path, or perhaps use it as the write dir. Internally, PhysicsFS
+ *  uses this function to register its own built-in archivers, like .zip
+ *  support, etc.
  *
  * You may not have two archivers that handle the same extension. If you are
  *  going to have a clash, you can deregister the other archiver (including
@@ -3633,6 +3643,9 @@ typedef struct PHYSFS_Archiver
  *
  * The data in (archiver) is copied; you may free this pointer when this
  *  function returns.
+ *
+ * Once this function returns successfully, PhysicsFS will be able to support
+ *  archives of this type until you deregister the archiver again.
  *
  *   \param archiver The archiver to register.
  *  \return Zero on error, non-zero on success.
@@ -3646,9 +3659,21 @@ PHYSFS_DECL int PHYSFS_registerArchiver(const PHYSFS_Archiver *archiver);
  * \fn int PHYSFS_deregisterArchiver(const char *ext)
  * \brief Remove an archiver from the system.
  *
- * !!! FIXME-3.0: write me.
+ * If for some reason, you only need your previously-registered archiver to
+ *  live for a portion of your app's lifetime, you can remove it from the
+ *  system once you're done with it through this function.
  *
  * This fails if there are any archives still open that use this archiver.
+ *
+ * This function can also remove internally-supplied archivers, like .zip
+ *  support or whatnot. This could be useful in some situations, like
+ *  disabling support for them outright or overriding them with your own
+ *  implementation. Once an internal archiver is disabled like this,
+ *  PhysicsFS provides no mechanism to recover them, short of calling
+ *  PHYSFS_deinit() and PHYSFS_init() again.
+ *
+ * PHYSFS_deinit() will automatically deregister all archivers, so you don't
+ *  need to explicitly deregister yours if you otherwise shut down cleanly.
  *
  *   \param ext Filename extension that the archiver handles.
  *  \return Zero on error, non-zero on success.

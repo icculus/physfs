@@ -356,7 +356,7 @@ int UNPK_stat(void *opaque, const char *fn, PHYSFS_Stat *st);
 
 
 /* Optional API many archivers use this to manage their directory tree. */
-/* !!! FIXME-3.0: document this better. */
+/* !!! FIXME: document this better. */
 
 typedef struct __PHYSFS_DirTreeEntry
 {
@@ -544,7 +544,13 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle);
 
 
 /*
- * !!! FIXME-3.0: comment me.
+ * Read filesystem metadata for a specific path.
+ *
+ * This needs to fill in all the fields of (stat). For fields that might not
+ *  mean anything on a platform (access time, perhaps), choose a reasonable
+ *  default.
+ *
+ *  Return zero on failure, non-zero on success.
  */
 int __PHYSFS_platformStat(const char *fn, PHYSFS_Stat *stat);
 
