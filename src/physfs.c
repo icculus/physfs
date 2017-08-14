@@ -2170,9 +2170,9 @@ int PHYSFS_delete(const char *_fname)
 } /* PHYSFS_delete */
 
 
-const char *PHYSFS_getRealDir(const char *_fname)
+static DirHandle *getRealDirHandle(const char *_fname)
 {
-    const char *retval = NULL;
+    DirHandle *retval = NULL;
     char *fname = NULL;
     size_t len;
 
@@ -2189,7 +2189,7 @@ const char *PHYSFS_getRealDir(const char *_fname)
             char *arcfname = fname;
             if (partOfMountPoint(i, arcfname))
             {
-                retval = i->dirName;
+                retval = i;
                 break;
             } /* if */
             else if (verifyPath(i, &arcfname, 0))
@@ -2197,7 +2197,7 @@ const char *PHYSFS_getRealDir(const char *_fname)
                 PHYSFS_Stat statbuf;
                 if (i->funcs->stat(i->opaque, arcfname, &statbuf))
                 {
-                    retval = i->dirName;
+                    retval = i;
                     break;
                 } /* if */
             } /* if */
@@ -2207,6 +2207,12 @@ const char *PHYSFS_getRealDir(const char *_fname)
 
     __PHYSFS_smallFree(fname);
     return retval;
+} /* getRealDirHandle */
+
+const char *PHYSFS_getRealDir(const char *fname)
+{
+    DirHandle *dh = getRealDirHandle(fname);
+    return dh ? dh->dirName : NULL;
 } /* PHYSFS_getRealDir */
 
 
@@ -2482,7 +2488,7 @@ void PHYSFS_enumerateFilesCallback(const char *fname,
 
 int PHYSFS_exists(const char *fname)
 {
-    return (PHYSFS_getRealDir(fname) != NULL);
+    return (getRealDirHandle(fname) != NULL);
 } /* PHYSFS_exists */
 
 
