@@ -1451,7 +1451,8 @@ static void ZIP_closeArchive(void *opaque)
 } /* ZIP_closeArchive */
 
 
-static void *ZIP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
+static void *ZIP_openArchive(PHYSFS_Io *io, const char *name,
+                             int forWriting, int *claimed)
 {
     ZIPinfo *info = NULL;
     ZIPentry *root = NULL;
@@ -1463,6 +1464,8 @@ static void *ZIP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
 
     BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
     BAIL_IF_ERRPASS(!isZip(io), NULL);
+
+    *claimed = 1;
 
     info = (ZIPinfo *) allocator.Malloc(sizeof (ZIPinfo));
     BAIL_IF(!info, PHYSFS_ERR_OUT_OF_MEMORY, NULL);

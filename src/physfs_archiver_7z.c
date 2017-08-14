@@ -210,14 +210,23 @@ static void SZIP_closeArchive(void *opaque)
 } /* SZIP_closeArchive */
 
 
-static void *SZIP_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
+static void *SZIP_openArchive(PHYSFS_Io *io, const char *name,
+                              int forWriting, int *claimed)
 {
+    static const PHYSFS_uint8 wantedsig[] = { '7','z',0xBC,0xAF,0x27,0x1C };
     SZIPLookToRead stream;
     ISzAlloc *alloc = &SZIP_SzAlloc;
     SZIPinfo *info = NULL;
     SRes rc;
+    PHYSFS_uint8 sig[6];
+    PHYSFS_sint64 pos;
 
     BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
+    pos = io->tell(io);
+    BAIL_IF_ERRPASS(pos == -1, NULL);
+    BAIL_IF_ERRPASS(io->read(io, sig, 6) != 6, NULL);
+    *claimed = (memcmp(sig, wantedsig, 6) == 0);
+    BAIL_IF_ERRPASS(!io->seek(io, pos), NULL);
 
     info = (SZIPinfo *) allocator.Malloc(sizeof (SZIPinfo));
     BAIL_IF(!info, PHYSFS_ERR_OUT_OF_MEMORY, NULL);

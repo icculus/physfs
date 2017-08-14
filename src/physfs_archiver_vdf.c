@@ -91,7 +91,8 @@ static int vdfLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count,
 } /* vdfLoadEntries */
 
 
-static void *VDF_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
+static void *VDF_openArchive(PHYSFS_Io *io, const char *name,
+                             int forWriting, int *claimed)
 {
     PHYSFS_uint8 ignore[16];
     PHYSFS_uint8 sig[VDF_SIGNATURE_LENGTH];
@@ -106,6 +107,15 @@ static void *VDF_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     BAIL_IF_ERRPASS(!io->seek(io, VDF_COMMENT_LENGTH), NULL);
 
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, sig, sizeof (sig)), NULL);
+
+    if ((memcmp(sig, VDF_SIGNATURE_G1, VDF_SIGNATURE_LENGTH) != 0) &&
+        (memcmp(sig, VDF_SIGNATURE_G2, VDF_SIGNATURE_LENGTH) != 0))
+    {
+        BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
+    } /* if */
+
+    *claimed = 1;
+
     BAIL_IF_ERRPASS(!readui32(io, &count), NULL);
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, ignore, 4), NULL);  /* numFiles */
     BAIL_IF_ERRPASS(!readui32(io, &timestamp), NULL);
@@ -114,12 +124,6 @@ static void *VDF_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     BAIL_IF_ERRPASS(!readui32(io, &version), NULL);
 
     BAIL_IF(version != 0x50, PHYSFS_ERR_UNSUPPORTED, NULL);
-
-    if ((memcmp(sig, VDF_SIGNATURE_G1, VDF_SIGNATURE_LENGTH) != 0) &&
-        (memcmp(sig, VDF_SIGNATURE_G2, VDF_SIGNATURE_LENGTH) != 0))
-    {
-        BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
-    } /* if */
 
     BAIL_IF_ERRPASS(!io->seek(io, rootCatOffset), NULL);
 

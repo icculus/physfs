@@ -70,7 +70,8 @@ static int wadLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
 } /* wadLoadEntries */
 
 
-static void *WAD_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
+static void *WAD_openArchive(PHYSFS_Io *io, const char *name,
+                             int forWriting, int *claimed)
 {
     PHYSFS_uint8 buf[4];
     PHYSFS_uint32 count;
@@ -83,6 +84,8 @@ static void *WAD_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, buf, sizeof (buf)), NULL);
     if ((memcmp(buf, "IWAD", 4) != 0) && (memcmp(buf, "PWAD", 4) != 0))
         BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
+
+    *claimed = 1;
 
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &count, sizeof (count)), NULL);
     count = PHYSFS_swapULE32(count);
