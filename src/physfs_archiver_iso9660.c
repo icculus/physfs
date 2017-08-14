@@ -54,6 +54,7 @@ static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
     size_t baselen;
     size_t fullpathlen;
     void *entry;
+    int i;
 
     if (fnamelen == 1 && ((fname[0] == 0) || (fname[0] == 1)))
         return 1;  /* Magic that represents "." and "..", ignore */
@@ -80,7 +81,6 @@ static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
     {
         PHYSFS_uint16 *ucs2 = (PHYSFS_uint16 *) fname;
         int total = fnamelen / 2;
-        int i;
         for (i = 0; i < total; i++)
             ucs2[i] = PHYSFS_swapUBE16(ucs2[i]);
         ucs2[total] = '\0';
@@ -88,10 +88,17 @@ static int iso9660AddEntry(PHYSFS_Io *io, const int joliet, const int isdir,
     } /* if */
     else
     {
-        /* !!! FIXME-3.0: we assume the filenames are low-ASCII; if they use
-           any high-ASCII chars, they will be invalid UTF-8. */
-        memcpy(fnamecpy, fname, fnamelen);
+        for (i = 0; i < fnamelen; i++)
+        {
+            /* We assume the filenames are low-ASCII; consider the archive
+               corrupt if we see something above 127, since we don't know the
+               encoding. (We can change this later if we find out these exist
+               and are intended to be, say, latin-1 or UTF-8 encoding). */
+            BAIL_IF(fname[i] > 127, PHYSFS_ERR_CORRUPT, 0);
+            fnamecpy[i] = fname[i];
+        } /* for */
         fnamecpy[fnamelen] = '\0';
+
         if (!isdir)
         {
             /* find last SEPARATOR2 */
