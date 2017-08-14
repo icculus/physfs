@@ -56,7 +56,8 @@ static int qpakLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
 } /* qpakLoadEntries */
 
 
-static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
+static void *QPAK_openArchive(PHYSFS_Io *io, const char *name,
+                              int forWriting, int *claimed)
 {
     PHYSFS_uint32 val = 0;
     PHYSFS_uint32 pos = 0;
@@ -70,6 +71,8 @@ static void *QPAK_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &val, 4), NULL);
     if (PHYSFS_swapULE32(val) != QPAK_SIG)
         BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
+
+    *claimed = 1;
 
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &val, 4), NULL);
     pos = PHYSFS_swapULE32(val);  /* directory table offset. */

@@ -3492,20 +3492,30 @@ typedef struct PHYSFS_Archiver
     /**
      * \brief Open an archive provided by (io).
      *
-     * This is where resources are allocated and data is parsed when mounting an archive.
-     *  (name) is a filename associated with (io), but doesn't necessarily
+     * This is where resources are allocated and data is parsed when mounting
+     *  an archive.
+     * (name) is a filename associated with (io), but doesn't necessarily
      *  map to anything, let alone a real filename. This possibly-
      *  meaningless name is in platform-dependent notation.
      * (forWrite) is non-zero if this is to be used for
      *  the write directory, and zero if this is to be used for an
      *  element of the search path.
-     * Return NULL on failure. We ignore any error code you set here;
-     *  when PHYSFS_mount() returns, the error will be PHYSFS_ERR_UNSUPPORTED
-     *  (no Archivers could handle this data).  // !!! FIXME-3.0: yeah?
-     *  Returns non-NULL on success. The pointer returned will be
+     * (claimed) should be set to 1 if this is definitely an archive your
+     *  archiver implementation can handle, even if it fails. We use to
+     *  decide if we should stop trying other archivers if you fail to open
+     *  it. For example: the .zip archiver will set this to 1 for something
+     *  that's got a .zip file signature, even if it failed because the file
+     *  was also truncated. No sense in trying other archivers here, we
+     *  already tried to handle it with the appropriate implementation!.
+     * Return NULL on failure and set (claimed) appropriately. If no archiver
+     *  opened the archive or set (claimed), PHYSFS_mount() will report
+     *  PHYSFS_ERR_UNSUPPORTED. Otherwise, it will report the error from the
+     *  archiver that claimed the data through (claimed).
+     * Return non-NULL on success. The pointer returned will be
      *  passed as the "opaque" parameter for later calls.
      */
-    void *(*openArchive)(PHYSFS_Io *io, const char *name, int forWrite);
+    void *(*openArchive)(PHYSFS_Io *io, const char *name,
+                         int forWrite, int *claimed);
 
     /**
      * \brief List all files in (dirname).

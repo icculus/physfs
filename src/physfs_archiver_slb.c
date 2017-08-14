@@ -59,7 +59,8 @@ static int slbLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
 } /* slbLoadEntries */
 
 
-static void *SLB_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
+static void *SLB_openArchive(PHYSFS_Io *io, const char *name,
+                             int forWriting, int *claimed)
 {
     PHYSFS_uint32 version;
     PHYSFS_uint32 count;
@@ -101,6 +102,8 @@ static void *SLB_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
         UNPK_abandonArchive(unpkarc);
         return NULL;
     } /* if */
+
+    *claimed = 1;  /* oh well. */
 
     return unpkarc;
 } /* SLB_openArchive */

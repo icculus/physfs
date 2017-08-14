@@ -215,11 +215,11 @@ static int iso9660LoadEntries(PHYSFS_Io *io, const int joliet,
 
 
 static int parseVolumeDescriptor(PHYSFS_Io *io, PHYSFS_uint64 *_rootpos,
-                                 PHYSFS_uint64 *_rootlen, int *_joliet)
+                                 PHYSFS_uint64 *_rootlen, int *_joliet,
+                                 int *_claimed)
 {
     PHYSFS_uint64 pos = 32768; /* start at the Primary Volume Descriptor */
     int found = 0;
-    int first = 1;
     int done = 0;
 
     *_joliet = 0;
@@ -242,13 +242,13 @@ static int parseVolumeDescriptor(PHYSFS_Io *io, PHYSFS_uint64 *_rootpos,
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &type, 1), 0);
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &identifier, 5), 0);
 
-        if (memcmp(identifier, "CD001", 5) != 0)
+        if (memcmp(identifier, "CD001", 5) != 0)  /* maybe not an iso? */
         {
-            BAIL_IF(first, PHYSFS_ERR_UNSUPPORTED, 0);  /* maybe not an iso? */
+            BAIL_IF(!*_claimed, PHYSFS_ERR_UNSUPPORTED, 0);
             continue;  /* just skip this one */
         } /* if */
 
-        first = 0; /* okay, this is probably an iso. */
+        *_claimed = 1; /* okay, this is probably an iso. */
 
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &version, 1), 0);  /* version */
         BAIL_IF(version != 1, PHYSFS_ERR_UNSUPPORTED, 0);
@@ -320,7 +320,8 @@ static int parseVolumeDescriptor(PHYSFS_Io *io, PHYSFS_uint64 *_rootpos,
 } /* parseVolumeDescriptor */
 
 
-static void *ISO9660_openArchive(PHYSFS_Io *io, const char *filename, int forWriting)
+static void *ISO9660_openArchive(PHYSFS_Io *io, const char *filename,
+                                 int forWriting, int *claimed)
 {
     PHYSFS_uint64 rootpos = 0;
     PHYSFS_uint64 len = 0;
@@ -330,7 +331,9 @@ static void *ISO9660_openArchive(PHYSFS_Io *io, const char *filename, int forWri
     assert(io != NULL);  /* shouldn't ever happen. */
 
     BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
-    BAIL_IF_ERRPASS(!parseVolumeDescriptor(io, &rootpos, &len, &joliet), NULL);
+
+    if (!parseVolumeDescriptor(io, &rootpos, &len, &joliet, claimed))
+        return NULL;
 
     unpkarc = UNPK_openArchive(io);
     BAIL_IF_ERRPASS(!unpkarc, NULL);

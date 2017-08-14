@@ -37,7 +37,8 @@ static char *cvtToDependent(const char *prepend, const char *path,
 
 
 
-static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
+static void *DIR_openArchive(PHYSFS_Io *io, const char *name,
+                             int forWriting, int *claimed)
 {
     PHYSFS_Stat st;
     const char dirsep = __PHYSFS_platformDirSeparator;
@@ -50,6 +51,7 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name, int forWriting)
     if (st.filetype != PHYSFS_FILETYPE_DIRECTORY)
         BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
 
+    *claimed = 1;
     retval = allocator.Malloc(namelen + seplen + 1);
     BAIL_IF(retval == NULL, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
 

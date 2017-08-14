@@ -838,7 +838,7 @@ static const char *find_filename_extension(const char *fname)
 
 
 static DirHandle *tryOpenDir(PHYSFS_Io *io, const PHYSFS_Archiver *funcs,
-                             const char *d, int forWriting)
+                             const char *d, int forWriting, int *_claimed)
 {
     DirHandle *retval = NULL;
     void *opaque = NULL;
@@ -846,7 +846,7 @@ static DirHandle *tryOpenDir(PHYSFS_Io *io, const PHYSFS_Archiver *funcs,
     if (io != NULL)
         BAIL_IF_ERRPASS(!io->seek(io, 0), NULL);
 
-    opaque = funcs->openArchive(io, d, forWriting);
+    opaque = funcs->openArchive(io, d, forWriting, _claimed);
     if (opaque != NULL)
     {
         retval = (DirHandle *) allocator.Malloc(sizeof (DirHandle));
@@ -871,14 +871,16 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
     PHYSFS_Archiver **i;
     const char *ext;
     int created_io = 0;
+    int claimed = 0;
+    PHYSFS_ErrorCode errcode;
 
     assert((io != NULL) || (d != NULL));
 
     if (io == NULL)
     {
         /* DIR gets first shot (unlike the rest, it doesn't deal with files). */
-        retval = tryOpenDir(io, &__PHYSFS_Archiver_DIR, d, forWriting);
-        if (retval != NULL)
+        retval = tryOpenDir(io, &__PHYSFS_Archiver_DIR, d, forWriting, &claimed);
+        if (retval || claimed)
             return retval;
 
         io = __PHYSFS_createNativeIo(d, forWriting ? 'w' : 'r');
@@ -890,30 +892,32 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
     if (ext != NULL)
     {
         /* Look for archivers with matching file extensions first... */
-        for (i = archivers; (*i != NULL) && (retval == NULL); i++)
+        for (i = archivers; (*i != NULL) && (retval == NULL) && !claimed; i++)
         {
             if (PHYSFS_utf8stricmp(ext, (*i)->info.extension) == 0)
-                retval = tryOpenDir(io, *i, d, forWriting);
+                retval = tryOpenDir(io, *i, d, forWriting, &claimed);
         } /* for */
 
         /* failing an exact file extension match, try all the others... */
-        for (i = archivers; (*i != NULL) && (retval == NULL); i++)
+        for (i = archivers; (*i != NULL) && (retval == NULL) && !claimed; i++)
         {
             if (PHYSFS_utf8stricmp(ext, (*i)->info.extension) != 0)
-                retval = tryOpenDir(io, *i, d, forWriting);
+                retval = tryOpenDir(io, *i, d, forWriting, &claimed);
         } /* for */
     } /* if */
 
     else  /* no extension? Try them all. */
     {
-        for (i = archivers; (*i != NULL) && (retval == NULL); i++)
-            retval = tryOpenDir(io, *i, d, forWriting);
+        for (i = archivers; (*i != NULL) && (retval == NULL) && !claimed; i++)
+            retval = tryOpenDir(io, *i, d, forWriting, &claimed);
     } /* else */
+
+    errcode = currentErrorCode();
 
     if ((!retval) && (created_io))
         io->destroy(io);
 
-    BAIL_IF(!retval, PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_IF(!retval, claimed ? errcode : PHYSFS_ERR_UNSUPPORTED, NULL);
     return retval;
 } /* openDirectory */
 
