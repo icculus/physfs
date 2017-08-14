@@ -2433,7 +2433,17 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
 
             else if (verifyPath(i, &arcfname, 0))
             {
-                if ((!allowSymLinks) && (i->funcs->info.supportsSymlinks))
+                PHYSFS_Stat statbuf;
+                if (!i->funcs->stat(i->opaque, arcfname, &statbuf))
+                {
+                    if (currentErrorCode() == PHYSFS_ERR_NOT_FOUND)
+                        continue;  /* no such dir in this archive, skip it. */
+                } /* if */
+
+                if (statbuf.filetype != PHYSFS_FILETYPE_DIRECTORY)
+                    continue;  /* not a directory in this archive, skip it. */
+
+                else if ((!allowSymLinks) && (i->funcs->info.supportsSymlinks))
                 {
                     filterdata.dirhandle = i;
                     filterdata.arcfname = arcfname;
@@ -2446,7 +2456,7 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
                         if (currentErrorCode() == PHYSFS_ERR_APP_CALLBACK)
                             PHYSFS_setErrorCode(filterdata.errcode);
                     } /* if */
-                } /* if */
+                } /* else if */
                 else
                 {
                     retval = i->funcs->enumerate(i->opaque, arcfname,
