@@ -3043,8 +3043,9 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
 } /* PHYSFS_stat */
 
 
-int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len)
+int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const size_t _len)
 {
+    const PHYSFS_uint64 len = (PHYSFS_uint64) _len;
     return (io->read(io, buf, len) == len);
 } /* __PHYSFS_readAll */
 

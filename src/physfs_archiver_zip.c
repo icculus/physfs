@@ -747,7 +747,7 @@ static ZIPentry *zip_follow_symlink(PHYSFS_Io *io, ZIPinfo *info, char *path)
 
 static int zip_resolve_symlink(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
 {
-    const PHYSFS_uint64 size = entry->uncompressed_size;
+    const size_t size = (size_t) entry->uncompressed_size;
     char *path = NULL;
     int rc = 0;
 
@@ -768,7 +768,7 @@ static int zip_resolve_symlink(PHYSFS_Io *io, ZIPinfo *info, ZIPentry *entry)
     else  /* symlink target path is compressed... */
     {
         z_stream stream;
-        const PHYSFS_uint64 complen = entry->compressed_size;
+        const size_t complen = (size_t) entry->compressed_size;
         PHYSFS_uint8 *compressed = (PHYSFS_uint8*) __PHYSFS_smallAlloc(complen);
         if (compressed != NULL)
         {
@@ -1223,8 +1223,8 @@ static PHYSFS_sint64 zip64_find_end_of_central_dir(PHYSFS_Io *io,
     /*  Just try moving back at most 256k. Oh well. */
     if ((offset < pos) && (pos > 4))
     {
-        const PHYSFS_uint64 maxbuflen = 256 * 1024;
-        PHYSFS_uint64 len = pos - offset;
+        const size_t maxbuflen = 256 * 1024;
+        size_t len = pos - offset;
         PHYSFS_uint8 *buf = NULL;
         PHYSFS_sint32 i;
 
@@ -1246,7 +1246,7 @@ static PHYSFS_sint64 zip64_find_end_of_central_dir(PHYSFS_Io *io,
                  (buf[i+2] == 0x06) && (buf[i+3] == 0x06) )
             {
                 __PHYSFS_smallFree(buf);
-                return pos - (len - i);
+                return pos - ((PHYSFS_sint64) (len - i));
             } /* if */
         } /* for */
 
@@ -1542,10 +1542,10 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
         const char *ptr = strrchr(filename, '$');
         if (ptr != NULL)
         {
-            const PHYSFS_uint64 len = (PHYSFS_uint64) (ptr - filename);
+            const size_t len = (size_t) (ptr - filename);
             char *str = (char *) __PHYSFS_smallAlloc(len + 1);
             BAIL_IF(!str, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-            memcpy(str, filename, (size_t) len);
+            memcpy(str, filename, len);
             str[len] = '\0';
             entry = zip_find_entry(info, str);
             __PHYSFS_smallFree(str);
