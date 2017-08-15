@@ -78,6 +78,11 @@ static char *txt200 =
 "Content-Type: text/plain; charset=utf-8\n"
 "\n";
 
+static const char *lastError(void)
+{
+    return PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode());
+} /* lastError */
+
 static int writeAll(const int fd, const void *buf, const size_t len)
 {
     return (write(fd, buf, len) == len);
@@ -91,7 +96,7 @@ static void feed_file_http(const char *ipstr, int sock, const char *fname)
     if (in == NULL)
     {
         printf("%s: Can't open [%s]: %s.\n",
-               ipstr, fname, PHYSFS_getLastError());
+               ipstr, fname, lastError());
         if (!writeAll(sock, txt404, strlen(txt404)))
             printf("%s: Write error to socket.\n", ipstr);
         return;
@@ -105,7 +110,7 @@ static void feed_file_http(const char *ipstr, int sock, const char *fname)
             PHYSFS_sint64 br = PHYSFS_readBytes(in, buffer, sizeof (buffer));
             if (br == -1)
             {
-                printf("%s: Read error: %s.\n", ipstr, PHYSFS_getLastError());
+                printf("%s: Read error: %s.\n", ipstr, lastError());
                 break;
             } /* if */
 
@@ -237,7 +242,7 @@ void at_exit_cleanup(void)
         close(listensocket);
 
     if (!PHYSFS_deinit())
-        printf("PHYSFS_deinit() failed: %s\n", PHYSFS_getLastError());
+        printf("PHYSFS_deinit() failed: %s\n", lastError());
 } /* at_exit_cleanup */
 
 
@@ -267,7 +272,7 @@ int main(int argc, char **argv)
 
     if (!PHYSFS_init(argv[0]))
     {
-        printf("PHYSFS_init() failed: %s\n", PHYSFS_getLastError());
+        printf("PHYSFS_init() failed: %s\n", lastError());
         return 42;
     } /* if */
 
