@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -64,45 +65,68 @@ typedef struct
 } http_args;
 
 
-static char *txt404 =
-"HTTP/1.0 404 Not Found\n"
-"Connection: close\n"
-"Content-Type: text/html; charset=utf-8\n"
-"\n"
-"<html><head><title>404 Not Found</title></head>\n"
-"<body>Can't find that.</body></html>\n\n";
+#define txt404 \
+    "HTTP/1.0 404 Not Found\n" \
+    "Connection: close\n" \
+    "Content-Type: text/html; charset=utf-8\n" \
+    "\n" \
+    "<html><head><title>404 Not Found</title></head>\n" \
+    "<body>Can't find '%s'.</body></html>\n\n" \
 
-static char *txt200 =
-"HTTP/1.0 200 OK\n"
-"Connection: close\n"
-"Content-Type: text/plain; charset=utf-8\n"
-"\n";
+#define txt200 \
+    "HTTP/1.0 200 OK\n" \
+    "Connection: close\n" \
+    "Content-Type: %s\n" \
+    "\n"
 
 static const char *lastError(void)
 {
     return PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode());
 } /* lastError */
 
-static int writeAll(const int fd, const void *buf, const size_t len)
+static int writeAll(const char *ipstr, const int sock, void *buf, const size_t len)
 {
-    return (write(fd, buf, len) == len);
+    if (write(sock, buf, len) != len)
+    {
+        printf("%s: Write error to socket.\n", ipstr);
+        return 0;
+    } /* if */
+
+    return 1;
 } /* writeAll */
+
+static int writeString(const char *ipstr, const int sock, const char *fmt, ...)
+{
+    /* none of this is robust against large strings or HTML escaping. */
+    char buffer[1024];
+    int len;
+    va_list ap;
+    va_start(ap, fmt);
+    len = vsnprintf(buffer, sizeof (buffer), fmt, ap);
+    va_end(ap);
+    if (len < 0)
+    {
+        printf("uhoh, vsnprintf() failed!\n");
+        return 0;
+    } /* if */
+
+    return writeAll(ipstr, sock, buffer, len);
+} /* writeString */
+
 
 static void feed_file_http(const char *ipstr, int sock, const char *fname)
 {
     PHYSFS_File *in = PHYSFS_openRead(fname);
 
-    printf("%s: requested [%s].\n", ipstr, fname);
     if (in == NULL)
     {
-        printf("%s: Can't open [%s]: %s.\n",
-               ipstr, fname, lastError());
-        if (!writeAll(sock, txt404, strlen(txt404)))
-            printf("%s: Write error to socket.\n", ipstr);
+        printf("%s: Can't open [%s]: %s.\n", ipstr, fname, lastError());
+        writeString(ipstr, sock, txt404, fname);
         return;
     } /* if */
 
-    if (writeAll(sock, txt200, strlen(txt200)))
+    /* !!! FIXME: mimetype */
+    if (writeString(ipstr, sock, txt200, "text/plain; charset=utf-8"))
     {
         do
         {
@@ -114,9 +138,8 @@ static void feed_file_http(const char *ipstr, int sock, const char *fname)
                 break;
             } /* if */
 
-            else if (!writeAll(sock, buffer, (size_t) br))
+            else if (!writeAll(ipstr, sock, buffer, (size_t) br))
             {
-                printf("%s: Write error to socket.\n", ipstr);
                 break;
             } /* else if */
         } while (!PHYSFS_eof(in));
@@ -124,6 +147,69 @@ static void feed_file_http(const char *ipstr, int sock, const char *fname)
 
     PHYSFS_close(in);
 } /* feed_file_http */
+
+
+static void feed_dirlist_http(const char *ipstr, int sock,
+                              const char *dname, char **list)
+{
+    int i;
+
+    if (!writeString(ipstr, sock, txt200, "text/html; charset=utf-8"))
+        return;
+
+    else if (!writeString(ipstr, sock,
+                    "<html><head><title>Directory %s</title></head>"
+                    "<body><p><h1>Directory %s</h1></p><p><ul>\n",
+                    dname, dname))
+        return;
+
+    if (strcmp(dname, "/") == 0)
+        dname = "";
+
+    for (i = 0; list[i]; i++)
+    {
+        const char *fname = list[i];
+        if (!writeString(ipstr, sock,
+            "<li><a href='%s/%s'>%s</a></li>\n", dname, fname, fname))
+            break;
+    } /* for */
+
+    writeString(ipstr, sock, "</ul></body></html>\n");
+} /* feed_dirlist_http */
+
+static void feed_dir_http(const char *ipstr, int sock, const char *dname)
+{
+    char **list = PHYSFS_enumerateFiles(dname);
+    if (list == NULL)
+    {
+        printf("%s: Can't enumerate directory [%s]: %s.\n",
+               ipstr, dname, lastError());
+        writeString(ipstr, sock, txt404, dname);
+        return;
+    } /* if */
+
+    feed_dirlist_http(ipstr, sock, dname, list);
+    PHYSFS_freeList(list);
+} /* feed_dir_http */
+
+static void feed_http_request(const char *ipstr, int sock, const char *fname)
+{
+    PHYSFS_Stat statbuf;
+
+    printf("%s: requested [%s].\n", ipstr, fname);
+
+    if (!PHYSFS_stat(fname, &statbuf))
+    {
+        printf("%s: Can't stat [%s]: %s.\n", ipstr, fname, lastError());
+        writeString(ipstr, sock, txt404, fname);
+        return;
+    } /* if */
+
+    if (statbuf.filetype == PHYSFS_FILETYPE_DIRECTORY)
+        feed_dir_http(ipstr, sock, fname);
+    else
+        feed_file_http(ipstr, sock, fname);
+} /* feed_http_request */
 
 
 static void *do_http(void *_args)
@@ -158,7 +244,7 @@ static void *do_http(void *_args)
             ptr = strchr(buffer + 5, ' ');
             if (ptr != NULL)
                 *ptr = '\0';
-            feed_file_http(ipstr, args->sock, buffer + 4);
+            feed_http_request(ipstr, args->sock, buffer + 4);
         } /* if */
     } /* else */
 
