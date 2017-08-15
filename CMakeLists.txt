@@ -12,7 +12,7 @@
 cmake_minimum_required(VERSION 2.8.4)
 
 project(PhysicsFS)
-set(PHYSFS_VERSION 2.1.0)
+set(PHYSFS_VERSION 2.1.1)
 
 # Increment this if/when we break backwards compatibility.
 set(PHYSFS_SOVERSION 1)
