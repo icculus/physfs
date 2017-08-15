@@ -1224,7 +1224,7 @@ static PHYSFS_sint64 zip64_find_end_of_central_dir(PHYSFS_Io *io,
     if ((offset < pos) && (pos > 4))
     {
         const size_t maxbuflen = 256 * 1024;
-        size_t len = pos - offset;
+        size_t len = (size_t) (pos - offset);
         PHYSFS_uint8 *buf = NULL;
         PHYSFS_sint32 i;
 
