@@ -334,7 +334,7 @@ PHYSFS_Io *__PHYSFS_createMemoryIo(const void *buf, PHYSFS_uint64 len,
  * Read (len) bytes from (io) into (buf). Returns non-zero on success,
  *  zero on i/o error. Literally: "return (io->read(io, buf, len) == len);"
  */
-int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const PHYSFS_uint64 len);
+int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const size_t len);
 
 
 /* These are shared between some archivers. */
