@@ -16,6 +16,10 @@
 #undef UNICODE
 #endif
 
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
+#define _CRT_SECURE_NO_WARNINGS 1
+#endif
+
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 

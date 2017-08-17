@@ -17,6 +17,9 @@
 
 #ifdef PHYSFS_PLATFORM_WINRT
 
+#if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
+#define _CRT_SECURE_NO_WARNINGS 1
+#endif
 #include <windows.h>
 
 #include "physfs_internal.h"
