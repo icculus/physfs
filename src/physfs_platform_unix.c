@@ -57,6 +57,7 @@
 #include <sys/sysctl.h>
 #endif
 
+
 #include "physfs_internal.h"
 
 int __PHYSFS_platformInit(void)
@@ -71,7 +72,6 @@ void __PHYSFS_platformDeinit(void)
 } /* __PHYSFS_platformDeinit */
 
 
-/* Stub version for platforms without CD-ROM support. */
 void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
 #if (defined PHYSFS_NO_CDROM_SUPPORT)

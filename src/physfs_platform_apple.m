@@ -7,15 +7,13 @@
  */
 
 #define __PHYSICSFS_INTERNAL__
-#include "physfs_internal.h"
+#include "physfs_platforms.h"
 
 #ifdef PHYSFS_PLATFORM_APPLE
 
-/* Foundation.h steps on these. :( */
-#undef malloc
-#undef free
-
 #include <Foundation/Foundation.h>
+
+#include "physfs_internal.h"
 
 int __PHYSFS_platformInit(void)
 {

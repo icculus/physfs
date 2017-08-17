@@ -7,7 +7,7 @@
  */
 
 #define __PHYSICSFS_INTERNAL__
-#include "physfs_internal.h"
+#include "physfs_platforms.h"
 
 #ifdef PHYSFS_PLATFORM_WINDOWS
 
@@ -15,9 +15,6 @@
 #ifdef UNICODE
 #undef UNICODE
 #endif
-
-/* !!! FIXME: maybe clean out the "allocator" macro, eventually. */
-#undef allocator  /* apparently Windows 10 SDK conflicts here. */
 
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
@@ -38,7 +35,8 @@
 #ifdef allocator  /* apparently Windows 10 SDK conflicts here. */
 #undef allocator
 #endif
-#define allocator __PHYSFS_AllocatorHooks
+
+#include "physfs_internal.h"
 
 /*
  * Users without the platform SDK don't have this defined.  The original docs
