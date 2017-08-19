@@ -3544,23 +3544,26 @@ typedef struct PHYSFS_Archiver
      *  you can dispose of it upon return from the callback. (dirname) is in
      *  platform-independent notation.
      * If you have a failure, call PHYSFS_SetErrorCode() with whatever code
-     *  seem appropriate and return -1.
-     * If the callback returns -1, please call
-     *  PHYSFS_SetErrorCode(PHYSFS_ERR_APP_CALLBACK) and then return -1.
-     * If the callback returns 0, stop enumerating and return 0. Don't call
-     *  the callback again in any circumstances. Don't set an error code in
-     *  this case.
-     * Callbacks are (currently) only supposed to return -1, 0, or 1. Any
-     *  other result has undefined behavior.
-     * As long as the callback returned 1 and you haven't experienced any
-     *  errors of your own, keep enumerating until you're done and then return
-     *  1 without setting an error code.
+     *  seem appropriate and return PHYSFS_ENUM_ERROR.
+     * If the callback returns PHYSFS_ENUM_ERROR, please call
+     *  PHYSFS_SetErrorCode(PHYSFS_ERR_APP_CALLBACK) and then return
+     *  PHYSFS_ENUM_ERROR as well. Don't call the callback again in any
+     *  circumstances.
+     * If the callback returns PHYSFS_ENUM_STOP, stop enumerating and return
+     *  PHYSFS_ENUM_STOP as well. Don't call the callback again in any
+     *  circumstances. Don't set an error code in this case.
+     * Callbacks are only supposed to return a value from
+     *  PHYSFS_EnumerateCallbackResult. Any other result has undefined
+     *  behavior.
+     * As long as the callback returned PHYSFS_ENUM_OK and you haven't
+     *  experienced any errors of your own, keep enumerating until you're done
+     *  and then return PHYSFS_ENUM_OK without setting an error code.
      *
      * \warning PHYSFS_enumerate returns zero or non-zero (success or failure),
      *          so be aware this function pointer returns different values!
      */
-    int (*enumerate)(void *opaque, const char *dirname,
-                     PHYSFS_EnumerateCallback cb,
+    PHYSFS_EnumerateCallbackResult (*enumerate)(void *opaque,
+                     const char *dirname, PHYSFS_EnumerateCallback cb,
                      const char *origdir, void *callbackdata);
 
     /**
