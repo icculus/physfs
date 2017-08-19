@@ -118,18 +118,18 @@ char *__PHYSFS_platformCalcUserDir(void)
 } /* __PHYSFS_platformCalcUserDir */
 
 
-int __PHYSFS_platformEnumerate(const char *dirname,
+PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
                                PHYSFS_EnumerateCallback callback,
                                const char *origdir, void *callbackdata)
 {
     DIR *dir;
     struct dirent *ent;
-    int retval = 1;
+    PHYSFS_EnumerateCallbackResult retval = PHYSFS_ENUM_OK;
 
     dir = opendir(dirname);
-    BAIL_IF(dir == NULL, errcodeFromErrno(), -1);
+    BAIL_IF(dir == NULL, errcodeFromErrno(), PHYSFS_ENUM_ERROR);
 
-    while ((retval == 1) && ((ent = readdir(dir)) != NULL))
+    while ((retval == PHYSFS_ENUM_OK) && ((ent = readdir(dir)) != NULL))
     {
         const char *name = ent->d_name;
         if (name[0] == '.')  /* ignore "." and ".." */
@@ -139,7 +139,7 @@ int __PHYSFS_platformEnumerate(const char *dirname,
         } /* if */
 
         retval = callback(callbackdata, origdir, name);
-        if (retval == -1)
+        if (retval == PHYSFS_ENUM_ERROR)
             PHYSFS_setErrorCode(PHYSFS_ERR_APP_CALLBACK);
     } /* while */
 

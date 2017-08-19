@@ -623,20 +623,20 @@ void *__PHYSFS_platformGetThreadID(void)
 } /* __PHYSFS_platformGetThreadID */
 
 
-int __PHYSFS_platformEnumerate(const char *dirname,
+PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
                                PHYSFS_EnumerateCallback callback,
                                const char *origdir, void *callbackdata)
 {
+    PHYSFS_EnumerateCallbackResult retval = PHYSFS_ENUM_OK;
     HANDLE dir = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW entw;
     size_t len = strlen(dirname);
     char *searchPath = NULL;
     WCHAR *wSearchPath = NULL;
-    int retval = 1;
 
     /* Allocate a new string for path, maybe '\\', "*", and NULL terminator */
     searchPath = (char *) __PHYSFS_smallAlloc(len + 3);
-    BAIL_IF(!searchPath, PHYSFS_ERR_OUT_OF_MEMORY, -1);
+    BAIL_IF(!searchPath, PHYSFS_ERR_OUT_OF_MEMORY, PHYSFS_ENUM_ERROR);
 
     /* Copy current dirname */
     strcpy(searchPath, dirname);
@@ -653,11 +653,11 @@ int __PHYSFS_platformEnumerate(const char *dirname,
 
     UTF8_TO_UNICODE_STACK(wSearchPath, searchPath);
     __PHYSFS_smallFree(searchPath);
-    BAIL_IF_ERRPASS(!wSearchPath, -1);
+    BAIL_IF_ERRPASS(!wSearchPath, PHYSFS_ENUM_ERROR);
 
     dir = winFindFirstFileW(wSearchPath, &entw);
     __PHYSFS_smallFree(wSearchPath);
-    BAIL_IF(dir == INVALID_HANDLE_VALUE, errcodeFromWinApi(), -1);
+    BAIL_IF(dir==INVALID_HANDLE_VALUE, errcodeFromWinApi(), PHYSFS_ENUM_ERROR);
 
     do
     {
@@ -677,10 +677,10 @@ int __PHYSFS_platformEnumerate(const char *dirname,
         {
             retval = callback(callbackdata, origdir, utf8);
             allocator.Free(utf8);
-            if (retval == -1)
+            if (retval == PHYSFS_ENUM_ERROR)
                 PHYSFS_setErrorCode(PHYSFS_ERR_APP_CALLBACK);
         } /* else */
-    } while ((retval == 1) && (FindNextFileW(dir, &entw) != 0));
+    } while ((retval == PHYSFS_ENUM_OK) && (FindNextFileW(dir, &entw) != 0));
 
     FindClose(dir);
 

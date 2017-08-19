@@ -1871,7 +1871,8 @@ typedef struct setSaneCfgEnumData
     PHYSFS_ErrorCode errcode;
 } setSaneCfgEnumData;
 
-static int setSaneCfgEnumCallback(void *_data, const char *dir, const char *f)
+static PHYSFS_EnumerateCallbackResult setSaneCfgEnumCallback(void *_data,
+                                                const char *dir, const char *f)
 {
     setSaneCfgEnumData *data = (setSaneCfgEnumData *) _data;
     const size_t extlen = data->archiveExtLen;
@@ -1900,9 +1901,9 @@ static int setSaneCfgEnumCallback(void *_data, const char *dir, const char *f)
     } /* if */
 
     /* !!! FIXME: if we want to abort on errors... */
-    /* return (data->errcode != PHYSFS_ERR_OK) ? -1 : 1; */
+    /*return (data->errcode != PHYSFS_ERR_OK) ? PHYSFS_ENUM_ERROR : PHYSFS_ENUM_OK;*/
 
-    return 1;  /* keep going */
+    return PHYSFS_ENUM_OK;  /* keep going */
 } /* setSaneCfgEnumCallback */
 
 
@@ -2248,7 +2249,8 @@ static int locateInStringList(const char *str,
 } /* locateInStringList */
 
 
-static int enumFilesCallback(void *data, const char *origdir, const char *str)
+static PHYSFS_EnumerateCallbackResult enumFilesCallback(void *data,
+                                        const char *origdir, const char *str)
 {
     PHYSFS_uint32 pos;
     void *ptr;
@@ -2261,7 +2263,7 @@ static int enumFilesCallback(void *data, const char *origdir, const char *str)
      */
     pos = pecd->size;
     if (locateInStringList(str, pecd->list, &pos))
-        return 1;  /* already in the list, but keep going. */
+        return PHYSFS_ENUM_OK;  /* already in the list, but keep going. */
 
     ptr = allocator.Realloc(pecd->list, (pecd->size + 2) * sizeof (char *));
     newstr = (char *) allocator.Malloc(strlen(str) + 1);
@@ -2274,7 +2276,7 @@ static int enumFilesCallback(void *data, const char *origdir, const char *str)
             allocator.Free(newstr);
 
         pecd->errcode = PHYSFS_ERR_OUT_OF_MEMORY;
-        return -1;  /* better luck next time. */
+        return PHYSFS_ENUM_ERROR;  /* better luck next time. */
     } /* if */
 
     strcpy(newstr, str);
@@ -2288,7 +2290,7 @@ static int enumFilesCallback(void *data, const char *origdir, const char *str)
     pecd->list[pos] = newstr;
     pecd->size++;
 
-    return 1;
+    return PHYSFS_ENUM_OK;
 } /* enumFilesCallback */
 
 
@@ -2317,29 +2319,30 @@ char **PHYSFS_enumerateFiles(const char *path)
 /*
  * Broke out to seperate function so we can use stack allocation gratuitously.
  */
-static int enumerateFromMountPoint(DirHandle *i, const char *arcfname,
+static PHYSFS_EnumerateCallbackResult enumerateFromMountPoint(DirHandle *i,
+                                    const char *arcfname,
                                     PHYSFS_EnumerateCallback callback,
                                     const char *_fname, void *data)
 {
+    PHYSFS_EnumerateCallbackResult retval;
     const size_t len = strlen(arcfname);
     char *ptr = NULL;
     char *end = NULL;
     const size_t slen = strlen(i->mountPoint) + 1;
     char *mountPoint = (char *) __PHYSFS_smallAlloc(slen);
-    int rc;
 
-    BAIL_IF(!mountPoint, PHYSFS_ERR_OUT_OF_MEMORY, -1);
+    BAIL_IF(!mountPoint, PHYSFS_ERR_OUT_OF_MEMORY, PHYSFS_ENUM_ERROR);
 
     strcpy(mountPoint, i->mountPoint);
     ptr = mountPoint + ((len) ? len + 1 : 0);
     end = strchr(ptr, '/');
     assert(end);  /* should always find a terminating '/'. */
     *end = '\0';
-    rc = callback(data, _fname, ptr);
+    retval = callback(data, _fname, ptr);
     __PHYSFS_smallFree(mountPoint);
 
-    BAIL_IF(rc == -1, PHYSFS_ERR_APP_CALLBACK, -1);
-    return rc;
+    BAIL_IF(retval == PHYSFS_ENUM_ERROR, PHYSFS_ERR_APP_CALLBACK, retval);
+    return retval;
 } /* enumerateFromMountPoint */
 
 
@@ -2352,8 +2355,8 @@ typedef struct SymlinkFilterData
     PHYSFS_ErrorCode errcode;
 } SymlinkFilterData;
 
-static int enumCallbackFilterSymLinks(void *_data, const char *origdir,
-                                      const char *fname)
+static PHYSFS_EnumerateCallbackResult enumCallbackFilterSymLinks(void *_data,
+                                    const char *origdir, const char *fname)
 {
     SymlinkFilterData *data = (SymlinkFilterData *) _data;
     const DirHandle *dh = data->dirhandle;
@@ -2362,12 +2365,12 @@ static int enumCallbackFilterSymLinks(void *_data, const char *origdir,
     const char *trimmedDir = (*arcfname == '/') ? (arcfname + 1) : arcfname;
     const size_t slen = strlen(trimmedDir) + strlen(fname) + 2;
     char *path = (char *) __PHYSFS_smallAlloc(slen);
-    int retval = 1;
+    PHYSFS_EnumerateCallbackResult retval = PHYSFS_ENUM_OK;
 
     if (path == NULL)
     {
         data->errcode = PHYSFS_ERR_OUT_OF_MEMORY;
-        return -1;
+        return PHYSFS_ENUM_ERROR;
     } /* if */
 
     snprintf(path, slen, "%s%s%s", trimmedDir, *trimmedDir ? "/" : "", fname);
@@ -2375,7 +2378,7 @@ static int enumCallbackFilterSymLinks(void *_data, const char *origdir,
     if (!dh->funcs->stat(dh->opaque, path, &statbuf))
     {
         data->errcode = currentErrorCode();
-        retval = -1;
+        retval = PHYSFS_ENUM_ERROR;
     } /* if */
     else
     {
@@ -2383,7 +2386,7 @@ static int enumCallbackFilterSymLinks(void *_data, const char *origdir,
         if (statbuf.filetype != PHYSFS_FILETYPE_SYMLINK)
         {
             retval = data->callback(data->callbackData, origdir, fname);
-            if (retval == -1)
+            if (retval == PHYSFS_ENUM_ERROR)
                 data->errcode = PHYSFS_ERR_APP_CALLBACK;
         } /* if */
     } /* else */
@@ -2396,7 +2399,7 @@ static int enumCallbackFilterSymLinks(void *_data, const char *origdir,
 
 int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
 {
-    int retval = 1;
+    PHYSFS_EnumerateCallbackResult retval = PHYSFS_ENUM_OK;
     size_t len;
     char *fname;
 
@@ -2408,7 +2411,7 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
     BAIL_IF(!fname, PHYSFS_ERR_OUT_OF_MEMORY, 0);
 
     if (!sanitizePlatformIndependentPath(_fn, fname))
-        retval = 0;
+        retval = PHYSFS_ENUM_STOP;
     else
     {
         DirHandle *i;
@@ -2423,7 +2426,7 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
             filterdata.callbackData = data;
         } /* if */
 
-        for (i = searchPath; (retval > 0) && (i != NULL); i = i->next)
+        for (i = searchPath; (retval == PHYSFS_ENUM_OK) && i; i = i->next)
         {
             char *arcfname = fname;
 
@@ -2450,7 +2453,7 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
                     retval = i->funcs->enumerate(i->opaque, arcfname,
                                                  enumCallbackFilterSymLinks,
                                                  _fn, &filterdata);
-                    if (retval == -1)
+                    if (retval == PHYSFS_ENUM_ERROR)
                     {
                         if (currentErrorCode() == PHYSFS_ERR_APP_CALLBACK)
                             PHYSFS_setErrorCode(filterdata.errcode);
@@ -2469,7 +2472,7 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
 
     __PHYSFS_smallFree(fname);
 
-    return (retval < 0) ? 0 : 1;
+    return (retval == PHYSFS_ENUM_ERROR) ? 0 : 1;
 } /* PHYSFS_enumerate */
 
 
@@ -2479,12 +2482,12 @@ typedef struct
     void *data;
 } LegacyEnumFilesCallbackData;
 
-static int enumFilesCallbackAlwaysSucceed(void *data, const char *origdir,
-                                          const char *fname)
+static PHYSFS_EnumerateCallbackResult enumFilesCallbackAlwaysSucceed(void *d,
+                                    const char *origdir, const char *fname)
 {
-    LegacyEnumFilesCallbackData *cbdata = (LegacyEnumFilesCallbackData *) data;
+    LegacyEnumFilesCallbackData *cbdata = (LegacyEnumFilesCallbackData *) d;
     cbdata->callback(cbdata->data, origdir, fname);
-    return 1;
+    return PHYSFS_ENUM_OK;
 } /* enumFilesCallbackAlwaysSucceed */
 
 void PHYSFS_enumerateFilesCallback(const char *fname,
@@ -3255,26 +3258,27 @@ void *__PHYSFS_DirTreeFind(__PHYSFS_DirTree *dt, const char *path)
     BAIL(PHYSFS_ERR_NOT_FOUND, NULL);
 } /* __PHYSFS_DirTreeFind */
 
-int __PHYSFS_DirTreeEnumerate(void *opaque, const char *dname,
-                              PHYSFS_EnumerateCallback cb,
+PHYSFS_EnumerateCallbackResult __PHYSFS_DirTreeEnumerate(void *opaque,
+                              const char *dname, PHYSFS_EnumerateCallback cb,
                               const char *origdir, void *callbackdata)
 {
+    PHYSFS_EnumerateCallbackResult retval = PHYSFS_ENUM_OK;
     __PHYSFS_DirTree *tree = (__PHYSFS_DirTree *) opaque;
     const __PHYSFS_DirTreeEntry *entry = __PHYSFS_DirTreeFind(tree, dname);
-    if (entry && entry->isdir)
-    {
-        for (entry = entry->children; entry; entry = entry->sibling)
-        {
-            const char *name = entry->name;
-            const char *ptr = strrchr(name, '/');
-            const int rc = cb(callbackdata, origdir, ptr ? ptr + 1 : name);
-            BAIL_IF(rc == -1, PHYSFS_ERR_APP_CALLBACK, -1);
-            if (rc == 0)
-                return 0;
-        } /* for */
-    } /* if */
+    BAIL_IF(!entry, PHYSFS_ERR_NOT_FOUND, PHYSFS_ENUM_ERROR);
 
-    return 1;
+    entry = entry->children;
+
+    while (entry && (retval == PHYSFS_ENUM_OK))
+    {
+        const char *name = entry->name;
+        const char *ptr = strrchr(name, '/');
+        retval = cb(callbackdata, origdir, ptr ? ptr + 1 : name);
+        BAIL_IF(retval == PHYSFS_ENUM_ERROR, PHYSFS_ERR_APP_CALLBACK, retval);
+        entry = entry->sibling;
+    } /* while */
+
+    return retval;
 } /* __PHYSFS_DirTreeEnumerate */
 
 

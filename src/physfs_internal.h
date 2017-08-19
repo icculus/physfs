@@ -379,8 +379,8 @@ typedef struct __PHYSFS_DirTree
 int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen);
 void *__PHYSFS_DirTreeAdd(__PHYSFS_DirTree *dt, char *name, const int isdir);
 void *__PHYSFS_DirTreeFind(__PHYSFS_DirTree *dt, const char *path);
-int __PHYSFS_DirTreeEnumerate(void *opaque, const char *dname,
-                              PHYSFS_EnumerateCallback cb,
+PHYSFS_EnumerateCallbackResult __PHYSFS_DirTreeEnumerate(void *opaque,
+                              const char *dname, PHYSFS_EnumerateCallback cb,
                               const char *origdir, void *callbackdata);
 void __PHYSFS_DirTreeDeinit(__PHYSFS_DirTree *dt);
 
@@ -633,7 +633,7 @@ void *__PHYSFS_platformGetThreadID(void);
  *  notation. Note that ".", "..", and other meta-entries should always
  *  be ignored.
  */
-int __PHYSFS_platformEnumerate(const char *dirname,
+PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
                                PHYSFS_EnumerateCallback callback,
                                const char *origdir, void *callbackdata);
 

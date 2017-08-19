@@ -70,14 +70,14 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name,
 } /* DIR_openArchive */
 
 
-static int DIR_enumerate(void *opaque, const char *dname,
-                         PHYSFS_EnumerateCallback cb,
+static PHYSFS_EnumerateCallbackResult DIR_enumerate(void *opaque,
+                         const char *dname, PHYSFS_EnumerateCallback cb,
                          const char *origdir, void *callbackdata)
 {
     char *d;
-    int retval;
+    PHYSFS_EnumerateCallbackResult retval;
     CVT_TO_DEPENDENT(d, opaque, dname);
-    BAIL_IF_ERRPASS(!d, -1);
+    BAIL_IF_ERRPASS(!d, PHYSFS_ENUM_ERROR);
     retval = __PHYSFS_platformEnumerate(d, cb, origdir, callbackdata);
     __PHYSFS_smallFree(d);
     return retval;
