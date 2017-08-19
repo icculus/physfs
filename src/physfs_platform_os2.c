@@ -390,10 +390,11 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     return __PHYSFS_platformCalcBaseDir(NULL);  /* !!! FIXME: ? */
 } /* __PHYSFS_platformCalcPrefDir */
 
-int __PHYSFS_platformEnumerate(const char *dirname,
+PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
                                PHYSFS_EnumerateCallback callback,
                                const char *origdir, void *callbackdata)
 {                                        
+    PHYSFS_EnumerateCallbackResult retval = PHYSFS_ENUM_OK;
     size_t utf8len = strlen(dirname);
     char *utf8 = (char *) __PHYSFS_smallAlloc(utf8len + 5);
     char *cpspec = NULL;
@@ -401,9 +402,8 @@ int __PHYSFS_platformEnumerate(const char *dirname,
     HDIR hdir = HDIR_CREATE;
     ULONG count = 1;
     APIRET rc;
-    int retval = 1;
 
-    BAIL_IF(!utf8, PHYSFS_ERR_OUT_OF_MEMORY, -1);
+    BAIL_IF(!utf8, PHYSFS_ERR_OUT_OF_MEMORY, PHYSFS_ENUM_ERROR);
 
     strcpy(utf8, dirname);
     if (utf8[utf8len - 1] != '\\')
@@ -413,7 +413,7 @@ int __PHYSFS_platformEnumerate(const char *dirname,
 
     cpspec = cvtUtf8ToCodepage(utf8);
     __PHYSFS_smallFree(utf8);
-    BAIL_IF_ERRPASS(!cpspec, -1);
+    BAIL_IF_ERRPASS(!cpspec, PHYSFS_ENUM_ERROR);
 
     rc = DosFindFirst((unsigned char *) cpspec, &hdir,
                       FILE_DIRECTORY | FILE_ARCHIVED |
@@ -421,7 +421,7 @@ int __PHYSFS_platformEnumerate(const char *dirname,
                       &fb, sizeof (fb), &count, FIL_STANDARD);
     allocator.Free(cpspec);
 
-    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), -1);
+    BAIL_IF(rc != NO_ERROR, errcodeFromAPIRET(rc), PHYSFS_ENUM_ERROR);
 
     while (count == 1)
     {
@@ -429,17 +429,17 @@ int __PHYSFS_platformEnumerate(const char *dirname,
         {
             utf8 = cvtCodepageToUtf8(fb.achName);
             if (!utf8)
-                retval = -1;
+                retval = PHYSFS_ENUM_ERROR;
             else
             {
                 retval = callback(callbackdata, origdir, utf8);
                 allocator.Free(utf8);
-                if (retval == -1)
+                if (retval == PHYSFS_ENUM_ERROR)
                     PHYSFS_setErrorCode(PHYSFS_ERR_APP_CALLBACK);
             } /* else */
         } /* if */
 
-        if (retval != 1)
+        if (retval != PHYSFS_ENUM_OK)
             break;
 
         DosFindNext(hdir, &fb, sizeof (fb), &count);

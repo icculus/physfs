@@ -2538,6 +2538,24 @@ PHYSFS_DECL void PHYSFS_utf8FromLatin1(const char *src, char *dst,
  */
 PHYSFS_DECL int PHYSFS_utf8stricmp(const char *str1, const char *str2);
 
+
+/**
+ * \typedef PHYSFS_EnumerateCallback
+ * \brief Possible return values from PHYSFS_EnumerateCallback.
+ *
+ * These values dictate if an enumeration callback should continue to fire,
+ *  or stop (and why it is stopping).
+ *
+ * \sa PHYSFS_EnumerateCallback
+ * \sa PHYSFS_enumerate
+ */
+typedef enum PHYSFS_EnumerateCallbackResult
+{
+    PHYSFS_ENUM_ERROR = -1,   /**< Stop enumerating, report error to app. */
+    PHYSFS_ENUM_STOP = 0,     /**< Stop enumerating, report success to app. */
+    PHYSFS_ENUM_OK = 1        /**< Keep enumerating, no problems */
+} PHYSFS_EnumerateCallbackResult;
+
 /**
  * \typedef PHYSFS_EnumerateCallback
  * \brief Function signature for callbacks that enumerate and return results.
@@ -2559,13 +2577,14 @@ PHYSFS_DECL int PHYSFS_utf8stricmp(const char *str1, const char *str2);
  *                 fired, and it will not contain the full path. You can
  *                 recreate the fullpath with $origdir/$fname ... The file
  *                 can be a subdirectory, a file, a symlink, etc.
- *   \return 1 to keep enumerating, 0 to stop (no error), -1 to stop (error).
+ *   \return A value from PHYSFS_EnumerateCallbackResult.
  *           All other values are (currently) undefined; don't use them.
  *
  * \sa PHYSFS_enumerate
+ * \sa PHYSFS_EnumerateCallbackResult
  */
-typedef int (*PHYSFS_EnumerateCallback)(void *data, const char *origdir,
-                                         const char *fname);
+typedef PHYSFS_EnumerateCallbackResult (*PHYSFS_EnumerateCallback)(void *data,
+                                       const char *origdir, const char *fname);
 
 /**
  * \fn int PHYSFS_enumerate(const char *dir, PHYSFS_EnumerateCallback c, void *d)
@@ -2618,8 +2637,9 @@ typedef int (*PHYSFS_EnumerateCallback)(void *data, const char *origdir,
  *    \param d Application-defined data passed to callback. Can be NULL.
  *   \return non-zero on success, zero on failure. Use
  *           PHYSFS_getLastErrorCode() to obtain the specific error. If the
- *           callback returns zero to stop early, this will be considered
- *           success. Callbacks returning -1 will result in
+ *           callback returns PHYSFS_ENUM_STOP to stop early, this will be
+ *           considered success. Callbacks returning PHYSFS_ENUM_ERROR will
+ *           make this function return zero and set the error code to
  *           PHYSFS_ERR_APP_CALLBACK.
  *
  * \sa PHYSFS_EnumerateCallback
