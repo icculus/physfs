@@ -2542,6 +2542,54 @@ PHYSFS_DECL void PHYSFS_utf8FromLatin1(const char *src, char *dst,
  */
 PHYSFS_DECL int PHYSFS_utf8stricmp(const char *str1, const char *str2);
 
+/**
+ * \fn int PHYSFS_utf16stricmp(const PHYSFS_uint16 *str1, const PHYSFS_uint16 *str2)
+ * \brief Case-insensitive compare of two UTF-16 strings.
+ *
+ * This is a strcasecmp/stricmp replacement that expects both strings
+ *  to be in UTF-16 encoding. It will do "case folding" to decide if the
+ *  Unicode codepoints in the strings match.
+ *
+ * It will report which string is "greater than" the other, but be aware that
+ *  this doesn't necessarily mean anything: 'a' may be "less than" 'b', but
+ *  a Japanese kuten has no meaningful alphabetically relationship to
+ *  a Greek lambda, but being able to assign a reliable "value" makes sorting
+ *  algorithms possible, if not entirely sane. Most cases should treat the
+ *  return value as "equal" or "not equal".
+ *
+ * Like stricmp, this expects both strings to be NULL-terminated.
+ *
+ *   \param str1 First string to compare.
+ *   \param str2 Second string to compare.
+ *  \return -1 if str1 is "less than" str2, 1 if "greater than", 0 if equal.
+ */
+PHYSFS_DECL int PHYSFS_utf16stricmp(const PHYSFS_uint16 *str1,
+                                    const PHYSFS_uint16 *str2);
+
+/**
+ * \fn int PHYSFS_ucs4stricmp(const PHYSFS_uint32 *str1, const PHYSFS_uint32 *str2)
+ * \brief Case-insensitive compare of two UCS-4 strings.
+ *
+ * This is a strcasecmp/stricmp replacement that expects both strings
+ *  to be in UCS-4 (aka UTF-32) encoding. It will do "case folding" to decide
+ *  if the Unicode codepoints in the strings match.
+ *
+ * It will report which string is "greater than" the other, but be aware that
+ *  this doesn't necessarily mean anything: 'a' may be "less than" 'b', but
+ *  a Japanese kuten has no meaningful alphabetically relationship to
+ *  a Greek lambda, but being able to assign a reliable "value" makes sorting
+ *  algorithms possible, if not entirely sane. Most cases should treat the
+ *  return value as "equal" or "not equal".
+ *
+ * Like stricmp, this expects both strings to be NULL-terminated.
+ *
+ *   \param str1 First string to compare.
+ *   \param str2 Second string to compare.
+ *  \return -1 if str1 is "less than" str2, 1 if "greater than", 0 if equal.
+ */
+PHYSFS_DECL int PHYSFS_ucs4stricmp(const PHYSFS_uint32 *str1,
+                                   const PHYSFS_uint32 *str2);
+
 
 /**
  * \typedef PHYSFS_EnumerateCallback

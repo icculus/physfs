@@ -190,6 +190,48 @@ static PHYSFS_uint32 utf8codepoint(const char **_str)
     return UNICODE_BOGUS_CHAR_VALUE;
 } /* utf8codepoint */
 
+static PHYSFS_uint32 utf16codepoint(const PHYSFS_uint16 **_str)
+{
+    const PHYSFS_uint16 *src = *_str;
+    PHYSFS_uint32 cp = (PHYSFS_uint32) *(src++);
+
+    if (cp == 0)  /* null terminator, end of string. */
+        return 0;
+    /* Orphaned second half of surrogate pair? */
+    else if ((cp >= 0xDC00) && (cp <= 0xDFFF))
+        cp = UNICODE_BOGUS_CHAR_CODEPOINT;
+    else if ((cp >= 0xD800) && (cp <= 0xDBFF))  /* start surrogate pair! */
+    {
+        const PHYSFS_uint32 pair = (PHYSFS_uint32) *src;
+        if (pair == 0)
+            cp = UNICODE_BOGUS_CHAR_CODEPOINT;
+        else if ((pair < 0xDC00) || (pair > 0xDFFF))
+            cp = UNICODE_BOGUS_CHAR_CODEPOINT;
+        else
+        {
+            src++;  /* eat the other surrogate. */
+            cp = (((cp - 0xD800) << 10) | (pair - 0xDC00));
+        } /* else */
+    } /* else if */
+
+    *_str = src;
+    return cp;
+} /* utf16codepoint */
+
+static PHYSFS_uint32 utf32codepoint(const PHYSFS_uint32 **_str)
+{
+    const PHYSFS_uint32 *src = *_str;
+    PHYSFS_uint32 cp = *(src++);
+
+    if (cp == 0)  /* null terminator, end of string. */
+        return 0;
+    else if (cp > 0x10FFF)
+        cp = UNICODE_BOGUS_CHAR_CODEPOINT;
+
+    *_str = src;
+    return cp;
+} /* utf32codepoint */
+
 
 void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst, PHYSFS_uint64 len)
 {
@@ -378,25 +420,9 @@ void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len
     len--;
     while (len)
     {
-        PHYSFS_uint32 cp = (PHYSFS_uint32) *(src++);
-        if (cp == 0)
+        const PHYSFS_uint32 cp = utf16codepoint(&src);
+        if (!cp)
             break;
-
-        /* Orphaned second half of surrogate pair? */
-        if ((cp >= 0xDC00) && (cp <= 0xDFFF))
-            cp = UNICODE_BOGUS_CHAR_CODEPOINT;
-        else if ((cp >= 0xD800) && (cp <= 0xDBFF))  /* start surrogate pair! */
-        {
-            const PHYSFS_uint32 pair = (PHYSFS_uint32) *src;
-            if ((pair < 0xDC00) || (pair > 0xDFFF))
-                cp = UNICODE_BOGUS_CHAR_CODEPOINT;
-            else
-            {
-                src++;  /* eat the other surrogate. */
-                cp = (((cp - 0xD800) << 10) | (pair - 0xDC00));
-            } /* else */
-        } /* else if */
-
         utf8fromcodepoint(cp, &dst, &len);
     } /* while */
 
@@ -492,46 +518,51 @@ static int locate_casefold_mapping(const PHYSFS_uint32 from, PHYSFS_uint32 *to)
 } /* locate_casefold_mapping */
 
 
+#define UTFSTRICMP(bits) \
+    PHYSFS_uint32 folded1[3], folded2[3]; \
+    int head1 = 0, tail1 = 0, head2 = 0, tail2 = 0; \
+    while (1) { \
+        PHYSFS_uint32 cp1, cp2; \
+        if (head1 != tail1) { \
+            cp1 = folded1[tail1++]; \
+        } else { \
+            head1 = locate_casefold_mapping(utf##bits##codepoint(&str1), folded1); \
+            cp1 = folded1[0]; \
+            tail1 = 1; \
+        } \
+        if (head2 != tail2) { \
+            cp2 = folded2[tail2++]; \
+        } else { \
+            head2 = locate_casefold_mapping(utf##bits##codepoint(&str2), folded2); \
+            cp2 = folded2[0]; \
+            tail2 = 1; \
+        } \
+        if (cp1 < cp2) { \
+            return -1; \
+        } else if (cp1 > cp2) { \
+            return 1; \
+        } else if (cp1 == 0) { \
+            break;  /* complete match. */ \
+        } \
+    } \
+    return 0
+
 int PHYSFS_utf8stricmp(const char *str1, const char *str2)
 {
-    PHYSFS_uint32 folded1[3], folded2[3];
-    int head1 = 0;
-    int tail1 = 0;
-    int head2 = 0;
-    int tail2 = 0;
-
-    while (1)
-    {
-        PHYSFS_uint32 cp1, cp2;
-
-        if (head1 != tail1)
-            cp1 = folded1[tail1++];
-        else
-        {
-            head1 = locate_casefold_mapping(utf8codepoint(&str1), folded1);
-            cp1 = folded1[0];
-            tail1 = 1;
-        } /* else */
-
-        if (head2 != tail2)
-            cp2 = folded2[tail2++];
-        else
-        {
-            head2 = locate_casefold_mapping(utf8codepoint(&str2), folded2);
-            cp2 = folded2[0];
-            tail2 = 1;
-        } /* else */
-
-        if (cp1 < cp2)
-            return -1;
-        else if (cp1 > cp2)
-            return 1;
-        else if (cp1 == 0)
-            break;    /* complete match. */
-    } /* while */
-
-    return 0;
+    UTFSTRICMP(8);
 } /* PHYSFS_utf8stricmp */
+
+int PHYSFS_utf16stricmp(const PHYSFS_uint16 *str1, const PHYSFS_uint16 *str2)
+{
+    UTFSTRICMP(16);
+} /* PHYSFS_utf16stricmp */
+
+int PHYSFS_ucs4stricmp(const PHYSFS_uint32 *str1, const PHYSFS_uint32 *str2)
+{
+    UTFSTRICMP(32);
+} /* PHYSFS_ucs4stricmp */
+
+#undef UTFSTRICMP
 
 /* end of physfs_unicode.c ... */
 
