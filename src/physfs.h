@@ -2386,6 +2386,10 @@ PHYSFS_DECL void PHYSFS_enumerateFilesCallback(const char *dir,
  * \fn void PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst, PHYSFS_uint64 len)
  * \brief Convert a UCS-4 string to a UTF-8 string.
  *
+ * \warning This function will not report an error if there are invalid UCS-4
+ *          values in the source string. It will replace them with a '?'
+ *          character and continue on.
+ *
  * UCS-4 (aka UTF-32) strings are 32-bits per character: \c wchar_t on Unix.
  *
  * To ensure that the destination buffer is large enough for the conversion,
@@ -2407,6 +2411,10 @@ PHYSFS_DECL void PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst,
 /**
  * \fn void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-8 string to a UCS-4 string.
+ *
+ * \warning This function will not report an error if there are invalid UTF-8
+ *          sequences in the source string. It will replace them with a '?'
+ *          character and continue on.
  *
  * UCS-4 (aka UTF-32) strings are 32-bits per character: \c wchar_t on Unix.
  *
@@ -2432,6 +2440,10 @@ PHYSFS_DECL void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst,
  *
  * \warning you almost certainly should use PHYSFS_utf8FromUtf16(), which
  *  became available in PhysicsFS 2.1, unless you know what you're doing.
+ *
+ * \warning This function will not report an error if there are invalid UCS-2
+ *          values in the source string. It will replace them with a '?'
+ *          character and continue on.
  *
  * UCS-2 strings are 16-bits per character: \c TCHAR on Windows, when building
  *  with Unicode support. Please note that modern versions of Windows use
@@ -2462,6 +2474,10 @@ PHYSFS_DECL void PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst,
  *
  * \warning you almost certainly should use PHYSFS_utf8ToUtf16(), which
  *  became available in PhysicsFS 2.1, unless you know what you're doing.
+ *
+ * \warning This function will not report an error if there are invalid UTF-8
+ *          sequences in the source string. It will replace them with a '?'
+ *          character and continue on.
  *
  * UCS-2 strings are 16-bits per character: \c TCHAR on Windows, when building
  *  with Unicode support. Please note that modern versions of Windows use
@@ -2829,6 +2845,10 @@ PHYSFS_DECL int PHYSFS_stat(const char *fname, PHYSFS_Stat *stat);
  * \fn void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-16 string to a UTF-8 string.
  *
+ * \warning This function will not report an error if there are invalid UTF-16
+ *          sequences in the source string. It will replace them with a '?'
+ *          character and continue on.
+ *
  * UTF-16 strings are 16-bits per character (except some chars, which are
  *  32-bits): \c TCHAR on Windows, when building with Unicode support. Modern
  *  Windows releases use UTF-16. Windows releases before 2000 used TCHAR, but
@@ -2855,6 +2875,10 @@ PHYSFS_DECL void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst,
 /**
  * \fn PHYSFS_utf8ToUtf16(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-8 string to a UTF-16 string.
+ *
+ * \warning This function will not report an error if there are invalid UTF-8
+ *          sequences in the source string. It will replace them with a '?'
+ *          character and continue on.
  *
  * UTF-16 strings are 16-bits per character (except some chars, which are
  *  32-bits): \c TCHAR on Windows, when building with Unicode support. Modern
