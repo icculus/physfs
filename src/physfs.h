@@ -170,14 +170,14 @@
  *  should convert them to UTF-8 before handing them to PhysicsFS with
  *  PHYSFS_utf8FromUtf16(), which handles both UTF-16 and UCS-2. If you're
  *  using Unix or Mac OS X, your wchar_t strings are four bytes per character
- *  ("UCS-4 encoding"). Use PHYSFS_utf8FromUcs4(). Mac OS X can give you UTF-8
- *  directly from a CFString or NSString, and many Unixes generally give you C
- *  strings in UTF-8 format everywhere. If you have a single-byte high ASCII
- *  charset, like so-many European "codepages" you may be out of luck. We'll
- *  convert from "Latin1" to UTF-8 only, and never back to Latin1. If you're
- *  above ASCII 127, all bets are off: move to Unicode or use your platform's
- *  facilities. Passing a C string with high-ASCII data that isn't UTF-8
- *  encoded will NOT do what you expect!
+ *  ("UCS-4 encoding", sometimes called "UTF-32"). Use PHYSFS_utf8FromUcs4().
+ *  Mac OS X can give you UTF-8 directly from a CFString or NSString, and many
+ *  Unixes generally give you C strings in UTF-8 format everywhere. If you
+ *  have a single-byte high ASCII charset, like so-many European "codepages"
+ *  you may be out of luck. We'll convert from "Latin1" to UTF-8 only, and
+ *  never back to Latin1. If you're above ASCII 127, all bets are off: move
+ *  to Unicode or use your platform's facilities. Passing a C string with
+ *  high-ASCII data that isn't UTF-8 encoded will NOT do what you expect!
  *
  * Naturally, there's also PHYSFS_utf8ToUcs2(), PHYSFS_utf8ToUtf16(), and
  *  PHYSFS_utf8ToUcs4() to get data back into a format you like. Behind the
@@ -2386,7 +2386,7 @@ PHYSFS_DECL void PHYSFS_enumerateFilesCallback(const char *dir,
  * \fn void PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst, PHYSFS_uint64 len)
  * \brief Convert a UCS-4 string to a UTF-8 string.
  *
- * UCS-4 strings are 32-bits per character: \c wchar_t on Unix.
+ * UCS-4 (aka UTF-32) strings are 32-bits per character: \c wchar_t on Unix.
  *
  * To ensure that the destination buffer is large enough for the conversion,
  *  please allocate a buffer that is the same size as the source buffer. UTF-8
@@ -2408,7 +2408,7 @@ PHYSFS_DECL void PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst,
  * \fn void PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst, PHYSFS_uint64 len)
  * \brief Convert a UTF-8 string to a UCS-4 string.
  *
- * UCS-4 strings are 32-bits per character: \c wchar_t on Unix.
+ * UCS-4 (aka UTF-32) strings are 32-bits per character: \c wchar_t on Unix.
  *
  * To ensure that the destination buffer is large enough for the conversion,
  *  please allocate a buffer that is four times the size of the source buffer.
@@ -2522,6 +2522,10 @@ PHYSFS_DECL void PHYSFS_utf8FromLatin1(const char *src, char *dst,
  * This is a strcasecmp/stricmp replacement that expects both strings
  *  to be in UTF-8 encoding. It will do "case folding" to decide if the
  *  Unicode codepoints in the strings match.
+ *
+ * If both strings are exclusively low-ASCII characters, this will do the
+ *  right thing, as that is also valid UTF-8. If there are any high-ASCII
+ *  chars, this will not do what you expect!
  *
  * It will report which string is "greater than" the other, but be aware that
  *  this doesn't necessarily mean anything: 'a' may be "less than" 'b', but
