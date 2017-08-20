@@ -203,7 +203,7 @@ static char *cvtPathToCorrectCase(char *buf)
                 int cmp;
                 char *utf8 = cvtCodepageToUtf8(fb.achName);
                 if (!utf8) /* ugh, maybe we'll get lucky with the C runtime. */
-                    cmp = stricmp(utf8, fname);
+                    cmp = stricmp(fb.achName, fname);
                 else
                 {
                     cmp = PHYSFS_utf8stricmp(utf8, fname);
