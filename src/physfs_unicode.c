@@ -430,8 +430,7 @@ void PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len
 } /* PHYSFS_utf8FromUtf16 */
 
 
-/* (to) should point to at least 3 PHYSFS_uint32 slots. */
-static int locate_casefold_mapping(const PHYSFS_uint32 from, PHYSFS_uint32 *to)
+int PHYSFS_caseFold(const PHYSFS_uint32 from, PHYSFS_uint32 *to)
 {
     int i;
 
@@ -515,7 +514,7 @@ static int locate_casefold_mapping(const PHYSFS_uint32 from, PHYSFS_uint32 *to)
     /* Not found...there's no remapping for this codepoint. */
     *to = from;
     return 1;
-} /* locate_casefold_mapping */
+} /* PHYSFS_caseFold */
 
 
 #define UTFSTRICMP(bits) \
@@ -526,14 +525,14 @@ static int locate_casefold_mapping(const PHYSFS_uint32 from, PHYSFS_uint32 *to)
         if (head1 != tail1) { \
             cp1 = folded1[tail1++]; \
         } else { \
-            head1 = locate_casefold_mapping(utf##bits##codepoint(&str1), folded1); \
+            head1 = PHYSFS_caseFold(utf##bits##codepoint(&str1), folded1); \
             cp1 = folded1[0]; \
             tail1 = 1; \
         } \
         if (head2 != tail2) { \
             cp2 = folded2[tail2++]; \
         } else { \
-            head2 = locate_casefold_mapping(utf##bits##codepoint(&str2), folded2); \
+            head2 = PHYSFS_caseFold(utf##bits##codepoint(&str2), folded2); \
             cp2 = folded2[0]; \
             tail2 = 1; \
         } \
