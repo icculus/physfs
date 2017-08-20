@@ -2532,6 +2532,36 @@ PHYSFS_DECL void PHYSFS_utf8FromLatin1(const char *src, char *dst,
 /* Everything above this line is part of the PhysicsFS 2.0 API. */
 
 /**
+ * \fn int PHYSFS_caseFold(const PHYSFS_uint32 from, PHYSFS_uint32 *to)
+ * \brief "Fold" a Unicode codepoint to a lowercase equivalent.
+ *
+ * (This is for limited, hardcore use. If you don't immediately see a need
+ *  for it, you can probably ignore this forever.)
+ *
+ * This will convert a Unicode codepoint into its lowercase equivalent.
+ *  Bogus codepoints and codepoints without a lowercase equivalent will
+ *  be returned unconverted.
+ *
+ * Note that you might get multiple codepoints in return! The German Eszett,
+ *  for example, will fold down to two lowercase latin 's' codepoints. The
+ *  theory is that if you fold two strings, one with an Eszett and one with
+ *  "SS" down, they will match.
+ *
+ * \warning Anyone that is a student of Unicode knows about the "Turkish I"
+ *          problem. This API does not handle it. Assume this one letter
+ *          in all of Unicode will definitely fold sort of incorrectly. If
+ *          you don't know what this is about, you can probably ignore this
+ *          problem for most of the planet, but perfection is impossible.
+ *
+ *   \param from The codepoint to fold.
+ *   \param to Buffer to store the folded codepoint values into. This should
+ *             point to space for at least 3 PHYSFS_uint32 slots.
+ *  \return The number of codepoints the folding produced. Between 1 and 3.
+ */
+PHYSFS_DECL int PHYSFS_caseFold(const PHYSFS_uint32 from, PHYSFS_uint32 *to);
+
+
+/**
  * \fn int PHYSFS_utf8stricmp(const char *str1, const char *str2)
  * \brief Case-insensitive compare of two UTF-8 strings.
  *
