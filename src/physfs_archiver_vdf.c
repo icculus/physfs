@@ -19,6 +19,7 @@
 #define VDF_COMMENT_LENGTH 256
 #define VDF_SIGNATURE_LENGTH 16
 #define VDF_ENTRY_NAME_LENGTH 64
+#define VDF_ENTRY_DIR 0x80000000
 
 static const char* VDF_SIGNATURE_G1 = "PSVDSC_V2.00\r\n\r\n";
 static const char* VDF_SIGNATURE_G2 = "PSVDSC_V2.00\n\r\n\r";
@@ -83,8 +84,9 @@ static int vdfLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count,
         } /* for */
 
         BAIL_IF(!name[0], PHYSFS_ERR_CORRUPT, 0);
-
-        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, ts, ts, jump, size), 0);
+        if (!(type & VDF_ENTRY_DIR)) {
+            BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, ts, ts, jump, size), 0);
+        }
     } /* for */
 
     return 1;
@@ -100,7 +102,7 @@ static void *VDF_openArchive(PHYSFS_Io *io, const char *name,
     void *unpkarc;
 
     assert(io != NULL); /* shouldn't ever happen. */
-    
+
     BAIL_IF(forWriting, PHYSFS_ERR_READ_ONLY, NULL);
 
     /* skip the 256-byte comment field. */
