@@ -135,11 +135,22 @@ static char *cvtUtf8ToCodepage(const char *utf8str)
 
 static char *cvtCodepageToUtf8(const char *cpstr)
 {
+    const size_t len = strlen(cpstr) + 1;
+    char *retvalbuf = (char *) allocator.Malloc(len * 4);
     char *retval = NULL;
-    if (uconvdll)
+
+    BAIL_IF(!retvalbuf, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+
+    if (!uconvdll)
+    {
+        /* There's really not much we can do on older OS/2s except pray this
+           is latin1-compatible. */
+        retval = retvalbuf;
+        PHYSFS_utf8FromLatin1(cpstr, retval, len * 4);
+    } /* if */
+    else
     {
         int rc;
-        size_t len = strlen(cpstr) + 1;
         size_t cplen = len;
         size_t unilen = len;
         size_t subs = 0;
@@ -151,12 +162,11 @@ static char *cvtCodepageToUtf8(const char *cpstr)
         GOTO_IF(rc != ULS_SUCCESS, PHYSFS_ERR_BAD_FILENAME, done);
         GOTO_IF(subs > 0, PHYSFS_ERR_BAD_FILENAME, done);
         assert(cplen == 0);
-        retval = (char *) allocator.Malloc(len * 4);
-        GOTO_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, done);
+        retval = retvalbuf;
         PHYSFS_utf8FromUcs2((const PHYSFS_uint16 *) uc2ptr, retval, len * 4);
         done:
         __PHYSFS_smallFree(uc2ptr);
-    } /* if */                
+    } /* else */
 
     return retval;
 } /* cvtCodepageToUtf8 */
