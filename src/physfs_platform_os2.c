@@ -95,25 +95,42 @@ static PHYSFS_ErrorCode errcodeFromAPIRET(const APIRET rc)
 
 static char *cvtUtf8ToCodepage(const char *utf8str)
 {
-    if (uconvdll)
+    const size_t len = strlen(utf8str) + 1;
+    const size_t uc2buflen = len * sizeof (UniChar);
+    UniChar *uc2ptr = (UniChar *) __PHYSFS_smallAlloc(uc2buflen);
+    UniChar *uc2str = uc2ptr;
+    char *cpptr = NULL;
+    char *cpstr = NULL;
+    size_t subs = 0;
+    size_t unilen;
+
+    BAIL_IF(!uc2str, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    PHYSFS_utf8ToUcs2(utf8str, (PHYSFS_uint16 *) uc2str, uc2buflen);
+    for (unilen = 0; uc2str[unilen]; unilen++) { /* spin */ }
+    unilen++;  /* null terminator. */
+
+    if (!uconvdll)
+    {
+        /* There's really not much we can do on older OS/2s except pray this
+           is latin1-compatible. */
+        size_t i;
+        cpptr = (char *) allocator.Malloc(unilen);
+        cpstr = cpptr;
+        GOTO_IF(!cpptr, PHYSFS_ERR_OUT_OF_MEMORY, failed);
+        for (i = 0; i < unilen; i++)
+        {
+            const UniChar ch = uc2str[i];
+            GOTO_IF(ch > 0xFF, PHYSFS_ERR_BAD_FILENAME, failed);
+            cpptr[i] = (char) ((unsigned char) ch);
+        } /* for */
+
+        __PHYSFS_smallFree(uc2ptr);
+        return cpstr;
+    } /* if */
+    else
     {
         int rc;
-        size_t len = strlen(utf8str) + 1;
-        const size_t uc2buflen = len * sizeof (UniChar);
-        UniChar *uc2ptr = (UniChar *) __PHYSFS_smallAlloc(uc2buflen);
-        UniChar *uc2str = uc2ptr;
-        char *cpptr = NULL;
-        char *cpstr = NULL;
-        size_t subs = 0;
-        size_t unilen;
-        size_t cplen;
-
-        GOTO_IF(!uc2str, PHYSFS_ERR_OUT_OF_MEMORY, failed);
-        PHYSFS_utf8ToUcs2(utf8str, (PHYSFS_uint16 *) uc2str, uc2buflen);
-        for (unilen = 0; uc2str[unilen]; unilen++) { /* spin */ }
-        unilen++;  /* null terminator. */
-
-        cplen = unilen * 4; /* overallocate, just in case. */
+        const size_t cplen = unilen * 4; /* overallocate, just in case. */
         cpptr = (char *) allocator.Malloc(cplen);
         GOTO_IF(!cpptr, PHYSFS_ERR_OUT_OF_MEMORY, failed);
         cpstr = cpptr;
@@ -123,12 +140,13 @@ static char *cvtUtf8ToCodepage(const char *utf8str)
         GOTO_IF(subs > 0, PHYSFS_ERR_BAD_FILENAME, failed);
         assert(unilen == 0);
 
-        return cpptr;
-
-        failed:
         __PHYSFS_smallFree(uc2ptr);
-        allocator.Free(cpptr);
-    } /* if */
+        return cpptr;
+    } /* else */
+
+failed:
+    __PHYSFS_smallFree(uc2ptr);
+    allocator.Free(cpptr);
 
     return NULL;
 } /* cvtUtf8ToCodepage */
