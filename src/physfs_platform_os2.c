@@ -130,7 +130,7 @@ static char *cvtUtf8ToCodepage(const char *utf8str)
     else
     {
         int rc;
-        const size_t cplen = unilen * 4; /* overallocate, just in case. */
+        size_t cplen = unilen * 4; /* overallocate, just in case. */
         cpptr = (char *) allocator.Malloc(cplen);
         GOTO_IF(!cpptr, PHYSFS_ERR_OUT_OF_MEMORY, failed);
         cpstr = cpptr;
