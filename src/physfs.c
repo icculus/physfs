@@ -169,7 +169,8 @@ static PHYSFS_Io *nativeIo_duplicate(PHYSFS_Io *io)
 
 static int nativeIo_flush(PHYSFS_Io *io)
 {
-    return __PHYSFS_platformFlush(io->opaque);
+    NativeIoInfo *info = (NativeIoInfo *) io->opaque;
+    return __PHYSFS_platformFlush(info->handle);
 } /* nativeIo_flush */
 
 static void nativeIo_destroy(PHYSFS_Io *io)
