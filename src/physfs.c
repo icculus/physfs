@@ -2889,7 +2889,7 @@ int PHYSFS_seek(PHYSFS_File *handle, PHYSFS_uint64 pos)
             /* backward? */
             ((offset < 0) && (((size_t) -offset) <= fh->bufpos)) )
         {
-            fh->bufpos += (PHYSFS_uint32) offset;
+            fh->bufpos = (size_t) (((PHYSFS_sint64) fh->bufpos) + offset);
             return 1; /* successful seek */
         } /* if */
     } /* if */
