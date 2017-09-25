@@ -2713,59 +2713,43 @@ int PHYSFS_close(PHYSFS_File *_handle)
 } /* PHYSFS_close */
 
 
-static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *buffer, size_t len)
+static PHYSFS_sint64 doBufferedRead(FileHandle *fh, void *_buffer, size_t len)
 {
-    PHYSFS_Io *io = NULL;
+    PHYSFS_uint8 *buffer = (PHYSFS_uint8 *) _buffer;
     PHYSFS_sint64 retval = 0;
-    size_t buffered = 0;
-    PHYSFS_sint64 rc = 0;
 
-    if (len == 0)
-        return 0;
-
-    buffered = fh->buffill - fh->bufpos;
-    if (buffered >= len)  /* totally in the buffer, just copy and return! */
+    while (len > 0)
     {
-        memcpy(buffer, fh->buffer + fh->bufpos, len);
-        fh->bufpos += len;
-        return (PHYSFS_sint64) len;
-    } /* if */
+        const size_t avail = fh->buffill - fh->bufpos;
+        if (avail > 0)  /* data available in the buffer. */
+        {
+            const size_t cpy = (len < avail) ? len : avail;
+            memcpy(buffer, fh->buffer + fh->bufpos, cpy);
+            assert(len >= cpy);
+            buffer += cpy;
+            len -= cpy;
+            fh->bufpos += cpy;
+            retval += cpy;
+        } /* if */
 
-    else if (buffered > 0) /* partially in the buffer... */
-    {
-        memcpy(buffer, fh->buffer + fh->bufpos, buffered);
-        buffer = ((PHYSFS_uint8 *) buffer) + buffered;
-        len -= buffered;
-        retval = (PHYSFS_sint64) buffered;
-    } /* if */
+        else   /* buffer is empty, refill it. */
+        {
+            PHYSFS_Io *io = fh->io;
+            const PHYSFS_sint64 rc = io->read(io, fh->buffer, fh->bufsize);
+            fh->bufpos = 0;
+            if (rc > 0)
+                fh->buffill = (size_t) rc;
+            else
+            {
+                fh->buffill = 0;
+                if (retval == 0)  /* report already-read data, or failure. */
+                    retval = rc;
+                break;
+            } /* else */
+        } /* else */
+    } /* while */
 
-    /* if you got here, the buffer is drained and we still need bytes. */
-    assert(len > 0);
-
-    fh->buffill = fh->bufpos = 0;
-
-    io = fh->io;
-    if (len >= fh->bufsize)  /* need more than the buffer takes. */
-    {
-        /* leave buffer empty, go right to output instead. */
-        rc = io->read(io, buffer, len);
-        if (rc < 0)
-            return ((retval == 0) ? rc : retval);
-        return retval + rc;
-    } /* if */
-
-    /* need less than buffer can take. Fill buffer. */
-    rc = io->read(io, fh->buffer, fh->bufsize);
-    if (rc < 0)
-        return ((retval == 0) ? rc : retval);
-
-    assert(fh->bufpos == 0);
-    fh->buffill = (size_t) rc;
-    rc = doBufferedRead(fh, buffer, len);  /* go from the start, again. */
-    if (rc < 0)
-        return ((retval == 0) ? rc : retval);
-
-    return retval + rc;
+    return retval;
 } /* doBufferedRead */
 
 
