@@ -149,7 +149,7 @@
  *   - .MVL (Descent II movielib archives)
  *   - .WAD (DOOM engine archives)
  *   - .VDF (Gothic I/II engine archives)
- *
+ *   - .SLB (Independence War archives)
  *
  * String policy for PhysicsFS 2.0 and later:
  *
