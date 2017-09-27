@@ -3229,7 +3229,7 @@ PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
 
 
 /**
- * \fn int PHYSFS_mountMemory(const void *ptr, PHYSFS_uint64 len, void (*del)(void *), const char *fname, const char *mountPoint, int appendToPath)
+ * \fn int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len, void (*del)(void *), const char *fname, const char *mountPoint, int appendToPath)
  * \brief Add an archive, contained in a memory buffer, to the search path.
  *
  * \warning Unless you have some special, low-level need, you should be using
