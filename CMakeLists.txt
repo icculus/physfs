@@ -266,7 +266,7 @@ if(NOT MSVC)
     )
     install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/extras/physfs.pc"
-        DESTINATION "lib/pkgconfig"
+        DESTINATION "lib${LIB_SUFFIX}/pkgconfig"
     )
 endif()
 
