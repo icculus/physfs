@@ -455,6 +455,7 @@ static PHYSFS_Io *ZIP_duplicate(PHYSFS_Io *io)
     finfo->io = zip_get_io(origfinfo->io, NULL, finfo->entry);
     GOTO_IF_ERRPASS(!finfo->io, failed);
 
+    initializeZStream(&finfo->stream);
     if (finfo->entry->compression_method != COMPMETH_NONE)
     {
         finfo->buffer = (PHYSFS_uint8 *) allocator.Malloc(ZIP_READBUFSIZE);
