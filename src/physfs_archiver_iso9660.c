@@ -151,18 +151,25 @@ static int iso9660LoadEntries(PHYSFS_Io *io, const int joliet,
 
         /* recordlen = 0 -> no more entries or fill entry */
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &recordlen, 1), 0);
-        if (recordlen == 0)
+        if (recordlen > 0)
+            readpos += recordlen;  /* ready to seek to next record. */
+        else
         {
+            PHYSFS_uint64 nextpos;
+
             /* if we are in the last sector of the directory & it's 0 -> end */
             if ((dirend - 2048) <= (readpos - 1))
                 break; /* finished */
 
             /* else skip to the next sector & continue; */
-            readpos = (((readpos - 1) / 2048) + 1) * 2048;
-            continue;
-        } /* if */
+            nextpos = (((readpos - 1) / 2048) + 1) * 2048;
 
-        readpos += recordlen;  /* ready to seek to next record. */
+            /* whoops, can't make forward progress! */
+            BAIL_IF(nextpos == readpos, PHYSFS_ERR_CORRUPT, 0);
+
+            readpos = nextpos;
+            continue;  /* start back at upper loop. */
+        } /* else */
 
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &extattrlen, 1), 0);
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &extent, 4), 0);
@@ -203,6 +210,10 @@ static int iso9660LoadEntries(PHYSFS_Io *io, const int joliet,
         timestamp = (PHYSFS_sint64) mktime(&t);
 
         extent += extattrlen;  /* skip extended attribute record. */
+
+        /* infinite loop, corrupt file? */
+        BAIL_IF((extent * 2048) == dirstart, PHYSFS_ERR_CORRUPT, 0);
+
         if (!iso9660AddEntry(io, joliet, isdir, base, fname, fnamelen,
                              timestamp, extent * 2048, datalen, unpkarc))
         {
