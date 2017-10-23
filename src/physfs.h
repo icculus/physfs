@@ -2760,6 +2760,12 @@ PHYSFS_DECL int PHYSFS_enumerate(const char *dir, PHYSFS_EnumerateCallback c,
  * This call will fail (and fail to remove from the path) if the element still
  *  has files open in it.
  *
+ * \warning This function wants the path to the archive or directory that was
+ *          mounted (the same string used for the "newDir" argument of
+ *          PHYSFS_addToSearchPath or any of the mount functions), not the
+ *          path where it is mounted in the tree (the "mountPoint" argument
+ *          to any of the mount functions).
+ *
  *    \param oldDir dir/archive to remove.
  *   \return nonzero on success, zero on failure. Use
  *           PHYSFS_getLastErrorCode() to obtain the specific error.
@@ -3188,7 +3194,7 @@ typedef struct PHYSFS_Io
 
 
 /**
- * \fn int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname, const char *mountPoint, int appendToPath)
+ * \fn int PHYSFS_mountIo(PHYSFS_Io *io, const char *newDir, const char *mountPoint, int appendToPath)
  * \brief Add an archive, built on a PHYSFS_Io, to the search path.
  *
  * \warning Unless you have some special, low-level need, you should be using
@@ -3198,11 +3204,14 @@ typedef struct PHYSFS_Io
  *  instead of a pathname. Behind the scenes, PHYSFS_mount() calls this
  *  function with a physical-filesystem-based PHYSFS_Io.
  *
- * (filename) is only used here to optimize archiver selection (if you name it
- *  XXXXX.zip, we might try the ZIP archiver first, for example). It doesn't
- *  need to refer to a real file at all, and can even be NULL. If the filename
- *  isn't helpful, the system will try every archiver until one works or none
- *  of them do.
+ * (newDir) must be a unique string to identify this archive. It is used
+ *  to optimize archiver selection (if you name it XXXXX.zip, we might try
+ *  the ZIP archiver first, for example, or directly choose an archiver that
+ *  can only trust the data is valid by filename extension). It doesn't
+ *  need to refer to a real file at all. If the filename extension isn't
+ *  helpful, the system will try every archiver until one works or none
+ *  of them do. This filename must be unique, as the system won't allow you
+ *  to have two archives with the same name.
  *
  * (io) must remain until the archive is unmounted. When the archive is
  *  unmounted, the system will call (io)->destroy(io), which will give you
@@ -3211,7 +3220,7 @@ typedef struct PHYSFS_Io
  * If this function fails, (io)->destroy(io) is not called.
  *
  *   \param io i/o instance for archive to add to the path.
- *   \param fname Filename that can represent this stream. Can be NULL.
+ *   \param newDir Filename that can represent this stream.
  *   \param mountPoint Location in the interpolated tree that this archive
  *                     will be "mounted", in platform-independent notation.
  *                     NULL or "" is equivalent to "/".
@@ -3224,12 +3233,12 @@ typedef struct PHYSFS_Io
  * \sa PHYSFS_getSearchPath
  * \sa PHYSFS_getMountPoint
  */
-PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
+PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *newDir,
                                const char *mountPoint, int appendToPath);
 
 
 /**
- * \fn int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len, void (*del)(void *), const char *fname, const char *mountPoint, int appendToPath)
+ * \fn int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len, void (*del)(void *), const char *newDir, const char *mountPoint, int appendToPath)
  * \brief Add an archive, contained in a memory buffer, to the search path.
  *
  * \warning Unless you have some special, low-level need, you should be using
@@ -3239,11 +3248,14 @@ PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
  *  instead of a pathname. This buffer contains all the data of the archive,
  *  and is used instead of a real file in the physical filesystem.
  *
- * (filename) is only used here to optimize archiver selection (if you name it
- *  XXXXX.zip, we might try the ZIP archiver first, for example). It doesn't
- *  need to refer to a real file at all, and can even be NULL. If the filename
- *  isn't helpful, the system will try every archiver until one works or none
- *  of them do.
+ * (newDir) must be a unique string to identify this archive. It is used
+ *  to optimize archiver selection (if you name it XXXXX.zip, we might try
+ *  the ZIP archiver first, for example, or directly choose an archiver that
+ *  can only trust the data is valid by filename extension). It doesn't
+ *  need to refer to a real file at all. If the filename extension isn't
+ *  helpful, the system will try every archiver until one works or none
+ *  of them do. This filename must be unique, as the system won't allow you
+ *  to have two archives with the same name.
  *
  * (ptr) must remain until the archive is unmounted. When the archive is
  *  unmounted, the system will call (del)(ptr), which will notify you that
@@ -3256,7 +3268,7 @@ PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
  *   \param buf Address of the memory buffer containing the archive data.
  *   \param len Size of memory buffer, in bytes.
  *   \param del A callback that triggers upon unmount. Can be NULL.
- *   \param fname Filename that can represent this stream. Can be NULL.
+ *   \param newDir Filename that can represent this stream.
  *   \param mountPoint Location in the interpolated tree that this archive
  *                     will be "mounted", in platform-independent notation.
  *                     NULL or "" is equivalent to "/".
@@ -3269,12 +3281,12 @@ PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *fname,
  * \sa PHYSFS_getMountPoint
  */
 PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
-                                   void (*del)(void *), const char *fname,
+                                   void (*del)(void *), const char *newDir,
                                    const char *mountPoint, int appendToPath);
 
 
 /**
- * \fn int PHYSFS_mountHandle(PHYSFS_File *file, const char *fname, const char *mountPoint, int appendToPath)
+ * \fn int PHYSFS_mountHandle(PHYSFS_File *file, const char *newDir, const char *mountPoint, int appendToPath)
  * \brief Add an archive, contained in a PHYSFS_File handle, to the search path.
  *
  * \warning Unless you have some special, low-level need, you should be using
@@ -3297,11 +3309,14 @@ PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
  *  but isn't necessarily. The most popular use for this is likely to mount
  *  archives stored inside other archives.
  *
- * (filename) is only used here to optimize archiver selection (if you name it
- *  XXXXX.zip, we might try the ZIP archiver first, for example). It doesn't
- *  need to refer to a real file at all, and can even be NULL. If the filename
- *  isn't helpful, the system will try every archiver until one works or none
- *  of them do.
+ * (newDir) must be a unique string to identify this archive. It is used
+ *  to optimize archiver selection (if you name it XXXXX.zip, we might try
+ *  the ZIP archiver first, for example, or directly choose an archiver that
+ *  can only trust the data is valid by filename extension). It doesn't
+ *  need to refer to a real file at all. If the filename extension isn't
+ *  helpful, the system will try every archiver until one works or none
+ *  of them do. This filename must be unique, as the system won't allow you
+ *  to have two archives with the same name.
  *
  * (file) must remain until the archive is unmounted. When the archive is
  *  unmounted, the system will call PHYSFS_close(file). If you need this
@@ -3311,7 +3326,7 @@ PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
  * If this function fails, PHYSFS_close(file) is not called.
  *
  *   \param file The PHYSFS_File handle containing archive data.
- *   \param fname Filename that can represent this stream. Can be NULL.
+ *   \param newDir Filename that can represent this stream.
  *   \param mountPoint Location in the interpolated tree that this archive
  *                     will be "mounted", in platform-independent notation.
  *                     NULL or "" is equivalent to "/".
@@ -3323,7 +3338,7 @@ PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
  * \sa PHYSFS_getSearchPath
  * \sa PHYSFS_getMountPoint
  */
-PHYSFS_DECL int PHYSFS_mountHandle(PHYSFS_File *file, const char *fname,
+PHYSFS_DECL int PHYSFS_mountHandle(PHYSFS_File *file, const char *newDir,
                                    const char *mountPoint, int appendToPath);
 
 
