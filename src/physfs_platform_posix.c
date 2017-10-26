@@ -296,11 +296,11 @@ int __PHYSFS_platformDelete(const char *path)
 } /* __PHYSFS_platformDelete */
 
 
-int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
+int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st, const int follow)
 {
     struct stat statbuf;
-
-    BAIL_IF(lstat(filename, &statbuf) == -1, errcodeFromErrno(), 0);
+    const int rc = follow ? stat(fname, &statbuf) : lstat(fname, &statbuf);
+    BAIL_IF(rc == -1, errcodeFromErrno(), 0);
 
     if (S_ISREG(statbuf.st_mode))
     {
@@ -330,7 +330,7 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
     st->createtime = statbuf.st_ctime;
     st->accesstime = statbuf.st_atime;
 
-    st->readonly = (access(filename, W_OK) == -1);
+    st->readonly = (access(fname, W_OK) == -1);
     return 1;
 } /* __PHYSFS_platformStat */
 
