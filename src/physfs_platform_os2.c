@@ -721,7 +721,7 @@ PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
 } /* os2TimeToUnixTime */
 
 
-int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *stat)
+int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *stat, const int follow)
 {
     char *cpfname = cvtUtf8ToCodepage(filename);
     FILESTATUS3 fs;

@@ -960,7 +960,7 @@ static int isSymlink(const WCHAR *wpath, const DWORD attr)
 } /* isSymlink */
 
 
-int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
+int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st, const int follow)
 {
     WIN32_FILE_ATTRIBUTE_DATA winstat;
     WCHAR *wstr = NULL;
@@ -975,7 +975,7 @@ int __PHYSFS_platformStat(const char *filename, PHYSFS_Stat *st)
     if (!rc)
         err = GetLastError();
     else  /* check for symlink while wstr is still available */
-        issymlink = isSymlink(wstr, winstat.dwFileAttributes);
+        issymlink = !follow && isSymlink(wstr, winstat.dwFileAttributes);
 
     __PHYSFS_smallFree(wstr);
     BAIL_IF(!rc, errcodeFromWinApiError(err), 0);
