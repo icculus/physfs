@@ -1595,7 +1595,7 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
     assert(*endstr == dirsep);
     *endstr = '\0';  /* mask out the final dirsep for now. */
 
-    if (!__PHYSFS_platformStat(prefDir, &statbuf))
+    if (!__PHYSFS_platformStat(prefDir, &statbuf, 1))
     {
         for (ptr = strchr(prefDir, dirsep); ptr; ptr = strchr(ptr+1, dirsep))
         {

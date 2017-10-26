@@ -2176,10 +2176,14 @@ PHYSFS_DECL int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
  *  or each other, for example.
  *
  * The mountpoint does not need to exist prior to mounting, which is different
- *  than those familiar with the Unix concept of "mounting" may not expect.
+ *  than those familiar with the Unix concept of "mounting" may expect.
  *  As well, more than one archive can be mounted to the same mountpoint, or
  *  mountpoints and archive contents can overlap...the interpolation mechanism
  *  still functions as usual.
+ *
+ * Specifying a symbolic link to an archive or directory is allowed here,
+ *  regardless of the state of PHYSFS_permitSymbolicLinks(). That function
+ *  only deals with symlinks inside the mounted directory or archive.
  *
  *   \param newDir directory or archive to add to the path, in
  *                   platform-dependent notation.
