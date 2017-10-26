@@ -939,6 +939,10 @@ static int sanitizePlatformIndependentPath(const char *src, char *dst)
     while (*src == '/')  /* skip initial '/' chars... */
         src++;
 
+    /* Make sure the entire string isn't "." or ".." */
+    if ((strcmp(src, ".") == 0) || (strcmp(src, "..") == 0))
+        BAIL(PHYSFS_ERR_BAD_FILENAME, 0);
+
     prev = dst;
     do
     {
