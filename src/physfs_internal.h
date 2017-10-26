@@ -549,11 +549,12 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *handle);
  *
  * This needs to fill in all the fields of (stat). For fields that might not
  *  mean anything on a platform (access time, perhaps), choose a reasonable
- *  default.
+ *  default. if (follow), we want to follow symlinks and stat what they
+ *  link to and not the link itself.
  *
  *  Return zero on failure, non-zero on success.
  */
-int __PHYSFS_platformStat(const char *fn, PHYSFS_Stat *stat);
+int __PHYSFS_platformStat(const char *fn, PHYSFS_Stat *stat, const int follow);
 
 /*
  * Flush any pending writes to disk. (opaque) should be cast to whatever data

@@ -49,7 +49,8 @@ static void *DIR_openArchive(PHYSFS_Io *io, const char *name,
     const size_t seplen = 1;
 
     assert(io == NULL);  /* shouldn't create an Io for these. */
-    BAIL_IF_ERRPASS(!__PHYSFS_platformStat(name, &st), NULL);
+    BAIL_IF_ERRPASS(!__PHYSFS_platformStat(name, &st, 1), NULL);
+
     if (st.filetype != PHYSFS_FILETYPE_DIRECTORY)
         BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
 
@@ -97,7 +98,7 @@ static PHYSFS_Io *doOpen(void *opaque, const char *name, const int mode)
     {
         const PHYSFS_ErrorCode err = PHYSFS_getLastErrorCode();
         PHYSFS_Stat statbuf;
-        __PHYSFS_platformStat(f, &statbuf);
+        __PHYSFS_platformStat(f, &statbuf, 0);  /* !!! FIXME: why are we stating here? */
         PHYSFS_setErrorCode(err);
     } /* if */
 
@@ -164,7 +165,7 @@ static int DIR_stat(void *opaque, const char *name, PHYSFS_Stat *stat)
 
     CVT_TO_DEPENDENT(d, opaque, name);
     BAIL_IF_ERRPASS(!d, 0);
-    retval = __PHYSFS_platformStat(d, stat);
+    retval = __PHYSFS_platformStat(d, stat, 0);
     __PHYSFS_smallFree(d);
     return retval;
 } /* DIR_stat */
