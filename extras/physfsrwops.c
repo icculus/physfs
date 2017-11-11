@@ -32,9 +32,15 @@
 #endif
 
 #if !TARGET_SDL2
+#ifndef RW_SEEK_SET
 #define RW_SEEK_SET SEEK_SET
+#endif
+#ifndef RW_SEEK_CUR
 #define RW_SEEK_CUR SEEK_CUR
+#endif
+#ifndef RW_SEEK_END
 #define RW_SEEK_END SEEK_END
+#endif
 #endif
 
 #if TARGET_SDL2
