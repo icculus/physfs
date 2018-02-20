@@ -208,13 +208,13 @@ int main(int argc, char **argv)
 
     if (!PHYSFS_init(argv[0]))
     {
-        fprintf(stderr, "PHYSFS_init(): %s\n", PHYSFS_getLastError());
+        fprintf(stderr, "PHYSFS_init(): %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
         return 1;
     } /* if */
 
     if (!PHYSFS_addToSearchPath(".", 1))
     {
-        fprintf(stderr, "PHYSFS_addToSearchPath(): %s\n", PHYSFS_getLastError());
+        fprintf(stderr, "PHYSFS_addToSearchPath(): %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
         PHYSFS_deinit();
         return 1;
     } /* if */
