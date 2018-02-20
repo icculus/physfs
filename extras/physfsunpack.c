@@ -28,7 +28,7 @@ static void modTimeToStr(PHYSFS_sint64 modtime, char *modstr, size_t strsize)
 static void fail(const char *what, const char *why)
 {
     if (why == NULL)
-        why = PHYSFS_getLastError();
+        why = PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode());
     fprintf(stderr, "%s failed: %s\n", what, why);
     failure = 1;
 } /* fail */
@@ -150,21 +150,21 @@ int main(int argc, char **argv)
 
     if (!PHYSFS_init(argv[0]))
     {
-        fprintf(stderr, "PHYSFS_init() failed: %s\n", PHYSFS_getLastError());
+        fprintf(stderr, "PHYSFS_init() failed: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
         return 2;
     } /* if */
 
     if (!PHYSFS_setWriteDir(argv[2]))
     {
         fprintf(stderr, "PHYSFS_setWriteDir('%s') failed: %s\n",
-                argv[2], PHYSFS_getLastError());
+                argv[2], PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
         return 3;
     } /* if */
 
     if (!PHYSFS_mount(argv[1], NULL, 1))
     {
         fprintf(stderr, "PHYSFS_mount('%s') failed: %s\n",
-                argv[1], PHYSFS_getLastError());
+                argv[1], PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
         return 4;
     } /* if */
 
