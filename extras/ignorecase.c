@@ -50,18 +50,22 @@ static int locateOneElement(char *buf)
         ptr++;  /* point past dirsep to entry itself. */
     } /* else */
 
-    for (i = rc; *i != NULL; i++)
+    if (rc != NULL)
     {
-        if (PHYSFS_utf8stricmp(*i, ptr) == 0)
+        for (i = rc; *i != NULL; i++)
         {
-            strcpy(ptr, *i); /* found a match. Overwrite with this case. */
-            PHYSFS_freeList(rc);
-            return 1;
-        } /* if */
-    } /* for */
+            if (PHYSFS_utf8stricmp(*i, ptr) == 0)
+            {
+                strcpy(ptr, *i); /* found a match. Overwrite with this case. */
+                PHYSFS_freeList(rc);
+                return 1;
+            } /* if */
+        } /* for */
+
+        PHYSFS_freeList(rc);
+    } /* if */
 
     /* no match at all... */
-    PHYSFS_freeList(rc);
     return 0;
 } /* locateOneElement */
 
