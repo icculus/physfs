@@ -879,13 +879,20 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
 
     if (io == NULL)
     {
+        /* file doesn't exist, etc? Just fail out. */
+        PHYSFS_Stat statbuf;
+        BAIL_IF_ERRPASS(!__PHYSFS_platformStat(d, &statbuf, 1), NULL);
+
         /* DIR gets first shot (unlike the rest, it doesn't deal with files). */
-        retval = tryOpenDir(io, &__PHYSFS_Archiver_DIR, d, forWriting, &claimed);
-        if (retval || claimed)
-            return retval;
+        if (statbuf.filetype == PHYSFS_FILETYPE_DIRECTORY)
+        {
+            retval = tryOpenDir(io, &__PHYSFS_Archiver_DIR, d, forWriting, &claimed);
+            if (retval || claimed)
+                return retval;
+        } /* if */
 
         io = __PHYSFS_createNativeIo(d, forWriting ? 'w' : 'r');
-        BAIL_IF_ERRPASS(!io, 0);
+        BAIL_IF_ERRPASS(!io, NULL);
         created_io = 1;
     } /* if */
 
