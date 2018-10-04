@@ -185,7 +185,6 @@ static char *getExePath(const char *argv0)
 static int determineUserDir(void)
 {
     DWORD psize = 0;
-    char dummy[1];
     BOOL rc = 0;
     HANDLE processHandle;            /* Current process handle */
     HANDLE accessToken = NULL;       /* Security handle to process */
@@ -217,7 +216,7 @@ static int determineUserDir(void)
                  *  psize. Also note that the second parameter can't be
                  *  NULL or the function fails.
                  */
-                rc = GetUserProfileDirectory(accessToken, dummy, &psize);
+                rc = GetUserProfileDirectory(accessToken, NULL, &psize);
                 assert(!rc);  /* success?! */
 
                 /* Allocate memory for the profile directory */
