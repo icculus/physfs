@@ -566,7 +566,6 @@ char *__PHYSFS_platformCalcUserDir(void)
     else
     {
         DWORD psize = 0;
-        WCHAR dummy = 0;
         LPWSTR wstr = NULL;
         BOOL rc = 0;
 
@@ -575,7 +574,7 @@ char *__PHYSFS_platformCalcUserDir(void)
          *  psize. Also note that the second parameter can't be
          *  NULL or the function fails.
          */
-        rc = pGetDir(accessToken, &dummy, &psize);
+        rc = pGetDir(accessToken, NULL, &psize);
         GOTO_IF(rc, PHYSFS_ERR_OS_ERROR, done);  /* should have failed! */
 
         /* Allocate memory for the profile directory */
