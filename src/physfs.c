@@ -88,7 +88,7 @@ static int allowSymLinks = 0;
 static PHYSFS_Archiver **archivers = NULL;
 static PHYSFS_ArchiveInfo **archiveInfo = NULL;
 static volatile size_t numArchivers = 0;
-static int longest_root = 0;
+static size_t longest_root = 0;
 
 /* mutexes ... */
 static void *errorLock = NULL;     /* protects error message list.        */
@@ -2230,7 +2230,6 @@ int PHYSFS_mkdir(const char *_dname)
 /* This must hold the stateLock before calling. */
 static int doDelete(const char *_fname, char *fname)
 {
-    int retval;
     DirHandle *h = writeDir;
     BAIL_IF_ERRPASS(!sanitizePlatformIndependentPathWithRoot(h, _fname, fname), 0);
     BAIL_IF_ERRPASS(!verifyPath(h, &fname, 0), 0);
