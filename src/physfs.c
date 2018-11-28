@@ -2752,7 +2752,6 @@ static int closeHandleInOpenList(FileHandle **list, FileHandle *handle)
 {
     FileHandle *prev = NULL;
     FileHandle *i;
-    int rc = 1;
 
     for (i = *list; i != NULL; i = i->next)
     {
@@ -2760,9 +2759,16 @@ static int closeHandleInOpenList(FileHandle **list, FileHandle *handle)
         {
             PHYSFS_Io *io = handle->io;
             PHYSFS_uint8 *tmp = handle->buffer;
-            rc = PHYSFS_flush((PHYSFS_File *) handle);
-            if (!rc)
+
+            /* send our buffer to io... */
+            if (!PHYSFS_flush((PHYSFS_File *) handle))
                 return -1;
+
+            /* ...then have io send it to the disk... */
+            else if (io->flush && !io->flush(io))
+                return -1;
+
+            /* ...then close the underlying file. */
             io->destroy(io);
 
             if (tmp != NULL)  /* free any associated buffer. */
@@ -3060,7 +3066,7 @@ int PHYSFS_flush(PHYSFS_File *handle)
     rc = io->write(io, fh->buffer + fh->bufpos, fh->buffill - fh->bufpos);
     BAIL_IF_ERRPASS(rc <= 0, 0);
     fh->bufpos = fh->buffill = 0;
-    return io->flush ? io->flush(io) : 1;
+    return 1;
 } /* PHYSFS_flush */
 
 
