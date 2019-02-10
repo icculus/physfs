@@ -232,8 +232,9 @@ if(DOXYGEN_FOUND)
     file(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "OUTPUT_DIRECTORY = \"${CMAKE_CURRENT_BINARY_DIR}/docs\"\n")
     file(APPEND "${PHYSFS_OUTPUT_DOXYFILE}" "\n# End auto-generated section.\n\n")
 
+    set(PHYSFS_TARGETNAME_DOCS "docs" CACHE STRING "Name of 'docs' build target")
     add_custom_target(
-        docs
+        ${PHYSFS_TARGETNAME_DOCS}
         ${DOXYGEN_EXECUTABLE} "${PHYSFS_OUTPUT_DOXYFILE}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Building documentation in 'docs' directory..."
@@ -244,14 +245,18 @@ endif()
 
 if(UNIX)
     set(PHYSFS_TARBALL "${CMAKE_CURRENT_SOURCE_DIR}/../physfs-${PHYSFS_VERSION}.tar.bz2")
+
+    set(PHYSFS_TARGETNAME_DIST "dist" CACHE STRING "Name of 'dist' build target")
     add_custom_target(
-        dist
+        ${PHYSFS_TARGETNAME_DIST}
         hg archive -t tbz2 "${PHYSFS_TARBALL}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Building source tarball '${PHYSFS_TARBALL}'..."
     )
+
+    set(PHYSFS_TARGETNAME_UNINSTALL "uninstall" CACHE STRING "Name of 'uninstall' build target")
     add_custom_target(
-        uninstall
+        ${PHYSFS_TARGETNAME_UNINSTALL}
         "${CMAKE_CURRENT_SOURCE_DIR}/extras/uninstall.sh"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Uninstall the project..."
