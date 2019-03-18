@@ -580,7 +580,7 @@ char *__PHYSFS_platformCalcUserDir(void)
 
         if (psize == 0)  /* probably on Windows XP, try a different way. */
         {
-            char x = 0;
+            WCHAR x = 0;
             rc = pGetDir(accessToken, &x, &psize);
             GOTO_IF(rc, PHYSFS_ERR_OS_ERROR, done);  /* should have failed! */
             GOTO_IF(!psize, PHYSFS_ERR_OS_ERROR, done);  /* Uhoh... */
