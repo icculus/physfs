@@ -2760,12 +2760,15 @@ static int closeHandleInOpenList(FileHandle **list, FileHandle *handle)
             PHYSFS_uint8 *tmp = handle->buffer;
 
             /* send our buffer to io... */
-            if (!PHYSFS_flush((PHYSFS_File *) handle))
-                return -1;
+            if (!handle->forReading)
+            {
+                if (!PHYSFS_flush((PHYSFS_File *) handle))
+                    return -1;
 
-            /* ...then have io send it to the disk... */
-            else if (io->flush && !io->flush(io))
-                return -1;
+                /* ...then have io send it to the disk... */
+                else if (io->flush && !io->flush(io))
+                    return -1;
+            } /* if */
 
             /* ...then close the underlying file. */
             io->destroy(io);
