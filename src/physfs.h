@@ -145,7 +145,7 @@
  *   - .ISO (ISO9660 files, CD-ROM images)
  *   - .GRP (Build Engine groupfile archives)
  *   - .PAK (Quake I/II archive format)
- *   - .HOG (Descent I/II HOG file archives)
+ *   - .HOG (Descent I/II/III HOG file archives)
  *   - .MVL (Descent II movielib archives)
  *   - .WAD (DOOM engine archives)
  *   - .VDF (Gothic I/II engine archives)
