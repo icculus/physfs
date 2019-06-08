@@ -105,7 +105,7 @@ static int hog2LoadEntries(PHYSFS_Io *io, void *arc)
     }
 
     return 1;
-} /* hogLoadEntries */
+} /* hog2LoadEntries */
 
 
 static void *HOG_openArchive(PHYSFS_Io *io, const char *name,
