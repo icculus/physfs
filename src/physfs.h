@@ -2702,10 +2702,10 @@ typedef PHYSFS_EnumerateCallbackResult (*PHYSFS_EnumerateCallback)(void *data,
  *
  * \code
  *
- * static int printDir(void *data, const char *origdir, const char *fname)
+ * static PHYSFS_EnumerateCallbackResult printDir(void *data, const char *origdir, const char *fname)
  * {
  *     printf(" * We've got [%s] in [%s].\n", fname, origdir);
- *     return 1;  // give me more data, please.
+ *     return PHYSFS_ENUM_OK;  // give me more data, please.
  * }
  *
  * // ...
