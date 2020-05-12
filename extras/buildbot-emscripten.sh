@@ -20,32 +20,6 @@ cd `dirname "$0"`
 cd ..
 PHYSFSBASE=`pwd`
 
-if [ -z "$MAKE" ]; then
-    OSTYPE=`uname -s`
-    if [ "$OSTYPE" == "Linux" ]; then
-        NCPU=`cat /proc/cpuinfo |grep vendor_id |wc -l`
-        let NCPU=$NCPU+1
-    elif [ "$OSTYPE" = "Darwin" ]; then
-        NCPU=`sysctl -n hw.ncpu`
-    elif [ "$OSTYPE" = "SunOS" ]; then
-        NCPU=`/usr/sbin/psrinfo |wc -l |sed -e 's/^ *//g;s/ *$//g'`
-    else
-        NCPU=1
-    fi
-
-    if [ -z "$NCPU" ]; then
-        NCPU=1
-    elif [ "$NCPU" = "0" ]; then
-        NCPU=1
-    fi
-
-    MAKE="make -j$NCPU"
-fi
-
-echo "\$MAKE is '$MAKE'"
-MAKECMD="$MAKE"
-unset MAKE  # prevent warnings about jobserver mode.
-
 echo "Setting up Emscripten SDK environment..."
 source "$ENVSCRIPT"
 
@@ -56,10 +30,10 @@ mkdir buildbot
 cd buildbot
 
 echo "Configuring..."
-emcmake cmake -G "Unix Makefiles" -DPHYSFS_BUILD_SHARED=False -DCMAKE_BUILD_TYPE=MinSizeRel .. || exit $?
+emcmake cmake -G "Ninja" -DPHYSFS_BUILD_SHARED=False -DCMAKE_BUILD_TYPE=MinSizeRel .. || exit $?
 
 echo "Building..."
-emmake $MAKECMD || exit $?
+emcmake cmake --build . --config MinSizeRel || exit $?
 
 set -e
 rm -rf "$TARBALL" physfs-emscripten
