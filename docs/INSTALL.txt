@@ -37,7 +37,7 @@ If this all worked for your specific project, you can stop reading now.
 
 
 
-UNIX:
+Unix:
 
 You will need CMake (https://www.cmake.org/) 2.4 or later installed.
 
