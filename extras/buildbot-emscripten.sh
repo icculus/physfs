@@ -33,7 +33,7 @@ echo "Configuring..."
 emcmake cmake -G "Ninja" -DPHYSFS_BUILD_SHARED=False -DCMAKE_BUILD_TYPE=MinSizeRel .. || exit $?
 
 echo "Building..."
-emcmake cmake --build . --config MinSizeRel || exit $?
+emmake cmake --build . --config MinSizeRel || exit $?
 
 set -e
 rm -rf "$TARBALL" physfs-emscripten
