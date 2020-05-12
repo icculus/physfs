@@ -15,24 +15,7 @@ if [ -z $1 ]; then
     TARBALL=physfs-raspberrypi.tar.xz
 fi
 
-OSTYPE=`uname -s`
-if [ "$OSTYPE" != "Linux" ]; then
-    # !!! FIXME
-    echo "This only works on x86 or x64-64 Linux at the moment." 1>&2
-    exit 1
-fi
-
-if [ "x$MAKE" == "x" ]; then
-    NCPU=`cat /proc/cpuinfo |grep vendor_id |wc -l`
-    let NCPU=$NCPU+1
-    MAKE="make -j$NCPU"
-fi
-
-echo "\$MAKE is '$MAKE'"
-MAKECMD="$MAKE"
-unset MAKE  # prevent warnings about jobserver mode.
-
-BUILDBOTDIR="raspberrypi-buildbot"
+BUILDBOTDIR="buildbot"
 PARENTDIR="$PWD"
 
 set -e
@@ -42,8 +25,9 @@ rm -rf $BUILDBOTDIR
 mkdir -p $BUILDBOTDIR
 pushd $BUILDBOTDIR
 
+# the '-G "Ninja"' can be '-G "Unix Makefiles"' if you prefer to use GNU Make.
 SYSROOT="/opt/rpi-sysroot"
-cmake -G "Unix Makefiles" \
+cmake -G "Ninja" \
     -DCMAKE_C_COMPILER="/opt/rpi-tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc" \
     -DCMAKE_BUILD_TYPE=MinSizeRel \
     -DCMAKE_SYSROOT="$SYSROOT" \
@@ -55,7 +39,7 @@ cmake -G "Unix Makefiles" \
     -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
     ..
 
-$MAKECMD
+cmake --build . --config MinSizeRel
 
 rm -rf "$TARBALL" physfs-raspberrypi
 mkdir -p physfs-raspberrypi
