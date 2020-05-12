@@ -22,32 +22,6 @@ if [ ! -d "$CHECKERDIR" ]; then
     exit 1
 fi
 
-if [ -z "$MAKE" ]; then
-    OSTYPE=`uname -s`
-    if [ "$OSTYPE" == "Linux" ]; then
-        NCPU=`cat /proc/cpuinfo |grep vendor_id |wc -l`
-        let NCPU=$NCPU+1
-    elif [ "$OSTYPE" = "Darwin" ]; then
-        NCPU=`sysctl -n hw.ncpu`
-    elif [ "$OSTYPE" = "SunOS" ]; then
-        NCPU=`/usr/sbin/psrinfo |wc -l |sed -e 's/^ *//g;s/ *$//g'`
-    else
-        NCPU=1
-    fi
-
-    if [ -z "$NCPU" ]; then
-        NCPU=1
-    elif [ "$NCPU" = "0" ]; then
-        NCPU=1
-    fi
-
-    MAKE="make -j$NCPU"
-fi
-
-echo "\$MAKE is '$MAKE'"
-MAKECMD="$MAKE"
-unset MAKE  # prevent warnings about jobserver mode.
-
 set -x
 set -e
 
@@ -66,13 +40,13 @@ cd checker-buildbot
 # The -Wno-liblto is new since our checker-279 upgrade, I think; checker otherwise warns "libLTO.dylib relative to clang installed dir not found"
 
 # You might want to do this for CMake-backed builds instead...
-PATH="$CHECKERDIR/bin:$PATH" scan-build -o analysis cmake -Wno-dev -DPHYSFS_BUILD_SHARED=False -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Wno-deprecated-declarations" -DCMAKE_EXE_LINKER_FLAGS="-Wno-liblto" ..
+PATH="$CHECKERDIR/bin:$PATH" scan-build -o analysis cmake -G Ninja -Wno-dev -DPHYSFS_BUILD_SHARED=False -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Wno-deprecated-declarations" -DCMAKE_EXE_LINKER_FLAGS="-Wno-liblto" ..
 
 # ...or run configure without the scan-build wrapper...
 #CC="$CHECKERDIR/libexec/ccc-analyzer" CFLAGS="-O0 -Wno-deprecated-declarations" LDFLAGS="-Wno-liblto" ../configure --enable-assertions=enabled
 
 rm -rf analysis
-PATH="$CHECKERDIR/bin:$PATH" scan-build -o analysis $MAKECMD
+PATH="$CHECKERDIR/bin:$PATH" scan-build -o analysis cmake --build . --config Debug
 
 if [ `ls -A analysis |wc -l` == 0 ] ; then
     mkdir analysis/zarro
