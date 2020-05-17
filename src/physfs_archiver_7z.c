@@ -290,7 +290,7 @@ static PHYSFS_Io *SZIP_openRead(void *opaque, const char *path)
     io = NULL;
 
     buf = allocator.Malloc(outSizeProcessed);
-    GOTO_IF(rc != SZ_OK, PHYSFS_ERR_OUT_OF_MEMORY, SZIP_openRead_failed);
+    GOTO_IF(buf == NULL, PHYSFS_ERR_OUT_OF_MEMORY, SZIP_openRead_failed);
     memcpy(buf, outBuffer + offset, outSizeProcessed);
 
     alloc->Free(alloc, outBuffer);
