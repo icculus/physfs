@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This is a script used by some Buildbot buildslaves to push the project
+# This is a script used by some Buildbot workers to push the project
 #  through Clang's static analyzer and prepare the output to be uploaded
 #  back to the buildmaster. You might find it useful too.
 
