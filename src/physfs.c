@@ -1233,7 +1233,9 @@ int PHYSFS_init(const char *argv0)
     if (!userDir) goto initFailed;
 
     /* Platform layer is required to append a dirsep. */
+    #ifndef __ANDROID__  /* it's an APK file, not a directory, on Android. */
     assert(baseDir[strlen(baseDir) - 1] == __PHYSFS_platformDirSeparator);
+    #endif
     assert(userDir[strlen(userDir) - 1] == __PHYSFS_platformDirSeparator);
 
     if (!initStaticArchivers()) goto initFailed;
