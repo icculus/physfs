@@ -160,15 +160,29 @@ static void *doOpen(const char *filename, int mode)
     const int appending = (mode & O_APPEND);
     int fd;
     int *retval;
+    int flags;
+    flags = -1;
     errno = 0;
 
     /* O_APPEND doesn't actually behave as we'd like. */
     mode &= ~O_APPEND;
+    
+#ifdef O_CLOEXEC
+    /* Add O_CLOEXEC if defined */
+    mode |= O_CLOEXEC;
+#endif
 
     do {
         fd = open(filename, mode, S_IRUSR | S_IWUSR);
     } while ((fd < 0) && (errno == EINTR));
     BAIL_IF(fd < 0, errcodeFromErrno(), NULL);
+
+#if !defined(O_CLOEXEC) && defined(FD_CLOEXEC)
+    flags = fcntl(fd, F_GETFD);
+    if (flags != -1) {
+        fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+    }
+#endif
 
     if (appending)
     {
