@@ -12,8 +12,6 @@
 #include "physfs_internal.h"
 
 #if defined(_MSC_VER)
-#include <stdarg.h>
-
 /* this code came from https://stackoverflow.com/a/8712996 */
 int __PHYSFS_msvc_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
 {
