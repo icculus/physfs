@@ -1,0 +1,26 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  Build:
+    name: ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      matrix:
+        platform:  # !!! FIXME: figure out an efficient way to get SDL2 on the Windows/Mac bots.
+        - { name: Linux,   os: ubuntu-20.04, flags: -GNinja }
+        - { name: Windows, os: windows-latest }
+        - { name: MacOS,   os: macos-latest }
+    steps:
+    - name: Setup Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install cmake ninja-build
+    - name: Get PhysicsFS sources
+      uses: actions/checkout@v2
+    - name: Configure CMake
+      run: cmake -B build ${{ matrix.platform.flags }}
+    - name: Build
+      run: cmake --build build/
