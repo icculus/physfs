@@ -6,6 +6,6 @@ The changelog is no longer maintained by hand. It made sense to have a single
 If you want a list of changes, updated in real time, just point your web
  browser here:
 
-    https://hg.icculus.org/icculus/physfs/
+    https://github.com/icculus/physfs/commits/
 
 
