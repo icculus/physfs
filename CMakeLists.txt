@@ -14,6 +14,8 @@ cmake_minimum_required(VERSION 2.8.12)
 project(PhysicsFS)
 set(PHYSFS_VERSION 3.0.2)
 
+include(GNUInstallDirs)
+
 # Increment this if/when we break backwards compatibility.
 set(PHYSFS_SOVERSION 1)
 
@@ -214,14 +216,14 @@ if(PHYSFS_BUILD_TEST)
 endif()
 
 install(TARGETS ${PHYSFS_INSTALL_TARGETS} EXPORT PhysFSExport
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib${LIB_SUFFIX}
-        ARCHIVE DESTINATION lib${LIB_SUFFIX}
-        INCLUDES DESTINATION include)
-install(FILES src/physfs.h DESTINATION include)
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES src/physfs.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(EXPORT PhysFSExport
-        DESTINATION "lib${LIB_SUFFIX}/cmake/PhysFS"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PhysFS"
         FILE PhysFSConfig.cmake
 )
 
@@ -278,7 +280,7 @@ if(NOT MSVC)
     )
     install(
         FILES "${CMAKE_CURRENT_BINARY_DIR}/extras/physfs.pc"
-        DESTINATION "lib${LIB_SUFFIX}/pkgconfig"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
     )
 endif()
 
@@ -309,4 +311,3 @@ if(PHYSFS_BUILD_TEST)
 endif()
 
 # end of CMakeLists.txt ...
-
