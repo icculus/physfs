@@ -24,7 +24,7 @@ if(WIN32 AND NOT WINDOWS)
     set(WINDOWS TRUE)
 endif()
 
-include_directories(./src)
+include_directories(include)
 
 if(APPLE)
     set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework IOKit -framework Foundation")
