@@ -223,14 +223,20 @@
 extern "C" {
 #endif
 
-#if defined(PHYSFS_DECL)
-/* do nothing. */
-#elif defined(_MSC_VER)
+#ifdef PHYSFS_SHARED
+#ifdef _MSC_VER
+#ifdef PHYSFS_BUILD_SHARED
 #define PHYSFS_DECL __declspec(dllexport)
+#else
+#define PHYSFS_DECL __declspec(dllimport)
+#endif
 #elif defined(__SUNPRO_C)
 #define PHYSFS_DECL __global
 #elif ((__GNUC__ >= 3) && (!defined(__EMX__)) && (!defined(sun)))
 #define PHYSFS_DECL __attribute__((visibility("default")))
+#else
+#define PHYSFS_DECL
+#endif
 #else
 #define PHYSFS_DECL
 #endif
