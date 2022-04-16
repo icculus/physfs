@@ -293,7 +293,7 @@ if(NOT MSVC)
     )
 endif()
 
-endif(NOT PHYSFS_DISABLE_INSTALL)
+endif()
 
 macro(message_bool_option _NAME _VALUE)
     if(${_VALUE})
