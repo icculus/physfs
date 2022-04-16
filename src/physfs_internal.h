@@ -69,7 +69,7 @@ extern "C" {
    All file-private symbols need to be marked "static".
    Everything shared between PhysicsFS sources needs to be in this
    file between the visibility pragma blocks. */
-#if PHYSFS_MINIMUM_GCC_VERSION(4,0) || defined(__clang__)
+#if !defined(_WIN32) && (PHYSFS_MINIMUM_GCC_VERSION(4,0) || defined(__clang__))
 #define PHYSFS_HAVE_PRAGMA_VISIBILITY 1
 #endif
 
