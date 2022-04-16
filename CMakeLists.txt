@@ -219,18 +219,31 @@ endif()
 option(PHYSFS_DISABLE_INSTALL "Disable installing PhysFS" OFF)
 if(NOT PHYSFS_DISABLE_INSTALL)
 
-install(TARGETS ${PHYSFS_INSTALL_TARGETS} EXPORT PhysFSExport
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(FILES src/physfs.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(TARGETS ${PHYSFS_INSTALL_TARGETS} EXPORT PhysFSExport
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(FILES src/physfs.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(EXPORT PhysFSExport
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PhysFS"
-        FILE PhysFSConfig.cmake
-)
+    install(EXPORT PhysFSExport
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PhysFS"
+            FILE PhysFSConfig.cmake
+    )
 
+    if(NOT MSVC)
+        configure_file(
+            "extras/physfs.pc.in"
+            "extras/physfs.pc"
+            @ONLY
+        )
+
+        install(
+            FILES "${CMAKE_CURRENT_BINARY_DIR}/extras/physfs.pc"
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+        )
+    endif()
+endif()
 
 option(PHYSFS_BUILD_DOCS "Build doxygen based documentation" TRUE)
 if(PHYSFS_BUILD_DOCS)
@@ -281,19 +294,6 @@ if(UNIX)
     )
 endif()
 
-if(NOT MSVC)
-    configure_file(
-        "extras/physfs.pc.in"
-        "extras/physfs.pc"
-        @ONLY
-    )
-    install(
-        FILES "${CMAKE_CURRENT_BINARY_DIR}/extras/physfs.pc"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
-    )
-endif()
-
-endif()
 
 macro(message_bool_option _NAME _VALUE)
     if(${_VALUE})
