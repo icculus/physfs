@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: open-watcom/setup-watcom@v0
-      - name: Build SDL2
+      - name: Build physfs.dll
         run: |
           cd src
           wmake -f Makefile.os2
@@ -18,4 +18,3 @@ jobs:
           cd src
           wmake -f Makefile.os2 distclean
           cd ..
-
