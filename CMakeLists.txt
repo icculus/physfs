@@ -166,6 +166,10 @@ if(PHYSFS_BUILD_STATIC)
 		set_target_properties(physfs-static PROPERTIES VS_WINRT_COMPONENT True)
         set_target_properties(physfs-static PROPERTIES STATIC_LIBRARY_FLAGS "/ignore:4264")
     endif()
+    if(WIN32 OR WINRT OR OS2)
+        # no dll exports from the static library
+        target_compile_definitions(physfs-static PRIVATE "PHYSFS_STATIC")
+    endif()
 
     set(PHYSFS_LIB_TARGET physfs-static)
     set(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";physfs-static")
