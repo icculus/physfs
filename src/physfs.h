@@ -225,6 +225,8 @@ extern "C" {
 
 #if defined(PHYSFS_DECL)
 /* do nothing. */
+#elif defined(PHYSFS_STATIC)
+#define PHYSFS_DECL   /**/
 #elif defined(_WIN32) || defined(__OS2__)
 #define PHYSFS_DECL __declspec(dllexport)
 #elif defined(__SUNPRO_C)
