@@ -94,7 +94,8 @@ static void *SLB_openArchive(PHYSFS_Io *io, const char *name,
     /* seek to the table of contents */
     BAIL_IF_ERRPASS(!io->seek(io, tocPos), NULL);
 
-    unpkarc = UNPK_openArchive(io);
+    /* !!! FIXME: check case_sensitive and only_usascii params for this archive. */
+    unpkarc = UNPK_openArchive(io, 1, 0);
     BAIL_IF_ERRPASS(!unpkarc, NULL);
 
     if (!slbLoadEntries(io, count, unpkarc))

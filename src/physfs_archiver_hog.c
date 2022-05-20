@@ -130,7 +130,7 @@ static void *HOG_openArchive(PHYSFS_Io *io, const char *name,
 
     *claimed = 1;
 
-    unpkarc = UNPK_openArchive(io);
+    unpkarc = UNPK_openArchive(io, 0, 1);
     BAIL_IF_ERRPASS(!unpkarc, NULL);
 
     if (!(hog1 ? hog1LoadEntries(io, unpkarc) : hog2LoadEntries(io, unpkarc)))

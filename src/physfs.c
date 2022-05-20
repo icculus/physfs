@@ -1433,13 +1433,58 @@ char *__PHYSFS_strdup(const char *str)
 } /* __PHYSFS_strdup */
 
 
-PHYSFS_uint32 __PHYSFS_hashString(const char *str, size_t len)
+PHYSFS_uint32 __PHYSFS_hashString(const char *str)
 {
     PHYSFS_uint32 hash = 5381;
-    while (len--)
-        hash = ((hash << 5) + hash) ^ *(str++);
+    while (1)
+    {
+        const char ch = *(str++);
+        if (ch == 0)
+            break;
+        hash = ((hash << 5) + hash) ^ ch;
+    } /* while */
     return hash;
 } /* __PHYSFS_hashString */
+
+
+PHYSFS_uint32 __PHYSFS_hashStringCaseFold(const char *str)
+{
+    PHYSFS_uint32 hash = 5381;
+    while (1)
+    {
+        const PHYSFS_uint32 cp = __PHYSFS_utf8codepoint(&str);
+        if (cp == 0)
+            break;
+        else
+        {
+            PHYSFS_uint32 folded[3];
+            const int numbytes = (int) (PHYSFS_caseFold(cp, folded) * sizeof (PHYSFS_uint32));
+            const char *bytes = (const char *) folded;
+            int i;
+            for (i = 0; i < numbytes; i++)
+                hash = ((hash << 5) + hash) ^ *(bytes++);
+        } /* else */
+    } /* while */
+
+    return hash;
+} /* __PHYSFS_hashStringCaseFold */
+
+
+PHYSFS_uint32 __PHYSFS_hashStringCaseFoldUSAscii(const char *str)
+{
+    PHYSFS_uint32 hash = 5381;
+    while (1)
+    {
+        char ch = *(str++);
+        if (ch == 0)
+            break;
+        else if ((ch >= 'A') && (ch <= 'Z'))
+            ch -= ('A' - 'a');
+
+        hash = ((hash << 5) + hash) ^ ch;
+    } /* while */
+    return hash;
+} /* __PHYSFS_hashStringCaseFoldUSAscii */
 
 
 /* MAKE SURE you hold stateLock before calling this! */
@@ -3229,7 +3274,7 @@ static void setDefaultAllocator(void)
 } /* setDefaultAllocator */
 
 
-int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen)
+int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen, const int case_sensitive, const int only_usascii)
 {
     static char rootpath[2] = { '/', '\0' };
     size_t alloclen;
@@ -3237,6 +3282,8 @@ int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen)
     assert(entrylen >= sizeof (__PHYSFS_DirTreeEntry));
 
     memset(dt, '\0', sizeof (*dt));
+    dt->case_sensitive = case_sensitive;
+    dt->only_usascii = only_usascii;
 
     dt->root = (__PHYSFS_DirTreeEntry *) allocator.Malloc(entrylen);
     BAIL_IF(!dt->root, PHYSFS_ERR_OUT_OF_MEMORY, 0);
@@ -3257,9 +3304,10 @@ int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen)
 } /* __PHYSFS_DirTreeInit */
 
 
-static inline PHYSFS_uint32 hashPathName(__PHYSFS_DirTree *dt, const char *name)
+static PHYSFS_uint32 hashPathName(__PHYSFS_DirTree *dt, const char *name)
 {
-    return __PHYSFS_hashString(name, strlen(name)) % dt->hashBuckets;
+    const PHYSFS_uint32 hashval = dt->case_sensitive ? __PHYSFS_hashString(name) : dt->only_usascii ? __PHYSFS_hashStringCaseFoldUSAscii(name) : __PHYSFS_hashStringCaseFold(name);
+    return hashval % dt->hashBuckets;
 } /* hashPathName */
 
 
@@ -3320,6 +3368,7 @@ void *__PHYSFS_DirTreeAdd(__PHYSFS_DirTree *dt, char *name, const int isdir)
 /* Find the __PHYSFS_DirTreeEntry for a path in platform-independent notation. */
 void *__PHYSFS_DirTreeFind(__PHYSFS_DirTree *dt, const char *path)
 {
+    const int cs = dt->case_sensitive;
     PHYSFS_uint32 hashval;
     __PHYSFS_DirTreeEntry *prev = NULL;
     __PHYSFS_DirTreeEntry *retval;
@@ -3330,7 +3379,8 @@ void *__PHYSFS_DirTreeFind(__PHYSFS_DirTree *dt, const char *path)
     hashval = hashPathName(dt, path);
     for (retval = dt->hash[hashval]; retval; retval = retval->hashnext)
     {
-        if (strcmp(retval->name, path) == 0)
+        const int cmp = cs ? strcmp(retval->name, path) : PHYSFS_utf8stricmp(retval->name, path);
+        if (cmp == 0)
         {
             if (prev != NULL)  /* move this to the front of the list */
             {

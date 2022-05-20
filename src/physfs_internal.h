@@ -322,7 +322,18 @@ char *__PHYSFS_strdup(const char *str);
 /*
  * Give a hash value for a C string (uses djb's xor hashing algorithm).
  */
-PHYSFS_uint32 __PHYSFS_hashString(const char *str, size_t len);
+PHYSFS_uint32 __PHYSFS_hashString(const char *str);
+
+/*
+ * Give a hash value for a C string (uses djb's xor hashing algorithm), case folding as it goes.
+ */
+PHYSFS_uint32 __PHYSFS_hashStringCaseFold(const char *str);
+
+/*
+ * Give a hash value for a C string (uses djb's xor hashing algorithm), case folding as it goes,
+ *  assuming that this is only US-ASCII chars (one byte per char, only 'A' through 'Z' need folding).
+ */
+PHYSFS_uint32 __PHYSFS_hashStringCaseFoldUSAscii(const char *str);
 
 
 /*
@@ -358,9 +369,10 @@ int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const size_t len);
 
 /* These are shared between some archivers. */
 
+/* LOTS of legacy formats that only use US ASCII, not actually UTF-8, so let them optimize here. */
+void *UNPK_openArchive(PHYSFS_Io *io, const int case_sensitive, const int only_usascii);
 void UNPK_abandonArchive(void *opaque);
 void UNPK_closeArchive(void *opaque);
-void *UNPK_openArchive(PHYSFS_Io *io);
 void *UNPK_addEntry(void *opaque, char *name, const int isdir,
                     const PHYSFS_sint64 ctime, const PHYSFS_sint64 mtime,
                     const PHYSFS_uint64 pos, const PHYSFS_uint64 len);
@@ -392,10 +404,13 @@ typedef struct __PHYSFS_DirTree
     __PHYSFS_DirTreeEntry **hash;  /* all entries hashed for fast lookup. */
     size_t hashBuckets;            /* number of buckets in hash.          */
     size_t entrylen;    /* size in bytes of entries (including subclass). */
+    int case_sensitive;  /* non-zero to treat entries as case-sensitive in DirTreeFind */
+    int only_usascii;  /* non-zero to treat paths as US ASCII only (one byte per char, only 'A' through 'Z' are considered for case folding). */
 } __PHYSFS_DirTree;
 
 
-int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen);
+/* LOTS of legacy formats that only use US ASCII, not actually UTF-8, so let them optimize here. */
+int __PHYSFS_DirTreeInit(__PHYSFS_DirTree *dt, const size_t entrylen, const int case_sensitive, const int only_usascii);
 void *__PHYSFS_DirTreeAdd(__PHYSFS_DirTree *dt, char *name, const int isdir);
 void *__PHYSFS_DirTreeFind(__PHYSFS_DirTree *dt, const char *path);
 PHYSFS_EnumerateCallbackResult __PHYSFS_DirTreeEnumerate(void *opaque,
@@ -724,6 +739,11 @@ int __PHYSFS_platformGrabMutex(void *mutex);
  *  use the BAIL_*MACRO* macros, either.
  */
 void __PHYSFS_platformReleaseMutex(void *mutex);
+
+
+/* !!! FIXME: move to public API? */
+PHYSFS_uint32 __PHYSFS_utf8codepoint(const char **_str);
+
 
 #if PHYSFS_HAVE_PRAGMA_VISIBILITY
 #pragma GCC visibility pop
