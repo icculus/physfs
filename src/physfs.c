@@ -1780,10 +1780,10 @@ int PHYSFS_setRoot(const char *archive, const char *subdir)
                 if (i->root)
                     allocator.Free(i->root);
                 i->root = ptr;
-                i->rootlen = len;
+                i->rootlen = strlen(i->root);  /* in case sanitizePlatformIndependentPath changed subdir */
 
-                if (longest_root < len)
-                    longest_root = len;
+                if (longest_root < i->rootlen)
+                    longest_root = i->rootlen;
             } /* else */
 
             break;
@@ -2154,10 +2154,10 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
     if (h->root)
     {
         const int isempty = (*fname == '\0');
-        fname -= h->rootlen - 1;
+        fname -= h->rootlen + (isempty ? 0 : 1);
         strcpy(fname, h->root);
         if (!isempty)
-            fname[h->rootlen - 2] = '/';
+            fname[h->rootlen] = '/';
         *_fname = fname;
     } /* if */
 
@@ -2312,10 +2312,10 @@ static DirHandle *getRealDirHandle(const char *_fname)
     BAIL_IF(!_fname, PHYSFS_ERR_INVALID_ARGUMENT, NULL);
 
     __PHYSFS_platformGrabMutex(stateLock);
-    len = strlen(_fname) + longest_root + 1;
+    len = strlen(_fname) + longest_root + 2;
     allocated_fname = __PHYSFS_smallAlloc(len);
     BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, NULL);
-    fname = allocated_fname + longest_root;
+    fname = allocated_fname + longest_root + 1;
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
         DirHandle *i;
@@ -2543,10 +2543,10 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
 
     __PHYSFS_platformGrabMutex(stateLock);
 
-    len = strlen(_fn) + longest_root + 1;
+    len = strlen(_fn) + longest_root + 2;
     allocated_fname = (char *) __PHYSFS_smallAlloc(len);
     BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
-    fname = allocated_fname + longest_root;
+    fname = allocated_fname + longest_root + 1;
     if (!sanitizePlatformIndependentPath(_fn, fname))
         retval = PHYSFS_ENUM_STOP;
     else
@@ -2749,10 +2749,10 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
 
     BAIL_IF_MUTEX(!searchPath, PHYSFS_ERR_NOT_FOUND, stateLock, 0);
 
-    len = strlen(_fname) + longest_root + 1;
+    len = strlen(_fname) + longest_root + 2;
     allocated_fname = (char *) __PHYSFS_smallAlloc(len);
     BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
-    fname = allocated_fname + longest_root;
+    fname = allocated_fname + longest_root + 1;
 
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
@@ -3140,10 +3140,10 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
     stat->readonly = 1;
 
     __PHYSFS_platformGrabMutex(stateLock);
-    len = strlen(_fname) + longest_root + 1;
+    len = strlen(_fname) + longest_root + 2;
     allocated_fname = (char *) __PHYSFS_smallAlloc(len);
     BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
-    fname = allocated_fname + longest_root;
+    fname = allocated_fname + longest_root + 1;
 
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
