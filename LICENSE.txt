@@ -1,4 +1,4 @@
-Copyright (c) 2001-2021 Ryan C. Gordon <icculus@icculus.org> and others.
+Copyright (c) 2001-2022 Ryan C. Gordon <icculus@icculus.org> and others.
   
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
