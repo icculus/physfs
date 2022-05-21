@@ -1093,6 +1093,8 @@ static int freeDirHandle(DirHandle *dh, FileHandle *openList)
         BAIL_IF(i->dirHandle == dh, PHYSFS_ERR_FILES_STILL_OPEN, 0);
 
     dh->funcs->closeArchive(dh->opaque);
+
+    if (dh->root) allocator.Free(dh->root);
     allocator.Free(dh->dirName);
     allocator.Free(dh->mountPoint);
     allocator.Free(dh);
