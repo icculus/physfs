@@ -833,7 +833,10 @@ static int zip_parse_local(PHYSFS_Io *io, ZIPentry *entry)
     BAIL_IF_ERRPASS(!readui32(io, &ui32), 0);
     BAIL_IF(ui32 != ZIP_LOCAL_FILE_SIG, PHYSFS_ERR_CORRUPT, 0);
     BAIL_IF_ERRPASS(!readui16(io, &ui16), 0);
-    BAIL_IF(ui16 != entry->version_needed, PHYSFS_ERR_CORRUPT, 0);
+    /* Windows Explorer might rewrite the entire central directory, setting
+       this field to 2.0/MS-DOS for all files, so favor the local version,
+       which it leaves intact if it didn't alter that specific file. */
+    entry->version_needed = ui16;
     BAIL_IF_ERRPASS(!readui16(io, &ui16), 0);  /* general bits. */
     BAIL_IF_ERRPASS(!readui16(io, &ui16), 0);
     BAIL_IF(ui16 != entry->compression_method, PHYSFS_ERR_CORRUPT, 0);
