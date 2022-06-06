@@ -9,26 +9,25 @@
 #  compile, using preprocessor checks for platform-specific bits instead of
 #  testing in here.
 
-cmake_minimum_required(VERSION 2.8.12)
-
-project(PhysicsFS)
 set(PHYSFS_VERSION 3.1.0)
+
+cmake_minimum_required(VERSION 3.0)
+
+project(PhysicsFS VERSION ${PHYSFS_VERSION} LANGUAGES C )
 
 include(GNUInstallDirs)
 
 # Increment this if/when we break backwards compatibility.
 set(PHYSFS_SOVERSION 1)
 
-# I hate that they define "WIN32" ... we're about to move to Win64...I hope!
-if(WIN32 AND NOT WINDOWS)
-    set(WINDOWS TRUE)
-endif()
+set(PHYSFS_M_SRCS)
+set(PHYSFS_CPP_SRCS)
 
-include_directories(./src)
+# I hate that they define "WIN32" ... we're about to move to Win64...I hope!
 
 if(APPLE)
     set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework IOKit -framework Foundation")
-    set(PHYSFS_M_SRCS src/physfs_platform_apple.m)
+    list(APPEND PHYSFS_M_SRCS src/physfs_platform_apple.m)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -44,10 +43,10 @@ endif()
 if(HAIKU)
     # We add this explicitly, since we don't want CMake to think this
     #  is a C++ project unless we're on Haiku.
-    set(PHYSFS_CPP_SRCS src/physfs_platform_haiku.cpp)
+    list(APPEND PHYSFS_CPP_SRCS src/physfs_platform_haiku.cpp)
     find_library(BE_LIBRARY be)
     find_library(ROOT_LIBRARY root)
-    set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${BE_LIBRARY} ${ROOT_LIBRARY})
+    list(APPEND OPTIONAL_LIBRARY_LIBS ${BE_LIBRARY} ${ROOT_LIBRARY})
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "WindowsPhone" OR CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
@@ -55,14 +54,18 @@ if(CMAKE_SYSTEM_NAME STREQUAL "WindowsPhone" OR CMAKE_SYSTEM_NAME STREQUAL "Wind
 endif()
 
 if(WINRT)
-    set(PHYSFS_CPP_SRCS src/physfs_platform_winrt.cpp)
+    list(APPEND PHYSFS_CPP_SRCS src/physfs_platform_winrt.cpp)
 endif()
 
-if(UNIX AND NOT WINDOWS AND NOT APPLE)  # (MingW and such might be UNIX _and_ WINDOWS!)
+if(UNIX AND NOT MSVC AND NOT APPLE)  # (MingW and such might be UNIX _and_ WINDOWS!)
     find_library(PTHREAD_LIBRARY pthread)
     if(PTHREAD_LIBRARY)
         set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${PTHREAD_LIBRARY})
     endif()
+endif()
+
+if(PHYSFS_CPP_SRCS)
+    enable_language(CXX)
 endif()
 
 # Almost everything is "compiled" here, but things that don't apply to the
@@ -154,6 +157,8 @@ endif()
 option(PHYSFS_BUILD_STATIC "Build static library" TRUE)
 if(PHYSFS_BUILD_STATIC)
     add_library(physfs-static STATIC ${PHYSFS_SRCS})
+    add_library(PhysFS::PhysFS-static ALIAS physfs-static)
+    set_target_properties(physfs-static PROPERTIES EXPORT_NAME PhysFS-static)
     # Don't rename this on Windows, since DLLs will also produce an import
     #  library named "physfs.lib" which would conflict; Unix tend to like the
     #  same library name with a different extension for static libs, but
@@ -170,26 +175,30 @@ if(PHYSFS_BUILD_STATIC)
         # no dll exports from the static library
         target_compile_definitions(physfs-static PRIVATE "PHYSFS_STATIC")
     endif()
-
+    target_include_directories(physfs-static PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+    target_link_libraries(physfs-static PRIVATE ${OPTIONAL_LIBRARY_LIBS} ${OTHER_LDFLAGS})
     set(PHYSFS_LIB_TARGET physfs-static)
-    set(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";physfs-static")
+    list(APPEND PHYSFS_INSTALL_TARGETS "physfs-static")
 endif()
 
 option(PHYSFS_BUILD_SHARED "Build shared library" TRUE)
 if(PHYSFS_BUILD_SHARED)
     add_library(physfs SHARED ${PHYSFS_SRCS})
+    add_library(PhysFS::PhysFS ALIAS physfs)
     set_target_properties(physfs PROPERTIES MACOSX_RPATH 1)
     set_target_properties(physfs PROPERTIES VERSION ${PHYSFS_VERSION})
     set_target_properties(physfs PROPERTIES SOVERSION ${PHYSFS_SOVERSION})
+    set_target_properties(physfs PROPERTIES EXPORT_NAME PhysFS)
     if(WINRT)
 		set_target_properties(physfs PROPERTIES VS_WINRT_COMPONENT True)
     endif()
     if(OS2) # OS/2 does not support a DLL name longer than 8 characters.
         set_target_properties(physfs PROPERTIES OUTPUT_NAME "physfs")
     endif()
-    target_link_libraries(physfs ${OPTIONAL_LIBRARY_LIBS} ${OTHER_LDFLAGS})
+    target_include_directories(physfs PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+    target_link_libraries(physfs PRIVATE ${OPTIONAL_LIBRARY_LIBS} ${OTHER_LDFLAGS})
     set(PHYSFS_LIB_TARGET physfs)
-    set(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";physfs")
+    list(APPEND PHYSFS_INSTALL_TARGETS "physfs")
 endif()
 
 if(NOT PHYSFS_BUILD_SHARED AND NOT PHYSFS_BUILD_STATIC)
@@ -197,7 +206,7 @@ if(NOT PHYSFS_BUILD_SHARED AND NOT PHYSFS_BUILD_STATIC)
 endif()
 
 # CMake FAQ says I need this...
-if(PHYSFS_BUILD_SHARED AND PHYSFS_BUILD_STATIC AND NOT WINDOWS)
+if(PHYSFS_BUILD_SHARED AND PHYSFS_BUILD_STATIC AND NOT WIN32)
     set_target_properties(physfs PROPERTIES CLEAN_DIRECT_OUTPUT 1)
     set_target_properties(physfs-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 endif()
@@ -214,15 +223,15 @@ if(PHYSFS_BUILD_TEST)
             find_library(READLINE_LIBRARY readline)
             if(READLINE_LIBRARY)
                 set(HAVE_SYSTEM_READLINE TRUE)
-                set(TEST_PHYSFS_LIBS ${TEST_PHYSFS_LIBS} ${READLINE_LIBRARY} ${CURSES_LIBRARY})
+                list(APPEND TEST_PHYSFS_LIBS ${READLINE_LIBRARY} ${CURSES_LIBRARY})
                 include_directories(SYSTEM ${READLINE_H} ${HISTORY_H})
                 add_definitions(-DPHYSFS_HAVE_READLINE=1)
             endif()
         endif()
     endif()
     add_executable(test_physfs test/test_physfs.c)
-    target_link_libraries(test_physfs ${PHYSFS_LIB_TARGET} ${TEST_PHYSFS_LIBS} ${OTHER_LDFLAGS})
-    set(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";test_physfs")
+    target_link_libraries(test_physfs PRIVATE ${PHYSFS_LIB_TARGET} ${TEST_PHYSFS_LIBS} ${OTHER_LDFLAGS})
+    list(APPEND PHYSFS_INSTALL_TARGETS test_physfs)
 endif()
 
 option(PHYSFS_DISABLE_INSTALL "Disable installing PhysFS" OFF)
@@ -238,6 +247,7 @@ if(NOT PHYSFS_DISABLE_INSTALL)
     install(EXPORT PhysFSExport
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PhysFS"
             FILE PhysFSConfig.cmake
+            NAMESPACE PhysFS::
     )
 
     if(NOT MSVC)
