@@ -10,6 +10,7 @@ jobs:
       matrix:
         platform:  # !!! FIXME: figure out an efficient way to get SDL2 on the Windows/Mac bots.
         - { name: Linux,   os: ubuntu-20.04, flags: -GNinja }
+        - { name: MinGW,   os: windows-latest, flags: -GNinja -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc -DCMAKE_SYSTEM_NAME=Windows }
         - { name: Windows, os: windows-latest }
         - { name: MacOS,   os: macos-latest }
     steps:
@@ -17,7 +18,10 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install cmake ninja-build
+        sudo apt-get install ninja-build
+    - name: Setup MinGW dependencies
+      if: contains(matrix.platform.name, 'MinGW')
+      run:  choco install ninja
     - name: Get PhysicsFS sources
       uses: actions/checkout@v2
     - name: Configure CMake
