@@ -251,7 +251,7 @@ static int parseVolumeDescriptor(PHYSFS_Io *io, PHYSFS_uint64 *_rootpos,
         pos += 2048;  /* each volume descriptor is 2048 bytes */
 
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &type, 1), 0);
-        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &identifier, 5), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, identifier, 5), 0);
 
         if (memcmp(identifier, "CD001", 5) != 0)  /* maybe not an iso? */
         {
