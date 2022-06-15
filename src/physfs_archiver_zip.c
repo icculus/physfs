@@ -15,6 +15,11 @@
 #include <errno.h>
 #include <time.h>
 
+#if (PHYSFS_BYTEORDER == PHYSFS_LIL_ENDIAN)
+#define MINIZ_LITTLE_ENDIAN 1
+#else
+#define MINIZ_LITTLE_ENDIAN 0
+#endif
 #include "physfs_miniz.h"
 
 /*

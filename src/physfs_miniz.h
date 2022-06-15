@@ -22,12 +22,14 @@ typedef unsigned long mz_ulong;
 typedef void *(*mz_alloc_func)(void *opaque, unsigned int items, unsigned int size);
 typedef void (*mz_free_func)(void *opaque, void *address);
 
+#ifndef MINIZ_LITTLE_ENDIAN /* if not defined by PHYSFS */
 #if defined(_M_IX86) || defined(_M_X64)
 /* Set MINIZ_USE_UNALIGNED_LOADS_AND_STORES to 1 if integer loads and stores to unaligned addresses are acceptable on the target platform (slightly faster). */
 #define MINIZ_USE_UNALIGNED_LOADS_AND_STORES 1
 /* Set MINIZ_LITTLE_ENDIAN to 1 if the processor is little endian. */
 #define MINIZ_LITTLE_ENDIAN 1
 #endif
+#endif /**/
 
 #if defined(_WIN64) || defined(__MINGW64__) || defined(_LP64) || defined(__LP64__)
 /* Set MINIZ_HAS_64BIT_REGISTERS to 1 if the processor has 64-bit general purpose registers (enables 64-bit bitbuffer in inflator) */
