@@ -921,12 +921,12 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
             retval = tryOpenDir(io, *i, d, forWriting, &claimed);
     } /* else */
 
-    errcode = currentErrorCode();
+    errcode = claimed ? currentErrorCode() : PHYSFS_ERR_UNSUPPORTED;
 
     if ((!retval) && (created_io))
         io->destroy(io);
 
-    BAIL_IF(!retval, claimed ? errcode : PHYSFS_ERR_UNSUPPORTED, NULL);
+    BAIL_IF(!retval, errcode, NULL);
     return retval;
 } /* openDirectory */
 
