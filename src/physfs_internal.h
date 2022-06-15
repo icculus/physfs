@@ -230,10 +230,25 @@ extern void SZIP_global_init(void);
 #ifdef __linux__
 #include <endian.h>
 #define PHYSFS_BYTEORDER  __BYTE_ORDER
-#else /* __linux__ */
+#elif defined(__OpenBSD__)
+#include <endian.h>
+#define PHYSFS_BYTEORDER  BYTE_ORDER
+#elif defined(__FreeBSD__) || defined(__NetBSD__)
+#include <sys/endian.h>
+#define PHYSFS_BYTEORDER  BYTE_ORDER
+/* predefs from newer gcc and clang versions: */
+#elif defined(__ORDER_LITTLE_ENDIAN__) && defined(__ORDER_BIG_ENDIAN__) && defined(__BYTE_ORDER__)
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#define PHYSFS_BYTEORDER   PHYSFS_LIL_ENDIAN
+#elif (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#define PHYSFS_BYTEORDER   PHYSFS_BIG_ENDIAN
+#else
+#error Unsupported endianness
+#endif /**/
+#else
 #if defined(__hppa__) || \
     defined(__m68k__) || defined(mc68000) || defined(_M_M68K) || \
-    (defined(__MIPS__) && defined(__MISPEB__)) || \
+    (defined(__MIPS__) && defined(__MIPSEB__)) || \
     defined(__ppc__) || defined(__POWERPC__) || defined(_M_PPC) || \
     defined(__sparc__)
 #define PHYSFS_BYTEORDER   PHYSFS_BIG_ENDIAN
