@@ -57,7 +57,7 @@ if(WINRT)
     list(APPEND PHYSFS_CPP_SRCS src/physfs_platform_winrt.cpp)
 endif()
 
-if(UNIX AND NOT MSVC AND NOT APPLE)  # (MingW and such might be UNIX _and_ WINDOWS!)
+if(UNIX AND NOT MSVC AND NOT MINGW AND NOT APPLE)  # (MingW and such might be UNIX _and_ WINDOWS!)
     find_library(PTHREAD_LIBRARY pthread)
     if(PTHREAD_LIBRARY)
         set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${PTHREAD_LIBRARY})
