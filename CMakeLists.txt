@@ -30,7 +30,8 @@ if(APPLE)
     list(APPEND PHYSFS_M_SRCS src/physfs_platform_apple.m)
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCC)
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wall)
     # Don't use -rpath.
     set(CMAKE_SKIP_RPATH ON CACHE BOOL "Skip RPATH" FORCE)
 endif()
