@@ -155,18 +155,27 @@ int __PHYSFS_platformMkDir(const char *path)
 } /* __PHYSFS_platformMkDir */
 
 
+#if !defined(O_CLOEXEC) && defined(FD_CLOEXEC)
+static inline void set_CLOEXEC(int fildes)
+{
+    int flags = fcntl(fildes, F_GETFD);
+    if (flags != -1) {
+        fcntl(fildes, F_SETFD, flags | FD_CLOEXEC);
+    }
+}
+#endif
+
 static void *doOpen(const char *filename, int mode)
 {
     const int appending = (mode & O_APPEND);
     int fd;
     int *retval;
-    int flags;
-    flags = -1;
+
     errno = 0;
 
     /* O_APPEND doesn't actually behave as we'd like. */
     mode &= ~O_APPEND;
-    
+
 #ifdef O_CLOEXEC
     /* Add O_CLOEXEC if defined */
     mode |= O_CLOEXEC;
@@ -178,10 +187,7 @@ static void *doOpen(const char *filename, int mode)
     BAIL_IF(fd < 0, errcodeFromErrno(), NULL);
 
 #if !defined(O_CLOEXEC) && defined(FD_CLOEXEC)
-    flags = fcntl(fd, F_GETFD);
-    if (flags != -1) {
-        fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
-    }
+    set_CLOEXEC(fd);
 #endif
 
     if (appending)
