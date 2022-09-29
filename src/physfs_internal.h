@@ -109,14 +109,15 @@ const void *__PHYSFS_winrtCalcPrefDir(void);
 #endif
 
 /* atomic operations. */
+/* increment/decrement operations return the final incremented/decremented value. */
 #if defined(_MSC_VER) && (_MSC_VER >= 1500)
 #include <intrin.h>
 __PHYSFS_COMPILE_TIME_ASSERT(LongEqualsInt, sizeof (int) == sizeof (long));
 #define __PHYSFS_ATOMIC_INCR(ptrval) _InterlockedIncrement((long*)(ptrval))
 #define __PHYSFS_ATOMIC_DECR(ptrval) _InterlockedDecrement((long*)(ptrval))
 #elif defined(__clang__) || (defined(__GNUC__) && (((__GNUC__ * 10000) + (__GNUC_MINOR__ * 100)) >= 40100))
-#define __PHYSFS_ATOMIC_INCR(ptrval) __sync_fetch_and_add(ptrval, 1)
-#define __PHYSFS_ATOMIC_DECR(ptrval) __sync_fetch_and_add(ptrval, -1)
+#define __PHYSFS_ATOMIC_INCR(ptrval) __sync_add_and_fetch(ptrval, 1)
+#define __PHYSFS_ATOMIC_DECR(ptrval) __sync_add_and_fetch(ptrval, -1)
 #elif defined(__WATCOMC__) && defined(__386__)
 extern __inline int _xadd_watcom(volatile int *a, int v);
 #pragma aux _xadd_watcom = \
@@ -124,8 +125,8 @@ extern __inline int _xadd_watcom(volatile int *a, int v);
   parm [ecx] [eax] \
   value [eax] \
   modify exact [eax];
-#define __PHYSFS_ATOMIC_INCR(ptrval) _xadd_watcom(ptrval, 1)
-#define __PHYSFS_ATOMIC_DECR(ptrval) _xadd_watcom(ptrval, -1)
+#define __PHYSFS_ATOMIC_INCR(ptrval) (_xadd_watcom(ptrval, 1)+1)
+#define __PHYSFS_ATOMIC_DECR(ptrval) (_xadd_watcom(ptrval, -1)-1)
 #else
 #define PHYSFS_NEED_ATOMIC_OP_FALLBACK 1
 int __PHYSFS_ATOMIC_INCR(int *ptrval);

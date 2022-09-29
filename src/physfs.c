@@ -99,8 +99,8 @@ static inline int __PHYSFS_atomicAdd(int *ptrval, const int val)
 {
     int retval;
     __PHYSFS_platformGrabMutex(stateLock);
+    *ptrval += val;
     retval = *ptrval;
-    *ptrval = retval + val;
     __PHYSFS_platformReleaseMutex(stateLock);
     return retval;
 } /* __PHYSFS_atomicAdd */
