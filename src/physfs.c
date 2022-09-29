@@ -2108,7 +2108,12 @@ static int doMkdir(const char *_dname, char *dname)
             const int rc = h->funcs->stat(h->opaque, dname, &statbuf);
             if ((!rc) && (currentErrorCode() == PHYSFS_ERR_NOT_FOUND))
                 exists = 0;
-            retval = ((rc) && (statbuf.filetype == PHYSFS_FILETYPE_DIRECTORY));
+            /* verifyPath made sure that (dname) doesn't have symlinks if they aren't
+               allowed, but it's possible the mounted writeDir itself has symlinks in it,
+               (for example "/var" on iOS is a symlink, and the prefpath will be somewhere
+               under that)...if we mounted that writeDir, we must allow those symlinks here
+               unconditionally. */
+            retval = ( (rc) && ((statbuf.filetype == PHYSFS_FILETYPE_DIRECTORY) || (statbuf.filetype == PHYSFS_FILETYPE_SYMLINK)) );
         } /* if */
 
         if (!exists)
