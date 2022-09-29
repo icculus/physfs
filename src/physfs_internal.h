@@ -224,6 +224,7 @@ extern void SZIP_global_init(void);
 /* The latest supported PHYSFS_Archiver::version value. */
 #define CURRENT_PHYSFS_ARCHIVER_API_VERSION 0
 
+
 /* This byteorder stuff was lifted from SDL. https://www.libsdl.org/ */
 #define PHYSFS_LIL_ENDIAN  1234
 #define PHYSFS_BIG_ENDIAN  4321
@@ -231,7 +232,7 @@ extern void SZIP_global_init(void);
 #ifdef __linux__
 #include <endian.h>
 #define PHYSFS_BYTEORDER  __BYTE_ORDER
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__DragonFly__)
 #include <endian.h>
 #define PHYSFS_BYTEORDER  BYTE_ORDER
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
@@ -250,7 +251,7 @@ extern void SZIP_global_init(void);
 #if defined(__hppa__) || \
     defined(__m68k__) || defined(mc68000) || defined(_M_M68K) || \
     (defined(__MIPS__) && defined(__MIPSEB__)) || \
-    defined(__ppc__) || defined(__POWERPC__) || defined(_M_PPC) || \
+    defined(__ppc__) || defined(__POWERPC__) || defined(__powerpc__) || defined(__PPC__) || \
     defined(__sparc__)
 #define PHYSFS_BYTEORDER   PHYSFS_BIG_ENDIAN
 #else
