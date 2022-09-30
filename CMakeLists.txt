@@ -12,7 +12,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 project(PhysicsFS)
-set(PHYSFS_VERSION 3.0.2)
+set(PHYSFS_VERSION 3.0.3)
 
 include(GNUInstallDirs)
 

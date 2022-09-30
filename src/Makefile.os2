@@ -2,7 +2,7 @@
 # wmake -f Makefile.os2
 
 LIBNAME = physfs
-VERSION = 3.0.2
+VERSION = 3.0.3
 
 LIBFILE = $(LIBNAME).lib
 DLLFILE = $(LIBNAME).dll
