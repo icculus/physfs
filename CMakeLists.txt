@@ -24,6 +24,9 @@ set(PHYSFS_M_SRCS)
 set(PHYSFS_CPP_SRCS)
 
 # I hate that they define "WIN32" ... we're about to move to Win64...I hope!
+if(WIN32)
+    list(APPEND OPTIONAL_LIBRARY_LIBS advapi32 shell32)
+endif()
 
 if(APPLE)
     set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework IOKit -framework Foundation")
@@ -61,7 +64,7 @@ endif()
 if(UNIX AND NOT WIN32 AND NOT APPLE)  # (MingW and such might be UNIX _and_ WINDOWS!)
     find_library(PTHREAD_LIBRARY pthread)
     if(PTHREAD_LIBRARY)
-        set(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${PTHREAD_LIBRARY})
+        list(APPEND OPTIONAL_LIBRARY_LIBS ${PTHREAD_LIBRARY})
     endif()
 endif()
 
@@ -191,7 +194,7 @@ if(PHYSFS_BUILD_SHARED)
     set_target_properties(physfs PROPERTIES SOVERSION ${PHYSFS_SOVERSION})
     set_target_properties(physfs PROPERTIES EXPORT_NAME PhysFS)
     if(WINRT)
-		set_target_properties(physfs PROPERTIES VS_WINRT_COMPONENT True)
+		set_target_properties(physfs PROPERTIES VS_WINRT_COMPONENT TRUE)
     endif()
     if(OS2) # OS/2 does not support a DLL name longer than 8 characters.
         set_target_properties(physfs PROPERTIES OUTPUT_NAME "physfs")
