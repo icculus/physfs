@@ -380,6 +380,86 @@ static int cmd_enumerate(char *args)
     return 1;
 } /* cmd_enumerate */
 
+#define STR_BOX_VERTICAL_RIGHT  "\xe2\x94\x9c"
+#define STR_BOX_VERTICAL        "\xe2\x94\x82"
+#define STR_BOX_HORIZONTAL      "\xe2\x94\x80"
+#define STR_BOX_UP_RIGHT        "\xe2\x94\x94"
+#define STR_NBSP                "\xc2\xa0"
+
+#define PREFIX_DIRENTRY         STR_BOX_VERTICAL_RIGHT  STR_BOX_HORIZONTAL  STR_BOX_HORIZONTAL  STR_NBSP
+#define PREFIX_DIRENTRY_LAST    STR_BOX_UP_RIGHT        STR_BOX_HORIZONTAL  STR_BOX_HORIZONTAL  STR_NBSP
+#define PREFIX_RECURSIVE        STR_BOX_VERTICAL        STR_NBSP            STR_NBSP            STR_NBSP
+#define PREFIX_RECURSIVE_LAST   STR_NBSP                STR_NBSP            STR_NBSP            STR_NBSP
+
+static void cmd_tree_recursive(const char *prefix, const char *fullPath, const char *name, unsigned depth, int *total_dir_count, int *total_file_count) {
+    char **rc;
+
+    printf("%s", name);
+    rc = PHYSFS_enumerateFiles(fullPath);
+
+    if (rc == NULL) {
+        printf(" [Failure. reason: %s]\n", PHYSFS_getLastError());
+    }
+    else
+    {
+        int file_count;
+        char **i;
+        printf("\n");
+        for (i = rc, file_count = 0; *i != NULL; i++, file_count++) {
+            char *newFullPath = malloc(strlen(fullPath) + strlen(*i) + 2);
+            char *thisPrefix;
+            strcpy(newFullPath, fullPath);
+            strcat(newFullPath, "/");
+            strcat(newFullPath, *i);
+            if (i[1]) {
+                thisPrefix = PREFIX_DIRENTRY;
+            } else {
+                thisPrefix = PREFIX_DIRENTRY_LAST;
+            }
+            if (PHYSFS_isSymbolicLink(newFullPath)) {
+                printf("%s%s%s [symbolic link]\n", prefix, thisPrefix, *i);
+            } else if (PHYSFS_isDirectory(newFullPath)) {
+                char *newPrefix;
+                *total_dir_count += 1;
+                if (i[1]) {
+                    newPrefix = malloc(strlen(prefix) + strlen(PREFIX_RECURSIVE) + 1);
+                    strcpy(newPrefix, prefix);
+                    strcat(newPrefix, PREFIX_RECURSIVE);
+                } else {
+                    newPrefix = malloc(strlen(prefix) + strlen(PREFIX_RECURSIVE_LAST) + 1);
+                    strcpy(newPrefix, prefix);
+                    strcat(newPrefix, PREFIX_RECURSIVE_LAST);
+                }
+                printf("%s%s", prefix, thisPrefix);
+                cmd_tree_recursive(newPrefix, newFullPath, *i, depth + 1, total_dir_count, total_file_count);
+                free(newPrefix);
+            } else {
+                *total_file_count += 1;
+                printf("%s%s%s\n", prefix, thisPrefix, *i);
+            }
+            free(newFullPath);
+        }
+        PHYSFS_freeList(rc);
+    } /* else */
+} /* cmd_tree_recursive */
+
+
+static int cmd_tree(char *args)
+{
+    int total_dir_count = 0, total_file_count = 0; /* FIXME: should be PHYSFS_uint64 */
+
+    if (*args == '\"')
+    {
+        args++;
+        args[strlen(args) - 1] = '\0';
+    } /* if */
+
+    cmd_tree_recursive("", args, args, 0, &total_dir_count, &total_file_count);
+
+    printf("\n%d directories, %d files\n", total_dir_count, total_file_count);
+    return 1;
+} /* cmd_enumerate */
+
 
 static int cmd_getdirsep(char *args)
 {
@@ -1359,6 +1439,7 @@ static const command_info commands[] =
     { "unmount",        cmd_removearchive,  1, "<archiveLocation>"          },
     { "enumerate",      cmd_enumerate,      1, "<dirToEnumerate>"           },
     { "ls",             cmd_enumerate,      1, "<dirToEnumerate>"           },
+    { "tree",           cmd_tree,           1, "<dirToEnumerate>"           },
     { "getlasterror",   cmd_getlasterror,   0, NULL                         },
     { "getdirsep",      cmd_getdirsep,      0, NULL                         },
     { "getcdromdirs",   cmd_getcdromdirs,   0, NULL                         },
