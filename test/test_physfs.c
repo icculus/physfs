@@ -1566,7 +1566,8 @@ static void open_history_file(void)
 int main(int argc, char **argv)
 {
     char *buf = NULL;
-    int rc = 0;
+    int rc = 1;
+    int i;
 
 #if (defined __MWERKS__)
     extern tSIOUXSettings SIOUXSettings;
@@ -1592,7 +1593,11 @@ int main(int argc, char **argv)
     printf("Enter commands. Enter \"help\" for instructions.\n");
     fflush(stdout);
 
-    do
+    for (i = 1; i < argc && rc; i++) {
+        rc = process_command(argv[i]);
+    }
+
+    while (rc)
     {
 #if (defined PHYSFS_HAVE_READLINE)
         buf = readline("> ");
@@ -1631,7 +1636,7 @@ int main(int argc, char **argv)
         fflush(stdout);
         if (buf != NULL)
             free(buf);
-    } while (rc);
+    };
 
     if (!PHYSFS_deinit())
         printf("PHYSFS_deinit() failed!\n  reason: %s.\n", PHYSFS_getLastError());
