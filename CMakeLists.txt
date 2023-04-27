@@ -35,8 +35,6 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall)
-    # Don't use -rpath.
-    set(CMAKE_SKIP_RPATH ON CACHE BOOL "Skip RPATH" FORCE)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
