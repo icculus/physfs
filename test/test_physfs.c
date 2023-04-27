@@ -1717,7 +1717,7 @@ int main(int argc, char **argv)
         fflush(stdout);
         if (buf != NULL)
             free(buf);
-    };
+    }
 
     if (!PHYSFS_deinit())
         printf("PHYSFS_deinit() failed!\n  reason: %s.\n", PHYSFS_getLastError());
