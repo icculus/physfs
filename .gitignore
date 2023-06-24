@@ -1,2 +1,11 @@
 cmake-build
-
+CMakeFiles/
+CMakeCache.txt
+Makefile
+test_physfs*
+libphysfs.*
+install_manifest.txt
+cmake_install.cmake
+CMakeDoxy*
+extras/physfs.pc
+Doxyfile
