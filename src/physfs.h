@@ -148,6 +148,7 @@
  *   - .HOG (Descent I/II/III HOG file archives)
  *   - .MVL (Descent II movielib archives)
  *   - .WAD (DOOM engine archives)
+ *   - .BIN (Chasm: The Rift engine archives)
  *   - .VDF (Gothic I/II engine archives)
  *   - .SLB (Independence War archives)
  *
