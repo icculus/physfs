@@ -100,7 +100,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_CSM =
 {
     CURRENT_PHYSFS_ARCHIVER_API_VERSION,
     {
-        "CSM",
+        "BIN",
         "Chasm: The Rift engine format",
 	"Jon Daniel <jondaniel879@gmail.com>",
         "http://www.github.com/Panzerschrek/Chasm-Reverse",
