@@ -25,6 +25,7 @@ SRCS = physfs.c                   &
        physfs_archiver_zip.c      &
        physfs_archiver_slb.c      &
        physfs_archiver_iso9660.c  &
+       physfs_archiver_csm.c      &
        physfs_archiver_vdf.c
 
 
