@@ -96,9 +96,10 @@ typedef struct Context
 } Context;
 static PHYSFS_Context defaultContext; /* The context for PHYSFS to use by default. */
 /* Shorthand helper */
-Context *boundContext() {
+static Context *boundContext()
+{
     return (Context*)PHYSFS_getBoundContext();
-}
+} /* boundContext */
 
 /* Thread-to-context mapping... */
 typedef struct ThreadContextMapNode {
@@ -3454,13 +3455,13 @@ PHYSFS_Context PHYSFS_allocContext()
     BAIL_IF(!context, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     memset(context, '\0', sizeof(Context));
     return (PHYSFS_Context)context;
-}
+} /* PHYSFS_allocContext */
 
 
 void PHYSFS_deallocContext(PHYSFS_Context context)
 {
     allocator.Free((Context*)context);
-}
+} /* PHYSFS_deallocContext */
 
 static int doDeinitContext(Context *context) {
     closeFileHandleList(&context->openWriteList);
@@ -3510,7 +3511,7 @@ static int doDeinitContext(Context *context) {
     context->errorLock = context->stateLock = NULL;
 
     return 1;
-}
+} /* doDeinitContext */
 
 int PHYSFS_initContext(PHYSFS_Context _context, const char *argv0)
 {
@@ -3554,7 +3555,7 @@ initFailed:
     PHYSFS_bindContext(boundContext); 
 
     return 0;
-}
+} /* PHYSFS_initContext */
 
 
 int PHYSFS_deinitContext(PHYSFS_Context _context)
@@ -3566,7 +3567,7 @@ int PHYSFS_deinitContext(PHYSFS_Context _context)
     doDeinitContext(context);
 
     return 1;
-}
+} /* PHYSFS_deinitContext */
 
 
 int PHYSFS_bindContext(PHYSFS_Context context)
