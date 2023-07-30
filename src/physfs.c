@@ -2655,25 +2655,7 @@ static PHYSFS_File *doOpenWrite(const char *_fname, const int appending)
 
     BAIL_IF_MUTEX(!boundContext()->searchPath, PHYSFS_ERR_NOT_FOUND, boundContext()->stateLock, 0);
 
-    /* Code copied from PHYSFS_openRead() */
-    len = strlen(_fname) + boundContext()->longest_root + 2;
-    char* allocated_fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, boundContext()->stateLock, 0);
-    fname = allocated_fname + boundContext()->longest_root + 1;
-
-    if (sanitizePlatformIndependentPath(_fname, fname)) {
-        PHYSFS_Io *io = NULL;
-        DirHandle *i;
-
-        for (i = boundContext()->searchPath; i != NULL; i = i->next) {
-            char *arcfname = fname;
-            if (verifyPath(i, &arcfname, 0)) {
-                /* Set dir handle to the one from search path */
-                h = i;
-            } /* if */
-        } /* for */
-    } /* if */
-
+    h = boundContext()->writeDir;
     BAIL_IF_MUTEX(!h, PHYSFS_ERR_NO_WRITE_DIR, boundContext()->stateLock, 0);
 
     len = strlen(_fname) + dirHandleRootLen(h) + 1;
