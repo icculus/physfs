@@ -3561,7 +3561,7 @@ int PHYSFS_bindContext(PHYSFS_Context context)
 
     __PHYSFS_platformGrabMutex(threadContextMapLock);
 
-    void *threadID = __PHYSFS_platformGetThreadID();
+    threadID = __PHYSFS_platformGetThreadID();
     
     if (!context)
         context = defaultContext;
