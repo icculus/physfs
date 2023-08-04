@@ -318,7 +318,7 @@ static PHYSFS_Io *memoryIo_duplicate(PHYSFS_Io *io)
         BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
-    __PHYSFS_ATOMIC_INCR(&info->refcount);
+    (void) __PHYSFS_ATOMIC_INCR(&info->refcount);
 
     memset(newinfo, '\0', sizeof (*info));
     newinfo->buf = info->buf;
