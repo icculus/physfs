@@ -1191,6 +1191,9 @@ static int initStaticArchivers(void)
     #if PHYSFS_SUPPORTS_CSM
         REGISTER_STATIC_ARCHIVER(CSM);
     #endif
+    #if PHYSFS_SUPPORTS_TAR
+        REGISTER_STATIC_ARCHIVER(TAR);
+    #endif
     #if PHYSFS_SUPPORTS_SLB
         REGISTER_STATIC_ARCHIVER(SLB);
     #endif
