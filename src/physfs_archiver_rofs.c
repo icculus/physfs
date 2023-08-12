@@ -375,8 +375,7 @@ static int ROFS_seek(PHYSFS_Io *io, PHYSFS_uint64 offset)
 	ROFSentry *entry = finfo->entry;
 	int rc = 1, i, srcBlock, dstBlock, remaining;
 
-	BAIL_IF(offset < 0, PHYSFS_ERR_INVALID_ARGUMENT, 0);
-	BAIL_IF(offset > entry->size, PHYSFS_ERR_PAST_EOF, 0);
+	BAIL_IF(offset >= entry->size, PHYSFS_ERR_PAST_EOF, 0);
 
 	/* Skip to a given 32KB block */
 	srcBlock = finfo->curPos >> 15;
