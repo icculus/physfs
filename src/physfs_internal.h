@@ -38,7 +38,7 @@
 #include <malloc.h>
 #endif
 
-#if defined(PHYSFS_PLATFORM_SOLARIS) || defined(PHYSFS_PLATFORM_LINUX)
+#if defined(PHYSFS_PLATFORM_SOLARIS) || defined(PHYSFS_PLATFORM_LINUX) || defined(PHYSFS_PLATFORM_OGC)
 #include <alloca.h>
 #endif
 
