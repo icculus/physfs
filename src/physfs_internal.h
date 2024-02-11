@@ -85,6 +85,7 @@ extern const PHYSFS_Archiver __PHYSFS_Archiver_ZIP;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_7Z;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_GRP;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_QPAK;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_ROFS;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_HOG;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_MVL;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_WAD;
@@ -206,6 +207,9 @@ void __PHYSFS_smallFree(void *ptr);
 #endif
 #ifndef PHYSFS_SUPPORTS_QPAK
 #define PHYSFS_SUPPORTS_QPAK PHYSFS_SUPPORTS_DEFAULT
+#endif
+#ifndef PHYSFS_SUPPORTS_ROFS
+#define PHYSFS_SUPPORTS_ROFS PHYSFS_SUPPORTS_DEFAULT
 #endif
 #ifndef PHYSFS_SUPPORTS_SLB
 #define PHYSFS_SUPPORTS_SLB PHYSFS_SUPPORTS_DEFAULT
