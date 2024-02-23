@@ -15,6 +15,14 @@ cmake_minimum_required(VERSION 3.5)
 
 project(PhysicsFS VERSION ${PHYSFS_VERSION} LANGUAGES C )
 
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    set(PHYSFS_SUBPROJECT OFF)
+    set(PHYSFS_ROOTPROJECT ON)
+else()
+    set(PHYSFS_SUBPROJECT ON)
+    set(PHYSFS_ROOTPROJECT OFF)
+endif()
+
 include(GNUInstallDirs)
 
 # Increment this if/when we break backwards compatibility.
@@ -232,7 +240,7 @@ if(PHYSFS_BUILD_TEST)
     list(APPEND PHYSFS_INSTALL_TARGETS test_physfs)
 endif()
 
-option(PHYSFS_DISABLE_INSTALL "Disable installing PhysFS" OFF)
+option(PHYSFS_DISABLE_INSTALL "Disable installing PhysFS" "${PHYSFS_SUBPROJECT}")
 if(NOT PHYSFS_DISABLE_INSTALL)
 
     install(TARGETS ${PHYSFS_INSTALL_TARGETS} EXPORT PhysFSExport
@@ -262,7 +270,7 @@ if(NOT PHYSFS_DISABLE_INSTALL)
     endif()
 endif()
 
-option(PHYSFS_BUILD_DOCS "Build doxygen based documentation" TRUE)
+option(PHYSFS_BUILD_DOCS "Build doxygen based documentation" ${PHYSFS_ROOTPROJECT})
 if(PHYSFS_BUILD_DOCS)
     find_package(Doxygen)
     if(DOXYGEN_FOUND)
