@@ -78,6 +78,9 @@
 #elif defined(__3DS__)
 #  define PHYSFS_PLATFORM_CTR 1
 #  define PHYSFS_NO_CDROM_SUPPORT 1
+#elif defined(__WIIU__)
+#  define PHYSFS_PLATFORM_CAFE 1
+#  define PHYSFS_NO_CDROM_SUPPORT 1
 #else
 #  error Unknown platform.
 #endif
