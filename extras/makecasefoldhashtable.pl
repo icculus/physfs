@@ -8,6 +8,8 @@ my $HASHBUCKETS1_32 = 16;
 my $HASHBUCKETS2_16 = 16;
 my $HASHBUCKETS3_16 = 4;
 
+my $mem_used = 0;
+
 print <<__EOF__;
 /*
  * This file is part of PhysicsFS (https://icculus.org/physfs/)
@@ -143,18 +145,22 @@ while (<FH>) {
             my $hashed = (($hexxed ^ ($hexxed >> 8)) & ($HASHBUCKETS1_32-1));
             #print("// hexxed '$hexxed'  hashed1 '$hashed'\n");
             $foldPairs1_32[$hashed] .= "    { 0x$code, 0x$map1 },\n";
+            $mem_used += 8;
         } elsif (not defined($map2)) {
             my $hashed = (($hexxed ^ ($hexxed >> 8)) & ($HASHBUCKETS1_16-1));
             #print("// hexxed '$hexxed'  hashed1 '$hashed'\n");
             $foldPairs1_16[$hashed] .= "    { 0x$code, 0x$map1 },\n";
+            $mem_used += 4;
         } elsif (not defined($map3)) {
             my $hashed = (($hexxed ^ ($hexxed >> 8)) & ($HASHBUCKETS2_16-1));
             #print("// hexxed '$hexxed'  hashed2 '$hashed'\n");
             $foldPairs2_16[$hashed] .= "    { 0x$code, 0x$map1, 0x$map2 },\n";
+            $mem_used += 6;
         } else {
             my $hashed = (($hexxed ^ ($hexxed >> 8)) & ($HASHBUCKETS3_16-1));
             #print("// hexxed '$hexxed'  hashed3 '$hashed'\n");
             $foldPairs3_16[$hashed] .= "    { 0x$code, 0x$map1, 0x$map2, 0x$map3 },\n";
+            $mem_used += 8;
         }
     }
 }
@@ -212,6 +218,7 @@ for (my $i = 0; $i < $HASHBUCKETS1_16; $i++) {
         my $sym = "case_fold1_16_${num}";
         print("    { $sym, __PHYSFS_ARRAYLEN($sym) },\n");
     }
+    $mem_used += 12;
 }
 print("};\n\n");
 
@@ -228,6 +235,7 @@ for (my $i = 0; $i < $HASHBUCKETS1_32; $i++) {
         my $sym = "case_fold1_32_${num}";
         print("    { $sym, __PHYSFS_ARRAYLEN($sym) },\n");
     }
+    $mem_used += 12;
 }
 print("};\n\n");
 
@@ -244,6 +252,7 @@ for (my $i = 0; $i < $HASHBUCKETS2_16; $i++) {
         my $sym = "case_fold2_16_${num}";
         print("    { $sym, __PHYSFS_ARRAYLEN($sym) },\n");
     }
+    $mem_used += 12;
 }
 print("};\n\n");
 
@@ -259,6 +268,7 @@ for (my $i = 0; $i < $HASHBUCKETS3_16; $i++) {
         my $sym = "case_fold3_16_${num}";
         print("    { $sym, __PHYSFS_ARRAYLEN($sym) },\n");
     }
+    $mem_used += 12;
 }
 print("};\n\n");
 
@@ -269,6 +279,8 @@ print <<__EOF__;
 /* end of physfs_casefolding.h ... */
 
 __EOF__
+
+print STDERR "Memory required for case-folding hashtable: $mem_used bytes\n";
 
 exit 0;
 
