@@ -107,6 +107,7 @@ static const CaseFoldMapping1_16 case_fold1_16_003[] = {
     { 0x0407, 0x0457 },
     { 0x0506, 0x0507 },
     { 0x1F1C, 0x1F14 },
+    { 0x2C2F, 0x2C5F },
     { 0xA7A4, 0xA7A5 },
     { 0xABA8, 0x13D8 }
 };
@@ -163,6 +164,7 @@ static const CaseFoldMapping1_16 case_fold1_16_009[] = {
     { 0x040D, 0x045D },
     { 0x050C, 0x050D },
     { 0x2C25, 0x2C55 },
+    { 0xA7AE, 0x026A },
     { 0xABA2, 0x13D2 }
 };
 
@@ -303,6 +305,7 @@ static const CaseFoldMapping1_16 case_fold1_16_025[] = {
     { 0x0118, 0x0119 },
     { 0x041D, 0x043D },
     { 0x051C, 0x051D },
+    { 0xA7BE, 0xA7BF },
     { 0xABB2, 0x13E2 }
 };
 
@@ -317,6 +320,7 @@ static const CaseFoldMapping1_16 case_fold1_16_027[] = {
     { 0x011A, 0x011B },
     { 0x041F, 0x043F },
     { 0x051E, 0x051F },
+    { 0xA7BC, 0xA7BD },
     { 0xABB0, 0x13E0 }
 };
 
@@ -331,6 +335,7 @@ static const CaseFoldMapping1_16 case_fold1_16_029[] = {
     { 0x011C, 0x011D },
     { 0x0419, 0x0439 },
     { 0x0518, 0x0519 },
+    { 0xA7BA, 0xA7BB },
     { 0xABB6, 0x13E6 }
 };
 
@@ -345,6 +350,7 @@ static const CaseFoldMapping1_16 case_fold1_16_031[] = {
     { 0x011E, 0x011F },
     { 0x041B, 0x043B },
     { 0x051A, 0x051B },
+    { 0xA7B8, 0xA7B9 },
     { 0xABB4, 0x13E4 }
 };
 
@@ -644,7 +650,6 @@ static const CaseFoldMapping1_16 case_fold1_16_064[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_065[] = {
-    { 0x0041, 0x0061 },
     { 0x0243, 0x0180 },
     { 0x0544, 0x0574 },
     { 0x2160, 0x2170 },
@@ -652,7 +657,6 @@ static const CaseFoldMapping1_16 case_fold1_16_065[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_066[] = {
-    { 0x0042, 0x0062 },
     { 0x0143, 0x0144 },
     { 0x0547, 0x0577 },
     { 0x1E5C, 0x1E5D },
@@ -662,7 +666,6 @@ static const CaseFoldMapping1_16 case_fold1_16_066[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_067[] = {
-    { 0x0043, 0x0063 },
     { 0x0241, 0x0242 },
     { 0x0546, 0x0576 },
     { 0x2162, 0x2172 },
@@ -670,7 +673,6 @@ static const CaseFoldMapping1_16 case_fold1_16_067[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_068[] = {
-    { 0x0044, 0x0064 },
     { 0x0145, 0x0146 },
     { 0x0246, 0x0247 },
     { 0x0541, 0x0571 },
@@ -680,14 +682,12 @@ static const CaseFoldMapping1_16 case_fold1_16_068[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_069[] = {
-    { 0x0045, 0x0065 },
     { 0x0540, 0x0570 },
     { 0x2164, 0x2174 },
     { 0x2C69, 0x2C6A }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_070[] = {
-    { 0x0046, 0x0066 },
     { 0x0147, 0x0148 },
     { 0x0244, 0x0289 },
     { 0x0345, 0x03B9 },
@@ -698,7 +698,6 @@ static const CaseFoldMapping1_16 case_fold1_16_070[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_071[] = {
-    { 0x0047, 0x0067 },
     { 0x0245, 0x028C },
     { 0x0542, 0x0572 },
     { 0x2166, 0x2176 },
@@ -706,7 +705,6 @@ static const CaseFoldMapping1_16 case_fold1_16_071[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_072[] = {
-    { 0x0048, 0x0068 },
     { 0x024A, 0x024B },
     { 0x054D, 0x057D },
     { 0x1E56, 0x1E57 },
@@ -715,13 +713,11 @@ static const CaseFoldMapping1_16 case_fold1_16_072[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_073[] = {
-    { 0x0049, 0x0069 },
     { 0x054C, 0x057C },
     { 0x2168, 0x2178 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_074[] = {
-    { 0x004A, 0x006A },
     { 0x0248, 0x0249 },
     { 0x054F, 0x057F },
     { 0x1E54, 0x1E55 },
@@ -729,7 +725,6 @@ static const CaseFoldMapping1_16 case_fold1_16_074[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_075[] = {
-    { 0x004B, 0x006B },
     { 0x014A, 0x014B },
     { 0x054E, 0x057E },
     { 0x216A, 0x217A },
@@ -737,7 +732,6 @@ static const CaseFoldMapping1_16 case_fold1_16_075[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_076[] = {
-    { 0x004C, 0x006C },
     { 0x024E, 0x024F },
     { 0x0549, 0x0579 },
     { 0x1E52, 0x1E53 },
@@ -746,14 +740,12 @@ static const CaseFoldMapping1_16 case_fold1_16_076[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_077[] = {
-    { 0x004D, 0x006D },
     { 0x014C, 0x014D },
     { 0x0548, 0x0578 },
     { 0x216C, 0x217C }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_078[] = {
-    { 0x004E, 0x006E },
     { 0x024C, 0x024D },
     { 0x054B, 0x057B },
     { 0x1E50, 0x1E51 },
@@ -762,7 +754,6 @@ static const CaseFoldMapping1_16 case_fold1_16_078[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_079[] = {
-    { 0x004F, 0x006F },
     { 0x014E, 0x014F },
     { 0x054A, 0x057A },
     { 0x216E, 0x217E },
@@ -770,26 +761,23 @@ static const CaseFoldMapping1_16 case_fold1_16_079[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_080[] = {
-    { 0x0050, 0x0070 },
     { 0x0555, 0x0585 },
     { 0x1E4E, 0x1E4F }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_081[] = {
-    { 0x0051, 0x0071 },
     { 0x0150, 0x0151 },
     { 0x0554, 0x0584 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_082[] = {
-    { 0x0052, 0x0072 },
     { 0x1E4C, 0x1E4D },
     { 0x1F4D, 0x1F45 },
-    { 0x2C7E, 0x023F }
+    { 0x2C7E, 0x023F },
+    { 0xA7F5, 0xA7F6 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_083[] = {
-    { 0x0053, 0x0073 },
     { 0x0152, 0x0153 },
     { 0x0556, 0x0586 },
     { 0x1F4C, 0x1F44 },
@@ -797,46 +785,39 @@ static const CaseFoldMapping1_16 case_fold1_16_083[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_084[] = {
-    { 0x0054, 0x0074 },
     { 0x0551, 0x0581 },
     { 0x1E4A, 0x1E4B },
     { 0x1F4B, 0x1F43 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_085[] = {
-    { 0x0055, 0x0075 },
     { 0x0154, 0x0155 },
     { 0x0550, 0x0580 },
     { 0x1F4A, 0x1F42 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_086[] = {
-    { 0x0056, 0x0076 },
     { 0x0553, 0x0583 },
     { 0x1E48, 0x1E49 },
     { 0x1F49, 0x1F41 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_087[] = {
-    { 0x0057, 0x0077 },
     { 0x0156, 0x0157 },
     { 0x0552, 0x0582 },
     { 0x1F48, 0x1F40 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_088[] = {
-    { 0x0058, 0x0078 },
     { 0x1E46, 0x1E47 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_089[] = {
-    { 0x0059, 0x0079 },
     { 0x0158, 0x0159 },
     { 0x2C75, 0x2C76 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_090[] = {
-    { 0x005A, 0x007A },
     { 0x1E44, 0x1E45 }
 };
 
@@ -864,20 +845,24 @@ static const CaseFoldMapping1_16 case_fold1_16_095[] = {
 
 static const CaseFoldMapping1_16 case_fold1_16_096[] = {
     { 0x0464, 0x0465 },
-    { 0x1E7E, 0x1E7F }
+    { 0x1E7E, 0x1E7F },
+    { 0xA7C7, 0xA7C8 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_097[] = {
-    { 0x0160, 0x0161 }
+    { 0x0160, 0x0161 },
+    { 0xA7C6, 0x1D8E }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_098[] = {
     { 0x0466, 0x0467 },
-    { 0x1E7C, 0x1E7D }
+    { 0x1E7C, 0x1E7D },
+    { 0xA7C5, 0x0282 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_099[] = {
-    { 0x0162, 0x0163 }
+    { 0x0162, 0x0163 },
+    { 0xA7C4, 0xA794 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_100[] = {
@@ -886,7 +871,8 @@ static const CaseFoldMapping1_16 case_fold1_16_100[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_101[] = {
-    { 0x0164, 0x0165 }
+    { 0x0164, 0x0165 },
+    { 0xA7C2, 0xA7C3 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_102[] = {
@@ -895,7 +881,8 @@ static const CaseFoldMapping1_16 case_fold1_16_102[] = {
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_103[] = {
-    { 0x0166, 0x0167 }
+    { 0x0166, 0x0167 },
+    { 0xA7C0, 0xA7C1 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_104[] = {
@@ -927,7 +914,8 @@ static const CaseFoldMapping1_16 case_fold1_16_109[] = {
 
 static const CaseFoldMapping1_16 case_fold1_16_110[] = {
     { 0x046A, 0x046B },
-    { 0x1E70, 0x1E71 }
+    { 0x1E70, 0x1E71 },
+    { 0xA7C9, 0xA7CA }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_111[] = {
@@ -943,7 +931,8 @@ static const CaseFoldMapping1_16 case_fold1_16_112[] = {
 static const CaseFoldMapping1_16 case_fold1_16_113[] = {
     { 0x0170, 0x0171 },
     { 0x0372, 0x0373 },
-    { 0x1F6E, 0x1F66 }
+    { 0x1F6E, 0x1F66 },
+    { 0xA7D6, 0xA7D7 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_114[] = {
@@ -978,7 +967,8 @@ static const CaseFoldMapping1_16 case_fold1_16_118[] = {
 
 static const CaseFoldMapping1_16 case_fold1_16_119[] = {
     { 0x0176, 0x0177 },
-    { 0x1F68, 0x1F60 }
+    { 0x1F68, 0x1F60 },
+    { 0xA7D0, 0xA7D1 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_120[] = {
@@ -1010,53 +1000,67 @@ static const CaseFoldMapping1_16 case_fold1_16_126[] = {
     { 0x1E60, 0x1E61 }
 };
 
+static const CaseFoldMapping1_16 case_fold1_16_127[] = {
+    { 0xA7D8, 0xA7D9 }
+};
+
 static const CaseFoldMapping1_16 case_fold1_16_128[] = {
     { 0x0181, 0x0253 },
+    { 0x1C9C, 0x10DC },
     { 0x2CAC, 0x2CAD }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_129[] = {
+    { 0x1C9D, 0x10DD },
     { 0xA726, 0xA727 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_130[] = {
+    { 0x1C9E, 0x10DE },
     { 0x2CAE, 0x2CAF }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_131[] = {
     { 0x0182, 0x0183 },
+    { 0x1C9F, 0x10DF },
     { 0xA724, 0xA725 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_132[] = {
     { 0x0480, 0x0481 },
+    { 0x1C98, 0x10D8 },
     { 0x2CA8, 0x2CA9 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_133[] = {
     { 0x0184, 0x0185 },
     { 0x0386, 0x03AC },
+    { 0x1C99, 0x10D9 },
     { 0x1E9B, 0x1E61 },
     { 0xA722, 0xA723 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_134[] = {
     { 0x0187, 0x0188 },
+    { 0x1C9A, 0x10DA },
     { 0x2CAA, 0x2CAB }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_135[] = {
-    { 0x0186, 0x0254 }
+    { 0x0186, 0x0254 },
+    { 0x1C9B, 0x10DB }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_136[] = {
     { 0x0189, 0x0256 },
     { 0x048C, 0x048D },
+    { 0x1C94, 0x10D4 },
     { 0x2CA4, 0x2CA5 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_137[] = {
     { 0x038A, 0x03AF },
+    { 0x1C95, 0x10D5 },
     { 0xA72E, 0xA72F }
 };
 
@@ -1064,6 +1068,7 @@ static const CaseFoldMapping1_16 case_fold1_16_138[] = {
     { 0x018B, 0x018C },
     { 0x0389, 0x03AE },
     { 0x048E, 0x048F },
+    { 0x1C96, 0x10D6 },
     { 0x1E94, 0x1E95 },
     { 0x2CA6, 0x2CA7 }
 };
@@ -1071,23 +1076,27 @@ static const CaseFoldMapping1_16 case_fold1_16_138[] = {
 static const CaseFoldMapping1_16 case_fold1_16_139[] = {
     { 0x018A, 0x0257 },
     { 0x0388, 0x03AD },
+    { 0x1C97, 0x10D7 },
     { 0xA72C, 0xA72D }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_140[] = {
     { 0x038F, 0x03CE },
+    { 0x1C90, 0x10D0 },
     { 0x1E92, 0x1E93 },
     { 0x2CA0, 0x2CA1 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_141[] = {
     { 0x038E, 0x03CD },
+    { 0x1C91, 0x10D1 },
     { 0xA72A, 0xA72B }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_142[] = {
     { 0x018F, 0x0259 },
     { 0x048A, 0x048B },
+    { 0x1C92, 0x10D2 },
     { 0x1E90, 0x1E91 },
     { 0x2CA2, 0x2CA3 }
 };
@@ -1095,6 +1104,7 @@ static const CaseFoldMapping1_16 case_fold1_16_142[] = {
 static const CaseFoldMapping1_16 case_fold1_16_143[] = {
     { 0x018E, 0x01DD },
     { 0x038C, 0x03CC },
+    { 0x1C93, 0x10D3 },
     { 0xA728, 0xA729 }
 };
 
@@ -1129,6 +1139,7 @@ static const CaseFoldMapping1_16 case_fold1_16_147[] = {
 static const CaseFoldMapping1_16 case_fold1_16_148[] = {
     { 0x0397, 0x03B7 },
     { 0x0490, 0x0491 },
+    { 0x1C88, 0xA64B },
     { 0x1E8A, 0x1E8B },
     { 0x2CB8, 0x2CB9 }
 };
@@ -1155,6 +1166,7 @@ static const CaseFoldMapping1_16 case_fold1_16_151[] = {
 static const CaseFoldMapping1_16 case_fold1_16_152[] = {
     { 0x039B, 0x03BB },
     { 0x049C, 0x049D },
+    { 0x1C84, 0x0442 },
     { 0x1E86, 0x1E87 },
     { 0x24BC, 0x24D6 },
     { 0x2CB4, 0x2CB5 }
@@ -1163,6 +1175,7 @@ static const CaseFoldMapping1_16 case_fold1_16_152[] = {
 static const CaseFoldMapping1_16 case_fold1_16_153[] = {
     { 0x0198, 0x0199 },
     { 0x039A, 0x03BA },
+    { 0x1C85, 0x0442 },
     { 0x24BD, 0x24D7 },
     { 0xA73E, 0xA73F }
 };
@@ -1170,6 +1183,7 @@ static const CaseFoldMapping1_16 case_fold1_16_153[] = {
 static const CaseFoldMapping1_16 case_fold1_16_154[] = {
     { 0x0399, 0x03B9 },
     { 0x049E, 0x049F },
+    { 0x1C86, 0x044A },
     { 0x1E84, 0x1E85 },
     { 0x24BE, 0x24D8 },
     { 0x2CB6, 0x2CB7 }
@@ -1177,6 +1191,7 @@ static const CaseFoldMapping1_16 case_fold1_16_154[] = {
 
 static const CaseFoldMapping1_16 case_fold1_16_155[] = {
     { 0x0398, 0x03B8 },
+    { 0x1C87, 0x0463 },
     { 0x24BF, 0x24D9 },
     { 0xA73C, 0xA73D }
 };
@@ -1185,6 +1200,7 @@ static const CaseFoldMapping1_16 case_fold1_16_156[] = {
     { 0x019D, 0x0272 },
     { 0x039F, 0x03BF },
     { 0x0498, 0x0499 },
+    { 0x1C80, 0x0432 },
     { 0x1E82, 0x1E83 },
     { 0x24B8, 0x24D2 },
     { 0x2CB0, 0x2CB1 }
@@ -1193,6 +1209,7 @@ static const CaseFoldMapping1_16 case_fold1_16_156[] = {
 static const CaseFoldMapping1_16 case_fold1_16_157[] = {
     { 0x019C, 0x026F },
     { 0x039E, 0x03BE },
+    { 0x1C81, 0x0434 },
     { 0x24B9, 0x24D3 },
     { 0xA73A, 0xA73B }
 };
@@ -1201,6 +1218,7 @@ static const CaseFoldMapping1_16 case_fold1_16_158[] = {
     { 0x019F, 0x0275 },
     { 0x039D, 0x03BD },
     { 0x049A, 0x049B },
+    { 0x1C82, 0x043E },
     { 0x1E80, 0x1E81 },
     { 0x24BA, 0x24D4 },
     { 0x2CB2, 0x2CB3 }
@@ -1208,6 +1226,7 @@ static const CaseFoldMapping1_16 case_fold1_16_158[] = {
 
 static const CaseFoldMapping1_16 case_fold1_16_159[] = {
     { 0x039C, 0x03BC },
+    { 0x1C83, 0x0441 },
     { 0x24BB, 0x24D5 },
     { 0xA738, 0xA739 }
 };
@@ -1223,6 +1242,7 @@ static const CaseFoldMapping1_16 case_fold1_16_160[] = {
 static const CaseFoldMapping1_16 case_fold1_16_161[] = {
     { 0x01A0, 0x01A1 },
     { 0x10B1, 0x2D11 },
+    { 0x1CBD, 0x10FD },
     { 0x1FBE, 0x03B9 }
 };
 
@@ -1230,6 +1250,7 @@ static const CaseFoldMapping1_16 case_fold1_16_162[] = {
     { 0x03A1, 0x03C1 },
     { 0x04A6, 0x04A7 },
     { 0x10B2, 0x2D12 },
+    { 0x1CBE, 0x10FE },
     { 0x1EBC, 0x1EBD },
     { 0x2183, 0x2184 },
     { 0x2C8E, 0x2C8F }
@@ -1238,13 +1259,15 @@ static const CaseFoldMapping1_16 case_fold1_16_162[] = {
 static const CaseFoldMapping1_16 case_fold1_16_163[] = {
     { 0x01A2, 0x01A3 },
     { 0x03A0, 0x03C0 },
-    { 0x10B3, 0x2D13 }
+    { 0x10B3, 0x2D13 },
+    { 0x1CBF, 0x10FF }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_164[] = {
     { 0x03A7, 0x03C7 },
     { 0x04A0, 0x04A1 },
     { 0x10B4, 0x2D14 },
+    { 0x1CB8, 0x10F8 },
     { 0x1EBA, 0x1EBB },
     { 0x1FBB, 0x1F71 },
     { 0x2C88, 0x2C89 }
@@ -1254,6 +1277,7 @@ static const CaseFoldMapping1_16 case_fold1_16_165[] = {
     { 0x01A4, 0x01A5 },
     { 0x03A6, 0x03C6 },
     { 0x10B5, 0x2D15 },
+    { 0x1CB9, 0x10F9 },
     { 0x1FBA, 0x1F70 }
 };
 
@@ -1262,6 +1286,7 @@ static const CaseFoldMapping1_16 case_fold1_16_166[] = {
     { 0x03A5, 0x03C5 },
     { 0x04A2, 0x04A3 },
     { 0x10B6, 0x2D16 },
+    { 0x1CBA, 0x10FA },
     { 0x1EB8, 0x1EB9 },
     { 0x1FB9, 0x1FB1 },
     { 0x2C8A, 0x2C8B }
@@ -1279,147 +1304,171 @@ static const CaseFoldMapping1_16 case_fold1_16_168[] = {
     { 0x03AB, 0x03CB },
     { 0x04AC, 0x04AD },
     { 0x10B8, 0x2D18 },
+    { 0x1CB4, 0x10F4 },
     { 0x1EB6, 0x1EB7 },
     { 0x2C84, 0x2C85 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_169[] = {
     { 0x03AA, 0x03CA },
-    { 0x10B9, 0x2D19 }
+    { 0x10B9, 0x2D19 },
+    { 0x1CB5, 0x10F5 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_170[] = {
     { 0x03A9, 0x03C9 },
     { 0x04AE, 0x04AF },
     { 0x10BA, 0x2D1A },
+    { 0x1CB6, 0x10F6 },
     { 0x1EB4, 0x1EB5 },
     { 0x2C86, 0x2C87 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_171[] = {
     { 0x03A8, 0x03C8 },
-    { 0x10BB, 0x2D1B }
+    { 0x10BB, 0x2D1B },
+    { 0x1CB7, 0x10F7 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_172[] = {
     { 0x04A8, 0x04A9 },
     { 0x10BC, 0x2D1C },
+    { 0x1CB0, 0x10F0 },
     { 0x1EB2, 0x1EB3 },
     { 0x2C80, 0x2C81 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_173[] = {
     { 0x01AC, 0x01AD },
-    { 0x10BD, 0x2D1D }
+    { 0x10BD, 0x2D1D },
+    { 0x1CB1, 0x10F1 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_174[] = {
     { 0x01AF, 0x01B0 },
     { 0x04AA, 0x04AB },
     { 0x10BE, 0x2D1E },
+    { 0x1CB2, 0x10F2 },
     { 0x1EB0, 0x1EB1 },
     { 0x2C82, 0x2C83 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_175[] = {
     { 0x01AE, 0x0288 },
-    { 0x10BF, 0x2D1F }
+    { 0x10BF, 0x2D1F },
+    { 0x1CB3, 0x10F3 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_176[] = {
     { 0x01B1, 0x028A },
     { 0x04B4, 0x04B5 },
     { 0x10A0, 0x2D00 },
+    { 0x1CAC, 0x10EC },
     { 0x1EAE, 0x1EAF },
     { 0x2C9C, 0x2C9D }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_177[] = {
-    { 0x10A1, 0x2D01 }
+    { 0x10A1, 0x2D01 },
+    { 0x1CAD, 0x10ED }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_178[] = {
     { 0x01B3, 0x01B4 },
     { 0x04B6, 0x04B7 },
     { 0x10A2, 0x2D02 },
+    { 0x1CAE, 0x10EE },
     { 0x1EAC, 0x1EAD },
     { 0x2C9E, 0x2C9F }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_179[] = {
     { 0x01B2, 0x028B },
-    { 0x10A3, 0x2D03 }
+    { 0x10A3, 0x2D03 },
+    { 0x1CAF, 0x10EF }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_180[] = {
     { 0x01B5, 0x01B6 },
     { 0x04B0, 0x04B1 },
     { 0x10A4, 0x2D04 },
+    { 0x1CA8, 0x10E8 },
     { 0x1EAA, 0x1EAB },
     { 0x2C98, 0x2C99 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_181[] = {
     { 0x00B5, 0x03BC },
-    { 0x10A5, 0x2D05 }
+    { 0x10A5, 0x2D05 },
+    { 0x1CA9, 0x10E9 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_182[] = {
     { 0x01B7, 0x0292 },
     { 0x04B2, 0x04B3 },
     { 0x10A6, 0x2D06 },
+    { 0x1CAA, 0x10EA },
     { 0x1EA8, 0x1EA9 },
     { 0x2C9A, 0x2C9B }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_183[] = {
-    { 0x10A7, 0x2D07 }
+    { 0x10A7, 0x2D07 },
+    { 0x1CAB, 0x10EB }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_184[] = {
     { 0x04BC, 0x04BD },
     { 0x10A8, 0x2D08 },
+    { 0x1CA4, 0x10E4 },
     { 0x1EA6, 0x1EA7 },
     { 0x2C94, 0x2C95 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_185[] = {
     { 0x01B8, 0x01B9 },
-    { 0x10A9, 0x2D09 }
+    { 0x10A9, 0x2D09 },
+    { 0x1CA5, 0x10E5 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_186[] = {
     { 0x04BE, 0x04BF },
     { 0x10AA, 0x2D0A },
+    { 0x1CA6, 0x10E6 },
     { 0x1EA4, 0x1EA5 },
     { 0x2C96, 0x2C97 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_187[] = {
-    { 0x10AB, 0x2D0B }
+    { 0x10AB, 0x2D0B },
+    { 0x1CA7, 0x10E7 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_188[] = {
     { 0x04B8, 0x04B9 },
     { 0x10AC, 0x2D0C },
+    { 0x1CA0, 0x10E0 },
     { 0x1EA2, 0x1EA3 },
     { 0x2C90, 0x2C91 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_189[] = {
     { 0x01BC, 0x01BD },
-    { 0x10AD, 0x2D0D }
+    { 0x10AD, 0x2D0D },
+    { 0x1CA1, 0x10E1 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_190[] = {
     { 0x04BA, 0x04BB },
     { 0x10AE, 0x2D0E },
+    { 0x1CA2, 0x10E2 },
     { 0x1EA0, 0x1EA1 },
     { 0x2C92, 0x2C93 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_191[] = {
-    { 0x10AF, 0x2D0F }
+    { 0x10AF, 0x2D0F },
+    { 0x1CA3, 0x10E3 }
 };
 
 static const CaseFoldMapping1_16 case_fold1_16_192[] = {
@@ -1933,171 +1982,308 @@ static const CaseFoldMapping1_32 case_fold1_32_000[] = {
     { 0x10404, 0x1042C },
     { 0x10414, 0x1043C },
     { 0x10424, 0x1044C },
+    { 0x104B4, 0x104DC },
+    { 0x104C4, 0x104EC },
+    { 0x10575, 0x1059C },
+    { 0x10585, 0x105AC },
+    { 0x10595, 0x105BC },
     { 0x10C8C, 0x10CCC },
     { 0x10C9C, 0x10CDC },
     { 0x10CAC, 0x10CEC },
     { 0x118A8, 0x118C8 },
-    { 0x118B8, 0x118D8 }
+    { 0x118B8, 0x118D8 },
+    { 0x16E4E, 0x16E6E },
+    { 0x16E5E, 0x16E7E },
+    { 0x1E909, 0x1E92B },
+    { 0x1E919, 0x1E93B }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_001[] = {
     { 0x10405, 0x1042D },
     { 0x10415, 0x1043D },
     { 0x10425, 0x1044D },
+    { 0x104B5, 0x104DD },
+    { 0x104C5, 0x104ED },
+    { 0x10574, 0x1059B },
+    { 0x10584, 0x105AB },
+    { 0x10594, 0x105BB },
     { 0x10C8D, 0x10CCD },
     { 0x10C9D, 0x10CDD },
     { 0x10CAD, 0x10CED },
     { 0x118A9, 0x118C9 },
-    { 0x118B9, 0x118D9 }
+    { 0x118B9, 0x118D9 },
+    { 0x16E4F, 0x16E6F },
+    { 0x16E5F, 0x16E7F },
+    { 0x1E908, 0x1E92A },
+    { 0x1E918, 0x1E93A }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_002[] = {
     { 0x10406, 0x1042E },
     { 0x10416, 0x1043E },
     { 0x10426, 0x1044E },
+    { 0x104B6, 0x104DE },
+    { 0x104C6, 0x104EE },
+    { 0x10577, 0x1059E },
+    { 0x10587, 0x105AE },
     { 0x10C8E, 0x10CCE },
     { 0x10C9E, 0x10CDE },
     { 0x10CAE, 0x10CEE },
     { 0x118AA, 0x118CA },
-    { 0x118BA, 0x118DA }
+    { 0x118BA, 0x118DA },
+    { 0x16E4C, 0x16E6C },
+    { 0x16E5C, 0x16E7C },
+    { 0x1E90B, 0x1E92D },
+    { 0x1E91B, 0x1E93D }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_003[] = {
     { 0x10407, 0x1042F },
     { 0x10417, 0x1043F },
     { 0x10427, 0x1044F },
+    { 0x104B7, 0x104DF },
+    { 0x104C7, 0x104EF },
+    { 0x10576, 0x1059D },
+    { 0x10586, 0x105AD },
     { 0x10C8F, 0x10CCF },
     { 0x10C9F, 0x10CDF },
     { 0x10CAF, 0x10CEF },
     { 0x118AB, 0x118CB },
-    { 0x118BB, 0x118DB }
+    { 0x118BB, 0x118DB },
+    { 0x16E4D, 0x16E6D },
+    { 0x16E5D, 0x16E7D },
+    { 0x1E90A, 0x1E92C },
+    { 0x1E91A, 0x1E93C }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_004[] = {
     { 0x10400, 0x10428 },
     { 0x10410, 0x10438 },
     { 0x10420, 0x10448 },
+    { 0x104B0, 0x104D8 },
+    { 0x104C0, 0x104E8 },
+    { 0x104D0, 0x104F8 },
+    { 0x10571, 0x10598 },
+    { 0x10581, 0x105A8 },
+    { 0x10591, 0x105B8 },
     { 0x10C88, 0x10CC8 },
     { 0x10C98, 0x10CD8 },
     { 0x10CA8, 0x10CE8 },
     { 0x118AC, 0x118CC },
-    { 0x118BC, 0x118DC }
+    { 0x118BC, 0x118DC },
+    { 0x16E4A, 0x16E6A },
+    { 0x16E5A, 0x16E7A },
+    { 0x1E90D, 0x1E92F },
+    { 0x1E91D, 0x1E93F }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_005[] = {
     { 0x10401, 0x10429 },
     { 0x10411, 0x10439 },
     { 0x10421, 0x10449 },
+    { 0x104B1, 0x104D9 },
+    { 0x104C1, 0x104E9 },
+    { 0x104D1, 0x104F9 },
+    { 0x10570, 0x10597 },
+    { 0x10580, 0x105A7 },
+    { 0x10590, 0x105B7 },
     { 0x10C89, 0x10CC9 },
     { 0x10C99, 0x10CD9 },
     { 0x10CA9, 0x10CE9 },
     { 0x118AD, 0x118CD },
-    { 0x118BD, 0x118DD }
+    { 0x118BD, 0x118DD },
+    { 0x16E4B, 0x16E6B },
+    { 0x16E5B, 0x16E7B },
+    { 0x1E90C, 0x1E92E },
+    { 0x1E91C, 0x1E93E }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_006[] = {
     { 0x10402, 0x1042A },
     { 0x10412, 0x1043A },
     { 0x10422, 0x1044A },
+    { 0x104B2, 0x104DA },
+    { 0x104C2, 0x104EA },
+    { 0x104D2, 0x104FA },
+    { 0x10573, 0x1059A },
+    { 0x10583, 0x105AA },
     { 0x10C8A, 0x10CCA },
     { 0x10C9A, 0x10CDA },
     { 0x10CAA, 0x10CEA },
     { 0x118AE, 0x118CE },
-    { 0x118BE, 0x118DE }
+    { 0x118BE, 0x118DE },
+    { 0x16E48, 0x16E68 },
+    { 0x16E58, 0x16E78 },
+    { 0x1E90F, 0x1E931 },
+    { 0x1E91F, 0x1E941 }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_007[] = {
     { 0x10403, 0x1042B },
     { 0x10413, 0x1043B },
     { 0x10423, 0x1044B },
+    { 0x104B3, 0x104DB },
+    { 0x104C3, 0x104EB },
+    { 0x104D3, 0x104FB },
+    { 0x10572, 0x10599 },
+    { 0x10582, 0x105A9 },
+    { 0x10592, 0x105B9 },
     { 0x10C8B, 0x10CCB },
     { 0x10C9B, 0x10CDB },
     { 0x10CAB, 0x10CEB },
     { 0x118AF, 0x118CF },
-    { 0x118BF, 0x118DF }
+    { 0x118BF, 0x118DF },
+    { 0x16E49, 0x16E69 },
+    { 0x16E59, 0x16E79 },
+    { 0x1E90E, 0x1E930 },
+    { 0x1E91E, 0x1E940 }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_008[] = {
     { 0x1040C, 0x10434 },
     { 0x1041C, 0x10444 },
+    { 0x104BC, 0x104E4 },
+    { 0x104CC, 0x104F4 },
+    { 0x1057D, 0x105A4 },
+    { 0x1058D, 0x105B4 },
     { 0x10C84, 0x10CC4 },
     { 0x10C94, 0x10CD4 },
     { 0x10CA4, 0x10CE4 },
     { 0x118A0, 0x118C0 },
-    { 0x118B0, 0x118D0 }
+    { 0x118B0, 0x118D0 },
+    { 0x16E46, 0x16E66 },
+    { 0x16E56, 0x16E76 },
+    { 0x1E901, 0x1E923 },
+    { 0x1E911, 0x1E933 },
+    { 0x1E921, 0x1E943 }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_009[] = {
     { 0x1040D, 0x10435 },
     { 0x1041D, 0x10445 },
+    { 0x104BD, 0x104E5 },
+    { 0x104CD, 0x104F5 },
+    { 0x1057C, 0x105A3 },
+    { 0x1058C, 0x105B3 },
     { 0x10C85, 0x10CC5 },
     { 0x10C95, 0x10CD5 },
     { 0x10CA5, 0x10CE5 },
     { 0x118A1, 0x118C1 },
-    { 0x118B1, 0x118D1 }
+    { 0x118B1, 0x118D1 },
+    { 0x16E47, 0x16E67 },
+    { 0x16E57, 0x16E77 },
+    { 0x1E900, 0x1E922 },
+    { 0x1E910, 0x1E932 },
+    { 0x1E920, 0x1E942 }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_010[] = {
     { 0x1040E, 0x10436 },
     { 0x1041E, 0x10446 },
+    { 0x104BE, 0x104E6 },
+    { 0x104CE, 0x104F6 },
+    { 0x1057F, 0x105A6 },
+    { 0x1058F, 0x105B6 },
     { 0x10C86, 0x10CC6 },
     { 0x10C96, 0x10CD6 },
     { 0x10CA6, 0x10CE6 },
     { 0x118A2, 0x118C2 },
-    { 0x118B2, 0x118D2 }
+    { 0x118B2, 0x118D2 },
+    { 0x16E44, 0x16E64 },
+    { 0x16E54, 0x16E74 },
+    { 0x1E903, 0x1E925 },
+    { 0x1E913, 0x1E935 }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_011[] = {
     { 0x1040F, 0x10437 },
     { 0x1041F, 0x10447 },
+    { 0x104BF, 0x104E7 },
+    { 0x104CF, 0x104F7 },
+    { 0x1057E, 0x105A5 },
+    { 0x1058E, 0x105B5 },
     { 0x10C87, 0x10CC7 },
     { 0x10C97, 0x10CD7 },
     { 0x10CA7, 0x10CE7 },
     { 0x118A3, 0x118C3 },
-    { 0x118B3, 0x118D3 }
+    { 0x118B3, 0x118D3 },
+    { 0x16E45, 0x16E65 },
+    { 0x16E55, 0x16E75 },
+    { 0x1E902, 0x1E924 },
+    { 0x1E912, 0x1E934 }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_012[] = {
     { 0x10408, 0x10430 },
     { 0x10418, 0x10440 },
+    { 0x104B8, 0x104E0 },
+    { 0x104C8, 0x104F0 },
+    { 0x10579, 0x105A0 },
+    { 0x10589, 0x105B0 },
     { 0x10C80, 0x10CC0 },
     { 0x10C90, 0x10CD0 },
     { 0x10CA0, 0x10CE0 },
     { 0x10CB0, 0x10CF0 },
     { 0x118A4, 0x118C4 },
-    { 0x118B4, 0x118D4 }
+    { 0x118B4, 0x118D4 },
+    { 0x16E42, 0x16E62 },
+    { 0x16E52, 0x16E72 },
+    { 0x1E905, 0x1E927 },
+    { 0x1E915, 0x1E937 }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_013[] = {
     { 0x10409, 0x10431 },
     { 0x10419, 0x10441 },
+    { 0x104B9, 0x104E1 },
+    { 0x104C9, 0x104F1 },
+    { 0x10578, 0x1059F },
+    { 0x10588, 0x105AF },
     { 0x10C81, 0x10CC1 },
     { 0x10C91, 0x10CD1 },
     { 0x10CA1, 0x10CE1 },
     { 0x10CB1, 0x10CF1 },
     { 0x118A5, 0x118C5 },
-    { 0x118B5, 0x118D5 }
+    { 0x118B5, 0x118D5 },
+    { 0x16E43, 0x16E63 },
+    { 0x16E53, 0x16E73 },
+    { 0x1E904, 0x1E926 },
+    { 0x1E914, 0x1E936 }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_014[] = {
     { 0x1040A, 0x10432 },
     { 0x1041A, 0x10442 },
+    { 0x104BA, 0x104E2 },
+    { 0x104CA, 0x104F2 },
     { 0x10C82, 0x10CC2 },
     { 0x10C92, 0x10CD2 },
     { 0x10CA2, 0x10CE2 },
     { 0x10CB2, 0x10CF2 },
     { 0x118A6, 0x118C6 },
-    { 0x118B6, 0x118D6 }
+    { 0x118B6, 0x118D6 },
+    { 0x16E40, 0x16E60 },
+    { 0x16E50, 0x16E70 },
+    { 0x1E907, 0x1E929 },
+    { 0x1E917, 0x1E939 }
 };
 
 static const CaseFoldMapping1_32 case_fold1_32_015[] = {
     { 0x1040B, 0x10433 },
     { 0x1041B, 0x10443 },
+    { 0x104BB, 0x104E3 },
+    { 0x104CB, 0x104F3 },
+    { 0x1057A, 0x105A1 },
+    { 0x1058A, 0x105B1 },
     { 0x10C83, 0x10CC3 },
     { 0x10C93, 0x10CD3 },
     { 0x10CA3, 0x10CE3 },
     { 0x118A7, 0x118C7 },
-    { 0x118B7, 0x118D7 }
+    { 0x118B7, 0x118D7 },
+    { 0x16E41, 0x16E61 },
+    { 0x16E51, 0x16E71 },
+    { 0x1E906, 0x1E928 },
+    { 0x1E916, 0x1E938 }
 };
 
 static const CaseFoldMapping2_16 case_fold2_16_000[] = {
@@ -2389,7 +2575,7 @@ static const CaseFoldHashBucket1_16 case_fold_hash1_16[] = {
     { case_fold1_16_124, __PHYSFS_ARRAYLEN(case_fold1_16_124) },
     { NULL, 0 },
     { case_fold1_16_126, __PHYSFS_ARRAYLEN(case_fold1_16_126) },
-    { NULL, 0 },
+    { case_fold1_16_127, __PHYSFS_ARRAYLEN(case_fold1_16_127) },
     { case_fold1_16_128, __PHYSFS_ARRAYLEN(case_fold1_16_128) },
     { case_fold1_16_129, __PHYSFS_ARRAYLEN(case_fold1_16_129) },
     { case_fold1_16_130, __PHYSFS_ARRAYLEN(case_fold1_16_130) },
