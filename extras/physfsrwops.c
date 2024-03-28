@@ -21,6 +21,8 @@
  *  This file was written by Ryan C. Gordon. (icculus@icculus.org).
  */
 
+/* This works with SDL1 and SDL2. For SDL3, use physfssdl3.c */
+
 #include <stdio.h>  /* used for SEEK_SET, SEEK_CUR, SEEK_END ... */
 #include "physfsrwops.h"
 
