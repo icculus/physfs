@@ -16,7 +16,7 @@
 
 #include "physfs_internal.h"
 
-int __PHYSFS_platformInit(void)
+int __PHYSFS_platformInit(const char *argv0)
 {
     return 1;  /* success. */
 } /* __PHYSFS_platformInit */

@@ -292,7 +292,7 @@ static void prepUnicodeSupport(void)
 } /* prepUnicodeSupport */
 
 
-int __PHYSFS_platformInit(void)
+int __PHYSFS_platformInit(const char *argv0)
 {
     prepUnicodeSupport();
     return 1;  /* ready to go! */

@@ -613,7 +613,7 @@ done:
 } /* __PHYSFS_platformCalcUserDir */
 
 
-int __PHYSFS_platformInit(void)
+int __PHYSFS_platformInit(const char *argv0)
 {
     return 1;  /* It's all good */
 } /* __PHYSFS_platformInit */

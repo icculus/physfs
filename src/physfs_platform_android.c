@@ -18,7 +18,7 @@
 static char *prefpath = NULL;
 
 
-int __PHYSFS_platformInit(void)
+int __PHYSFS_platformInit(const char *argv0)
 {
     return 1;  /* always succeed. */
 } /* __PHYSFS_platformInit */

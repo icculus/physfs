@@ -378,7 +378,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
 
 
 
-int __PHYSFS_platformInit(void)
+int __PHYSFS_platformInit(const char *argv0)
 {
     return 1;  /* always succeed. */
 } /* __PHYSFS_platformInit */

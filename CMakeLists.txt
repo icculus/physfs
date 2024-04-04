@@ -84,6 +84,7 @@ set(PHYSFS_SRCS
     src/physfs_platform_os2.c
     src/physfs_platform_qnx.c
     src/physfs_platform_android.c
+    src/physfs_platform_playdate.c
     src/physfs_archiver_dir.c
     src/physfs_archiver_unpacked.c
     src/physfs_archiver_grp.c
