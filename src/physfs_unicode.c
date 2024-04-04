@@ -442,10 +442,10 @@ int PHYSFS_caseFold(const PHYSFS_uint32 from, PHYSFS_uint32 *to)
     if (from < 128)  /* low-ASCII, easy! */
     {
         if ((from >= 'A') && (from <= 'Z'))
+        {
             *to = from - ('A' - 'a');
-        else
-            *to = from;
-        return 1;
+            return 1;
+        } /* if */
     } /* if */
 
     else if (from <= 0xFFFF)
