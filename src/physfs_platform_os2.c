@@ -703,7 +703,7 @@ done:
 
 
 /* Convert to a format PhysicsFS can grok... */
-PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
+static PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
 {
     struct tm tm;
 
