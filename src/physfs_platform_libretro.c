@@ -28,32 +28,32 @@ static struct retro_vfs_interface *physfs_platform_libretro_vfs = NULL;
 
 int __PHYSFS_platformInit(const char *argv0)
 {
-	retro_environment_t environ_cb = (retro_environment_t)argv0;
-	struct retro_vfs_interface_info vfs_interface_info;
+    retro_environment_t environ_cb = (retro_environment_t) argv0;
+    struct retro_vfs_interface_info vfs_interface_info;
 
     /* as a cheat, we expect argv0 to be a retro_environment_t callback. */
-	if (environ_cb == NULL || argv0[0] == '\0') {
-		return 0;
-	}
+    if (environ_cb == NULL || argv0[0] == '\0') {
+        return 0;
+    }
 
-	/* get the virtual file system interface */
-	vfs_interface_info.required_interface_version = 3;
-	vfs_interface_info.iface = NULL;
-	if (!environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_interface_info)) {
-		return 0;
-	}
+    /* get the virtual file system interface */
+    vfs_interface_info.required_interface_version = 3;
+    vfs_interface_info.iface = NULL;
+    if (!environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_interface_info)) {
+        return 0;
+    }
 
-	physfs_platform_libretro_vfs = vfs_interface_info.iface;
-	physfs_platform_libretro_environ_cb = environ_cb;
+    physfs_platform_libretro_vfs = vfs_interface_info.iface;
+    physfs_platform_libretro_environ_cb = environ_cb;
 
-	return 1;
+    return 1;
 } /* __PHYSFS_platformInit */
 
 
 void __PHYSFS_platformDeinit(void)
 {
-	physfs_platform_libretro_environ_cb = NULL;
-	physfs_platform_libretro_vfs = NULL;
+    physfs_platform_libretro_environ_cb = NULL;
+    physfs_platform_libretro_vfs = NULL;
 } /* __PHYSFS_platformDeinit */
 
 
@@ -61,249 +61,275 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
 } /* __PHYSFS_platformDetectAvailableCDs */
 
-char* physfs_platform_libretro_get_directory(int libretro_dir, int extra_memory, int add_slash)
+char *physfs_platform_libretro_get_directory(int libretro_dir, int extra_memory, int add_slash)
 {
-	const char* dir = NULL;
-	char* retval = NULL;
-	size_t dir_length = 0;
+    const char *dir = NULL;
+    char *retval;
+    size_t dir_length;
 
-	BAIL_IF(physfs_platform_libretro_environ_cb == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
-	BAIL_IF(!physfs_platform_libretro_environ_cb(libretro_dir, &dir), PHYSFS_ERR_IO, NULL);
+    BAIL_IF(physfs_platform_libretro_environ_cb == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
+    BAIL_IF(!physfs_platform_libretro_environ_cb(libretro_dir, &dir), PHYSFS_ERR_IO, NULL);
 
-	dir_length = strlen(dir);
-	retval = allocator.Malloc(dir_length + 2 + extra_memory);
-	if (!retval) {
+    dir_length = strlen(dir);
+    retval = allocator.Malloc(dir_length + 2 + extra_memory);
+    if (!retval) {
         BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-	}
+    }
 
-	strcpy(retval, dir);
+    strcpy(retval, dir);
 
-	if (add_slash && (dir_length == 0 || retval[dir_length - 1] != __PHYSFS_platformDirSeparator)) {
-		retval[dir_length] = __PHYSFS_platformDirSeparator;
-		retval[dir_length + 1] = '\0';
-	}
+    if (add_slash && (dir_length == 0 || retval[dir_length - 1] != __PHYSFS_platformDirSeparator)) {
+        retval[dir_length] = __PHYSFS_platformDirSeparator;
+        retval[dir_length + 1] = '\0';
+    }
 
-	return retval;
+    return retval;
 }
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-	return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, 0, 1);
+    /* TODO: Replace getcwd() with a libretro-common libretry? */
+    const size_t bufsize = 128;
+    char *retval = allocator.Malloc(bufsize);
+    BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+
+    if (getcwd(retval, bufsize - 1))
+    {
+        /* Make sure the path is slash-terminated */
+        size_t length = strlen(retval);
+        if (length > 0 && retval[length - 1] != '/')
+        {
+            retval[length++] = '/';
+            retval[length] = '\0';
+        }
+    }
+    else
+    {
+        strcpy(retval, "/");
+    }
+
+    return retval;
 } /* __PHYSFS_platformCalcBaseDir */
 
 char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 {
-	// TODO: Use org and app
-	return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, 0, 1);
+    const char *userdir = __PHYSFS_getUserDir();
+    const size_t len = strlen(userdir) + strlen(org) + strlen(app) + 3;
+    char *retval = (char *) allocator.Malloc(len);
+    BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    snprintf(retval, len, "%s%s/%s/", userdir, org, app);
+    return retval;
 } /* __PHYSFS_platformCalcPrefDir */
 
 char *__PHYSFS_platformCalcUserDir(void)
 {
-	return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, 0, 1);
+    return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, 0, 1);
 } /* __PHYSFS_platformCalcUserDir */
 
 
- // Single-threaded. WiiU is multi-threaded but our frontend is single-threaded and we're statically linked
+/**
+ * Thread mutex data structure.
+ */
 typedef struct
 {
-	slock_t *mutex;
-	uintptr_t owner;
-	PHYSFS_uint32 count;
+    slock_t *mutex;
+    uintptr_t owner;
+    PHYSFS_uint32 count;
 } PthreadMutex;
 
 void *__PHYSFS_platformGetThreadID(void)
 {
-	return ( (void *) sthread_get_current_thread_id() );
+    return (void *) sthread_get_current_thread_id();
 } /* __PHYSFS_platformGetThreadID */
 
 void *__PHYSFS_platformCreateMutex(void)
 {
-	PthreadMutex *m = (PthreadMutex *) allocator.Malloc(sizeof (PthreadMutex));
-	BAIL_IF(!m, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
-	m->mutex = slock_new();
-	if (!m->mutex) {
-		allocator.Free(m);
-		BAIL(PHYSFS_ERR_OS_ERROR, NULL);
-	} /* if */
+    PthreadMutex *m = (PthreadMutex *) allocator.Malloc(sizeof (PthreadMutex));
+    BAIL_IF(!m, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    m->mutex = slock_new();
+    if (!m->mutex) {
+        allocator.Free(m);
+        BAIL(PHYSFS_ERR_OS_ERROR, NULL);
+    } /* if */
 
-	m->count = 0;
-	m->owner = (uintptr_t) 0xDEADBEEF;
-	return ((void *) m);
+    m->count = 0;
+    m->owner = (uintptr_t) 0xDEADBEEF;
+    return (void *) m;
 } /* __PHYSFS_platformCreateMutex */
 
 
 void __PHYSFS_platformDestroyMutex(void *mutex)
 {
-	PthreadMutex *m = (PthreadMutex *) mutex;
+    PthreadMutex *m = (PthreadMutex *) mutex;
 
-	/* Destroying a locked mutex is a bug, but we'll try to be helpful. */
-	if ((m->owner == sthread_get_current_thread_id()) && (m->count > 0))
-		slock_unlock(m->mutex);
+    /* Destroying a locked mutex is a bug, but we'll try to be helpful. */
+    if ((m->owner == sthread_get_current_thread_id()) && (m->count > 0))
+        slock_unlock(m->mutex);
 
-	slock_free(m->mutex);
-	allocator.Free(m);
+    slock_free(m->mutex);
+    allocator.Free(m);
 } /* __PHYSFS_platformDestroyMutex */
 
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
-	PthreadMutex *m = (PthreadMutex *) mutex;
-	uintptr_t tid = sthread_get_current_thread_id();
-	if (m->owner != tid)
-	{
-		slock_lock(m->mutex);
-		m->owner = tid;
-	} /* if */
+    PthreadMutex *m = (PthreadMutex *) mutex;
+    uintptr_t tid = sthread_get_current_thread_id();
+    if (m->owner != tid)
+    {
+        slock_lock(m->mutex);
+        m->owner = tid;
+    } /* if */
 
-	m->count++;
-	return 1;
+    m->count++;
+    return 1;
 } /* __PHYSFS_platformGrabMutex */
 
 void __PHYSFS_platformReleaseMutex(void *mutex)
 {
-	PthreadMutex *m = (PthreadMutex *) mutex;
-	assert(m->owner == sthread_get_current_thread_id());  /* catch programming errors. */
-	assert(m->count > 0);  /* catch programming errors. */
-	if (m->owner == sthread_get_current_thread_id()) {
-		if (--m->count == 0) {
-			m->owner = (uintptr_t) 0xDEADBEEF;
-			slock_unlock(m->mutex);
-		} /* if */
-	} /* if */
+    PthreadMutex *m = (PthreadMutex *) mutex;
+    assert(m->owner == sthread_get_current_thread_id());  /* catch programming errors. */
+    assert(m->count > 0);  /* catch programming errors. */
+    if (m->owner == sthread_get_current_thread_id()) {
+        if (--m->count == 0) {
+            m->owner = (uintptr_t) 0xDEADBEEF;
+            slock_unlock(m->mutex);
+        } /* if */
+    } /* if */
 } /* __PHYSFS_platformReleaseMutex */
 
 PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
                                PHYSFS_EnumerateCallback callback,
                                const char *origdir, void *callbackdata)
 {
-	struct retro_vfs_dir_handle* dir;
-	PHYSFS_EnumerateCallbackResult retval = PHYSFS_ENUM_OK;
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->opendir == NULL || physfs_platform_libretro_vfs->readdir == NULL, PHYSFS_ERR_NOT_INITIALIZED, PHYSFS_ENUM_ERROR);
+    struct retro_vfs_dir_handle* dir;
+    PHYSFS_EnumerateCallbackResult retval = PHYSFS_ENUM_OK;
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->opendir == NULL || physfs_platform_libretro_vfs->readdir == NULL, PHYSFS_ERR_NOT_INITIALIZED, PHYSFS_ENUM_ERROR);
 
-	dir = physfs_platform_libretro_vfs->opendir(dirname, true);
-	BAIL_IF(dir == NULL, PHYSFS_ERR_NOT_FOUND, PHYSFS_ENUM_ERROR);
+    dir = physfs_platform_libretro_vfs->opendir(dirname, true);
+    BAIL_IF(dir == NULL, PHYSFS_ERR_NOT_FOUND, PHYSFS_ENUM_ERROR);
 
-	while (physfs_platform_libretro_vfs->readdir(dir)) {
-		const char *name = physfs_platform_libretro_vfs->dirent_get_name(dir);
-		if (name[0] == '.') {  /* ignore "." and ".." */
-			if ((name[1] == '\0') || ((name[1] == '.') && (name[2] == '\0'))) {
-				continue;
-			} /* if */
-		} /* if */
-		
-		retval = callback(callbackdata, origdir, name);
-		if (retval == PHYSFS_ENUM_ERROR) {
-			PHYSFS_setErrorCode(PHYSFS_ERR_APP_CALLBACK);
-			break;
-		}
-	} /* while */
+    while (physfs_platform_libretro_vfs->readdir(dir)) {
+        const char *name = physfs_platform_libretro_vfs->dirent_get_name(dir);
+        if (name[0] == '.') {  /* ignore "." and ".." */
+            if ((name[1] == '\0') || ((name[1] == '.') && (name[2] == '\0'))) {
+                continue;
+            } /* if */
+        } /* if */
+        
+        retval = callback(callbackdata, origdir, name);
+        if (retval == PHYSFS_ENUM_ERROR) {
+            PHYSFS_setErrorCode(PHYSFS_ERR_APP_CALLBACK);
+            break;
+        }
+    } /* while */
 
-	if (physfs_platform_libretro_vfs->closedir != NULL) {
-		physfs_platform_libretro_vfs->closedir(dir);
-	}
+    if (physfs_platform_libretro_vfs->closedir != NULL) {
+        physfs_platform_libretro_vfs->closedir(dir);
+    }
 
-	return retval;
+    return retval;
 } /* __PHYSFS_platformEnumerate */
 
 static void *__PHYSFS_platformOpen(const char *filename, unsigned lr_mode, int appending)
 {
-	void* retval;
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->open == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
-	BAIL_IF(filename == NULL || strlen(filename) == 0, PHYSFS_ERR_BAD_FILENAME, NULL);
-	retval = (void*)physfs_platform_libretro_vfs->open(filename, lr_mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
-	BAIL_IF(retval == NULL, PHYSFS_ERR_IO, NULL); // TODO: Improve error handling?
+    void* retval;
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->open == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
+    BAIL_IF(filename == NULL || strlen(filename) == 0, PHYSFS_ERR_BAD_FILENAME, NULL);
+    retval = (void *) physfs_platform_libretro_vfs->open(filename, lr_mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+    BAIL_IF(retval == NULL, PHYSFS_ERR_IO, NULL);
 
-	if (appending) {
-		if (physfs_platform_libretro_vfs->seek(retval, 0, RETRO_VFS_SEEK_POSITION_END) < 0) {
-			physfs_platform_libretro_vfs->close(retval);
-			BAIL(PHYSFS_ERR_IO, NULL);
-		} /* if */
-	} /* if */
+    if (appending) {
+        if (physfs_platform_libretro_vfs->seek(retval, 0, RETRO_VFS_SEEK_POSITION_END) < 0) {
+            physfs_platform_libretro_vfs->close(retval);
+            BAIL(PHYSFS_ERR_IO, NULL);
+        } /* if */
+    } /* if */
 
-	return retval;
+    return retval;
 } /* doOpen */
 
 
 void *__PHYSFS_platformOpenRead(const char *filename)
 {
-	return __PHYSFS_platformOpen(filename, RETRO_VFS_FILE_ACCESS_READ, 0);
+    return __PHYSFS_platformOpen(filename, RETRO_VFS_FILE_ACCESS_READ, 0);
 } /* __PHYSFS_platformOpenRead */
 
 
 void *__PHYSFS_platformOpenWrite(const char *filename)
 {
-	return __PHYSFS_platformOpen(filename, RETRO_VFS_FILE_ACCESS_WRITE, 0);
+    return __PHYSFS_platformOpen(filename, RETRO_VFS_FILE_ACCESS_WRITE, 0);
 } /* __PHYSFS_platformOpenWrite */
 
 
 void *__PHYSFS_platformOpenAppend(const char *filename)
 {
-	return __PHYSFS_platformOpen(filename, RETRO_VFS_FILE_ACCESS_WRITE | RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING, 1);
+    return __PHYSFS_platformOpen(filename, RETRO_VFS_FILE_ACCESS_WRITE | RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING, 1);
 } /* __PHYSFS_platformOpenAppend */
 
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
                                     PHYSFS_uint64 len)
 {
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->read == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
-	BAIL_IF(opaque == NULL || buffer == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
-	PHYSFS_sint64 retval = (PHYSFS_sint64)physfs_platform_libretro_vfs->read((struct retro_vfs_file_handle*)opaque, buffer, (uint64_t)len);
-	BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
-	return retval;
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->read == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
+    BAIL_IF(opaque == NULL || buffer == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+    PHYSFS_sint64 retval = (PHYSFS_sint64) physfs_platform_libretro_vfs->read((struct retro_vfs_file_handle *) opaque, buffer, (uint64_t) len);
+    BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
+    return retval;
 } /* __PHYSFS_platformRead */
 
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint64 len)
 {
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->write == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
-	BAIL_IF(opaque == NULL || buffer == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
-	PHYSFS_sint64 retval = (PHYSFS_sint64)physfs_platform_libretro_vfs->write((struct retro_vfs_file_handle*)opaque, buffer, (uint64_t)len);
-	BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
-	return retval;
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->write == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
+    BAIL_IF(opaque == NULL || buffer == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+    PHYSFS_sint64 retval = (PHYSFS_sint64) physfs_platform_libretro_vfs->write((struct retro_vfs_file_handle *) opaque, buffer, (uint64_t)len);
+    BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
+    return retval;
 } /* __PHYSFS_platformWrite */
 
 
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->seek == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
-	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, 0);
-	BAIL_IF(physfs_platform_libretro_vfs->seek((struct retro_vfs_file_handle*)opaque, pos, RETRO_VFS_SEEK_POSITION_START) == -1, PHYSFS_ERR_IO, 0);
-	return 1;
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->seek == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, 0);
+    BAIL_IF(physfs_platform_libretro_vfs->seek((struct retro_vfs_file_handle *) opaque, pos, RETRO_VFS_SEEK_POSITION_START) == -1, PHYSFS_ERR_IO, 0);
+    return 1;
 } /* __PHYSFS_platformSeek */
 
 
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->tell == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
-	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
-	return (PHYSFS_sint64)physfs_platform_libretro_vfs->tell((struct retro_vfs_file_handle*)opaque);
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->tell == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
+    BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+    return (PHYSFS_sint64) physfs_platform_libretro_vfs->tell((struct retro_vfs_file_handle *) opaque);
 } /* __PHYSFS_platformTell */
 
 
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->size == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
-	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
-	return (PHYSFS_sint64)physfs_platform_libretro_vfs->size((struct retro_vfs_file_handle*)opaque);
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->size == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
+    BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+    return (PHYSFS_sint64) physfs_platform_libretro_vfs->size((struct retro_vfs_file_handle *) opaque);
 } /* __PHYSFS_platformFileLength */
 
 int __PHYSFS_platformFlush(void *opaque)
 {
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->flush == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
-	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, 0);
-	return physfs_platform_libretro_vfs->flush((struct retro_vfs_file_handle*)opaque) == 0 ? 1 : 0;
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->flush == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, 0);
+    return physfs_platform_libretro_vfs->flush((struct retro_vfs_file_handle *) opaque) == 0 ? 1 : 0;
 } /* __PHYSFS_platformFlush */
 
 
 void __PHYSFS_platformClose(void *opaque)
 {
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->close == NULL, PHYSFS_ERR_NOT_INITIALIZED, /* void */);
-	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, /* void */);
-	physfs_platform_libretro_vfs->close((struct retro_vfs_file_handle*)opaque);
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->close == NULL, PHYSFS_ERR_NOT_INITIALIZED, /* void */);
+    BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, /* void */);
+    physfs_platform_libretro_vfs->close((struct retro_vfs_file_handle *) opaque);
 } /* __PHYSFS_platformClose */
 
 int __PHYSFS_platformDelete(const char *path)
 {
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->remove == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
-	return physfs_platform_libretro_vfs->remove(path) == 0 ? 1 : 0;
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->remove == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    return physfs_platform_libretro_vfs->remove(path) == 0 ? 1 : 0;
 } /* __PHYSFS_platformDelete */
 
 static PHYSFS_ErrorCode errcodeFromErrnoError(const int err)
@@ -339,43 +365,43 @@ static inline PHYSFS_ErrorCode errcodeFromErrno(void)
 
 int __PHYSFS_platformMkDir(const char *path)
 {
-	int rc;
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->mkdir == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
-	rc = physfs_platform_libretro_vfs->mkdir(path);
-	BAIL_IF(rc == -1, PHYSFS_ERR_IO, 0); // Unknown failure
-	BAIL_IF(rc == -2, PHYSFS_ERR_DUPLICATE, 0); // Already exists
-	return 1;
+    int rc;
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->mkdir == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
+    rc = physfs_platform_libretro_vfs->mkdir(path);
+    BAIL_IF(rc == -1, PHYSFS_ERR_IO, 0); /* Unknown failure */
+    BAIL_IF(rc == -2, PHYSFS_ERR_DUPLICATE, 0); /* Already exists */
+    return 1;
 } /* __PHYSFS_platformMkDir */
 
 
 int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st, const int follow)
 {
-	int32_t size;
-	int flags;
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->stat == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
-	flags = physfs_platform_libretro_vfs->stat(fname, &size);
-	if (!(flags & RETRO_VFS_STAT_IS_VALID)) {
-		BAIL(PHYSFS_ERR_NOT_FOUND, 0);
-	}
+    int32_t size;
+    int flags;
+    BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->stat == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    flags = physfs_platform_libretro_vfs->stat(fname, &size);
+    if (!(flags & RETRO_VFS_STAT_IS_VALID)) {
+        BAIL(PHYSFS_ERR_NOT_FOUND, 0);
+    }
 
-	if (flags & RETRO_VFS_STAT_IS_DIRECTORY) {
-		st->filetype = PHYSFS_FILETYPE_DIRECTORY;
-		st->filesize = 0;
-	} else if (flags & RETRO_VFS_STAT_IS_CHARACTER_SPECIAL) {
-		st->filetype = PHYSFS_FILETYPE_OTHER;
-		st->filesize = 0;
-	} else {
-		st->filetype = PHYSFS_FILETYPE_REGULAR;
-		st->filesize = size;
-	}
+    if (flags & RETRO_VFS_STAT_IS_DIRECTORY) {
+        st->filetype = PHYSFS_FILETYPE_DIRECTORY;
+        st->filesize = 0;
+    } else if (flags & RETRO_VFS_STAT_IS_CHARACTER_SPECIAL) {
+        st->filetype = PHYSFS_FILETYPE_OTHER;
+        st->filesize = 0;
+    } else {
+        st->filetype = PHYSFS_FILETYPE_REGULAR;
+        st->filesize = size;
+    }
 
-	// TODO: Fill the following properties
-	st->modtime = 0;
-	st->createtime = 0;
-	st->accesstime = 0;
-	st->readonly = 0;
+    /* TODO: Fill the following properties */
+    st->modtime = 0;
+    st->createtime = 0;
+    st->accesstime = 0;
+    st->readonly = 0;
 
-	return 1;
+    return 1;
 } /* __PHYSFS_platformStat */
 
 #endif  /* PHYSFS_PLATFORM_LIBRETRO */
