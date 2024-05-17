@@ -12,7 +12,6 @@
 #ifdef PHYSFS_PLATFORM_LIBRETRO
 
 #include <string.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -21,8 +20,6 @@
 /* libretro dependencies */
 #include <libretro.h>
 #include <rthreads/rthreads.h>
-#include <streams/file_stream.h>
-#include <retro_dirent.h>
 
 #include "physfs_internal.h"
 
@@ -35,7 +32,7 @@ int __PHYSFS_platformInit(const char *argv0)
 	struct retro_vfs_interface_info vfs_interface_info;
 
     /* as a cheat, we expect argv0 to be a retro_environment_t callback. */
-	if (environ_cb == NULL) {
+	if (environ_cb == NULL || argv0[0] == '\0') {
 		return 0;
 	}
 
@@ -47,7 +44,7 @@ int __PHYSFS_platformInit(const char *argv0)
 	}
 
 	physfs_platform_libretro_vfs = vfs_interface_info.iface;
-	physfs_platform_libretro_environment = environ_cb;
+	physfs_platform_libretro_environ_cb = environ_cb;
 
 	return 1;
 } /* __PHYSFS_platformInit */
@@ -64,17 +61,14 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
 } /* __PHYSFS_platformDetectAvailableCDs */
 
-const char* physfs_platform_libretro_get_directory(int libretro_dir, int extra_memory, int add_slash)
+char* physfs_platform_libretro_get_directory(int libretro_dir, int extra_memory, int add_slash)
 {
 	const char* dir = NULL;
-	const char* retval;
+	char* retval = NULL;
 	size_t dir_length = 0;
 
-	BAIL_IF(physfs_platform_environ_cb == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
-
-	if (!physfs_platform_environ_cb(libretro_dir, &dir)) {
-		return NULL;
-	}
+	BAIL_IF(physfs_platform_libretro_environ_cb == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
+	BAIL_IF(!physfs_platform_libretro_environ_cb(libretro_dir, &dir), PHYSFS_ERR_IO, NULL);
 
 	dir_length = strlen(dir);
 	retval = allocator.Malloc(dir_length + 2 + extra_memory);
@@ -84,9 +78,9 @@ const char* physfs_platform_libretro_get_directory(int libretro_dir, int extra_m
 
 	strcpy(retval, dir);
 
-	if (add_slash && (dir_length == 0 || ret[dir_length - 1] != __PHYSFS_platformDirSeparator)) {
-		ret[dir_length] = __PHYSFS_platformDirSeparator;
-		ret[dir_length + 1] = '\0';
+	if (add_slash && (dir_length == 0 || retval[dir_length - 1] != __PHYSFS_platformDirSeparator)) {
+		retval[dir_length] = __PHYSFS_platformDirSeparator;
+		retval[dir_length + 1] = '\0';
 	}
 
 	return retval;
@@ -94,18 +88,18 @@ const char* physfs_platform_libretro_get_directory(int libretro_dir, int extra_m
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-	return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, 0);
+	return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, 0, 1);
 } /* __PHYSFS_platformCalcBaseDir */
 
 char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 {
-	const char* retval = physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, strlen(org) + strlen(app) + 2);
-    snprintf(retval, strlen(retval), "%s/%s/%s/", utf8, org, app);
+	// TODO: Use org and app
+	return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, 0, 1);
 } /* __PHYSFS_platformCalcPrefDir */
 
 char *__PHYSFS_platformCalcUserDir(void)
 {
-	return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, 0);
+	return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, 0, 1);
 } /* __PHYSFS_platformCalcUserDir */
 
 
@@ -181,46 +175,51 @@ PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
                                PHYSFS_EnumerateCallback callback,
                                const char *origdir, void *callbackdata)
 {
-	RDIR *dir;
+	struct retro_vfs_dir_handle* dir;
 	PHYSFS_EnumerateCallbackResult retval = PHYSFS_ENUM_OK;
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->opendir == NULL || physfs_platform_libretro_vfs->readdir == NULL, PHYSFS_ERR_NOT_INITIALIZED, PHYSFS_ENUM_ERROR);
 
-	dir = retro_opendir(dirname);
+	dir = physfs_platform_libretro_vfs->opendir(dirname, true);
 	BAIL_IF(dir == NULL, PHYSFS_ERR_NOT_FOUND, PHYSFS_ENUM_ERROR);
 
-	while (retro_readdir(dir))
-	{
-		const char *name = retro_dirent_get_name(dir);
-		if (name[0] == '.')  /* ignore "." and ".." */
-		{
-			if ((name[1] == '\0') || ((name[1] == '.') && (name[2] == '\0')))
+	while (physfs_platform_libretro_vfs->readdir(dir)) {
+		const char *name = physfs_platform_libretro_vfs->dirent_get_name(dir);
+		if (name[0] == '.') {  /* ignore "." and ".." */
+			if ((name[1] == '\0') || ((name[1] == '.') && (name[2] == '\0'))) {
 				continue;
+			} /* if */
 		} /* if */
 		
 		retval = callback(callbackdata, origdir, name);
-		if (retval == PHYSFS_ENUM_ERROR)
+		if (retval == PHYSFS_ENUM_ERROR) {
 			PHYSFS_setErrorCode(PHYSFS_ERR_APP_CALLBACK);
+			break;
+		}
 	} /* while */
 
-	retro_closedir(dir);
+	if (physfs_platform_libretro_vfs->closedir != NULL) {
+		physfs_platform_libretro_vfs->closedir(dir);
+	}
 
 	return retval;
 } /* __PHYSFS_platformEnumerate */
 
 static void *__PHYSFS_platformOpen(const char *filename, unsigned lr_mode, int appending)
 {
-	RFILE *fd = filestream_open(filename, lr_mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
-	BAIL_IF(fd == NULL, PHYSFS_ERR_NOT_FOUND, NULL); // TODO: improve error handling?
+	void* retval;
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->open == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
+	BAIL_IF(filename == NULL || strlen(filename) == 0, PHYSFS_ERR_BAD_FILENAME, NULL);
+	retval = (void*)physfs_platform_libretro_vfs->open(filename, lr_mode, RETRO_VFS_FILE_ACCESS_HINT_NONE);
+	BAIL_IF(retval == NULL, PHYSFS_ERR_IO, NULL); // TODO: Improve error handling?
 
-	if (appending)
-	{	    
-		if (filestream_seek(fd, 0, RETRO_VFS_SEEK_POSITION_END) < 0)
-		{
-			filestream_close(fd);
+	if (appending) {
+		if (physfs_platform_libretro_vfs->seek(retval, 0, RETRO_VFS_SEEK_POSITION_END) < 0) {
+			physfs_platform_libretro_vfs->close(retval);
 			BAIL(PHYSFS_ERR_IO, NULL);
-		}
+		} /* if */
 	} /* if */
 
-	return fd;
+	return retval;
 } /* doOpen */
 
 
@@ -244,82 +243,67 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
                                     PHYSFS_uint64 len)
 {
-	RFILE *fd = (RFILE *) opaque;
-	ssize_t rc = 0;
-
-	if (!__PHYSFS_ui64FitsAddressSpace(len))
-		BAIL(PHYSFS_ERR_INVALID_ARGUMENT, -1);
-
-	rc = filestream_read(fd, buffer, (size_t) len);
-	BAIL_IF(rc == -1, PHYSFS_ERR_IO, -1);
-	assert(rc >= 0);
-	assert(rc <= len);
-	return (PHYSFS_sint64) rc;
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->read == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
+	BAIL_IF(opaque == NULL || buffer == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+	PHYSFS_sint64 retval = (PHYSFS_sint64)physfs_platform_libretro_vfs->read((struct retro_vfs_file_handle*)opaque, buffer, (uint64_t)len);
+	BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
+	return retval;
 } /* __PHYSFS_platformRead */
 
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint64 len)
 {
-	RFILE *fd = (RFILE *) opaque;
-	ssize_t rc = 0;
-
-	if (!__PHYSFS_ui64FitsAddressSpace(len))
-		BAIL(PHYSFS_ERR_INVALID_ARGUMENT, -1);
-
-	rc = filestream_write(fd, (void *) buffer, (size_t) len);
-	BAIL_IF(rc == -1, PHYSFS_ERR_IO, rc);
-	assert(rc >= 0);
-	assert(rc <= len);
-	return (PHYSFS_sint64) rc;
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->write == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
+	BAIL_IF(opaque == NULL || buffer == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+	PHYSFS_sint64 retval = (PHYSFS_sint64)physfs_platform_libretro_vfs->write((struct retro_vfs_file_handle*)opaque, buffer, (uint64_t)len);
+	BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
+	return retval;
 } /* __PHYSFS_platformWrite */
 
 
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
-	RFILE *fd = (RFILE *) opaque;
-	const int64_t rc = filestream_seek(fd, (off_t) pos, RETRO_VFS_SEEK_POSITION_START);
-	BAIL_IF(rc == -1, PHYSFS_ERR_IO, 0);
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->seek == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
+	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, 0);
+	BAIL_IF(physfs_platform_libretro_vfs->seek((struct retro_vfs_file_handle*)opaque, pos, RETRO_VFS_SEEK_POSITION_START) == -1, PHYSFS_ERR_IO, 0);
 	return 1;
 } /* __PHYSFS_platformSeek */
 
 
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
-	RFILE *fd = (RFILE *) opaque;
-	PHYSFS_sint64 retval;
-	retval = (PHYSFS_sint64) filestream_tell(fd);
-	BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
-	return retval;
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->tell == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
+	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+	return (PHYSFS_sint64)physfs_platform_libretro_vfs->tell((struct retro_vfs_file_handle*)opaque);
 } /* __PHYSFS_platformTell */
 
 
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
-	RFILE *fd = (RFILE *) opaque;
-	PHYSFS_sint64 retval;
-	retval = (PHYSFS_sint64) filestream_get_size(fd);
-	BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
-	return retval;
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->size == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
+	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
+	return (PHYSFS_sint64)physfs_platform_libretro_vfs->size((struct retro_vfs_file_handle*)opaque);
 } /* __PHYSFS_platformFileLength */
 
 int __PHYSFS_platformFlush(void *opaque)
 {
-	RFILE *fd = (RFILE *) opaque;
-	filestream_flush(fd);
-	return 1;
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->flush == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
+	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, 0);
+	return physfs_platform_libretro_vfs->flush((struct retro_vfs_file_handle*)opaque) == 0 ? 1 : 0;
 } /* __PHYSFS_platformFlush */
 
 
 void __PHYSFS_platformClose(void *opaque)
 {
-	RFILE *fd = (RFILE *) opaque;
-	filestream_close(fd);
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->close == NULL, PHYSFS_ERR_NOT_INITIALIZED, /* void */);
+	BAIL_IF(opaque == NULL, PHYSFS_ERR_INVALID_ARGUMENT, /* void */);
+	physfs_platform_libretro_vfs->close((struct retro_vfs_file_handle*)opaque);
 } /* __PHYSFS_platformClose */
 
 int __PHYSFS_platformDelete(const char *path)
 {
-    BAIL_IF(filestream_delete(path) == -1, PHYSFS_ERR_IO, 0);
-    return 1;
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->remove == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
+	return physfs_platform_libretro_vfs->remove(path) == 0 ? 1 : 0;
 } /* __PHYSFS_platformDelete */
 
 static PHYSFS_ErrorCode errcodeFromErrnoError(const int err)
@@ -355,11 +339,11 @@ static inline PHYSFS_ErrorCode errcodeFromErrno(void)
 
 int __PHYSFS_platformMkDir(const char *path)
 {
-	const int rc;
-	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->mkdir == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
+	int rc;
+	BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->mkdir == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
 	rc = physfs_platform_libretro_vfs->mkdir(path);
-	BAIL_IF(rc == -1, PHYSFS_ERR_IO, 0);
-	BAIL_IF(rc == -2, PHYSFS_ERR_DUPLICATE, 0); //Already exists
+	BAIL_IF(rc == -1, PHYSFS_ERR_IO, 0); // Unknown failure
+	BAIL_IF(rc == -2, PHYSFS_ERR_DUPLICATE, 0); // Already exists
 	return 1;
 } /* __PHYSFS_platformMkDir */
 
@@ -385,7 +369,7 @@ int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st, const int follow)
 		st->filesize = size;
 	}
 
-	// TODO: Fill those properly
+	// TODO: Fill the following properties
 	st->modtime = 0;
 	st->createtime = 0;
 	st->accesstime = 0;
