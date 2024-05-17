@@ -3,7 +3,7 @@
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *
- *  This file written by Vladimir Serbinenko (@phcoder), and Rob Loach.
+ * This file written by Vladimir Serbinenko (@phcoder), and Rob Loach (@RobLoach).
  */
 
 #define __PHYSICSFS_INTERNAL__
@@ -26,22 +26,18 @@
 static retro_environment_t physfs_platform_libretro_environ_cb = NULL;
 static struct retro_vfs_interface *physfs_platform_libretro_vfs = NULL;
 
+
 int __PHYSFS_platformInit(const char *argv0)
 {
+    /* as a cheat, we expect argv0 to be a retro_environment_t callback. */
     retro_environment_t environ_cb = (retro_environment_t) argv0;
     struct retro_vfs_interface_info vfs_interface_info;
+    BAIL_IF(environ_cb == NULL || argv0[0] == '\0', PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
-    /* as a cheat, we expect argv0 to be a retro_environment_t callback. */
-    if (environ_cb == NULL || argv0[0] == '\0') {
-        return 0;
-    }
-
-    /* get the virtual file system interface */
+    /* get the virtual file system interface, at least version 3 */
     vfs_interface_info.required_interface_version = 3;
     vfs_interface_info.iface = NULL;
-    if (!environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_interface_info)) {
-        return 0;
-    }
+    BAIL_IF(!environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_interface_info), PHYSFS_ERR_UNSUPPORTED, 0);
 
     physfs_platform_libretro_vfs = vfs_interface_info.iface;
     physfs_platform_libretro_environ_cb = environ_cb;
@@ -61,17 +57,18 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
 } /* __PHYSFS_platformDetectAvailableCDs */
 
-char *physfs_platform_libretro_get_directory(int libretro_dir, int extra_memory, int add_slash)
+
+char *physfs_platform_libretro_get_directory(int libretro_dir, int add_slash)
 {
     const char *dir = NULL;
     char *retval;
     size_t dir_length;
 
     BAIL_IF(physfs_platform_libretro_environ_cb == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
-    BAIL_IF(!physfs_platform_libretro_environ_cb(libretro_dir, &dir), PHYSFS_ERR_IO, NULL);
+    BAIL_IF(!physfs_platform_libretro_environ_cb(libretro_dir, &dir), PHYSFS_ERR_UNSUPPORTED, NULL);
 
     dir_length = strlen(dir);
-    retval = allocator.Malloc(dir_length + 2 + extra_memory);
+    retval = allocator.Malloc(dir_length + 2);
     if (!retval) {
         BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     }
@@ -86,9 +83,10 @@ char *physfs_platform_libretro_get_directory(int libretro_dir, int extra_memory,
     return retval;
 }
 
+
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    /* TODO: Replace getcwd() with a libretro-common libretry? */
+    /* TODO: Replace getcwd() with a libretro-common function call? */
     const size_t bufsize = 128;
     char *retval = allocator.Malloc(bufsize);
     BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
@@ -111,6 +109,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     return retval;
 } /* __PHYSFS_platformCalcBaseDir */
 
+
 char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 {
     const char *userdir = __PHYSFS_getUserDir();
@@ -121,9 +120,10 @@ char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
     return retval;
 } /* __PHYSFS_platformCalcPrefDir */
 
+
 char *__PHYSFS_platformCalcUserDir(void)
 {
-    return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, 0, 1);
+    return physfs_platform_libretro_get_directory(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, 1);
 } /* __PHYSFS_platformCalcUserDir */
 
 
@@ -137,10 +137,12 @@ typedef struct
     PHYSFS_uint32 count;
 } PthreadMutex;
 
+
 void *__PHYSFS_platformGetThreadID(void)
 {
     return (void *) sthread_get_current_thread_id();
 } /* __PHYSFS_platformGetThreadID */
+
 
 void *__PHYSFS_platformCreateMutex(void)
 {
@@ -170,6 +172,7 @@ void __PHYSFS_platformDestroyMutex(void *mutex)
     allocator.Free(m);
 } /* __PHYSFS_platformDestroyMutex */
 
+
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
     PthreadMutex *m = (PthreadMutex *) mutex;
@@ -184,6 +187,7 @@ int __PHYSFS_platformGrabMutex(void *mutex)
     return 1;
 } /* __PHYSFS_platformGrabMutex */
 
+
 void __PHYSFS_platformReleaseMutex(void *mutex)
 {
     PthreadMutex *m = (PthreadMutex *) mutex;
@@ -196,6 +200,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
         } /* if */
     } /* if */
 } /* __PHYSFS_platformReleaseMutex */
+
 
 PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
                                PHYSFS_EnumerateCallback callback,
@@ -229,6 +234,7 @@ PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
 
     return retval;
 } /* __PHYSFS_platformEnumerate */
+
 
 static void *__PHYSFS_platformOpen(const char *filename, unsigned lr_mode, int appending)
 {
@@ -266,6 +272,7 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
     return __PHYSFS_platformOpen(filename, RETRO_VFS_FILE_ACCESS_WRITE | RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING, 1);
 } /* __PHYSFS_platformOpenAppend */
 
+
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
                                     PHYSFS_uint64 len)
 {
@@ -275,6 +282,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
     return retval;
 } /* __PHYSFS_platformRead */
+
 
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint64 len)
@@ -311,6 +319,7 @@ PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
     return (PHYSFS_sint64) physfs_platform_libretro_vfs->size((struct retro_vfs_file_handle *) opaque);
 } /* __PHYSFS_platformFileLength */
 
+
 int __PHYSFS_platformFlush(void *opaque)
 {
     BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->flush == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
@@ -326,11 +335,13 @@ void __PHYSFS_platformClose(void *opaque)
     physfs_platform_libretro_vfs->close((struct retro_vfs_file_handle *) opaque);
 } /* __PHYSFS_platformClose */
 
+
 int __PHYSFS_platformDelete(const char *path)
 {
     BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->remove == NULL, PHYSFS_ERR_NOT_INITIALIZED, 0);
     return physfs_platform_libretro_vfs->remove(path) == 0 ? 1 : 0;
 } /* __PHYSFS_platformDelete */
+
 
 static PHYSFS_ErrorCode errcodeFromErrnoError(const int err)
 {
@@ -362,6 +373,7 @@ static inline PHYSFS_ErrorCode errcodeFromErrno(void)
 {
     return errcodeFromErrnoError(errno);
 } /* errcodeFromErrno */
+
 
 int __PHYSFS_platformMkDir(const char *path)
 {
