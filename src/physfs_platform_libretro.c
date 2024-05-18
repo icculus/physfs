@@ -182,9 +182,7 @@ void *__PHYSFS_platformCreateMutex(void)
 
 void __PHYSFS_platformDestroyMutex(void *mutex)
 {
-#ifdef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
-    return;
-#else
+#ifndef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
     PthreadMutex *m = (PthreadMutex *) mutex;
 
     /* Destroying a locked mutex is a bug, but we'll try to be helpful. */
