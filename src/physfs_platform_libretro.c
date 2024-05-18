@@ -3,7 +3,7 @@
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *
- * This file written by Vladimir Serbinenko (@phcoder), and Rob Loach (@RobLoach).
+ *  This file written by Vladimir Serbinenko (@phcoder), and Rob Loach (@RobLoach).
  */
 
 #define __PHYSICSFS_INTERNAL__
@@ -12,14 +12,18 @@
 #ifdef PHYSFS_PLATFORM_LIBRETRO
 
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 
 /* libretro dependencies */
 #include <libretro.h>
+
+/**
+ * Disable threading support by defining PHYSFS_PLATFORM_LIBRETRO_NO_THREADS.
+ */
+#ifndef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
 #include <rthreads/rthreads.h>
+#endif  /* PHYSFS_PLATFORM_LIBRETRO_NO_THREADS */
 
 #include "physfs_internal.h"
 
@@ -127,6 +131,7 @@ char *__PHYSFS_platformCalcUserDir(void)
 } /* __PHYSFS_platformCalcUserDir */
 
 
+#ifndef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
 /**
  * Thread mutex data structure.
  */
@@ -136,16 +141,24 @@ typedef struct
     uintptr_t owner;
     PHYSFS_uint32 count;
 } PthreadMutex;
+#endif  /* PHYSFS_PLATFORM_LIBRETRO_NO_THREADS */
 
 
 void *__PHYSFS_platformGetThreadID(void)
 {
+#ifdef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
+    return (void *) (size_t) 0x1;
+#else
     return (void *) sthread_get_current_thread_id();
+#endif  /* PHYSFS_PLATFORM_LIBRETRO_NO_THREADS */
 } /* __PHYSFS_platformGetThreadID */
 
 
 void *__PHYSFS_platformCreateMutex(void)
 {
+#ifdef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
+    return (void *) (size_t) 0x1;
+#else
     PthreadMutex *m = (PthreadMutex *) allocator.Malloc(sizeof (PthreadMutex));
     BAIL_IF(!m, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     m->mutex = slock_new();
@@ -157,11 +170,15 @@ void *__PHYSFS_platformCreateMutex(void)
     m->count = 0;
     m->owner = (uintptr_t) 0xDEADBEEF;
     return (void *) m;
+#endif  /* PHYSFS_PLATFORM_LIBRETRO_NO_THREADS */
 } /* __PHYSFS_platformCreateMutex */
 
 
 void __PHYSFS_platformDestroyMutex(void *mutex)
 {
+#ifdef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
+    return;
+#else
     PthreadMutex *m = (PthreadMutex *) mutex;
 
     /* Destroying a locked mutex is a bug, but we'll try to be helpful. */
@@ -170,11 +187,15 @@ void __PHYSFS_platformDestroyMutex(void *mutex)
 
     slock_free(m->mutex);
     allocator.Free(m);
+#endif  /* PHYSFS_PLATFORM_LIBRETRO_NO_THREADS */
 } /* __PHYSFS_platformDestroyMutex */
 
 
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
+#ifdef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
+    return 0;
+#else
     PthreadMutex *m = (PthreadMutex *) mutex;
     uintptr_t tid = sthread_get_current_thread_id();
     if (m->owner != tid)
@@ -185,11 +206,13 @@ int __PHYSFS_platformGrabMutex(void *mutex)
 
     m->count++;
     return 1;
+#endif  /* PHYSFS_PLATFORM_LIBRETRO_NO_THREADS */
 } /* __PHYSFS_platformGrabMutex */
 
 
 void __PHYSFS_platformReleaseMutex(void *mutex)
 {
+#ifndef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
     PthreadMutex *m = (PthreadMutex *) mutex;
     assert(m->owner == sthread_get_current_thread_id());  /* catch programming errors. */
     assert(m->count > 0);  /* catch programming errors. */
@@ -199,6 +222,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
             slock_unlock(m->mutex);
         } /* if */
     } /* if */
+#endif  /* PHYSFS_PLATFORM_LIBRETRO_NO_THREADS */
 } /* __PHYSFS_platformReleaseMutex */
 
 
@@ -411,10 +435,10 @@ int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st, const int follow)
         st->filesize = size;
     }
 
-    /* TODO: Fill the following properties */
-    st->modtime = 0;
-    st->createtime = 0;
-    st->accesstime = 0;
+    /* libretro's virtual file system doesn't support retrieving the following values */
+    st->modtime = -1;
+    st->createtime = -1;
+    st->accesstime = -1;
     st->readonly = 0;
 
     return 1;
