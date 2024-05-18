@@ -350,7 +350,11 @@ static PHYSFS_ErrorCode errcodeFromErrnoError(const int err)
         case 0: return PHYSFS_ERR_OK;
         case EACCES: return PHYSFS_ERR_PERMISSION;
         case EPERM: return PHYSFS_ERR_PERMISSION;
+#if defined(EDQUOT)
         case EDQUOT: return PHYSFS_ERR_NO_SPACE;
+#elif defined(WSAEDQUOT)
+        case WSAEDQUOT: return PHYSFS_ERR_NO_SPACE;
+#endif
         case EIO: return PHYSFS_ERR_IO;
         case ELOOP: return PHYSFS_ERR_SYMLINK_LOOP;
         case EMLINK: return PHYSFS_ERR_NO_SPACE;
