@@ -306,9 +306,10 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
                                     PHYSFS_uint64 len)
 {
+    PHYSFS_sint64 retval;
     BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->read == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
     BAIL_IF(opaque == NULL || buffer == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
-    PHYSFS_sint64 retval = (PHYSFS_sint64) physfs_platform_libretro_vfs->read((struct retro_vfs_file_handle *) opaque, buffer, (uint64_t) len);
+    retval = (PHYSFS_sint64) physfs_platform_libretro_vfs->read((struct retro_vfs_file_handle *) opaque, buffer, (uint64_t) len);
     BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
     return retval;
 } /* __PHYSFS_platformRead */
@@ -317,9 +318,10 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint64 len)
 {
+    PHYSFS_sint64 retval;
     BAIL_IF(physfs_platform_libretro_vfs == NULL || physfs_platform_libretro_vfs->write == NULL, PHYSFS_ERR_NOT_INITIALIZED, -1);
     BAIL_IF(opaque == NULL || buffer == NULL, PHYSFS_ERR_INVALID_ARGUMENT, -1);
-    PHYSFS_sint64 retval = (PHYSFS_sint64) physfs_platform_libretro_vfs->write((struct retro_vfs_file_handle *) opaque, buffer, (uint64_t)len);
+    retval = (PHYSFS_sint64) physfs_platform_libretro_vfs->write((struct retro_vfs_file_handle *) opaque, buffer, (uint64_t)len);
     BAIL_IF(retval == -1, PHYSFS_ERR_IO, -1);
     return retval;
 } /* __PHYSFS_platformWrite */
