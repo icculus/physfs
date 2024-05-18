@@ -12,7 +12,6 @@
 #ifdef PHYSFS_PLATFORM_LIBRETRO
 
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
 
 /* libretro dependencies */
