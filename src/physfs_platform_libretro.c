@@ -59,6 +59,7 @@ void __PHYSFS_platformDeinit(void)
 
 void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 {
+    /* no-op. */
 } /* __PHYSFS_platformDetectAvailableCDs */
 
 
@@ -90,26 +91,32 @@ char *physfs_platform_libretro_get_directory(int libretro_dir, int add_slash)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
-    /* TODO: Replace getcwd() with a libretro-common function call? */
-    const size_t bufsize = 128;
-    char *retval = allocator.Malloc(bufsize);
-    BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    char* dir = NULL;
+    char* retval;
+    size_t dir_length;
+    const struct retro_game_info_ext *game_info_ext;
+    BAIL_IF(physfs_platform_libretro_environ_cb == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
 
-    if (getcwd(retval, bufsize - 1))
-    {
-        /* Make sure the path is slash-terminated */
-        size_t length = strlen(retval);
-        if (length > 0 && retval[length - 1] != '/')
-        {
-            retval[length++] = '/';
-            retval[length] = '\0';
-        }
-    }
+    /* use the actively loaded content directory, or the system directory */
+    if (physfs_platform_libretro_environ_cb(RETRO_ENVIRONMENT_GET_GAME_INFO_EXT, &game_info_ext) && game_info_ext != NULL && game_info_ext->dir != NULL)
+        dir = (char *) game_info_ext->dir;
     else
-    {
-        strcpy(retval, "/");
-    }
+        physfs_platform_libretro_environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir);
 
+    /* fallback to using / */
+    if (dir == NULL)
+        dir = "/";
+
+    dir_length = strlen(dir);
+    retval = allocator.Malloc(dir_length + 2);
+    BAIL_IF(!retval, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    strcpy(retval, dir);
+
+    /* append a slash if needed */
+    if (dir_length == 0 || retval[dir_length - 1] != __PHYSFS_platformDirSeparator) {
+        retval[dir_length] = __PHYSFS_platformDirSeparator;
+        retval[dir_length + 1] = '\0';
+    }
     return retval;
 } /* __PHYSFS_platformCalcBaseDir */
 
