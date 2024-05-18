@@ -386,7 +386,9 @@ static PHYSFS_ErrorCode errcodeFromErrnoError(const int err)
         case WSAEDQUOT: return PHYSFS_ERR_NO_SPACE;
 #endif
         case EIO: return PHYSFS_ERR_IO;
+#if defined(ELOOP)
         case ELOOP: return PHYSFS_ERR_SYMLINK_LOOP;
+#endif
         case EMLINK: return PHYSFS_ERR_NO_SPACE;
         case ENAMETOOLONG: return PHYSFS_ERR_BAD_FILENAME;
         case ENOENT: return PHYSFS_ERR_NOT_FOUND;
