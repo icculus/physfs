@@ -90,19 +90,29 @@ char *physfs_platform_libretro_get_directory(int libretro_dir, int add_slash)
 
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
 {
+    int append_slash = 1;
     char* dir = NULL;
     char* retval;
     size_t dir_length;
-    const struct retro_game_info_ext *game_info_ext;
+    const struct retro_game_info_ext *game_info_ext = NULL;
     BAIL_IF(physfs_platform_libretro_environ_cb == NULL, PHYSFS_ERR_NOT_INITIALIZED, NULL);
 
-    /* use the actively loaded content directory, or the system directory */
-    if (physfs_platform_libretro_environ_cb(RETRO_ENVIRONMENT_GET_GAME_INFO_EXT, &game_info_ext) && game_info_ext != NULL && game_info_ext->dir != NULL)
-        dir = (char *) game_info_ext->dir;
-    else
+    /* try to get the base path to the actively loaded content */
+    if (physfs_platform_libretro_environ_cb(RETRO_ENVIRONMENT_GET_GAME_INFO_EXT, &game_info_ext) && game_info_ext != NULL) {
+        /* use the archive file if the content is within an archive */
+        if (game_info_ext->file_in_archive && game_info_ext->archive_path != NULL) {
+            dir = (char *) game_info_ext->archive_path;
+            append_slash = 0;
+        } else {
+            dir = (char *) game_info_ext->dir;
+        }
+    }
+
+    /* fallback to the system directory */
+    if (dir == NULL)
         physfs_platform_libretro_environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir);
 
-    /* fallback to using / */
+    /* as a last case, use / */
     if (dir == NULL)
         dir = "/";
 
@@ -112,7 +122,7 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     strcpy(retval, dir);
 
     /* append a slash if needed */
-    if (dir_length == 0 || retval[dir_length - 1] != __PHYSFS_platformDirSeparator) {
+    if (append_slash && (dir_length == 0 || retval[dir_length - 1] != __PHYSFS_platformDirSeparator)) {
         retval[dir_length] = __PHYSFS_platformDirSeparator;
         retval[dir_length + 1] = '\0';
     }
