@@ -15,6 +15,9 @@
 #if defined(TARGET_EXTENSION) && (defined(TARGET_PLAYDATE) || defined(TARGET_SIMULATOR))
 #  define PHYSFS_PLATFORM_PLAYDATE 1
 #  define PHYSFS_NO_CRUNTIME_MALLOC 1
+#elif (defined __LIBRETRO__)
+#  define PHYSFS_PLATFORM_LIBRETRO 1
+#  define PHYSFS_NO_CDROM_SUPPORT 1
 #elif (defined __HAIKU__)
 #  define PHYSFS_PLATFORM_HAIKU 1
 #  define PHYSFS_PLATFORM_POSIX 1
