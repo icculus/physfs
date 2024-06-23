@@ -292,7 +292,7 @@ static void prepUnicodeSupport(void)
 } /* prepUnicodeSupport */
 
 
-int __PHYSFS_platformInit(void)
+int __PHYSFS_platformInit(const char *argv0)
 {
     prepUnicodeSupport();
     return 1;  /* ready to go! */
@@ -703,7 +703,7 @@ done:
 
 
 /* Convert to a format PhysicsFS can grok... */
-PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
+static PHYSFS_sint64 os2TimeToUnixTime(const FDATE *date, const FTIME *time)
 {
     struct tm tm;
 

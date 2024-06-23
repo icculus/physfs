@@ -12,7 +12,10 @@
  *  PHYSFS_PLATFORM_UNIX on that system.
  */
 
-#if (defined __HAIKU__)
+#if defined(TARGET_EXTENSION) && (defined(TARGET_PLAYDATE) || defined(TARGET_SIMULATOR))
+#  define PHYSFS_PLATFORM_PLAYDATE 1
+#  define PHYSFS_NO_CRUNTIME_MALLOC 1
+#elif (defined __HAIKU__)
 #  define PHYSFS_PLATFORM_HAIKU 1
 #  define PHYSFS_PLATFORM_POSIX 1
 #elif ((defined __BEOS__) || (defined __beos__))
@@ -72,6 +75,9 @@
 #elif defined(unix) || defined(__unix__)
 #  define PHYSFS_PLATFORM_UNIX 1
 #  define PHYSFS_PLATFORM_POSIX 1
+#elif defined(__wii__) || defined(__gamecube__)
+#  define PHYSFS_PLATFORM_OGC 1
+#  define PHYSFS_NO_CDROM_SUPPORT 1 // TODO
 #else
 #  error Unknown platform.
 #endif

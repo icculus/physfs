@@ -1222,7 +1222,7 @@ int PHYSFS_init(const char *argv0)
 
     if ((allocator.Init != NULL) && (!allocator.Init())) return 0;
 
-    if (!__PHYSFS_platformInit())
+    if (!__PHYSFS_platformInit(argv0))
     {
         if (allocator.Deinit != NULL) allocator.Deinit();
         return 0;
@@ -3251,6 +3251,7 @@ const PHYSFS_Allocator *PHYSFS_getAllocator(void)
 } /* PHYSFS_getAllocator */
 
 
+#ifndef PHYSFS_NO_CRUNTIME_MALLOC
 static void *mallocAllocatorMalloc(PHYSFS_uint64 s)
 {
     if (!__PHYSFS_ui64FitsAddressSpace(s))
@@ -3274,16 +3275,18 @@ static void mallocAllocatorFree(void *ptr)
     #undef free
     free(ptr);
 } /* mallocAllocatorFree */
-
+#endif
 
 static void setDefaultAllocator(void)
 {
     assert(!externalAllocator);
     allocator.Init = NULL;
     allocator.Deinit = NULL;
+    #ifndef PHYSFS_NO_CRUNTIME_MALLOC
     allocator.Malloc = mallocAllocatorMalloc;
     allocator.Realloc = mallocAllocatorRealloc;
     allocator.Free = mallocAllocatorFree;
+    #endif
 } /* setDefaultAllocator */
 
 
