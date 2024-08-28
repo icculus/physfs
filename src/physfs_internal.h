@@ -92,6 +92,9 @@ extern const PHYSFS_Archiver __PHYSFS_Archiver_CSM;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_SLB;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_VDF;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_GOB;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_LFD;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_LAB;
 
 /* a real C99-compliant snprintf() is in Visual Studio 2015,
    but just use this everywhere for binary compatibility. */
@@ -221,6 +224,10 @@ void __PHYSFS_smallFree(void *ptr);
 #ifndef PHYSFS_SUPPORTS_VDF
 #define PHYSFS_SUPPORTS_VDF PHYSFS_SUPPORTS_DEFAULT
 #endif
+#ifndef PHYSFS_SUPPORTS_LECARCHIVES
+#define PHYSFS_SUPPORTS_LECARCHIVES PHYSFS_SUPPORTS_DEFAULT
+#endif
+
 
 #if PHYSFS_SUPPORTS_7Z
 /* 7zip support needs a global init function called at startup (no deinit). */
