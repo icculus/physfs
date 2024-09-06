@@ -186,9 +186,10 @@ static int lfdLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 skip, void *arc)
 		finalname[i] = '.';
 		strcpy(finalname + i + 1, ext);
 
+		pos += 16;	/* step over file meta info */
 		BAIL_IF_ERRPASS(!UNPK_addEntry(arc, finalname, 0, -1, -1, pos, dlen), 0);
 
-		pos += 16 + dlen;	/* name+size entry + actual size */
+		pos += dlen;	/* step over file contents */
 	}
 
 	return 1;
