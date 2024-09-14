@@ -47,6 +47,8 @@ static int qpakLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, name, 56), 0);
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &pos, 4), 0);
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), 0);
+        /* name must be null terminated, so its length must leave space for null byte  */
+        BAIL_IF_ERRPASS(strnlen(name, sizeof(name)) != sizeof(name), 0);
         size = PHYSFS_swapULE32(size);
         pos = PHYSFS_swapULE32(pos);
         BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, -1, -1, pos, size), 0);
