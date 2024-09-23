@@ -24,6 +24,7 @@
 /* This works with SDL3. For SDL1 and SDL2, use physfsrwops.h */
 
 #include "physfssdl3.h"
+#include "SDL3/SDL_iostream.h"
 
 /* SDL_IOStream -> PhysicsFS bridge ... */
 
@@ -32,7 +33,8 @@ static Sint64 SDLCALL physfsiostream_size(void *userdata)
     return (Sint64) PHYSFS_fileLength((PHYSFS_File *) userdata);
 }
 
-static Sint64 SDLCALL physfsiostream_seek(void *userdata, Sint64 offset, int whence)
+
+static Sint64 SDLCALL physfsiostream_seek(void *userdata, Sint64 offset, SDL_IOWhence whence)
 {
     PHYSFS_File *handle = (PHYSFS_File *) userdata;
     PHYSFS_sint64 pos = 0;
@@ -99,12 +101,12 @@ static size_t SDLCALL physfsiostream_write(void *userdata, const void *ptr, size
     return (size_t) rc;
 }
 
-static int SDLCALL physfsiostream_close(void *userdata)
+static bool SDLCALL physfsiostream_close(void *userdata)
 {
     if (!PHYSFS_close((PHYSFS_File *) userdata)) {
         return SDL_SetError("PhysicsFS error: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
     }
-    return 0;
+    return true;
 }
 
 static SDL_IOStream *create_iostream(PHYSFS_File *handle)
@@ -154,14 +156,14 @@ SDL_IOStream *PHYSFSSDL3_openAppend(const char *fname)
 
 /* SDL_Storage -> PhysicsFS bridge ... */
 
-static int SDLCALL physfssdl3storage_close(void *userdata)
+static bool SDLCALL physfssdl3storage_close(void *userdata)
 {
-    return 0;  /* this doesn't do anything, we didn't allocate anything specific to this object. */
+    return false;  /* this doesn't do anything, we didn't allocate anything specific to this object. */
 }
 
-static SDL_bool SDLCALL physfssdl3storage_ready(void *userdata)
+static bool SDLCALL physfssdl3storage_ready(void *userdata)
 {
-    return SDL_TRUE;
+    return true;
 }
 
 /* this is a really obnoxious symbol name... */
@@ -183,15 +185,15 @@ static PHYSFS_EnumerateCallbackResult physfssdl3storage_enumerate_callback(void 
     return PHYSFS_ENUM_OK;
 }
 
-static int SDLCALL physfssdl3storage_enumerate(void *userdata, const char *path, SDL_EnumerateDirectoryCallback callback, void *callback_userdata)
+static bool SDLCALL physfssdl3storage_enumerate(void *userdata, const char *path, SDL_EnumerateDirectoryCallback callback, void *callback_userdata)
 {
     physfssdl3storage_enumerate_callback_data data;
     data.sdlcallback = callback;
     data.sdluserdata = callback_userdata;
-    return PHYSFS_enumerate(path, physfssdl3storage_enumerate_callback, &data) ? 0 : -1;
+    return PHYSFS_enumerate(path, physfssdl3storage_enumerate_callback, &data) ? true : false;
 }
 
-static int SDLCALL physfssdl3storage_info(void *userdata, const char *path, SDL_PathInfo *info)
+static bool SDLCALL physfssdl3storage_info(void *userdata, const char *path, SDL_PathInfo *info)
 {
     PHYSFS_Stat statbuf;
     if (!PHYSFS_stat(path, &statbuf)) {
@@ -211,10 +213,10 @@ static int SDLCALL physfssdl3storage_info(void *userdata, const char *path, SDL_
         info->access_time = (SDL_Time) ((statbuf.accesstime < 0) ? 0 : SDL_SECONDS_TO_NS(statbuf.accesstime));
     }
 
-    return 0;
+    return true;
 }
 
-static int SDLCALL physfssdl3storage_read_file(void *userdata, const char *path, void *destination, Uint64 length)
+static bool SDLCALL physfssdl3storage_read_file(void *userdata, const char *path, void *destination, Uint64 length)
 {
     PHYSFS_file *f = PHYSFS_openRead(path);
     PHYSFS_sint64 br;
@@ -229,11 +231,11 @@ static int SDLCALL physfssdl3storage_read_file(void *userdata, const char *path,
     if (br != (Sint64) length) {
         return SDL_SetError("%s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
     }
-    return 0;
+    return true;
 }
 
 
-static int SDLCALL physfssdl3storage_write_file(void *userdata, const char *path, const void *source, Uint64 length)
+static bool SDLCALL physfssdl3storage_write_file(void *userdata, const char *path, const void *source, Uint64 length)
 {
     PHYSFS_file *f = PHYSFS_openWrite(path);
     PHYSFS_sint64 bw;
@@ -248,27 +250,27 @@ static int SDLCALL physfssdl3storage_write_file(void *userdata, const char *path
     if (bw != (Sint64) length) {
         return SDL_SetError("%s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
     }
-    return 0;
+    return true;
 }
 
-static int SDLCALL physfssdl3storage_mkdir(void *userdata, const char *path)
+static bool SDLCALL physfssdl3storage_mkdir(void *userdata, const char *path)
 {
     if (!PHYSFS_mkdir(path)) {
         return SDL_SetError("%s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
     }
-    return 0;
+    return true;
 
 }
 
-static int SDLCALL physfssdl3storage_remove(void *userdata, const char *path)
+static bool SDLCALL physfssdl3storage_remove(void *userdata, const char *path)
 {
     if (!PHYSFS_delete(path)) {
         return SDL_SetError("%s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
     }
-    return 0;
+    return true;
 }
 
-static int SDLCALL physfssdl3storage_rename(void *userdata, const char *oldpath, const char *newpath)
+static bool SDLCALL physfssdl3storage_rename(void *userdata, const char *oldpath, const char *newpath)
 {
     return SDL_Unsupported();  /* no rename operation in PhysicsFS. */
 }
