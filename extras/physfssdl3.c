@@ -24,7 +24,6 @@
 /* This works with SDL3. For SDL1 and SDL2, use physfsrwops.h */
 
 #include "physfssdl3.h"
-#include "SDL3/SDL_iostream.h"
 
 /* SDL_IOStream -> PhysicsFS bridge ... */
 
