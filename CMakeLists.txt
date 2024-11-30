@@ -99,6 +99,7 @@ set(PHYSFS_SRCS
     src/physfs_archiver_slb.c
     src/physfs_archiver_iso9660.c
     src/physfs_archiver_vdf.c
+    src/physfs_archiver_lec3d.c
     ${PHYSFS_CPP_SRCS}
     ${PHYSFS_M_SRCS}
 )
@@ -161,6 +162,11 @@ endif()
 option(PHYSFS_ARCHIVE_VDF "Enable Gothic I/II VDF archive support" TRUE)
 if(NOT PHYSFS_ARCHIVE_VDF)
     add_definitions(-DPHYSFS_SUPPORTS_VDF=0)
+endif()
+
+option(PHYSFS_ARCHIVE_LECARCHIVES "Enable LucasArts GOB/LAB/LFD Archive support" TRUE)
+if(NOT PHYSFS_ARCHIVE_LECARCHIVES)
+    add_definitions(-DPHYSFS_SUPPORTS_LECARCHIVES=0)
 endif()
 
 
@@ -334,6 +340,7 @@ message_bool_option("QPAK support" PHYSFS_ARCHIVE_QPAK)
 message_bool_option("SLB support" PHYSFS_ARCHIVE_SLB)
 message_bool_option("VDF support" PHYSFS_ARCHIVE_VDF)
 message_bool_option("ISO9660 support" PHYSFS_ARCHIVE_ISO9660)
+message_bool_option("GOB/LAB/LFD support" PHYSFS_ARCHIVE_LECARCHIVES)
 message_bool_option("Build static library" PHYSFS_BUILD_STATIC)
 message_bool_option("Build shared library" PHYSFS_BUILD_SHARED)
 message_bool_option("Build stdio test program" PHYSFS_BUILD_TEST)
