@@ -115,6 +115,7 @@ static SDL_IOStream *create_iostream(PHYSFS_File *handle)
         SDL_SetError("PhysicsFS error: %s", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
     } else {
         SDL_IOStreamInterface iface;
+        SDL_INIT_INTERFACE(&iface);
         iface.size  = physfsiostream_size;
         iface.seek  = physfsiostream_seek;
         iface.read  = physfsiostream_read;
