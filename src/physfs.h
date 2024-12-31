@@ -529,6 +529,11 @@ typedef struct PHYSFS_AndroidInit
  *          will hold it until PHYSFS_deinit is called.
  *          If you pass a NULL here, PhysicsFS will crash.
  *
+ * \warning On libretro, argv0 should be a non-NULL pointer to the
+ *          retro_environment_t callback. PhysicsFS will use this callback
+ *          to get libretro's virtual file system interface, along with
+ *          any other related directory paths.
+ *
  *   \param argv0 the argv[0] string passed to your program's mainline.
  *          This may be NULL on most platforms (such as ones without a
  *          standard main() function), but you should always try to pass
