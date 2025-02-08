@@ -35,7 +35,7 @@ int __PHYSFS_platformInit(const char *argv0)
     /* as a cheat, we expect argv0 to be a retro_environment_t callback. */
     retro_environment_t environ_cb = (retro_environment_t) argv0;
     struct retro_vfs_interface_info vfs_interface_info;
-    BAIL_IF(environ_cb == NULL || argv0[0] == '\0', PHYSFS_ERR_INVALID_ARGUMENT, 0);
+    BAIL_IF(environ_cb == NULL, PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
     /* get the virtual file system interface, at least version 3 */
     vfs_interface_info.required_interface_version = 3;
@@ -258,7 +258,7 @@ PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
                 continue;
             } /* if */
         } /* if */
-        
+
         retval = callback(callbackdata, origdir, name);
         if (retval == PHYSFS_ENUM_ERROR) {
             PHYSFS_setErrorCode(PHYSFS_ERR_APP_CALLBACK);
