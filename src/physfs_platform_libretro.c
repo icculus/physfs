@@ -112,9 +112,9 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     if (dir == NULL)
         physfs_platform_libretro_environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &dir);
 
-    /* as a last case, use / */
+    /* as a last case, provide an empty string, assuming the platform resolves a working directory */
     if (dir == NULL)
-        dir = "/";
+        dir = "";
 
     dir_length = strlen(dir);
     retval = allocator.Malloc(dir_length + 2);
