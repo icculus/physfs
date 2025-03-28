@@ -282,6 +282,7 @@ static Uint64 SDLCALL physfssdl3storage_space_remaining(void *userdata)
 SDL_Storage *PHYSFSSDL3_makeStorage(void)
 {
     SDL_StorageInterface iface;
+    SDL_INIT_INTERFACE(&iface);
     iface.close = physfssdl3storage_close;
     iface.ready = physfssdl3storage_ready;
     iface.enumerate = physfssdl3storage_enumerate;
