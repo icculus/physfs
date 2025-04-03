@@ -11,7 +11,7 @@
 
 set(PHYSFS_VERSION 3.3.0)
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 project(PhysicsFS VERSION ${PHYSFS_VERSION} LANGUAGES C )
 
