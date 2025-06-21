@@ -88,7 +88,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_TAR =
     {
         "TAR",
         "POSIX tar archives / Chasm: the Rift Remastered",
-        "Jon Daniel <jondaniel879@gmail.com>",
+        "Jon Daniel <joneqdaniel@gmail.com>",
 	"http://www.gnu.org/software/tar/",
         0,
     },

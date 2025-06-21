@@ -102,7 +102,7 @@ const PHYSFS_Archiver __PHYSFS_Archiver_CSM =
     {
         "BIN",
         "Chasm: The Rift engine format",
-	"Jon Daniel <jondaniel879@gmail.com>",
+	"Jon Daniel <joneqdaniel@gmail.com>",
         "http://www.github.com/Panzerschrek/Chasm-Reverse",
         0,  /* supportsSymlinks */
     },
