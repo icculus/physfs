@@ -43,17 +43,21 @@ static int csmLoadEntries(PHYSFS_Io *io, const PHYSFS_uint16 count, void *arc)
     for (i = 0; i < count; i++)
     {
     	PHYSFS_uint8 fn_len;
-	char name[12];
+	    char name[12];
         PHYSFS_uint32 size;
         PHYSFS_uint32 pos;
 
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &fn_len, 1), 0);
-        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, name, 12), 0);
+        BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, name, sizeof(name)), 0);
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &size, 4), 0);
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &pos, 4), 0);
 
-	if(fn_len > 12) fn_len = 12;
-        name[fn_len] = '\0'; /* name might not be null-terminated in file. */
+	    if(fn_len > sizeof(name))
+            fn_len = sizeof(name);
+        if (fn_len > 0)
+            name[fn_len - 1] = '\0'; /* name might not be null-terminated in file. */
+        else
+            name[0] = '\0';
         size = PHYSFS_swapULE32(size);
         pos = PHYSFS_swapULE32(pos);
         BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, -1, -1, pos, size), 0);
