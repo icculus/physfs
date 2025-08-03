@@ -1179,6 +1179,9 @@ static int initStaticArchivers(void)
     #if PHYSFS_SUPPORTS_QPAK
         REGISTER_STATIC_ARCHIVER(QPAK);
     #endif
+    #if PHYSFS_SUPPORTS_ROFS
+        REGISTER_STATIC_ARCHIVER(ROFS);
+    #endif
     #if PHYSFS_SUPPORTS_HOG
         REGISTER_STATIC_ARCHIVER(HOG);
     #endif
