@@ -3154,12 +3154,15 @@ typedef struct PHYSFS_Io
      *  being destroyed separately (so, for example: they can't share a file
      *  handle; they each need their own).
      *
+     * The current seek position does not need to be duplicated; the caller
+     *  is expected to explicitly seek the duplicated object before using it.
+     *
      * If you can't duplicate a handle, it's legal to return NULL, but you
      *  almost certainly need this functionality if you want to use this to
      *  PHYSFS_Io to back an archive.
      *
      *   \param io The i/o instance to duplicate.
-     *  \return A new value for a stream's (opaque) field, or NULL on error.
+     *  \return A new instance of `io` that can operate independently.
      */
     struct PHYSFS_Io *(*duplicate)(struct PHYSFS_Io *io);
 
