@@ -73,24 +73,43 @@ typedef struct __PHYSFS_ERRSTATETYPE__
 
 
 /* General PhysicsFS state ... */
-static int initialized = 0;
-static ErrState *errorStates = NULL;
-static DirHandle *searchPath = NULL;
-static DirHandle *writeDir = NULL;
-static FileHandle *openWriteList = NULL;
-static FileHandle *openReadList = NULL;
-static char *baseDir = NULL;
-static char *userDir = NULL;
-static char *prefDir = NULL;
-static int allowSymLinks = 0;
-static PHYSFS_Archiver **archivers = NULL;
-static PHYSFS_ArchiveInfo **archiveInfo = NULL;
-static volatile size_t numArchivers = 0;
-static size_t longest_root = 0;
+typedef struct Context
+{
+    int initialized;
+    ErrState *errorStates;
+    DirHandle *searchPath;
+    DirHandle *writeDir;
+    FileHandle *openWriteList;
+    FileHandle *openReadList;
+    char *baseDir;
+    char *userDir;
+    char *prefDir;
+    int allowSymLinks;
+    PHYSFS_Archiver **archivers;
+    PHYSFS_ArchiveInfo **archiveInfo;
+    volatile size_t numArchivers;
+    size_t longest_root;
 
-/* mutexes ... */
-static void *errorLock = NULL;     /* protects error message list.        */
-static void *stateLock = NULL;     /* protects other PhysFS static state. */
+    /* mutexes ... */
+    void *errorLock;     /* protects error message list.        */
+    void *stateLock;     /* protects other PhysFS context state. */
+} Context;
+static PHYSFS_Context defaultContext; /* The context for PHYSFS to use by default. */
+/* Shorthand helper */
+Context *boundContext() {
+    return (Context*)PHYSFS_getBoundContext();
+}
+
+/* Thread-to-context mapping... */
+typedef struct ThreadContextMapNode {
+    void *threadID;
+    PHYSFS_Context context;
+    struct ThreadContextMapNode *next;
+} ThreadContextMapNode;
+static ThreadContextMapNode *threadContextMap = NULL;
+static void *threadContextMapLock = NULL;
+
+static int libInitialized = 0; /* If the PHYSFS library is initialized. */
 
 /* allocator ... */
 static int externalAllocator = 0;
@@ -471,18 +490,18 @@ static PHYSFS_Io *handleIo_duplicate(PHYSFS_Io *io)
     newfh->forReading = origfh->forReading;
     newfh->dirHandle = origfh->dirHandle;
 
-    __PHYSFS_platformGrabMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
     if (newfh->forReading)
     {
-        newfh->next = openReadList;
-        openReadList = newfh;
+        newfh->next = boundContext()->openReadList;
+        boundContext()->openReadList = newfh;
     } /* if */
     else
     {
-        newfh->next = openWriteList;
-        openWriteList = newfh;
+        newfh->next = boundContext()->openWriteList;
+        boundContext()->openWriteList = newfh;
     } /* else */
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
 
     memcpy(retval, io, sizeof (PHYSFS_Io));
     retval->opaque = newfh;
@@ -668,26 +687,26 @@ static ErrState *findErrorForCurrentThread(void)
     ErrState *i;
     void *tid;
 
-    if (errorLock != NULL)
-        __PHYSFS_platformGrabMutex(errorLock);
+    if (boundContext()->errorLock != NULL)
+        __PHYSFS_platformGrabMutex(boundContext()->errorLock);
 
-    if (errorStates != NULL)
+    if (boundContext()->errorStates != NULL)
     {
         tid = __PHYSFS_platformGetThreadID();
 
-        for (i = errorStates; i != NULL; i = i->next)
+        for (i = boundContext()->errorStates; i != NULL; i = i->next)
         {
             if (i->tid == tid)
             {
-                if (errorLock != NULL)
-                    __PHYSFS_platformReleaseMutex(errorLock);
+                if (boundContext()->errorLock != NULL)
+                    __PHYSFS_platformReleaseMutex(boundContext()->errorLock);
                 return i;
             } /* if */
         } /* for */
     } /* if */
 
-    if (errorLock != NULL)
-        __PHYSFS_platformReleaseMutex(errorLock);
+    if (boundContext()->errorLock != NULL)
+        __PHYSFS_platformReleaseMutex(boundContext()->errorLock);
 
     return NULL;   /* no error available. */
 } /* findErrorForCurrentThread */
@@ -768,14 +787,14 @@ void PHYSFS_setErrorCode(PHYSFS_ErrorCode errcode)
         memset(err, '\0', sizeof (ErrState));
         err->tid = __PHYSFS_platformGetThreadID();
 
-        if (errorLock != NULL)
-            __PHYSFS_platformGrabMutex(errorLock);
+        if (boundContext()->errorLock != NULL)
+            __PHYSFS_platformGrabMutex(boundContext()->errorLock);
 
-        err->next = errorStates;
-        errorStates = err;
+        err->next = boundContext()->errorStates;
+        boundContext()->errorStates = err;
 
-        if (errorLock != NULL)
-            __PHYSFS_platformReleaseMutex(errorLock);
+        if (boundContext()->errorLock != NULL)
+            __PHYSFS_platformReleaseMutex(boundContext()->errorLock);
     } /* if */
 
     err->code = errcode;
@@ -795,13 +814,13 @@ static void freeErrorStates(void)
     ErrState *i;
     ErrState *next;
 
-    for (i = errorStates; i != NULL; i = next)
+    for (i = boundContext()->errorStates; i != NULL; i = next)
     {
         next = i->next;
         allocator.Free(i);
     } /* for */
 
-    errorStates = NULL;
+    boundContext()->errorStates = NULL;
 } /* freeErrorStates */
 
 
@@ -901,14 +920,14 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
     if (ext != NULL)
     {
         /* Look for archivers with matching file extensions first... */
-        for (i = archivers; (*i != NULL) && (retval == NULL) && !claimed; i++)
+        for (i = boundContext()->archivers; (*i != NULL) && (retval == NULL) && !claimed; i++)
         {
             if (PHYSFS_utf8stricmp(ext, (*i)->info.extension) == 0)
                 retval = tryOpenDir(io, *i, d, forWriting, &claimed);
         } /* for */
 
         /* failing an exact file extension match, try all the others... */
-        for (i = archivers; (*i != NULL) && (retval == NULL) && !claimed; i++)
+        for (i = boundContext()->archivers; (*i != NULL) && (retval == NULL) && !claimed; i++)
         {
             if (PHYSFS_utf8stricmp(ext, (*i)->info.extension) != 0)
                 retval = tryOpenDir(io, *i, d, forWriting, &claimed);
@@ -917,7 +936,7 @@ static DirHandle *openDirectory(PHYSFS_Io *io, const char *d, int forWriting)
 
     else  /* no extension? Try them all. */
     {
-        for (i = archivers; (*i != NULL) && (retval == NULL) && !claimed; i++)
+        for (i = boundContext()->archivers; (*i != NULL) && (retval == NULL) && !claimed; i++)
             retval = tryOpenDir(io, *i, d, forWriting, &claimed);
     } /* else */
 
@@ -1131,29 +1150,44 @@ static char *calculateBaseDir(const char *argv0)
     BAIL(PHYSFS_ERR_INVALID_ARGUMENT, NULL);
 } /* calculateBaseDir */
 
-
 static int initializeMutexes(void)
 {
-    errorLock = __PHYSFS_platformCreateMutex();
-    if (errorLock == NULL)
+    threadContextMapLock = __PHYSFS_platformCreateMutex();
+    if (threadContextMapLock == NULL)
         goto initializeMutexes_failed;
 
-    stateLock = __PHYSFS_platformCreateMutex();
-    if (stateLock == NULL)
-        goto initializeMutexes_failed;
+    return 1; /* success. */
+
+initializeMutexes_failed:
+    if (threadContextMapLock != NULL)
+        __PHYSFS_platformDestroyMutex(threadContextMapLock);
+    
+    threadContextMapLock = NULL;
+    return 0; /* failed. */
+} /* initializeStaticMutexes */
+
+static int initializeContextMutexes(Context *context)
+{
+    context->errorLock = __PHYSFS_platformCreateMutex();
+    if (context->errorLock == NULL)
+        goto initializeContextMutexes_failed;
+
+    context->stateLock = __PHYSFS_platformCreateMutex();
+    if (context->stateLock == NULL)
+        goto initializeContextMutexes_failed;
 
     return 1;  /* success. */
 
-initializeMutexes_failed:
-    if (errorLock != NULL)
-        __PHYSFS_platformDestroyMutex(errorLock);
+initializeContextMutexes_failed:
+    if (context->errorLock != NULL)
+        __PHYSFS_platformDestroyMutex(context->errorLock);
 
-    if (stateLock != NULL)
-        __PHYSFS_platformDestroyMutex(stateLock);
+    if (context->stateLock != NULL)
+        __PHYSFS_platformDestroyMutex(context->stateLock);
 
-    errorLock = stateLock = NULL;
+    context->errorLock = context->stateLock = NULL;
     return 0;  /* failed. */
-} /* initializeMutexes */
+} /* initializeContextMutexes */
 
 
 static int doRegisterArchiver(const PHYSFS_Archiver *_archiver);
@@ -1188,9 +1222,6 @@ static int initStaticArchivers(void)
     #if PHYSFS_SUPPORTS_WAD
         REGISTER_STATIC_ARCHIVER(WAD);
     #endif
-    #if PHYSFS_SUPPORTS_CSM
-        REGISTER_STATIC_ARCHIVER(CSM);
-    #endif
     #if PHYSFS_SUPPORTS_SLB
         REGISTER_STATIC_ARCHIVER(SLB);
     #endif
@@ -1217,7 +1248,7 @@ static int doDeinit(void);
 
 int PHYSFS_init(const char *argv0)
 {
-    BAIL_IF(initialized, PHYSFS_ERR_IS_INITIALIZED, 0);
+    BAIL_IF(libInitialized, PHYSFS_ERR_IS_INITIALIZED, 0);
 
     if (!externalAllocator)
         setDefaultAllocator();
@@ -1230,34 +1261,12 @@ int PHYSFS_init(const char *argv0)
         return 0;
     } /* if */
 
-    /* everything below here can be cleaned up safely by doDeinit(). */
+    initializeMutexes();
 
-    if (!initializeMutexes()) goto initFailed;
-
-    baseDir = calculateBaseDir(argv0);
-    if (!baseDir) goto initFailed;
-
-    userDir = __PHYSFS_platformCalcUserDir();
-    if (!userDir) goto initFailed;
-
-    /* Platform layer is required to append a dirsep. */
-    #ifndef __ANDROID__  /* it's an APK file, not a directory, on Android. */
-    assert(baseDir[strlen(baseDir) - 1] == __PHYSFS_platformDirSeparator);
-    #endif
-    assert(userDir[strlen(userDir) - 1] == __PHYSFS_platformDirSeparator);
-
-    if (!initStaticArchivers()) goto initFailed;
-
-    initialized = 1;
-
-    /* This makes sure that the error subsystem is initialized. */
-    PHYSFS_setErrorCode(PHYSFS_getLastErrorCode());
+    defaultContext = PHYSFS_allocContext();
+    PHYSFS_initContext(defaultContext, argv0);
 
     return 1;
-
-initFailed:
-    doDeinit();
-    return 0;
 } /* PHYSFS_init */
 
 
@@ -1293,16 +1302,16 @@ static void freeSearchPath(void)
     DirHandle *i;
     DirHandle *next = NULL;
 
-    closeFileHandleList(&openReadList);
+    closeFileHandleList(&boundContext()->openReadList);
 
-    if (searchPath != NULL)
+    if (boundContext()->searchPath != NULL)
     {
-        for (i = searchPath; i != NULL; i = next)
+        for (i = boundContext()->searchPath; i != NULL; i = next)
         {
             next = i->next;
-            freeDirHandle(i, openReadList);
+            freeDirHandle(i, boundContext()->openReadList);
         } /* for */
-        searchPath = NULL;
+        boundContext()->searchPath = NULL;
     } /* if */
 } /* freeSearchPath */
 
@@ -1324,12 +1333,12 @@ static int archiverInUse(const PHYSFS_Archiver *arc, const DirHandle *list)
 /* MAKE SURE you hold stateLock before calling this! */
 static int doDeregisterArchiver(const size_t idx)
 {
-    const size_t len = (numArchivers - idx) * sizeof (void *);
-    PHYSFS_ArchiveInfo *info = archiveInfo[idx];
-    PHYSFS_Archiver *arc = archivers[idx];
+    const size_t len = (boundContext()->numArchivers - idx) * sizeof (void *);
+    PHYSFS_ArchiveInfo *info = boundContext()->archiveInfo[idx];
+    PHYSFS_Archiver *arc = boundContext()->archivers[idx];
 
     /* make sure nothing is still using this archiver */
-    if (archiverInUse(arc, searchPath) || archiverInUse(arc, writeDir))
+    if (archiverInUse(arc, boundContext()->searchPath) || archiverInUse(arc, boundContext()->writeDir))
         BAIL(PHYSFS_ERR_FILES_STILL_OPEN, 0);
 
     allocator.Free((void *) info->extension);
@@ -1338,11 +1347,11 @@ static int doDeregisterArchiver(const size_t idx)
     allocator.Free((void *) info->url);
     allocator.Free((void *) arc);
 
-    memmove(&archiveInfo[idx], &archiveInfo[idx+1], len);
-    memmove(&archivers[idx], &archivers[idx+1], len);
+    memmove(&boundContext()->archiveInfo[idx], &boundContext()->archiveInfo[idx+1], len);
+    memmove(&boundContext()->archivers[idx], &boundContext()->archivers[idx+1], len);
 
-    assert(numArchivers > 0);
-    numArchivers--;
+    assert(boundContext()->numArchivers > 0);
+    boundContext()->numArchivers--;
 
     return 1;
 } /* doDeregisterArchiver */
@@ -1351,69 +1360,26 @@ static int doDeregisterArchiver(const size_t idx)
 /* Does NOT hold the state lock; we're shutting down. */
 static void freeArchivers(void)
 {
-    while (numArchivers > 0)
+    while (boundContext()->numArchivers > 0)
     {
-        if (!doDeregisterArchiver(numArchivers - 1))
+        if (!doDeregisterArchiver(boundContext()->numArchivers - 1))
             assert(!"nothing should be mounted during shutdown.");
     } /* while */
 
-    allocator.Free(archivers);
-    allocator.Free(archiveInfo);
-    archivers = NULL;
-    archiveInfo = NULL;
+    allocator.Free(boundContext()->archivers);
+    allocator.Free(boundContext()->archiveInfo);
+    boundContext()->archivers = NULL;
+    boundContext()->archiveInfo = NULL;
 } /* freeArchivers */
 
 
 static int doDeinit(void)
 {
-    closeFileHandleList(&openWriteList);
-    BAIL_IF(!PHYSFS_setWriteDir(NULL), PHYSFS_ERR_FILES_STILL_OPEN, 0);
-
-    freeSearchPath();
-    freeArchivers();
-    freeErrorStates();
-
-    if (baseDir != NULL)
-    {
-        allocator.Free(baseDir);
-        baseDir = NULL;
-    } /* if */
-
-    if (userDir != NULL)
-    {
-        allocator.Free(userDir);
-        userDir = NULL;
-    } /* if */
-
-    if (prefDir != NULL)
-    {
-        allocator.Free(prefDir);
-        prefDir = NULL;
-    } /* if */
-
-    if (archiveInfo != NULL)
-    {
-        allocator.Free(archiveInfo);
-        archiveInfo = NULL;
-    } /* if */
-
-    if (archivers != NULL)
-    {
-        allocator.Free(archivers);
-        archivers = NULL;
-    } /* if */
-
-    longest_root = 0;
-    allowSymLinks = 0;
-    initialized = 0;
-
-    if (errorLock) __PHYSFS_platformDestroyMutex(errorLock);
-    if (stateLock) __PHYSFS_platformDestroyMutex(stateLock);
+    PHYSFS_deinitContext(defaultContext);
+    PHYSFS_deallocContext(defaultContext);
 
     if (allocator.Deinit != NULL)
         allocator.Deinit();
-
-    errorLock = stateLock = NULL;
 
     __PHYSFS_platformDeinit();
 
@@ -1423,14 +1389,14 @@ static int doDeinit(void)
 
 int PHYSFS_deinit(void)
 {
-    BAIL_IF(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    BAIL_IF(!libInitialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
     return doDeinit();
 } /* PHYSFS_deinit */
 
 
 int PHYSFS_isInit(void)
 {
-    return initialized;
+    return libInitialized;
 } /* PHYSFS_isInit */
 
 
@@ -1501,7 +1467,7 @@ PHYSFS_uint32 __PHYSFS_hashStringCaseFoldUSAscii(const char *str)
 static int doRegisterArchiver(const PHYSFS_Archiver *_archiver)
 {
     const PHYSFS_uint32 maxver = CURRENT_PHYSFS_ARCHIVER_API_VERSION;
-    const size_t len = (numArchivers + 2) * sizeof (void *);
+    const size_t len = (boundContext()->numArchivers + 2) * sizeof (void *);
     PHYSFS_Archiver *archiver = NULL;
     PHYSFS_ArchiveInfo *info = NULL;
     const char *ext = NULL;
@@ -1525,9 +1491,9 @@ static int doRegisterArchiver(const PHYSFS_Archiver *_archiver)
     BAIL_IF(!_archiver->stat, PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
     ext = _archiver->info.extension;
-    for (i = 0; i < numArchivers; i++)
+    for (i = 0; i < boundContext()->numArchivers; i++)
     {
-        if (PHYSFS_utf8stricmp(archiveInfo[i]->extension, ext) == 0)
+        if (PHYSFS_utf8stricmp(boundContext()->archiveInfo[i]->extension, ext) == 0)
             BAIL(PHYSFS_ERR_DUPLICATE, 0);
     } /* for */
 
@@ -1550,21 +1516,21 @@ static int doRegisterArchiver(const PHYSFS_Archiver *_archiver)
     info->supportsSymlinks = _archiver->info.supportsSymlinks;
     #undef CPYSTR
 
-    ptr = allocator.Realloc(archiveInfo, len);
+    ptr = allocator.Realloc(boundContext()->archiveInfo, len);
     GOTO_IF(!ptr, PHYSFS_ERR_OUT_OF_MEMORY, regfailed);
-    archiveInfo = (PHYSFS_ArchiveInfo **) ptr;
+    boundContext()->archiveInfo = (PHYSFS_ArchiveInfo **) ptr;
 
-    ptr = allocator.Realloc(archivers, len);
+    ptr = allocator.Realloc(boundContext()->archivers, len);
     GOTO_IF(!ptr, PHYSFS_ERR_OUT_OF_MEMORY, regfailed);
-    archivers = (PHYSFS_Archiver **) ptr;
+    boundContext()->archivers = (PHYSFS_Archiver **) ptr;
 
-    archiveInfo[numArchivers] = info;
-    archiveInfo[numArchivers + 1] = NULL;
+    boundContext()->archiveInfo[boundContext()->numArchivers] = info;
+    boundContext()->archiveInfo[boundContext()->numArchivers + 1] = NULL;
 
-    archivers[numArchivers] = archiver;
-    archivers[numArchivers + 1] = NULL;
+    boundContext()->archivers[boundContext()->numArchivers] = archiver;
+    boundContext()->archivers[boundContext()->numArchivers + 1] = NULL;
 
-    numArchivers++;
+    boundContext()->numArchivers++;
 
     return 1;
 
@@ -1585,10 +1551,10 @@ regfailed:
 int PHYSFS_registerArchiver(const PHYSFS_Archiver *archiver)
 {
     int retval;
-    BAIL_IF(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
-    __PHYSFS_platformGrabMutex(stateLock);
+    BAIL_IF(!boundContext()->initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
     retval = doRegisterArchiver(archiver);
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
     return retval;
 } /* PHYSFS_registerArchiver */
 
@@ -1597,20 +1563,20 @@ int PHYSFS_deregisterArchiver(const char *ext)
 {
     size_t i;
 
-    BAIL_IF(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    BAIL_IF(!boundContext()->initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
     BAIL_IF(!ext, PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
-    __PHYSFS_platformGrabMutex(stateLock);
-    for (i = 0; i < numArchivers; i++)
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
+    for (i = 0; i < boundContext()->numArchivers; i++)
     {
-        if (PHYSFS_utf8stricmp(archiveInfo[i]->extension, ext) == 0)
+        if (PHYSFS_utf8stricmp(boundContext()->archiveInfo[i]->extension, ext) == 0)
         {
             const int retval = doDeregisterArchiver(i);
-            __PHYSFS_platformReleaseMutex(stateLock);
+            __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
             return retval;
         } /* if */
     } /* for */
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
 
     BAIL(PHYSFS_ERR_NOT_FOUND, 0);
 } /* PHYSFS_deregisterArchiver */
@@ -1618,8 +1584,8 @@ int PHYSFS_deregisterArchiver(const char *ext)
 
 const PHYSFS_ArchiveInfo **PHYSFS_supportedArchiveTypes(void)
 {
-    BAIL_IF(!initialized, PHYSFS_ERR_NOT_INITIALIZED, NULL);
-    return (const PHYSFS_ArchiveInfo **) archiveInfo;
+    BAIL_IF(!boundContext()->initialized, PHYSFS_ERR_NOT_INITIALIZED, NULL);
+    return (const PHYSFS_ArchiveInfo **) boundContext()->archiveInfo;
 } /* PHYSFS_supportedArchiveTypes */
 
 
@@ -1662,52 +1628,52 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
     char *ptr = NULL;
     char *endstr = NULL;
 
-    BAIL_IF(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    BAIL_IF(!boundContext()->initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
     BAIL_IF(!org, PHYSFS_ERR_INVALID_ARGUMENT, NULL);
     BAIL_IF(*org == '\0', PHYSFS_ERR_INVALID_ARGUMENT, NULL);
     BAIL_IF(!app, PHYSFS_ERR_INVALID_ARGUMENT, NULL);
     BAIL_IF(*app == '\0', PHYSFS_ERR_INVALID_ARGUMENT, NULL);
 
-    allocator.Free(prefDir);
-    prefDir = __PHYSFS_platformCalcPrefDir(org, app);
-    BAIL_IF_ERRPASS(!prefDir, NULL);
+    allocator.Free(boundContext()->prefDir);
+    boundContext()->prefDir = __PHYSFS_platformCalcPrefDir(org, app);
+    BAIL_IF_ERRPASS(!boundContext()->prefDir, NULL);
 
-    assert(strlen(prefDir) > 0);
-    endstr = prefDir + (strlen(prefDir) - 1);
+    assert(strlen(boundContext()->prefDir) > 0);
+    endstr = boundContext()->prefDir + (strlen(boundContext()->prefDir) - 1);
     assert(*endstr == dirsep);
     *endstr = '\0';  /* mask out the final dirsep for now. */
 
-    if (!__PHYSFS_platformStat(prefDir, &statbuf, 1))
+    if (!__PHYSFS_platformStat(boundContext()->prefDir, &statbuf, 1))
     {
-        for (ptr = strchr(prefDir, dirsep); ptr; ptr = strchr(ptr+1, dirsep))
+        for (ptr = strchr(boundContext()->prefDir, dirsep); ptr; ptr = strchr(ptr+1, dirsep))
         {
             *ptr = '\0';
-            __PHYSFS_platformMkDir(prefDir);
+            __PHYSFS_platformMkDir(boundContext()->prefDir);
             *ptr = dirsep;
         } /* for */
 
-        if (!__PHYSFS_platformMkDir(prefDir))
+        if (!__PHYSFS_platformMkDir(boundContext()->prefDir))
         {
-            allocator.Free(prefDir);
-            prefDir = NULL;
+            allocator.Free(boundContext()->prefDir);
+            boundContext()->prefDir = NULL;
         } /* if */
     } /* if */
 
     *endstr = dirsep;  /* readd the final dirsep. */
 
-    return prefDir;
+    return boundContext()->prefDir;
 } /* PHYSFS_getPrefDir */
 
 
 const char *PHYSFS_getBaseDir(void)
 {
-    return baseDir;   /* this is calculated in PHYSFS_init()... */
+    return boundContext()->baseDir;   /* this is calculated in PHYSFS_init()... */
 } /* PHYSFS_getBaseDir */
 
 
 const char *__PHYSFS_getUserDir(void)  /* not deprecated internal version. */
 {
-    return userDir;   /* this is calculated in PHYSFS_init()... */
+    return boundContext()->userDir;   /* this is calculated in PHYSFS_init()... */
 } /* __PHYSFS_getUserDir */
 
 
@@ -1721,10 +1687,10 @@ const char *PHYSFS_getWriteDir(void)
 {
     const char *retval = NULL;
 
-    __PHYSFS_platformGrabMutex(stateLock);
-    if (writeDir != NULL)
-        retval = writeDir->dirName;
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
+    if (boundContext()->writeDir != NULL)
+        retval = boundContext()->writeDir->dirName;
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
 
     return retval;
 } /* PHYSFS_getWriteDir */
@@ -1734,22 +1700,22 @@ int PHYSFS_setWriteDir(const char *newDir)
 {
     int retval = 1;
 
-    __PHYSFS_platformGrabMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
 
-    if (writeDir != NULL)
+    if (boundContext()->writeDir != NULL)
     {
-        BAIL_IF_MUTEX_ERRPASS(!freeDirHandle(writeDir, openWriteList),
-                            stateLock, 0);
-        writeDir = NULL;
+        BAIL_IF_MUTEX_ERRPASS(!freeDirHandle(boundContext()->writeDir, boundContext()->openWriteList),
+                            boundContext()->stateLock, 0);
+        boundContext()->writeDir = NULL;
     } /* if */
 
     if (newDir != NULL)
     {
-        writeDir = createDirHandle(NULL, newDir, NULL, 1);
-        retval = (writeDir != NULL);
+        boundContext()->writeDir = createDirHandle(NULL, newDir, NULL, 1);
+        retval = (boundContext()->writeDir != NULL);
     } /* if */
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
 
     return retval;
 } /* PHYSFS_setWriteDir */
@@ -1761,9 +1727,9 @@ int PHYSFS_setRoot(const char *archive, const char *subdir)
 
     BAIL_IF(!archive, PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
-    __PHYSFS_platformGrabMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
 
-    for (i = searchPath; i != NULL; i = i->next)
+    for (i = boundContext()->searchPath; i != NULL; i = i->next)
     {
         if ((i->dirName != NULL) && (strcmp(archive, i->dirName) == 0))
         {
@@ -1778,11 +1744,11 @@ int PHYSFS_setRoot(const char *archive, const char *subdir)
             {
                 const size_t len = strlen(subdir) + 1;
                 char *ptr = (char *) allocator.Malloc(len);
-                BAIL_IF_MUTEX(!ptr, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
+                BAIL_IF_MUTEX(!ptr, PHYSFS_ERR_OUT_OF_MEMORY, boundContext()->stateLock, 0);
                 if (!sanitizePlatformIndependentPath(subdir, ptr))
                 {
                     allocator.Free(ptr);
-                    BAIL_MUTEX_ERRPASS(stateLock, 0);
+                    BAIL_MUTEX_ERRPASS(boundContext()->stateLock, 0);
                 } /* if */
 
                 if (i->root)
@@ -1790,15 +1756,15 @@ int PHYSFS_setRoot(const char *archive, const char *subdir)
                 i->root = ptr;
                 i->rootlen = strlen(i->root);  /* in case sanitizePlatformIndependentPath changed subdir */
 
-                if (longest_root < i->rootlen)
-                    longest_root = i->rootlen;
+                if (boundContext()->longest_root < i->rootlen)
+                    boundContext()->longest_root = i->rootlen;
             } /* else */
 
             break;
         } /* if */
     } /* for */
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
     return 1;
 } /* PHYSFS_setRoot */
 
@@ -1815,33 +1781,33 @@ static int doMount(PHYSFS_Io *io, const char *fname,
     if (mountPoint == NULL)
         mountPoint = "/";
 
-    __PHYSFS_platformGrabMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
 
-    for (i = searchPath; i != NULL; i = i->next)
+    for (i = boundContext()->searchPath; i != NULL; i = i->next)
     {
         /* already in search path? */
         if ((i->dirName != NULL) && (strcmp(fname, i->dirName) == 0))
-            BAIL_MUTEX_ERRPASS(stateLock, 1);
+            BAIL_MUTEX_ERRPASS(boundContext()->stateLock, 1);
         prev = i;
     } /* for */
 
     dh = createDirHandle(io, fname, mountPoint, 0);
-    BAIL_IF_MUTEX_ERRPASS(!dh, stateLock, 0);
+    BAIL_IF_MUTEX_ERRPASS(!dh, boundContext()->stateLock, 0);
 
     if (appendToPath)
     {
         if (prev == NULL)
-            searchPath = dh;
+            boundContext()->searchPath = dh;
         else
             prev->next = dh;
     } /* if */
     else
     {
-        dh->next = searchPath;
-        searchPath = dh;
+        dh->next = boundContext()->searchPath;
+        boundContext()->searchPath = dh;
     } /* else */
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
     return 1;
 } /* doMount */
 
@@ -1931,26 +1897,26 @@ int PHYSFS_unmount(const char *oldDir)
 
     BAIL_IF(oldDir == NULL, PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
-    __PHYSFS_platformGrabMutex(stateLock);
-    for (i = searchPath; i != NULL; i = i->next)
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
+    for (i = boundContext()->searchPath; i != NULL; i = i->next)
     {
         if (strcmp(i->dirName, oldDir) == 0)
         {
             next = i->next;
-            BAIL_IF_MUTEX_ERRPASS(!freeDirHandle(i, openReadList),
-                                stateLock, 0);
+            BAIL_IF_MUTEX_ERRPASS(!freeDirHandle(i, boundContext()->openReadList),
+                                boundContext()->stateLock, 0);
 
             if (prev == NULL)
-                searchPath = next;
+                boundContext()->searchPath = next;
             else
                 prev->next = next;
 
-            BAIL_MUTEX_ERRPASS(stateLock, 1);
+            BAIL_MUTEX_ERRPASS(boundContext()->stateLock, 1);
         } /* if */
         prev = i;
     } /* for */
 
-    BAIL_MUTEX(PHYSFS_ERR_NOT_MOUNTED, stateLock, 0);
+    BAIL_MUTEX(PHYSFS_ERR_NOT_MOUNTED, boundContext()->stateLock, 0);
 } /* PHYSFS_unmount */
 
 
@@ -1963,17 +1929,17 @@ char **PHYSFS_getSearchPath(void)
 const char *PHYSFS_getMountPoint(const char *dir)
 {
     DirHandle *i;
-    __PHYSFS_platformGrabMutex(stateLock);
-    for (i = searchPath; i != NULL; i = i->next)
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
+    for (i = boundContext()->searchPath; i != NULL; i = i->next)
     {
         if (strcmp(i->dirName, dir) == 0)
         {
             const char *retval = ((i->mountPoint) ? i->mountPoint : "/");
-            __PHYSFS_platformReleaseMutex(stateLock);
+            __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
             return retval;
         } /* if */
     } /* for */
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
 
     BAIL(PHYSFS_ERR_NOT_MOUNTED, NULL);
 } /* PHYSFS_getMountPoint */
@@ -1983,12 +1949,12 @@ void PHYSFS_getSearchPathCallback(PHYSFS_StringCallback callback, void *data)
 {
     DirHandle *i;
 
-    __PHYSFS_platformGrabMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
 
-    for (i = searchPath; i != NULL; i = i->next)
+    for (i = boundContext()->searchPath; i != NULL; i = i->next)
         callback(data, i->dirName);
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
 } /* PHYSFS_getSearchPathCallback */
 
 
@@ -2043,7 +2009,7 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
     const char *basedir;
     const char *prefdir;
 
-    BAIL_IF(!initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
+    BAIL_IF(!boundContext()->initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
 
     prefdir = PHYSFS_getPrefDir(organization, appName);
     BAIL_IF_ERRPASS(!prefdir, 0);
@@ -2095,13 +2061,13 @@ int PHYSFS_setSaneConfig(const char *organization, const char *appName,
 
 void PHYSFS_permitSymbolicLinks(int allow)
 {
-    allowSymLinks = allow;
+    boundContext()->allowSymLinks = allow;
 } /* PHYSFS_permitSymbolicLinks */
 
 
 int PHYSFS_symbolicLinksPermitted(void)
 {
-    return allowSymLinks;
+    return boundContext()->allowSymLinks;
 } /* PHYSFS_symbolicLinksPermitted */
 
 
@@ -2170,7 +2136,7 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
     } /* if */
 
     start = fname;
-    if (!allowSymLinks)
+    if (!boundContext()->allowSymLinks)
     {
         while (1)
         {
@@ -2217,7 +2183,7 @@ static int verifyPath(DirHandle *h, char **_fname, int allowMissing)
 /* This must hold the stateLock before calling. */
 static int doMkdir(const char *_dname, char *dname)
 {
-    DirHandle *h = writeDir;
+    DirHandle *h = boundContext()->writeDir;
     char *start;
     char *end;
     int retval = 0;
@@ -2275,13 +2241,13 @@ int PHYSFS_mkdir(const char *_dname)
 
     BAIL_IF(!_dname, PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
-    __PHYSFS_platformGrabMutex(stateLock);
-    BAIL_IF_MUTEX(!writeDir, PHYSFS_ERR_NO_WRITE_DIR, stateLock, 0);
-    len = strlen(_dname) + dirHandleRootLen(writeDir) + 1;
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
+    BAIL_IF_MUTEX(!boundContext()->writeDir, PHYSFS_ERR_NO_WRITE_DIR, boundContext()->stateLock, 0);
+    len = strlen(_dname) + dirHandleRootLen(boundContext()->writeDir) + 1;
     dname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MUTEX(!dname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
+    BAIL_IF_MUTEX(!dname, PHYSFS_ERR_OUT_OF_MEMORY, boundContext()->stateLock, 0);
     retval = doMkdir(_dname, dname);
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
     __PHYSFS_smallFree(dname);
     return retval;
 } /* PHYSFS_mkdir */
@@ -2290,7 +2256,7 @@ int PHYSFS_mkdir(const char *_dname)
 /* This must hold the stateLock before calling. */
 static int doDelete(const char *_fname, char *fname)
 {
-    DirHandle *h = writeDir;
+    DirHandle *h = boundContext()->writeDir;
     BAIL_IF_ERRPASS(!sanitizePlatformIndependentPathWithRoot(h, _fname, fname), 0);
     BAIL_IF_ERRPASS(!verifyPath(h, &fname, 0), 0);
     return h->funcs->remove(h->opaque, fname);
@@ -2303,13 +2269,13 @@ int PHYSFS_delete(const char *_fname)
     char *fname;
     size_t len;
 
-    __PHYSFS_platformGrabMutex(stateLock);
-    BAIL_IF_MUTEX(!writeDir, PHYSFS_ERR_NO_WRITE_DIR, stateLock, 0);
-    len = strlen(_fname) + dirHandleRootLen(writeDir) + 1;
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
+    BAIL_IF_MUTEX(!boundContext()->writeDir, PHYSFS_ERR_NO_WRITE_DIR, boundContext()->stateLock, 0);
+    len = strlen(_fname) + dirHandleRootLen(boundContext()->writeDir) + 1;
     fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MUTEX(!fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
+    BAIL_IF_MUTEX(!fname, PHYSFS_ERR_OUT_OF_MEMORY, boundContext()->stateLock, 0);
     retval = doDelete(_fname, fname);
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
     __PHYSFS_smallFree(fname);
     return retval;
 } /* PHYSFS_delete */
@@ -2324,15 +2290,15 @@ static DirHandle *getRealDirHandle(const char *_fname)
 
     BAIL_IF(!_fname, PHYSFS_ERR_INVALID_ARGUMENT, NULL);
 
-    __PHYSFS_platformGrabMutex(stateLock);
-    len = strlen(_fname) + longest_root + 2;
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
+    len = strlen(_fname) + boundContext()->longest_root + 2;
     allocated_fname = __PHYSFS_smallAlloc(len);
-    BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, NULL);
-    fname = allocated_fname + longest_root + 1;
+    BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, boundContext()->stateLock, NULL);
+    fname = allocated_fname + boundContext()->longest_root + 1;
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
         DirHandle *i;
-        for (i = searchPath; i != NULL; i = i->next)
+        for (i = boundContext()->searchPath; i != NULL; i = i->next)
         {
             char *arcfname = fname;
             if (partOfMountPoint(i, arcfname))
@@ -2352,7 +2318,7 @@ static DirHandle *getRealDirHandle(const char *_fname)
         } /* for */
     } /* if */
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
     __PHYSFS_smallFree(allocated_fname);
     return retval;
 } /* getRealDirHandle */
@@ -2554,12 +2520,12 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
     BAIL_IF(!_fn, PHYSFS_ERR_INVALID_ARGUMENT, 0);
     BAIL_IF(!cb, PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
-    __PHYSFS_platformGrabMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
 
-    len = strlen(_fn) + longest_root + 2;
+    len = strlen(_fn) + boundContext()->longest_root + 2;
     allocated_fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
-    fname = allocated_fname + longest_root + 1;
+    BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, boundContext()->stateLock, 0);
+    fname = allocated_fname + boundContext()->longest_root + 1;
     if (!sanitizePlatformIndependentPath(_fn, fname))
         retval = PHYSFS_ENUM_STOP;
     else
@@ -2567,14 +2533,14 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
         DirHandle *i;
         SymlinkFilterData filterdata;
 
-        if (!allowSymLinks)
+        if (!boundContext()->allowSymLinks)
         {
             memset(&filterdata, '\0', sizeof (filterdata));
             filterdata.callback = cb;
             filterdata.callbackData = data;
         } /* if */
 
-        for (i = searchPath; (retval == PHYSFS_ENUM_OK) && i; i = i->next)
+        for (i = boundContext()->searchPath; (retval == PHYSFS_ENUM_OK) && i; i = i->next)
         {
             char *arcfname = fname;
 
@@ -2593,7 +2559,7 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
                 if (statbuf.filetype != PHYSFS_FILETYPE_DIRECTORY)
                     continue;  /* not a directory in this archive, skip it. */
 
-                else if ((!allowSymLinks) && (i->funcs->info.supportsSymlinks))
+                else if ((!boundContext()->allowSymLinks) && (i->funcs->info.supportsSymlinks))
                 {
                     filterdata.dirhandle = i;
                     filterdata.arcfname = arcfname;
@@ -2617,7 +2583,7 @@ int PHYSFS_enumerate(const char *_fn, PHYSFS_EnumerateCallback cb, void *data)
 
     } /* if */
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
 
     __PHYSFS_smallFree(allocated_fname);
 
@@ -2689,14 +2655,16 @@ static PHYSFS_File *doOpenWrite(const char *_fname, const int appending)
 
     BAIL_IF(!_fname, PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
-    __PHYSFS_platformGrabMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
 
-    h = writeDir;
-    BAIL_IF_MUTEX(!h, PHYSFS_ERR_NO_WRITE_DIR, stateLock, 0);
+    BAIL_IF_MUTEX(!boundContext()->searchPath, PHYSFS_ERR_NOT_FOUND, boundContext()->stateLock, 0);
+
+    h = boundContext()->writeDir;
+    BAIL_IF_MUTEX(!h, PHYSFS_ERR_NO_WRITE_DIR, boundContext()->stateLock, 0);
 
     len = strlen(_fname) + dirHandleRootLen(h) + 1;
     fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MUTEX(!fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
+    BAIL_IF_MUTEX(!fname, PHYSFS_ERR_OUT_OF_MEMORY, boundContext()->stateLock, 0);
 
     if (sanitizePlatformIndependentPathWithRoot(h, _fname, fname))
     {
@@ -2723,14 +2691,14 @@ static PHYSFS_File *doOpenWrite(const char *_fname, const int appending)
                     memset(fh, '\0', sizeof (FileHandle));
                     fh->io = io;
                     fh->dirHandle = h;
-                    fh->next = openWriteList;
-                    openWriteList = fh;
+                    fh->next = boundContext()->openWriteList;
+                    boundContext()->openWriteList = fh;
                 } /* else */
             } /* if */
         } /* if */
     } /* if */
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
 
     __PHYSFS_smallFree(fname);
     return ((PHYSFS_File *) fh);
@@ -2758,21 +2726,21 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
 
     BAIL_IF(!_fname, PHYSFS_ERR_INVALID_ARGUMENT, 0);
 
-    __PHYSFS_platformGrabMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
 
-    BAIL_IF_MUTEX(!searchPath, PHYSFS_ERR_NOT_FOUND, stateLock, 0);
+    BAIL_IF_MUTEX(!boundContext()->searchPath, PHYSFS_ERR_NOT_FOUND, boundContext()->stateLock, 0);
 
-    len = strlen(_fname) + longest_root + 2;
+    len = strlen(_fname) + boundContext()->longest_root + 2;
     allocated_fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
-    fname = allocated_fname + longest_root + 1;
+    BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, boundContext()->stateLock, 0);
+    fname = allocated_fname + boundContext()->longest_root + 1;
 
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
         PHYSFS_Io *io = NULL;
         DirHandle *i;
 
-        for (i = searchPath; i != NULL; i = i->next)
+        for (i = boundContext()->searchPath; i != NULL; i = i->next)
         {
             char *arcfname = fname;
             if (verifyPath(i, &arcfname, 0))
@@ -2797,13 +2765,13 @@ PHYSFS_File *PHYSFS_openRead(const char *_fname)
                 fh->io = io;
                 fh->forReading = 1;
                 fh->dirHandle = i;
-                fh->next = openReadList;
-                openReadList = fh;
+                fh->next = boundContext()->openReadList;
+                boundContext()->openReadList = fh;
             } /* else */
         } /* if */
     } /* if */
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
     __PHYSFS_smallFree(allocated_fname);
     return ((PHYSFS_File *) fh);
 } /* PHYSFS_openRead */
@@ -2858,18 +2826,18 @@ int PHYSFS_close(PHYSFS_File *_handle)
     FileHandle *handle = (FileHandle *) _handle;
     int rc;
 
-    __PHYSFS_platformGrabMutex(stateLock);
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
 
     /* -1 == close failure. 0 == not found. 1 == success. */
-    rc = closeHandleInOpenList(&openReadList, handle);
-    BAIL_IF_MUTEX_ERRPASS(rc == -1, stateLock, 0);
+    rc = closeHandleInOpenList(&boundContext()->openReadList, handle);
+    BAIL_IF_MUTEX_ERRPASS(rc == -1, boundContext()->stateLock, 0);
     if (!rc)
     {
-        rc = closeHandleInOpenList(&openWriteList, handle);
-        BAIL_IF_MUTEX_ERRPASS(rc == -1, stateLock, 0);
+        rc = closeHandleInOpenList(&boundContext()->openWriteList, handle);
+        BAIL_IF_MUTEX_ERRPASS(rc == -1, boundContext()->stateLock, 0);
     } /* if */
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
     BAIL_IF(!rc, PHYSFS_ERR_INVALID_ARGUMENT, 0);
     return 1;
 } /* PHYSFS_close */
@@ -3152,25 +3120,25 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
     stat->filetype = PHYSFS_FILETYPE_OTHER;
     stat->readonly = 1;
 
-    __PHYSFS_platformGrabMutex(stateLock);
-    len = strlen(_fname) + longest_root + 2;
+    __PHYSFS_platformGrabMutex(boundContext()->stateLock);
+    len = strlen(_fname) + boundContext()->longest_root + 2;
     allocated_fname = (char *) __PHYSFS_smallAlloc(len);
-    BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, stateLock, 0);
-    fname = allocated_fname + longest_root + 1;
+    BAIL_IF_MUTEX(!allocated_fname, PHYSFS_ERR_OUT_OF_MEMORY, boundContext()->stateLock, 0);
+    fname = allocated_fname + boundContext()->longest_root + 1;
 
     if (sanitizePlatformIndependentPath(_fname, fname))
     {
         if (*fname == '\0')
         {
             stat->filetype = PHYSFS_FILETYPE_DIRECTORY;
-            stat->readonly = !writeDir; /* Writeable if we have a writeDir */
+            stat->readonly = !boundContext()->writeDir; /* Writeable if we have a writeDir */
             retval = 1;
         } /* if */
         else
         {
             DirHandle *i;
             int exists = 0;
-            for (i = searchPath; ((i != NULL) && (!exists)); i = i->next)
+            for (i = boundContext()->searchPath; ((i != NULL) && (!exists)); i = i->next)
             {
                 char *arcfname = fname;
                 exists = partOfMountPoint(i, arcfname);
@@ -3190,7 +3158,7 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
         } /* else */
     } /* if */
 
-    __PHYSFS_platformReleaseMutex(stateLock);
+    __PHYSFS_platformReleaseMutex(boundContext()->stateLock);
     __PHYSFS_smallFree(allocated_fname);
     return retval;
 } /* PHYSFS_stat */
@@ -3237,7 +3205,7 @@ void __PHYSFS_smallFree(void *ptr)
 
 int PHYSFS_setAllocator(const PHYSFS_Allocator *a)
 {
-    BAIL_IF(initialized, PHYSFS_ERR_IS_INITIALIZED, 0);
+    BAIL_IF(libInitialized, PHYSFS_ERR_IS_INITIALIZED, 0);
     externalAllocator = (a != NULL);
     if (externalAllocator)
         memcpy(&allocator, a, sizeof (PHYSFS_Allocator));
@@ -3248,7 +3216,7 @@ int PHYSFS_setAllocator(const PHYSFS_Allocator *a)
 
 const PHYSFS_Allocator *PHYSFS_getAllocator(void)
 {
-    BAIL_IF(!initialized, PHYSFS_ERR_NOT_INITIALIZED, NULL);
+    BAIL_IF(!libInitialized, PHYSFS_ERR_NOT_INITIALIZED, NULL);
     return &allocator;
 } /* PHYSFS_getAllocator */
 
@@ -3468,6 +3436,216 @@ void __PHYSFS_DirTreeDeinit(__PHYSFS_DirTree *dt)
         allocator.Free(dt->hash);
     } /* if */
 } /* __PHYSFS_DirTreeDeinit */
+
+
+PHYSFS_Context PHYSFS_allocContext()
+{
+    Context *context = allocator.Malloc(sizeof(Context));
+    BAIL_IF(!context, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
+    memset(context, '\0', sizeof(Context));
+    return (PHYSFS_Context)context;
+}
+
+
+void PHYSFS_deallocContext(PHYSFS_Context context)
+{
+    allocator.Free((Context*)context);
+}
+
+static int doDeinitContext(Context *context) {
+    closeFileHandleList(&context->openWriteList);
+    BAIL_IF(!PHYSFS_setWriteDir(NULL), PHYSFS_ERR_FILES_STILL_OPEN, 0);
+
+    freeSearchPath();
+    freeArchivers();
+    freeErrorStates();
+
+    if (context->baseDir != NULL)
+    {
+        allocator.Free(context->baseDir);
+        context->baseDir = NULL;
+    } /* if */
+
+    if (context->userDir != NULL)
+    {
+        allocator.Free(context->userDir);
+        context->userDir = NULL;
+    } /* if */
+
+    if (context->prefDir != NULL)
+    {
+        allocator.Free(context->prefDir);
+        context->prefDir = NULL;
+    } /* if */
+
+    if (context->archiveInfo != NULL)
+    {
+        allocator.Free(context->archiveInfo);
+        context->archiveInfo = NULL;
+    } /* if */
+
+    if (context->archivers != NULL)
+    {
+        allocator.Free(context->archivers);
+        context->archivers = NULL;
+    } /* if */
+
+    context->longest_root = 0;
+    context->allowSymLinks = 0;
+    context->initialized = 0;
+
+    if (context->errorLock) __PHYSFS_platformDestroyMutex(context->errorLock);
+    if (context->stateLock) __PHYSFS_platformDestroyMutex(context->stateLock);
+
+    context->errorLock = context->stateLock = NULL;
+
+    return 1;
+}
+
+int PHYSFS_initContext(PHYSFS_Context _context, const char *argv0)
+{
+    Context *context = (Context*)_context;
+    PHYSFS_Context boundContext;
+
+    BAIL_IF(context->initialized, PHYSFS_ERR_IS_INITIALIZED, 0);
+
+    boundContext = PHYSFS_getBoundContext();
+    PHYSFS_bindContext(_context);
+
+    if (!initializeContextMutexes(context)) goto initFailed;
+
+    context->baseDir = calculateBaseDir(argv0);
+    if (!context->baseDir) goto initFailed;
+
+    context->userDir = __PHYSFS_platformCalcUserDir();
+    if (!context->userDir) goto initFailed;
+
+    /* Platform layer is required to append a dirsep. */
+    #ifndef __ANDROID__  /* it's an APK file, not a directory, on Android. */
+    assert(context->baseDir[strlen(context->baseDir) - 1] == __PHYSFS_platformDirSeparator);
+    #endif
+    assert(context->userDir[strlen(context->userDir) - 1] == __PHYSFS_platformDirSeparator);
+
+    if (!initStaticArchivers()) goto initFailed;
+
+    context->initialized = 1;
+
+    /* This makes sure that the error subsystem is initialized. */
+    PHYSFS_setErrorCode(PHYSFS_getLastErrorCode());
+
+    /* This function shouldn't result in a new bound context. */
+    PHYSFS_bindContext(boundContext); 
+
+    return 1;
+
+initFailed:
+    doDeinitContext(context);
+
+    /* This function shouldn't result in a new bound context. */
+    PHYSFS_bindContext(boundContext); 
+
+    return 0;
+}
+
+
+int PHYSFS_deinitContext(PHYSFS_Context _context)
+{
+    Context *context = (Context*)_context;
+
+    BAIL_IF(!context->initialized, PHYSFS_ERR_NOT_INITIALIZED, 0);
+
+    doDeinitContext(context);
+
+    return 1;
+}
+
+
+int PHYSFS_bindContext(PHYSFS_Context context)
+{
+    ThreadContextMapNode *newNode;
+    ThreadContextMapNode *currentNode;
+    ThreadContextMapNode *lastNode;
+    void* threadID;
+
+    __PHYSFS_platformGrabMutex(threadContextMapLock);
+
+    threadID = __PHYSFS_platformGetThreadID();
+    
+    if (!context)
+        context = defaultContext;
+
+    currentNode = threadContextMap;
+    lastNode = threadContextMap;
+    if (currentNode)
+    {
+        do
+        {
+            if (currentNode->threadID == threadID)
+            {
+                currentNode->context = context;
+                goto bindSuccess;
+            } /* if */
+
+            lastNode = currentNode;
+            currentNode = currentNode->next;
+        } while (currentNode != NULL);
+    } /* if */
+    else
+    {
+        newNode = allocator.Malloc(sizeof(ThreadContextMapNode));
+        GOTO_IF(!newNode, PHYSFS_ERR_OUT_OF_MEMORY, bindFailed);
+        newNode->context = context;
+        newNode->threadID = threadID;
+        newNode->next = NULL;
+        threadContextMap = newNode;
+        goto bindSuccess;
+    } /* else */
+
+    newNode = allocator.Malloc(sizeof(ThreadContextMapNode));
+    GOTO_IF(!newNode, PHYSFS_ERR_OUT_OF_MEMORY, bindFailed);
+    newNode->context = context;
+    newNode->threadID = threadID;
+    newNode->next = NULL;
+    lastNode->next = newNode;
+
+bindSuccess:
+    __PHYSFS_platformReleaseMutex(threadContextMapLock);
+    return 1;
+
+bindFailed:
+    __PHYSFS_platformReleaseMutex(threadContextMapLock);
+    return 0;
+} /* PHYSFS_bindContext */
+
+
+PHYSFS_Context PHYSFS_getBoundContext()
+{
+    ThreadContextMapNode *currentNode;
+    void *threadID;
+
+    __PHYSFS_platformGrabMutex(threadContextMapLock);
+
+    threadID = __PHYSFS_platformGetThreadID();
+
+    currentNode = threadContextMap;
+    while (currentNode)
+    {
+        if (currentNode->threadID == threadID)
+        {
+            Context *retval = currentNode->context;
+            __PHYSFS_platformReleaseMutex(threadContextMapLock);
+            return retval;
+        } /* if */
+
+        currentNode = currentNode->next;
+    } /* while */
+
+    /* The default context isn't bound yet. */
+    PHYSFS_bindContext(NULL);
+    __PHYSFS_platformReleaseMutex(threadContextMapLock);
+    return defaultContext;
+} /* PHYSFS_getBoundContext */
+
 
 /* end of physfs.c ... */
 
