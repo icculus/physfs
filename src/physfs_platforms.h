@@ -81,6 +81,15 @@
 #elif defined(__wii__) || defined(__gamecube__)
 #  define PHYSFS_PLATFORM_OGC 1
 #  define PHYSFS_NO_CDROM_SUPPORT 1 // TODO
+#elif defined(__3DS__)
+#  define PHYSFS_PLATFORM_CTR 1
+#  define PHYSFS_NO_CDROM_SUPPORT 1
+#elif defined(__SWITCH__)
+#  define PHYSFS_PLATFORM_HAC 1
+#  define PHYSFS_NO_CDROM_SUPPORT 1
+#elif defined(__WIIU__)
+#  define PHYSFS_PLATFORM_CAFE 1
+#  define PHYSFS_NO_CDROM_SUPPORT 1
 #else
 #  error Unknown platform.
 #endif
