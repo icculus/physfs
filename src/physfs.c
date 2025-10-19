@@ -1205,6 +1205,9 @@ static int initStaticArchivers(void)
         REGISTER_STATIC_ARCHIVER(LFD)
         REGISTER_STATIC_ARCHIVER(LAB)
     #endif
+    #if PHYSFS_SUPPORTS_POD
+        REGISTER_STATIC_ARCHIVER(POD)
+    #endif
 
     #undef REGISTER_STATIC_ARCHIVER
 

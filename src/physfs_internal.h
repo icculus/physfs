@@ -95,6 +95,7 @@ extern const PHYSFS_Archiver __PHYSFS_Archiver_VDF;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_GOB;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_LFD;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_LAB;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_POD;
 
 /* a real C99-compliant snprintf() is in Visual Studio 2015,
    but just use this everywhere for binary compatibility. */
@@ -226,6 +227,9 @@ void __PHYSFS_smallFree(void *ptr);
 #endif
 #ifndef PHYSFS_SUPPORTS_LECARCHIVES
 #define PHYSFS_SUPPORTS_LECARCHIVES PHYSFS_SUPPORTS_DEFAULT
+#endif
+#ifndef PHYSFS_SUPPORTS_POD
+#define PHYSFS_SUPPORTS_POD PHYSFS_SUPPORTS_DEFAULT
 #endif
 
 
