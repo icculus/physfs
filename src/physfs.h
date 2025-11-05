@@ -2197,7 +2197,7 @@ PHYSFS_DECL int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
 
 
 /**
- * \fn int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
+ * \fn int PHYSFS_mount(const char *newDir, const char *mountPoint, int priority)
  * \brief Add an archive or directory to the search path.
  *
  * If this is a duplicate, the entry is not added again, even though the
@@ -2231,7 +2231,8 @@ PHYSFS_DECL int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
  *   \param mountPoint Location in the interpolated tree that this archive
  *                     will be "mounted", in platform-independent notation.
  *                     NULL or "" is equivalent to "/".
- *   \param appendToPath nonzero to append to search path, zero to prepend.
+ *   \param priority Archive priority.  Positive inserts archive AFTER others
+ *                   with the same priority; negative appends, zero prepends.
  *  \return nonzero if added to path, zero on failure (bogus archive, dir
  *          missing, etc). Use PHYSFS_getLastErrorCode() to obtain
  *          the specific error.
@@ -2243,7 +2244,7 @@ PHYSFS_DECL int PHYSFS_setAllocator(const PHYSFS_Allocator *allocator);
  */
 PHYSFS_DECL int PHYSFS_mount(const char *newDir,
                              const char *mountPoint,
-                             int appendToPath);
+                             int priority);
 
 /**
  * \fn int PHYSFS_getMountPoint(const char *dir)
@@ -3242,7 +3243,7 @@ typedef struct PHYSFS_Io
 
 
 /**
- * \fn int PHYSFS_mountIo(PHYSFS_Io *io, const char *newDir, const char *mountPoint, int appendToPath)
+ * \fn int PHYSFS_mountIo(PHYSFS_Io *io, const char *newDir, const char *mountPoint, int priority)
  * \brief Add an archive, built on a PHYSFS_Io, to the search path.
  *
  * \warning Unless you have some special, low-level need, you should be using
@@ -3272,7 +3273,7 @@ typedef struct PHYSFS_Io
  *   \param mountPoint Location in the interpolated tree that this archive
  *                     will be "mounted", in platform-independent notation.
  *                     NULL or "" is equivalent to "/".
- *   \param appendToPath nonzero to append to search path, zero to prepend.
+ *   \param priority Archive priority; see PHYSFS_mount.
  *  \return nonzero if added to path, zero on failure (bogus archive, stream
  *                   i/o issue, etc). Use PHYSFS_getLastErrorCode() to obtain
  *                   the specific error.
@@ -3282,11 +3283,11 @@ typedef struct PHYSFS_Io
  * \sa PHYSFS_getMountPoint
  */
 PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *newDir,
-                               const char *mountPoint, int appendToPath);
+                               const char *mountPoint, int priority);
 
 
 /**
- * \fn int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len, void (*del)(void *), const char *newDir, const char *mountPoint, int appendToPath)
+ * \fn int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len, void (*del)(void *), const char *newDir, const char *mountPoint, int priority)
  * \brief Add an archive, contained in a memory buffer, to the search path.
  *
  * \warning Unless you have some special, low-level need, you should be using
@@ -3320,7 +3321,7 @@ PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *newDir,
  *   \param mountPoint Location in the interpolated tree that this archive
  *                     will be "mounted", in platform-independent notation.
  *                     NULL or "" is equivalent to "/".
- *   \param appendToPath nonzero to append to search path, zero to prepend.
+ *   \param priority Archive priority; see PHYSFS_mount.
  *  \return nonzero if added to path, zero on failure (bogus archive, etc).
  *          Use PHYSFS_getLastErrorCode() to obtain the specific error.
  *
@@ -3330,11 +3331,11 @@ PHYSFS_DECL int PHYSFS_mountIo(PHYSFS_Io *io, const char *newDir,
  */
 PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
                                    void (*del)(void *), const char *newDir,
-                                   const char *mountPoint, int appendToPath);
+                                   const char *mountPoint, int priority);
 
 
 /**
- * \fn int PHYSFS_mountHandle(PHYSFS_File *file, const char *newDir, const char *mountPoint, int appendToPath)
+ * \fn int PHYSFS_mountHandle(PHYSFS_File *file, const char *newDir, const char *mountPoint, int priority)
  * \brief Add an archive, contained in a PHYSFS_File handle, to the search path.
  *
  * \warning Unless you have some special, low-level need, you should be using
@@ -3378,7 +3379,7 @@ PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
  *   \param mountPoint Location in the interpolated tree that this archive
  *                     will be "mounted", in platform-independent notation.
  *                     NULL or "" is equivalent to "/".
- *   \param appendToPath nonzero to append to search path, zero to prepend.
+ *   \param priority Archive priority; see PHYSFS_mount.
  *  \return nonzero if added to path, zero on failure (bogus archive, etc).
  *          Use PHYSFS_getLastErrorCode() to obtain the specific error.
  *
@@ -3387,7 +3388,7 @@ PHYSFS_DECL int PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
  * \sa PHYSFS_getMountPoint
  */
 PHYSFS_DECL int PHYSFS_mountHandle(PHYSFS_File *file, const char *newDir,
-                                   const char *mountPoint, int appendToPath);
+                                   const char *mountPoint, int priority);
 
 
 /**
