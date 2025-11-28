@@ -942,7 +942,7 @@ extern PHYSFS_DECL const char * PHYSFS_CALL PHYSFS_getBaseDir(void);
  * \sa PHYSFS_getBaseDir
  * \sa PHYSFS_getPrefDir
  */
-extern PHYSFS_DECL const char * PHYSFS_CALL PHYSFS_getUserDir(void) PHYSFS_DEPRECATED;
+extern PHYSFS_DEPRECATED PHYSFS_DECL const char * PHYSFS_CALL PHYSFS_getUserDir(void);
 
 
 /**
@@ -1010,8 +1010,7 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_setWriteDir(const char *newDir);
  * \sa PHYSFS_removeFromSearchPath
  * \sa PHYSFS_getSearchPath
  */
-extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_addToSearchPath(const char *newDir, int appendToPath)
-                                        PHYSFS_DEPRECATED;
+extern PHYSFS_DEPRECATED PHYSFS_DECL int PHYSFS_CALL PHYSFS_addToSearchPath(const char *newDir, int appendToPath);
 
 /**
  * Remove a directory or archive from the search path.
@@ -1040,8 +1039,7 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_addToSearchPath(const char *newDir, in
  * \sa PHYSFS_getSearchPath
  * \sa PHYSFS_unmount
  */
-extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_removeFromSearchPath(const char *oldDir)
-                                            PHYSFS_DEPRECATED;
+extern PHYSFS_DEPRECATED PHYSFS_DECL int PHYSFS_CALL PHYSFS_removeFromSearchPath(const char *oldDir);
 
 
 /**
@@ -1334,7 +1332,7 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_exists(const char *fname);
  * \sa PHYSFS_stat
  * \sa PHYSFS_exists
  */
-extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_isDirectory(const char *fname) PHYSFS_DEPRECATED;
+extern PHYSFS_DEPRECATED PHYSFS_DECL int PHYSFS_CALL PHYSFS_isDirectory(const char *fname);
 
 
 /**
@@ -1360,7 +1358,7 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_isDirectory(const char *fname) PHYSFS_
  * \sa PHYSFS_stat
  * \sa PHYSFS_exists
  */
-extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_isSymbolicLink(const char *fname) PHYSFS_DEPRECATED;
+extern PHYSFS_DEPRECATED PHYSFS_DECL int PHYSFS_CALL PHYSFS_isSymbolicLink(const char *fname);
 
 
 /**
@@ -1387,8 +1385,7 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_isSymbolicLink(const char *fname) PHYS
  *
  * \sa PHYSFS_stat
  */
-extern PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_getLastModTime(const char *filename)
-                                                PHYSFS_DEPRECATED;
+extern PHYSFS_DEPRECATED PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_getLastModTime(const char *filename);
 
 
 /* i/o stuff... */
@@ -1532,11 +1529,10 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_close(PHYSFS_File *handle);
  * \sa PHYSFS_readBytes
  * \sa PHYSFS_eof
  */
-extern PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_read(PHYSFS_File *handle,
+extern PHYSFS_DEPRECATED PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_read(PHYSFS_File *handle,
                                       void *buffer,
                                       PHYSFS_uint32 objSize,
-                                      PHYSFS_uint32 objCount)
-                                        PHYSFS_DEPRECATED;
+                                      PHYSFS_uint32 objCount);
 
 /**
  * Write data to a PhysicsFS filehandle.
@@ -1566,11 +1562,10 @@ extern PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_read(PHYSFS_File *handle,
  *
  * \sa PHYSFS_writeBytes
  */
-extern PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_write(PHYSFS_File *handle,
+extern PHYSFS_DEPRECATED PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_write(PHYSFS_File *handle,
                                        const void *buffer,
                                        PHYSFS_uint32 objSize,
-                                       PHYSFS_uint32 objCount)
-                                        PHYSFS_DEPRECATED;
+                                       PHYSFS_uint32 objCount);
 
 
 /* File position stuff... */
@@ -2813,9 +2808,9 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_getSearchPathCallback(PHYSFS_StringCa
  * \sa PHYSFS_enumerateFiles
  * \sa PHYSFS_EnumFilesCallback
  */
-extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_enumerateFilesCallback(const char *dir,
+extern PHYSFS_DEPRECATED PHYSFS_DECL void PHYSFS_CALL PHYSFS_enumerateFilesCallback(const char *dir,
                                                PHYSFS_EnumFilesCallback c,
-                                               void *d) PHYSFS_DEPRECATED;
+                                               void *d);
 
 /**
  * Convert a UCS-4 string to a UTF-8 string.
