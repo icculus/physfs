@@ -100,6 +100,7 @@ set(PHYSFS_SRCS
     src/physfs_archiver_iso9660.c
     src/physfs_archiver_vdf.c
     src/physfs_archiver_lec3d.c
+    src/physfs_version.rc
     ${PHYSFS_CPP_SRCS}
     ${PHYSFS_M_SRCS}
 )
