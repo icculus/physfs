@@ -1001,6 +1001,13 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_setWriteDir(const char *newDir);
  * \deprecated As of PhysicsFS 2.0, use PHYSFS_mount() instead. This function
  *             just wraps it anyhow.
  *
+ * \param newDir directory or archive to add to the path, in
+ *               platform-dependent notation.
+ * \param appendToPath nonzero to append to search path, zero to prepend.
+ * \returns nonzero if added to path, zero on failure (bogus archive, dir
+ *          missing, etc). Use PHYSFS_getLastErrorCode() to obtain the
+ *          specific error.
+ *
  * \threadsafety It is safe to call this function from any thread.
  *
  * \since This function is available since PhysicsFS 1.0.0.
@@ -1029,6 +1036,10 @@ extern PHYSFS_DEPRECATED PHYSFS_DECL int PHYSFS_CALL PHYSFS_addToSearchPath(cons
  *             to "mounting" when that functionality was extended, and thus
  *             the preferred way to accomplish this function's work is now
  *             called "unmounting."
+ *
+ * \param oldDir dir/archive to remove.
+ * \returns nonzero on success, zero on failure. Use PHYSFS_getLastErrorCode()
+ *          to obtain the specific error.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -2792,6 +2803,10 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_getSearchPathCallback(PHYSFS_StringCa
  *             signal an error or request a stop), so if data will be lost,
  *             your callback has no way to direct the process, and your
  *             calling app has no way to know.
+ *
+ * \param dir Directory, in platform-independent notation, to enumerate.
+ * \param c Callback function to notify about search path elements.
+ * \param d Application-defined data passed to callback. Can be NULL.
  *
  * \threadsafety It is safe to call this function from any thread, but this
  *               function will hold a lock that prevents many other PhysicsFS
