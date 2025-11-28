@@ -3717,6 +3717,22 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_mountIo(PHYSFS_Io *io,
                                 int appendToPath);
 
 
+/**
+ * Function signature for callbacks that free a pointer.
+ *
+ * These are used to free/delete/deallocate a pointer in an abstract way.
+ *
+ * Prior to PhysicsFS 3.3.0, PHYSFS_mountMemory() had a function pointer
+ * declared inline in the function's signature. This just moves that
+ * declaration to its own typedef, for clarity and documentation purposes, but
+ * programs use the API exactly the same way.
+ *
+ * \param ptr The pointer to free.
+ *
+ * \since This typedef is available since PhysicsFS 3.3.0.
+ *
+ * \sa PHYSFS_mountMemory
+ */
 typedef void (PHYSFS_CALL *PHYSFS_FreeCallback)(void *ptr);
 
 /**
