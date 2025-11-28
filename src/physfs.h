@@ -240,7 +240,36 @@ extern "C" {
 #define PHYSFS_DECL
 #endif
 
-#if defined(PHYSFS_DEPRECATED)
+#ifdef PHYSFS_WIKI_DOCUMENTATION_SECTION
+/**
+ * A macro to tag a symbol as deprecated.
+ *
+ * A function is marked deprecated by adding this macro to its declaration:
+ *
+ * ```c
+ * extern PHYSFS_DEPRECATED int ThisFunctionWasABadIdea(void);
+ * ```
+ *
+ * Compilers with deprecation support can give a warning when a deprecated
+ * function is used. This symbol may be used in PhysicsFS's headers, but apps
+ * are welcome to use it for their own interfaces as well.
+ *
+ * PhysicsFS, on occasion, might deprecate a function for various reasons.
+ * However, PhysicsFS never removes symbols before major versions, at a
+ * minimum, so deprecated interfaces in PhysicsFS 3 will remain available at
+ * least until PhysicsFS 4, where it would be expected an app would have to
+ * take steps to migrate anyhow.
+ *
+ * Historically, PhysicsFS has _never_ removed a deprecated symbol, but this
+ * is not promised forever!
+ *
+ * On compilers without a deprecation mechanism, this is defined to nothing,
+ * and using a deprecated function will not generate a warning.
+ *
+ * \since This macro is available since PhysicsFS 2.1.0.
+ */
+#define PHYSFS_DEPRECATED __attribute__((deprecated))
+#elif defined(PHYSFS_DEPRECATED)
 /* do nothing. */
 #elif (__GNUC__ >= 4)  /* technically, this arrived in gcc 3.1, but oh well. */
 #define PHYSFS_DEPRECATED __attribute__((deprecated))
@@ -544,10 +573,25 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_getLinkedVersion(PHYSFS_Version *ver)
 
 
 #ifdef __ANDROID__
+/**
+ * Android-specific initialization details.
+ *
+ * This data is only used on Android. Other platforms can ignore this
+ * (and the struct will be preprocessed out too).
+ *
+ * This struct must hold a valid JNIEnv * and a JNI object of a Context
+ * (either the application context or the current Activity is fine). Both are
+ * cast to a void * so we don't need jni.h included wherever physfs.h is.
+ *
+ * This _must_ be used with PHYSFS_init or various APIs, like
+ * PHYSFS_getBaseDir() and PHYSFS_getPrefDir(), will fail on Android.
+ *
+ * \sa PHYSFS_init
+ */
 typedef struct PHYSFS_AndroidInit
 {
-    void *jnienv;
-    void *context;
+    void *jnienv;  /**< a valid JNIEnv * for the app. */
+    void *context; /**< a valid Context * for the app. */
 } PHYSFS_AndroidInit;
 #endif
 
