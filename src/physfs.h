@@ -719,7 +719,7 @@ extern PHYSFS_DECL const PHYSFS_ArchiveInfo ** PHYSFS_CALL PHYSFS_supportedArchi
  * before PhysicsFS 2.1.0.
  *
  * \param listVar List of information specified as freeable by this function.
- *                Passing NULL is safe; it is a valid no-op.
+ *                May be NULL.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -967,15 +967,18 @@ extern PHYSFS_DECL const char * PHYSFS_CALL PHYSFS_getWriteDir(void);
  *
  * Set a new write dir. This will override the previous setting.
  *
+ * All attempts to open a file for writing via PhysicsFS will fail until there
+ * is a valid write dir specified through this function.
+ *
  * This call will fail (and fail to change the write dir) if the current write
  * dir still has files open in it.
  *
+ * Passing a NULL here disables the write dir, so no files can be opened for
+ * writing via PhysicsFS, until a later call specifies a new write dir.
+ *
  * \param newDir The new directory to be the root of the write dir, specified
- *               in platform-dependent notation. Setting to NULL disables the
- *               write dir, so no files can be opened for writing via
- *               PhysicsFS.
- * \returns non-zero on success, zero on failure. All attempts to open a file
- *          for writing via PhysicsFS will fail until this call succeeds. Use
+ *               in platform-dependent notation. May be NULL.
+ * \returns non-zero on success, zero on failure. Use
  *          PHYSFS_getLastErrorCode() to obtain the specific error.
  *
  * \threadsafety It is safe to call this function from any thread.
@@ -3679,7 +3682,7 @@ typedef struct PHYSFS_Io
      * it is unsafe to touch that instance again and will discard any
      * references to it.
      *
-     * \param s The i/o instance to destroy.
+     * \param io The i/o instance to destroy.
      */
     void (PHYSFS_CALL *destroy)(struct PHYSFS_Io *io);
 } PHYSFS_Io;
