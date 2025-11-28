@@ -15,7 +15,11 @@ cmake_minimum_required(VERSION 3.5...4.0)
 
 project(PhysicsFS VERSION ${PHYSFS_VERSION} LANGUAGES C )
 
+include(CMakeDependentOption)
 include(GNUInstallDirs)
+include("${PROJECT_SOURCE_DIR}/extras/GetGitRevisionDescription.cmake")
+include("${PROJECT_SOURCE_DIR}/extras/PrivateSdlFunctions.cmake")
+include("${PROJECT_SOURCE_DIR}/extras/sdlmanpages.cmake")
 
 # Increment this if/when we break backwards compatibility.
 set(PHYSFS_SOVERSION 1)
@@ -256,6 +260,7 @@ if(PHYSFS_BUILD_TEST)
 endif()
 
 option(PHYSFS_INSTALL "Enable PhysFS installation" ON)
+cmake_dependent_option(PHYSFS_INSTALL_MAN "Install man pages for PhysicsFS" OFF "PHYSFS_INSTALL" OFF)
 if(PHYSFS_INSTALL)
     if(MSVC)
         set(PHYSFS_INSTALL_CMAKEDIR "cmake")
@@ -324,6 +329,16 @@ if(PHYSFS_INSTALL)
         install(
             FILES "${CMAKE_CURRENT_BINARY_DIR}/extras/physfs.pc"
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+        )
+    endif()
+
+    if(PHYSFS_INSTALL_MAN)
+        sdl_get_git_revision_hash(PHYSFS_REVISION)
+        SDL_generate_manpages(
+            HEADERS_DIR "${PROJECT_SOURCE_DIR}/src/physfs.h"
+            SYMBOL "PHYSFS_init"
+            WIKIHEADERS_PL_PATH "${PROJECT_SOURCE_DIR}/extras/wikiheaders.pl"
+            REVISION "${PHYSFS_REVISION}"
         )
     endif()
 endif()
