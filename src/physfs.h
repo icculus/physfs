@@ -2693,8 +2693,7 @@ typedef void (PHYSFS_CALL *PHYSFS_StringCallback)(void *data, const char *str);
  *
  * \sa PHYSFS_enumerateFilesCallback
  */
-typedef void (PHYSFS_CALL *PHYSFS_EnumFilesCallback)(void *data, const char *origdir,
-                                         const char *fname);
+typedef void (PHYSFS_CALL *PHYSFS_EnumFilesCallback)(void *data, const char *origdir, const char *fname);
 
 
 /**
@@ -2808,9 +2807,7 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_getSearchPathCallback(PHYSFS_StringCa
  * \sa PHYSFS_enumerateFiles
  * \sa PHYSFS_EnumFilesCallback
  */
-extern PHYSFS_DEPRECATED PHYSFS_DECL void PHYSFS_CALL PHYSFS_enumerateFilesCallback(const char *dir,
-                                               PHYSFS_EnumFilesCallback c,
-                                               void *d);
+extern PHYSFS_DEPRECATED PHYSFS_DECL void PHYSFS_CALL PHYSFS_enumerateFilesCallback(const char *dir, PHYSFS_EnumFilesCallback c, void *d);
 
 /**
  * Convert a UCS-4 string to a UTF-8 string.
@@ -2838,8 +2835,7 @@ extern PHYSFS_DEPRECATED PHYSFS_DECL void PHYSFS_CALL PHYSFS_enumerateFilesCallb
  *
  * \since This function is available since PhysicsFS 2.0.0.
  */
-extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst,
-                                     PHYSFS_uint64 len);
+extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src, char *dst, PHYSFS_uint64 len);
 
 /**
  * Convert a UTF-8 string to a UCS-4 string.
@@ -2867,8 +2863,7 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromUcs4(const PHYSFS_uint32 *src
  *
  * \since This function is available since PhysicsFS 2.0.0.
  */
-extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst,
-                                   PHYSFS_uint64 len);
+extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8ToUcs4(const char *src, PHYSFS_uint32 *dst, PHYSFS_uint64 len);
 
 /**
  * Convert a UCS-2 string to a UTF-8 string.
@@ -2904,8 +2899,7 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8ToUcs4(const char *src, PHYSFS_ui
  *
  * \sa PHYSFS_utf8FromUtf16
  */
-extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst,
-                                     PHYSFS_uint64 len);
+extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len);
 
 /**
  * Convert a UTF-8 string to a UCS-2 string.
@@ -2942,8 +2936,7 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromUcs2(const PHYSFS_uint16 *src
  *
  * \sa PHYSFS_utf8ToUtf16
  */
-extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst,
-                                   PHYSFS_uint64 len);
+extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8ToUcs2(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len);
 
 /**
  * Convert a UTF-8 string to a Latin1 string.
@@ -2971,8 +2964,7 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8ToUcs2(const char *src, PHYSFS_ui
  *
  * \since This function is available since PhysicsFS 2.0.0.
  */
-extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromLatin1(const char *src, char *dst,
-                                       PHYSFS_uint64 len);
+extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromLatin1(const char *src, char *dst, PHYSFS_uint64 len);
 
 /* Everything above this line is part of the PhysicsFS 2.0 API. */
 
@@ -3063,8 +3055,7 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_utf8stricmp(const char *str1, const ch
  *
  * \since This function is available since PhysicsFS 2.1.0.
  */
-extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_utf16stricmp(const PHYSFS_uint16 *str1,
-                                    const PHYSFS_uint16 *str2);
+extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_utf16stricmp(const PHYSFS_uint16 *str1, const PHYSFS_uint16 *str2);
 
 /**
  * Case-insensitive compare of two UCS-4 strings.
@@ -3090,8 +3081,7 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_utf16stricmp(const PHYSFS_uint16 *str1
  *
  * \since This function is available since PhysicsFS 2.1.0.
  */
-extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_ucs4stricmp(const PHYSFS_uint32 *str1,
-                                   const PHYSFS_uint32 *str2);
+extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_ucs4stricmp(const PHYSFS_uint32 *str1, const PHYSFS_uint32 *str2);
 
 
 /**
@@ -3140,8 +3130,7 @@ typedef enum PHYSFS_EnumerateCallbackResult
  * \sa PHYSFS_enumerate
  * \sa PHYSFS_EnumerateCallbackResult
  */
-typedef PHYSFS_EnumerateCallbackResult (PHYSFS_CALL *PHYSFS_EnumerateCallback)(void *data,
-                                       const char *origdir, const char *fname);
+typedef PHYSFS_EnumerateCallbackResult (PHYSFS_CALL *PHYSFS_EnumerateCallback)(void *data, const char *origdir, const char *fname);
 
 /**
  * Get a file listing of a search path's directory, using an
@@ -3209,8 +3198,7 @@ typedef PHYSFS_EnumerateCallbackResult (PHYSFS_CALL *PHYSFS_EnumerateCallback)(v
  * \sa PHYSFS_EnumerateCallback
  * \sa PHYSFS_enumerateFiles
  */
-extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_enumerate(const char *dir, PHYSFS_EnumerateCallback c,
-                                 void *d);
+extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_enumerate(const char *dir, PHYSFS_EnumerateCallback c, void *d);
 
 
 /**
@@ -3381,8 +3369,7 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_stat(const char *fname, PHYSFS_Stat *s
  *
  * \since This function is available since PhysicsFS 2.1.0.
  */
-extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst,
-                                      PHYSFS_uint64 len);
+extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *src, char *dst, PHYSFS_uint64 len);
 
 /**
  * Convert a UTF-8 string to a UTF-16 string.
@@ -3420,8 +3407,7 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8FromUtf16(const PHYSFS_uint16 *sr
  *
  * \sa PHYSFS_utf8ToUtf16
  */
-extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8ToUtf16(const char *src, PHYSFS_uint16 *dst,
-                                    PHYSFS_uint64 len);
+extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8ToUtf16(const char *src, PHYSFS_uint16 *dst, PHYSFS_uint64 len);
 
 
 /**
@@ -3445,8 +3431,7 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_utf8ToUtf16(const char *src, PHYSFS_u
  *
  * \sa PHYSFS_eof
  */
-extern PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_readBytes(PHYSFS_File *handle, void *buffer,
-                                           PHYSFS_uint64 len);
+extern PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_readBytes(PHYSFS_File *handle, void *buffer, PHYSFS_uint64 len);
 
 /**
  * Write data to a PhysicsFS filehandle.
@@ -3475,9 +3460,7 @@ extern PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_readBytes(PHYSFS_File *handl
  *
  * \since This function is available since PhysicsFS 2.1.0.
  */
-extern PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_writeBytes(PHYSFS_File *handle,
-                                            const void *buffer,
-                                            PHYSFS_uint64 len);
+extern PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_writeBytes(PHYSFS_File *handle, const void *buffer, PHYSFS_uint64 len);
 
 
 /**
@@ -3590,7 +3573,7 @@ typedef struct PHYSFS_Io
      * \returns number of bytes written to file, -1 if complete failure.
      */
     PHYSFS_sint64 (PHYSFS_CALL *write)(struct PHYSFS_Io *io, const void *buffer,
-                           PHYSFS_uint64 len);
+                                       PHYSFS_uint64 len);
 
     /**
      * Move i/o position to a given byte offset from start.
@@ -3729,8 +3712,9 @@ typedef struct PHYSFS_Io
  * \sa PHYSFS_getSearchPath
  * \sa PHYSFS_getMountPoint
  */
-extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_mountIo(PHYSFS_Io *io, const char *newDir,
-                               const char *mountPoint, int appendToPath);
+extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_mountIo(PHYSFS_Io *io,
+                                const char *newDir, const char *mountPoint,
+                                int appendToPath);
 
 
 typedef void (PHYSFS_CALL *PHYSFS_FreeCallback)(void *ptr);
@@ -3782,8 +3766,8 @@ typedef void (PHYSFS_CALL *PHYSFS_FreeCallback)(void *ptr);
  * \sa PHYSFS_getMountPoint
  */
 extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_mountMemory(const void *buf, PHYSFS_uint64 len,
-                                   PHYSFS_FreeCallback del, const char *newDir,
-                                   const char *mountPoint, int appendToPath);
+                                        PHYSFS_FreeCallback del, const char *newDir,
+                                        const char *mountPoint, int appendToPath);
 
 
 /**
@@ -3842,7 +3826,7 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_mountMemory(const void *buf, PHYSFS_ui
  * \sa PHYSFS_getMountPoint
  */
 extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_mountHandle(PHYSFS_File *file, const char *newDir,
-                                   const char *mountPoint, int appendToPath);
+                                                      const char *mountPoint, int appendToPath);
 
 
 /**
