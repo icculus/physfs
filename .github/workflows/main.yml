@@ -31,6 +31,7 @@ jobs:
         cmake -B build -GNinja \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=prefix_cmake \
+          -DPHYSFS_INSTALL_MAN=ON \
           ${{ matrix.platform.flags }}
     - name: Build (CMake)
       run: |
