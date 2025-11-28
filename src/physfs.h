@@ -25,18 +25,18 @@
  *
  * With PhysicsFS, you have a single writing directory and multiple
  * directories (the "search path") for reading. You can think of this as a
- * filesystem within a filesystem. If (on Windows) you were to set the
- * writing directory to "C:\MyGame\MyWritingDirectory", then no PHYSFS calls
- * could touch anything above this directory, including the "C:\MyGame" and
- * "C:\" directories. This prevents an application's internal scripting
- * language from piddling over c:\\config.sys, for example. If you'd rather
- * give PHYSFS full access to the system's REAL file system, set the writing
- * dir to "C:\", but that's generally A Bad Thing for several reasons.
+ * filesystem within a filesystem. If (on Windows) you were to set the writing
+ * directory to "C:\MyGame\MyWritingDirectory", then no PHYSFS calls could
+ * touch anything above this directory, including the "C:\MyGame" and "C:\"
+ * directories. This prevents an application's internal scripting language
+ * from piddling over c:\\config.sys, for example. If you'd rather give PHYSFS
+ * full access to the system's REAL file system, set the writing dir to "C:\",
+ * but that's generally A Bad Thing for several reasons.
  *
  * Drive letters are hidden in PhysicsFS once you set up your initial paths.
- * The search path creates a single, hierarchical directory structure.
- * Not only does this lend itself well to general abstraction with archives,
- * it also gives better support to operating systems like MacOS and Unix.
+ * The search path creates a single, hierarchical directory structure. Not
+ * only does this lend itself well to general abstraction with archives, it
+ * also gives better support to operating systems like MacOS and Unix.
  * Generally speaking, you shouldn't ever hardcode a drive letter; not only
  * does this hurt portability to non-Microsoft OSes, but it limits your win32
  * users to a single drive, too. Use the PhysicsFS abstraction functions and
@@ -45,21 +45,20 @@
  * "C:\MyGame\MyConfigFiles\game.cfg", then you might set the write dir to
  * "C:\MyGame" and then open "MyConfigFiles/game.cfg". This gives an
  * abstraction across all platforms. Specifying a file in this way is termed
- * "platform-independent notation" in this documentation. Specifying a
- * a filename in a form such as "C:\mydir\myfile" or
- * "MacOS hard drive:My Directory:My File" is termed "platform-dependent
- * notation". The only time you use platform-dependent notation is when
- * setting up your write directory and search path; after that, all file
- * access into those directories are done with platform-independent notation.
+ * "platform-independent notation" in this documentation. Specifying a a
+ * filename in a form such as "C:\mydir\myfile" or "MacOS hard drive:My
+ * Directory:My File" is termed "platform-dependent notation". The only time
+ * you use platform-dependent notation is when setting up your write directory
+ * and search path; after that, all file access into those directories are
+ * done with platform-independent notation.
  *
  * All files opened for writing are opened in relation to the write directory,
  * which is the root of the writable filesystem. When opening a file for
- * reading, PhysicsFS goes through the search path. This is NOT the
- * same thing as the PATH environment variable. An application using
- * PhysicsFS specifies directories to be searched which may be actual
- * directories, or archive files that contain files and subdirectories of
- * their own. See the end of these docs for currently supported archive
- * formats.
+ * reading, PhysicsFS goes through the search path. This is NOT the same thing
+ * as the PATH environment variable. An application using PhysicsFS specifies
+ * directories to be searched which may be actual directories, or archive
+ * files that contain files and subdirectories of their own. See the end of
+ * these docs for currently supported archive formats.
  *
  * Once the search path is defined, you may open files for reading. If you've
  * got the following search path defined (to use a win32 example again):
@@ -81,37 +80,37 @@
  * it correctly.
  *
  * Files opened through PhysicsFS may NOT contain "." or ".." or ":" as dir
- * elements. Not only are these meaningless on MacOS Classic and/or Unix,
- * they are a security hole. Also, symbolic links (which can be found in
- * some archive types and directly in the filesystem on Unix platforms) are
- * NOT followed until you call PHYSFS_permitSymbolicLinks(). That's left to
- * your own discretion, as following a symlink can allow for access outside
- * the write dir and search paths. For portability, there is no mechanism for
+ * elements. Not only are these meaningless on MacOS Classic and/or Unix, they
+ * are a security hole. Also, symbolic links (which can be found in some
+ * archive types and directly in the filesystem on Unix platforms) are NOT
+ * followed until you call PHYSFS_permitSymbolicLinks(). That's left to your
+ * own discretion, as following a symlink can allow for access outside the
+ * write dir and search paths. For portability, there is no mechanism for
  * creating new symlinks in PhysicsFS.
  *
  * The write dir is not included in the search path unless you specifically
- * add it. While you CAN change the write dir as many times as you like,
- * you should probably set it once and stick to it. Remember that your
- * program will not have permission to write in every directory on Unix and
- * NT systems.
+ * add it. While you CAN change the write dir as many times as you like, you
+ * should probably set it once and stick to it. Remember that your program
+ * will not have permission to write in every directory on Unix and NT
+ * systems.
  *
  * All files are opened in binary mode; there is no endline conversion for
  * textfiles. Other than that, PhysicsFS has some convenience functions for
  * platform-independence. There is a function to tell you the current
  * platform's dir separator ("\\" on windows, "/" on Unix, ":" on MacOS),
- * which is needed only to set up your search/write paths. There is a
- * function to tell you what CD-ROM drives contain accessible discs, and a
- * function to recommend a good search path, etc.
+ * which is needed only to set up your search/write paths. There is a function
+ * to tell you what CD-ROM drives contain accessible discs, and a function to
+ * recommend a good search path, etc.
  *
- * A recommended order for the search path is the write dir, then the base dir,
- * then the cdrom dir, then any archives discovered. Quake 3 does something
- * like this, but moves the archives to the start of the search path. Build
- * Engine games, like Duke Nukem 3D and Blood, place the archives last, and
- * use the base dir for both searching and writing. There is a helper
- * function (PHYSFS_setSaneConfig()) that puts together a basic configuration
- * for you, based on a few parameters. Also see the comments on
- * PHYSFS_getBaseDir(), and PHYSFS_getPrefDir() for info on what those
- * are and how they can help you determine an optimal search path.
+ * A recommended order for the search path is the write dir, then the base
+ * dir, then the cdrom dir, then any archives discovered. Quake 3 does
+ * something like this, but moves the archives to the start of the search
+ * path. Build Engine games, like Duke Nukem 3D and Blood, place the archives
+ * last, and use the base dir for both searching and writing. There is a
+ * helper function (PHYSFS_setSaneConfig()) that puts together a basic
+ * configuration for you, based on a few parameters. Also see the comments on
+ * PHYSFS_getBaseDir(), and PHYSFS_getPrefDir() for info on what those are and
+ * how they can help you determine an optimal search path.
  *
  * PhysicsFS 2.0 adds the concept of "mounting" archives to arbitrary points
  * in the search path. If a zipfile contains "maps/level.map" and you mount
@@ -127,25 +126,25 @@
  *
  * PhysicsFS is mostly thread safe. The errors returned by
  * PHYSFS_getLastErrorCode() are unique by thread, and library-state-setting
- * functions are mutex'd. For efficiency, individual file accesses are
- * not locked, so you can not safely read/write/seek/close/etc the same
- * file from two threads at the same time. Other race conditions are bugs
- * that should be reported/patched.
+ * functions are mutex'd. For efficiency, individual file accesses are not
+ * locked, so you can not safely read/write/seek/close/etc the same file from
+ * two threads at the same time. Other race conditions are bugs that should be
+ * reported/patched.
  *
  * While you CAN use stdio/syscall file access in a program that has PHYSFS_*
  * calls, doing so is not recommended, and you can not directly use system
- * filehandles with PhysicsFS and vice versa (but as of PhysicsFS 2.1, you
- * can wrap them in a PHYSFS_Io interface yourself if you wanted to).
+ * filehandles with PhysicsFS and vice versa (but as of PhysicsFS 2.1, you can
+ * wrap them in a PHYSFS_Io interface yourself if you wanted to).
  *
  * Note that archives need not be named as such: if you have a ZIP file and
- * rename it with a .PKG extension, the file will still be recognized as a
- * ZIP archive by PhysicsFS; the file's contents are used to determine its
- * type where possible.
+ * rename it with a .PKG extension, the file will still be recognized as a ZIP
+ * archive by PhysicsFS; the file's contents are used to determine its type
+ * where possible.
  *
  * Currently supported archive types:
  *
  * - .ZIP (pkZip/WinZip/Info-ZIP compatible)
- * - .7Z  (7zip archives)
+ * - .7Z (7zip archives)
  * - .ISO (ISO9660 files, CD-ROM images)
  * - .GRP (Build Engine groupfile archives)
  * - .PAK (Quake I/II archive format)
@@ -170,19 +169,19 @@
  * should!) then you need to figure out what your platform wants, needs, and
  * offers. If you are on Windows before Win2000 and build with Unicode
  * support, your TCHAR strings are two bytes per character (this is called
- * "UCS-2 encoding"). Any modern Windows uses UTF-16, which is two bytes
- * per character for most characters, but some characters are four. You
- * should convert them to UTF-8 before handing them to PhysicsFS with
+ * "UCS-2 encoding"). Any modern Windows uses UTF-16, which is two bytes per
+ * character for most characters, but some characters are four. You should
+ * convert them to UTF-8 before handing them to PhysicsFS with
  * PHYSFS_utf8FromUtf16(), which handles both UTF-16 and UCS-2. If you're
  * using Unix or Mac OS X, your wchar_t strings are four bytes per character
  * ("UCS-4 encoding", sometimes called "UTF-32"). Use PHYSFS_utf8FromUcs4().
  * Mac OS X can give you UTF-8 directly from a CFString or NSString, and many
- * Unixes generally give you C strings in UTF-8 format everywhere. If you
- * have a single-byte high ASCII charset, like so-many European "codepages"
- * you may be out of luck. We'll convert from "Latin1" to UTF-8 only, and
- * never back to Latin1. If you're above ASCII 127, all bets are off: move
- * to Unicode or use your platform's facilities. Passing a C string with
- * high-ASCII data that isn't UTF-8 encoded will NOT do what you expect!
+ * Unixes generally give you C strings in UTF-8 format everywhere. If you have
+ * a single-byte high ASCII charset, like so-many European "codepages" you may
+ * be out of luck. We'll convert from "Latin1" to UTF-8 only, and never back
+ * to Latin1. If you're above ASCII 127, all bets are off: move to Unicode or
+ * use your platform's facilities. Passing a C string with high-ASCII data
+ * that isn't UTF-8 encoded will NOT do what you expect!
  *
  * Naturally, there's also PHYSFS_utf8ToUcs2(), PHYSFS_utf8ToUtf16(), and
  * PHYSFS_utf8ToUcs4() to get data back into a format you like. Behind the
@@ -203,20 +202,18 @@
  * Descent HOG/MVL and Build Engine GRP archivers, for example, only offer a
  * DOS 8.3 filename, for example). Nothing can be done for these, but they
  * tend to be legacy formats for existing content that was all ASCII (and
- * thus, valid UTF-8) anyhow. Other formats, like .ZIP, don't explicitly
- * offer Unicode support, but unofficially expect filenames to be UTF-8
- * encoded, and thus Just Work. Most everything does the right thing without
- * bothering you, but it's good to be aware of these nuances in case they
- * don't.
- *
+ * thus, valid UTF-8) anyhow. Other formats, like .ZIP, don't explicitly offer
+ * Unicode support, but unofficially expect filenames to be UTF-8 encoded, and
+ * thus Just Work. Most everything does the right thing without bothering you,
+ * but it's good to be aware of these nuances in case they don't.
  *
  * Other stuff:
  *
  * Please see the file LICENSE.txt in the source's root directory for
  * licensing and redistribution rights.
  *
- * Please see the file CREDITS.txt in the source's "docs" directory for
- * a more or less complete list of who's responsible for this.
+ * Please see the file CREDITS.txt in the source's "docs" directory for a more
+ * or less complete list of who's responsible for this.
  */
 
 #ifndef _INCLUDE_PHYSFS_H_
@@ -241,6 +238,7 @@ extern "C" {
 #endif
 
 #ifdef PHYSFS_WIKI_DOCUMENTATION_SECTION
+
 /**
  * A macro to tag a symbol as deprecated.
  *
@@ -573,11 +571,12 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_getLinkedVersion(PHYSFS_Version *ver)
 
 
 #ifdef __ANDROID__
+
 /**
  * Android-specific initialization details.
  *
- * This data is only used on Android. Other platforms can ignore this
- * (and the struct will be preprocessed out too).
+ * This data is only used on Android. Other platforms can ignore this (and the
+ * struct will be preprocessed out too).
  *
  * This struct must hold a valid JNIEnv * and a JNI object of a Context
  * (either the application context or the current Activity is fine). Both are
@@ -925,11 +924,11 @@ extern PHYSFS_DECL const char * PHYSFS_CALL PHYSFS_getBaseDir(void);
  * Helper function.
  *
  * Get the "user dir". This is meant to be a suggestion of where a specific
- * user of the system can store files. On Unix, this is her home directory.
- * On systems with no concept of multiple home directories (MacOS, win95),
- * this will default to something like "C:\mybasedir\users\username"
- * where "username" will either be the login name, or "default" if the
- * platform doesn't support multiple users, either.
+ * user of the system can store files. On Unix, this is her home directory. On
+ * systems with no concept of multiple home directories (MacOS, win95), this
+ * will default to something like "C:\mybasedir\users\username" where
+ * "username" will either be the login name, or "default" if the platform
+ * doesn't support multiple users, either.
  *
  * \deprecated As of PhysicsFS 2.1, you probably want PHYSFS_getPrefDir().
  *
@@ -999,8 +998,8 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_setWriteDir(const char *newDir);
  * You must use this and not PHYSFS_mount if binary compatibility with
  * PhysicsFS 1.0 is important (which it may not be for many people).
  *
- * \deprecated As of PhysicsFS 2.0, use PHYSFS_mount() instead. This
- *             function just wraps it anyhow.
+ * \deprecated As of PhysicsFS 2.0, use PHYSFS_mount() instead. This function
+ *             just wraps it anyhow.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -1312,18 +1311,18 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_exists(const char *fname);
 /**
  * Determine if a file in the search path is really a directory.
  *
- * Determine if the first occurence of `fname` in the search path is
- * really a directory entry.
+ * Determine if the first occurence of `fname` in the search path is really a
+ * directory entry.
  *
  * Note that entries that are symlinks are ignored if
- * PHYSFS_permitSymbolicLinks(1) hasn't been called, so you
- * might end up further down in the search path than expected.
+ * PHYSFS_permitSymbolicLinks(1) hasn't been called, so you might end up
+ * further down in the search path than expected.
  *
- * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This
- *             function just wraps it anyhow.
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This function
+ *             just wraps it anyhow.
  *
  * \param fname filename in platform-independent notation.
- * \returns non-zero if filename exists and is a directory.  zero otherwise.
+ * \returns non-zero if filename exists and is a directory. zero otherwise.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -1338,18 +1337,18 @@ extern PHYSFS_DEPRECATED PHYSFS_DECL int PHYSFS_CALL PHYSFS_isDirectory(const ch
 /**
  * Determine if a file in the search path is really a symbolic link.
  *
- * Determine if the first occurence of `fname` in the search path is
- * really a symbolic link.
+ * Determine if the first occurence of `fname` in the search path is really a
+ * symbolic link.
  *
  * Note that entries that are symlinks are ignored if
- * PHYSFS_permitSymbolicLinks(1) hasn't been called, and as such,
- * this function will always return 0 in that case.
+ * PHYSFS_permitSymbolicLinks(1) hasn't been called, and as such, this
+ * function will always return 0 in that case.
  *
- * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This
- *             function just wraps it anyhow.
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This function
+ *             just wraps it anyhow.
  *
  * \param fname filename in platform-independent notation.
- * \returns non-zero if filename exists and is a symlink.  zero otherwise.
+ * \returns non-zero if filename exists and is a symlink. zero otherwise.
  *
  * \threadsafety It is safe to call this function from any thread.
  *
@@ -1366,15 +1365,15 @@ extern PHYSFS_DEPRECATED PHYSFS_DECL int PHYSFS_CALL PHYSFS_isSymbolicLink(const
  *
  * The modtime is returned as a number of seconds since the Unix epoch
  * (midnight, Jan 1, 1970). The exact derivation and accuracy of this time
- * depends on the particular archiver. If there is no reasonable way to
- * obtain this information for a particular archiver, or there was some sort
- * of error, this function returns (-1).
+ * depends on the particular archiver. If there is no reasonable way to obtain
+ * this information for a particular archiver, or there was some sort of
+ * error, this function returns (-1).
  *
  * You must use this and not PHYSFS_stat() if binary compatibility with
  * PhysicsFS 2.0 is important (which it may not be for many people).
  *
- * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This
- *             function just wraps it anyhow.
+ * \deprecated As of PhysicsFS 2.1, use PHYSFS_stat() instead. This function
+ *             just wraps it anyhow.
  *
  * \param filename filename to check, in platform-independent notation.
  * \returns last modified time of the file. -1 if it can't be determined.
@@ -1517,11 +1516,11 @@ extern PHYSFS_DECL int PHYSFS_CALL PHYSFS_close(PHYSFS_File *handle);
  * \param objSize size in bytes of objects being read from `handle`.
  * \param objCount number of `objSize` objects to read from `handle`.
  * \returns number of objects read. PHYSFS_getLastErrorCode() can shed light
- *          on the reason this might be < (objCount), as can PHYSFS_eof().
- *          -1 if complete failure.
+ *          on the reason this might be < (objCount), as can PHYSFS_eof(). -1
+ *          if complete failure.
  *
- * \threadsafety Multiple threads can not operate on the same PHYSFS_File
- *               at the same time, but they can safely operate on _different_
+ * \threadsafety Multiple threads can not operate on the same PHYSFS_File at
+ *               the same time, but they can safely operate on _different_
  *               ones simultaneously.
  *
  * \since This function is available since PhysicsFS 1.0.0.
@@ -1554,8 +1553,8 @@ extern PHYSFS_DEPRECATED PHYSFS_DECL PHYSFS_sint64 PHYSFS_CALL PHYSFS_read(PHYSF
  *          light on the reason this might be < `objCount`. -1 if complete
  *          failure.
  *
- * \threadsafety Multiple threads can not operate on the same PHYSFS_File
- *               at the same time, but they can safely operate on _different_
+ * \threadsafety Multiple threads can not operate on the same PHYSFS_File at
+ *               the same time, but they can safely operate on _different_
  *               ones simultaneously.
  *
  * \since This function is available since PhysicsFS 1.0.0.
@@ -2781,7 +2780,8 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_getSearchPathCallback(PHYSFS_StringCa
 
 
 /**
- * Get a file listing of a search path's directory, using an application-defined callback.
+ * Get a file listing of a search path's directory, using an
+ * application-defined callback.
  *
  * As of PhysicsFS 2.1, this function just wraps PHYSFS_enumerate() and
  * ignores errors. Consider using PHYSFS_enumerate() or
@@ -2798,8 +2798,8 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_getSearchPathCallback(PHYSFS_StringCa
  *               functions from running until your callback returns and this
  *               function finishes. This is only a problem if you're using
  *               this callback to farm work off to other threads that will
- *               want to use PhysicsFS to do work (like enumerating files
- *               that another thread reads in and processes).
+ *               want to use PhysicsFS to do work (like enumerating files that
+ *               another thread reads in and processes).
  *
  * \since This function is available since PhysicsFS 2.0.0.
  *
