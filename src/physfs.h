@@ -1,4 +1,4 @@
-/**
+/*
  * PhysicsFS; a portable, flexible file i/o abstraction.
  *
  * Please see the file LICENSE.txt in the source's root directory.
