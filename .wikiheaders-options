@@ -1,0 +1,41 @@
+projectfullname = PhysicsFS
+projectshortname = physfs
+incsubdir = src
+wikisubdir =
+#readmesubdir = docs
+apiprefixregex = PHYSFS_
+mainincludefname = physfs.h
+versionfname = src/physfs.h
+versionmajorregex = \A\#define\s+PHYSFS_VER_MAJOR\s+(\d+)\Z
+versionminorregex = \A\#define\s+PHYSFS_VER_MINOR\s+(\d+)\Z
+versionmicroregex = \A\#define\s+PHYSFS_VER_PATCH\s+(\d+)\Z
+#apipropertyregex = \A\s*\#\s*define\s+SDL_PROP_
+selectheaderregex = \Aphysfs\.h\Z
+wikidocsectionsym = PHYSFS_WIKI_DOCUMENTATION_SECTION
+forceinlinesym = PHYSFS_FORCE_INLINE
+deprecatedsym = PHYSFS_DEPRECATED
+declspecsym = PHYSFS_DECL
+callconvsym = PHYSFS_CALL
+projecturl = https://icculus.org/physfs/
+wikiurl = https://wiki.libsdl.org/
+bugreporturl = https://github.com/libsdl-org/sdlwiki/issues/new
+warn_about_missing = 0
+#wikipreamble = (This is the documentation for SDL3, which is the current stable version. [SDL2](https://wiki.libsdl.org/SDL2/) was the previous version!)
+wikiheaderfiletext = Defined in [<%fname%>](https://github.com/icculus/physfs/blob/main/src/%fname%)
+
+manpageheaderfiletext = Defined in %fname%
+#manpagesymbolfilterregex = \A[US]int\d+\Z
+
+# All SDL_test_* headers become undefined categories, everything else just converts like SDL_audio.h -> Audio
+# A handful of others we fix up in the header itself with /* WIKI CATEGORY: x */ comments.
+#headercategoryeval = s/\ASDL_test_?.*?\.h\Z//; s/\ASDL_?(.*?)\.h\Z/$1/; ucfirst();
+
+quickrefenabled = 1
+quickrefcategoryorder = PhysicsFS
+quickreftitle = PhysicsFS API Quick Reference
+quickrefurl = https://icculus.org/physfs/
+quickrefdesc = The latest version of this document can be found at https://wiki.icculus.org/PhysicsFS3/QuickReference
+#quickrefmacroregex = \A(SDL_PLATFORM_.*|SDL_.*_INTRINSICS|SDL_Atomic...Ref|SDL_assert.*?|SDL_COMPILE_TIME_ASSERT|SDL_arraysize|SDL_Swap[BL]E\d\d|SDL_[a-z]+_cast)\Z
+
+envvarenabled = 0
+
