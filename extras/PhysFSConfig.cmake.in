@@ -1,0 +1,44 @@
+include(FeatureSummary)
+set_package_properties(PhysicsFS PROPERTIES
+    URL "https://icculus.org/physfs/"
+    DESCRIPTION "Library to provide abstract access to various archives"
+)
+
+@PACKAGE_INIT@
+
+set(PhysFS_PhysFS_FOUND)
+
+set(PhysFS_PhysFS-shared_FOUND)
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/PhysFS-shared-targets.cmake")
+    include("${CMAKE_CURRENT_LIST_DIR}/PhysFS-shared-targets.cmake")
+    set(PhysFS_PhysFS-shared_FOUND TRUE)
+    set(PhysFS_PhysFS_FOUND TRUE)
+endif()
+
+set(PhysFS_PhysFS-static_FOUND)
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/PhysFS-static-targets.cmake")
+    include("${CMAKE_CURRENT_LIST_DIR}/PhysFS-static-targets.cmake")
+    set(PhysFS_PhysFS-static_FOUND TRUE)
+    set(PhysFS_PhysFS_FOUND TRUE)
+endif()
+
+function(_physfsl_create_target_alias_compat NEW_TARGET TARGET)
+  if(CMAKE_VERSION VERSION_LESS "3.18")
+    # Aliasing local targets is not supported on CMake < 3.18, so make it global.
+    add_library(${NEW_TARGET} INTERFACE IMPORTED)
+    set_target_properties(${NEW_TARGET} PROPERTIES INTERFACE_LINK_LIBRARIES "${TARGET}")
+  else()
+    add_library(${NEW_TARGET} ALIAS ${TARGET})
+  endif()
+endfunction()
+
+# Make sure PhysFS::PhysFS always exists
+if(NOT TARGET PhysFS::PhysFS)
+  if(TARGET PhysFS::PhysFS-shared)
+    _physfsl_create_target_alias_compat(PhysFS::PhysFS PhysFS::PhysFS-shared)
+  elseif(TARGET PhysFS::PhysFS-static)
+    _physfsl_create_target_alias_compat(PhysFS::PhysFS PhysFS::PhysFS-static)
+  endif()
+endif()
+
+check_required_components(PhysFS)

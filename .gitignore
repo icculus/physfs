@@ -1,10 +1,13 @@
 cmake-build
 CMakeFiles/
 CMakeCache.txt
+build.ninja
 Makefile
 test_physfs*
 libphysfs.*
+physfs*.dll
 install_manifest.txt
+PhysFS-*.cmake
 cmake_install.cmake
 CMakeDoxy*
 extras/physfs.pc
