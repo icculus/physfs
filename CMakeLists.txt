@@ -246,6 +246,12 @@ if(PHYSFS_BUILD_TEST)
         target_compile_definitions(test_physfs PRIVATE PHYSFS_HAVE_READLINE=1)
     endif()
     list(APPEND PHYSFS_INSTALL_TARGETS test_physfs)
+
+    if(UNIX)
+        add_executable(physfshttpd extras/physfshttpd.c)
+        target_link_libraries(physfshttpd PRIVATE PhysFS::PhysFS)
+        sdl_add_warning_options(physfshttpd WARNING_AS_ERROR ${PHYSFS_WERROR})
+    endif()
 endif()
 
 option(PHYSFS_INSTALL "Enable PhysFS installation" ON)
