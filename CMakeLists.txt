@@ -17,9 +17,9 @@ project(PhysicsFS VERSION ${PHYSFS_VERSION} LANGUAGES C )
 
 include(CMakeDependentOption)
 include(GNUInstallDirs)
-include("${PROJECT_SOURCE_DIR}/extras/GetGitRevisionDescription.cmake")
-include("${PROJECT_SOURCE_DIR}/extras/PrivateSdlFunctions.cmake")
-include("${PROJECT_SOURCE_DIR}/extras/sdlmanpages.cmake")
+include("${PROJECT_SOURCE_DIR}/cmake/GetGitRevisionDescription.cmake")
+include("${PROJECT_SOURCE_DIR}/cmake/PrivateSdlFunctions.cmake")
+include("${PROJECT_SOURCE_DIR}/cmake/sdlmanpages.cmake")
 
 # Increment this if/when we break backwards compatibility.
 set(PHYSFS_SOVERSION 1)
@@ -305,7 +305,7 @@ if(PHYSFS_INSTALL)
     install(FILES src/physfs.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
     include(CMakePackageConfigHelpers)
-    configure_package_config_file(extras/PhysFSConfig.cmake.in PhysFSConfig.cmake
+    configure_package_config_file(cmake/PhysFSConfig.cmake.in PhysFSConfig.cmake
         NO_SET_AND_CHECK_MACRO
         PATH_VARS CMAKE_INSTALL_PREFIX
         INSTALL_DESTINATION "${PHYSFS_INSTALL_CMAKEDIR}"
@@ -321,18 +321,14 @@ if(PHYSFS_INSTALL)
     install(FILES LICENSE.txt
         DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/licenses/PhysicsFS${PROJECT_VERSION_MAJOR}")
 
-    configure_file(extras/cmake_uninstall.cmake.in cmake_uninstall.cmake IMMEDIATE @ONLY)
+    configure_file(cmake/cmake_uninstall.cmake.in cmake_uninstall.cmake IMMEDIATE @ONLY)
     add_custom_target(uninstall-physfs
         COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
     if(NOT MSVC)
-        configure_file(
-            "extras/physfs.pc.in"
-            "extras/physfs.pc"
-            @ONLY
-        )
+        configure_file(cmake/physfs.pc.in physfs.pc @ONLY)
         install(
-            FILES "${CMAKE_CURRENT_BINARY_DIR}/extras/physfs.pc"
+            FILES "${CMAKE_CURRENT_BINARY_DIR}/physfs.pc"
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
         )
     endif()
@@ -342,7 +338,7 @@ if(PHYSFS_INSTALL)
         SDL_generate_manpages(
             HEADERS_DIR "${PROJECT_SOURCE_DIR}/src/physfs.h"
             SYMBOL "PHYSFS_init"
-            WIKIHEADERS_PL_PATH "${PROJECT_SOURCE_DIR}/extras/wikiheaders.pl"
+            WIKIHEADERS_PL_PATH "${PROJECT_SOURCE_DIR}/build-scripts/wikiheaders.pl"
             REVISION "${PHYSFS_REVISION}"
         )
     endif()
