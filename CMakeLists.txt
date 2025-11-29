@@ -242,7 +242,7 @@ option(PHYSFS_BUILD_TEST "Build stdio test program." TRUE)
 mark_as_advanced(PHYSFS_BUILD_TEST)
 if(PHYSFS_BUILD_TEST)
     add_executable(test_physfs test/test_physfs.c)
-    target_link_libraries(test_physfs PRIVATE PhysFS::PhysFS ${OTHER_LDFLAGS})
+    target_link_libraries(test_physfs PRIVATE PhysFS::PhysFS)
     sdl_add_warning_options(test_physfs WARNING_AS_ERROR ${PHYSFS_WERROR})
 
     find_path(READLINE_H readline/readline.h)
