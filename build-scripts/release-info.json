@@ -1,0 +1,151 @@
+{
+  "name": "physfs",
+  "remote": "icculus/physfs",
+  "version": {
+    "file": "src/physfs.h",
+    "re_major": "^#define PHYSFS_VER_MAJOR\\s+([0-9]+)$",
+    "re_minor": "^#define PHYSFS_VER_MINOR\\s+([0-9]+)$",
+    "re_micro": "^#define PHYSFS_VER_PATCH\\s+([0-9]+)$"
+  },
+  "source": {
+    "checks": [
+      "src/physfs.c",
+      "src/physfs.h",
+      "test/test_physfs.c",
+      "extras/physfssdl3.h"
+    ]
+  },
+  "mingw": {
+    "cmake": {
+      "archs": ["x86", "x64"],
+      "args": [
+        "-DPHYSFS_BUILD_SHARED=ON",
+        "-DPHYSFS_BUILD_STATIC=OFF",
+        "-DPHYSFS_INSTALL=ON",
+        "-DPHYSFS_INSTALL_MAN=OFF",
+        "-DPHYSFS_BUILD_DOCS=OFF",
+        "-DPHYSFS_BUILD_TEST=OFF"
+      ],
+      "shared-static": "args"
+    },
+    "files": {
+      "": [
+        "build-scripts/pkg-support/mingw/INSTALL.md.in:INSTALL.md",
+        "build-scripts/pkg-support/mingw/Makefile",
+        "LICENSE.txt",
+        "README.md"
+      ],
+      "cmake": [
+        "build-scripts/pkg-support/mingw/cmake/PhysFSConfig.cmake",
+        "build-scripts/pkg-support/mingw/cmake/PhysFSConfigVersion.cmake"
+      ]
+    }
+  },
+  "msvc": {
+    "cmake": {
+      "archs": [
+        "x86",
+        "x64",
+        "arm64"
+      ],
+      "args": [
+        "-DPHYSFS_BUILD_SHARED=ON",
+        "-DPHYSFS_BUILD_STATIC=OFF",
+        "-DPHYSFS_INSTAL=ON",
+        "-DPHYSFS_INSTALL_MAN=OFF",
+        "-DPHYSFS_BUILD_DOCS=OFF",
+        "-DPHYSFS_BUILD_TEST=OFF"
+      ],
+      "files-lib": {
+        "": [
+          "bin/physfs.dll"
+        ]
+      },
+      "files-devel": {
+        "lib/@<@ARCH@>@": [
+          "bin/physfs.dll",
+          "bin/physfs.pdb",
+          "lib/physfs.lib"
+        ]
+      }
+    },
+    "files-lib": {
+      "": [
+        "build-scripts/pkg-support/msvc/@<@ARCH@>@/INSTALL.md.in:INSTALL.md",
+        "LICENSE.txt",
+        "README.md"
+      ]
+    },
+    "files-devel": {
+      "": [
+        "build-scripts/pkg-support/msvc/INSTALL.md.in:INSTALL.md",
+        "LICENSE.txt",
+        "README.md"
+      ],
+      "cmake": [
+        "build-scripts/pkg-support/msvc/cmake/PhysFSConfig.cmake.in:PhysFSConfig.cmake",
+        "build-scripts/pkg-support/msvc/cmake/PhysFSConfigVersion.cmake.in:PhysFSConfigVersion.cmake",
+        "cmake/sdlcpu.cmake"
+      ],
+      "include": [
+        "src/physfs.h"
+      ]
+    }
+  },
+  "android": {
+    "cmake": {
+      "args": [
+        "-DPHYSFS_BUILD_SHARED=ON",
+        "-DPHYSFS_BUILD_STATIC=OFF",
+        "-DPHYSFS_INSTAL=ON",
+        "-DPHYSFS_INSTALL_MAN=OFF",
+        "-DPHYSFS_BUILD_DOCS=OFF",
+        "-DPHYSFS_BUILD_TEST=OFF"
+      ]
+    },
+    "name": "PhysFS",
+    "modules": {
+      "PhysFS-shared": {
+        "type": "library",
+        "library": "lib/libphysfs.so",
+        "includes": {
+          ".": ["include/physfs.h"]
+        }
+      },
+      "PhysFS": {
+        "type": "interface",
+        "export-libraries": [":PhysFS-shared"]
+      }
+    },
+    "abis": [
+      "armeabi-v7a",
+      "arm64-v8a",
+      "x86",
+      "x86_64"
+    ],
+    "api-minimum": 21,
+    "api-target": 35,
+    "ndk-minimum": 28,
+    "aar-files": {
+      "": [
+        "build-scripts/pkg-support/android/aar/__main__.py.in:__main__.py",
+        "build-scripts/pkg-support/android/aar/description.json.in:description.json"
+      ],
+      "META-INF": [
+        "LICENSE.txt"
+      ],
+      "cmake": [
+        "cmake/sdlcpu.cmake",
+        "build-scripts/pkg-support/android/aar/cmake/PhysFSConfig.cmake",
+        "build-scripts/pkg-support/android/aar/cmake/PhysFSConfigVersion.cmake.in:PhysFSConfigVersion.cmake"
+      ]
+    },
+    "files": {
+      "": [
+        "build-scripts/pkg-support/android/INSTALL.md.in:INSTALL.md",
+        "LICENSE.txt",
+        "README.md"
+      ]
+    }
+  }
+}
