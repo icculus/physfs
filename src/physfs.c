@@ -3199,7 +3199,12 @@ int PHYSFS_stat(const char *_fname, PHYSFS_Stat *stat)
 int __PHYSFS_readAll(PHYSFS_Io *io, void *buf, const size_t _len)
 {
     const PHYSFS_uint64 len = (PHYSFS_uint64) _len;
-    return (io->read(io, buf, len) == len);
+    PHYSFS_sint64 amount_read = io->read(io, buf, len);
+    if (amount_read < 0)
+    {
+        return 0;
+    }
+    return ((PHYSFS_uint64)amount_read == len);
 } /* __PHYSFS_readAll */
 
 
