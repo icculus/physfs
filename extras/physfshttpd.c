@@ -382,6 +382,7 @@ int main(int argc, char **argv)
         printf("listen socket failed to create.\n");
         return 42;
     } /* if */
+    printf("Listening on port %d\n", portnum);
 
     while (1)  /* infinite loop for now. */
     {
