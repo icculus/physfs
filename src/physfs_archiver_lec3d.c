@@ -291,7 +291,7 @@ static int labLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 cnt, void *arc)
 	PHYSFS_sint32 readlen;
 	PHYSFS_sint64 savepos;
 	char fn[32];
-	int i;
+	PHYSFS_uint32 i;
 
 	for (i = 0; i < cnt; i++)
 	{

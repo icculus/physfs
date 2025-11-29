@@ -244,7 +244,7 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     } while ((rc == -1) && (errno == EINTR));
     BAIL_IF(rc == -1, errcodeFromErrno(), -1);
     assert(rc >= 0);
-    assert(rc <= len);
+    assert((PHYSFS_uint64)rc <= len);
     return (PHYSFS_sint64) rc;
 } /* __PHYSFS_platformRead */
 
@@ -263,7 +263,7 @@ PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
     } while ((rc == -1) && (errno == EINTR));
     BAIL_IF(rc == -1, errcodeFromErrno(), rc);
     assert(rc >= 0);
-    assert(rc <= len);
+    assert((PHYSFS_uint64)rc <= len);
     return (PHYSFS_sint64) rc;
 } /* __PHYSFS_platformWrite */
 
