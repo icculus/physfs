@@ -219,34 +219,38 @@ static void *do_http(void *_args)
     char ipstr[128];
     char buffer[512];
     char *ptr;
+    int amount_read;
     strncpy(ipstr, inet_ntoa(((struct sockaddr_in *) args->addr)->sin_addr),
             sizeof (ipstr));
     ipstr[sizeof (ipstr) - 1] = '\0';
 
     printf("%s: connected.\n", ipstr);
-    read(args->sock, buffer, sizeof (buffer));
-    buffer[sizeof (buffer) - 1] = '\0';
-    ptr = strchr(buffer, '\n');
-    if (!ptr)
-        printf("%s: potentially bogus request.\n", ipstr);
-    else
+    amount_read = read(args->sock, buffer, sizeof (buffer));
+    if (amount_read > 0)
     {
-        *ptr = '\0';
-        ptr = strchr(buffer, '\r');
-        if (ptr != NULL)
-            *ptr = '\0';
-
-        if ((toupper(buffer[0]) == 'G') &&
-            (toupper(buffer[1]) == 'E') &&
-            (toupper(buffer[2]) == 'T') &&
-            (toupper(buffer[3]) == ' ') &&
-            (toupper(buffer[4]) == '/'))
+        buffer[sizeof (buffer) - 1] = '\0';
+        ptr = strchr(buffer, '\n');
+        if (!ptr)
+            printf("%s: potentially bogus request.\n", ipstr);
+        else
         {
-            ptr = strchr(buffer + 5, ' ');
+            *ptr = '\0';
+            ptr = strchr(buffer, '\r');
             if (ptr != NULL)
                 *ptr = '\0';
-            feed_http_request(ipstr, args->sock, buffer + 4);
-        } /* if */
+
+            if ((toupper(buffer[0]) == 'G') &&
+                (toupper(buffer[1]) == 'E') &&
+                (toupper(buffer[2]) == 'T') &&
+                (toupper(buffer[3]) == ' ') &&
+                (toupper(buffer[4]) == '/'))
+            {
+                ptr = strchr(buffer + 5, ' ');
+                if (ptr != NULL)
+                    *ptr = '\0';
+                feed_http_request(ipstr, args->sock, buffer + 4);
+            } /* if */
+        } /* else */
     } /* else */
 
     /* !!! FIXME: Time the transfer. */
