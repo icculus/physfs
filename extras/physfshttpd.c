@@ -86,7 +86,8 @@ static const char *lastError(void)
 
 static int writeAll(const char *ipstr, const int sock, void *buf, const size_t len)
 {
-    if (write(sock, buf, len) != len)
+    PHYSFS_sint64 amount_written = write(sock, buf, len);
+    if (amount_written < 0 || (size_t)amount_written != len)
     {
         printf("%s: Write error to socket.\n", ipstr);
         return 0;
