@@ -1335,12 +1335,12 @@ static int cmd_write(char *args)
 static char* modTimeToStr(PHYSFS_sint64 modtime, char *modstr, size_t strsize)
 {
     if (modtime < 0)
-        strncpy(modstr, "Unknown\n", strsize);
+        strncpy(modstr, "Unknown\n", strsize - 1);
     else
     {
         time_t t = (time_t) modtime;
         char *str = ctime(&t);
-        strncpy(modstr, str, strsize);
+        strncpy(modstr, str, strsize - 1);
     } /* else */
 
     modstr[strsize-1] = '\0';
