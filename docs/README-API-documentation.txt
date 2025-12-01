@@ -8,7 +8,10 @@ The API documentation is readable in a few ways:
   generated for you.
 - Too much trouble? We generated the HTML reference for you, online here:
 
-      https://icculus.org/physfs/docs/
+      https://wiki.icculus.org/PhysicsFS3/
+
+  The wiki is bridged to the headers; most of the documentation is kept in
+  sync between the two locations automatically.
 
 - We would love well-written tutorials for the latest version of PhysicsFS!
   If you write one, we would love to list it here. Drop me a line about it:

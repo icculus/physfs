@@ -981,7 +981,7 @@ static int cmd_cat(char *args)
             for (i = 0; i < rc; i++)
                 fputc((int) buffer[i], stdout);
 
-            if (rc < sizeof (buffer))
+            if (rc < (PHYSFS_sint64)sizeof (buffer))
             {
                 printf("\n\n");
                 if (!PHYSFS_eof(f))
@@ -1257,7 +1257,12 @@ static int cmd_append(char *args)
 
         bw = strlen(WRITESTR);
         rc = PHYSFS_writeBytes(f, WRITESTR, bw);
-        if (rc != bw)
+        if (rc < 0)
+        {
+            printf("Writing failed. Reason: [%s].\n",
+                   PHYSFS_getLastError());
+        }
+        else if ((PHYSFS_uint64)rc != bw)
         {
             printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n",
                    (int) rc, (int) bw, PHYSFS_getLastError());
@@ -1305,7 +1310,12 @@ static int cmd_write(char *args)
 
         bw = strlen(WRITESTR);
         rc = PHYSFS_writeBytes(f, WRITESTR, bw);
-        if (rc != bw)
+        if (rc < 0)
+        {
+            printf("Writing failed. Reason: [%s].\n",
+                   PHYSFS_getLastError());
+        }
+        else if ((size_t)rc != bw)
         {
             printf("Wrote (%d) of (%d) bytes. Reason: [%s].\n",
                    (int) rc, (int) bw, PHYSFS_getLastError());
@@ -1325,12 +1335,12 @@ static int cmd_write(char *args)
 static char* modTimeToStr(PHYSFS_sint64 modtime, char *modstr, size_t strsize)
 {
     if (modtime < 0)
-        strncpy(modstr, "Unknown\n", strsize);
+        strncpy(modstr, "Unknown\n", strsize - 1);
     else
     {
         time_t t = (time_t) modtime;
         char *str = ctime(&t);
-        strncpy(modstr, str, strsize);
+        strncpy(modstr, str, strsize - 1);
     } /* else */
 
     modstr[strsize-1] = '\0';
