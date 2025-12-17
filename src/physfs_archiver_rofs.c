@@ -576,6 +576,9 @@ static ROFSentry *rofs_load_entry(ROFSinfo *info)
 	i = snprintf(entry.name, sizeof(entry.name), "%s/%s/%s", info->dirs[0].name,
 			info->dirs[1].name, shortname);
 
+	/* Bail if long filename is too long */
+	BAIL_IF(i >= (int)sizeof(entry.name), PHYSFS_ERR_OUT_OF_MEMORY, 0);
+
 	/* Now go read real file size */
 	location = io->tell(io);
 
