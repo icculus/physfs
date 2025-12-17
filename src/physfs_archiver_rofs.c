@@ -206,7 +206,7 @@ static int rofs_depack_block(ROFSfileinfo *finfo, void *buffer,
 {
 	ROFSentry *entry = finfo->entry;
 	PHYSFS_uint8 *dstBuffer = (PHYSFS_uint8 *) buffer;
-	int dstIndex = 0;
+	PHYSFS_uint32 dstIndex = 0;
 
 	if (!finfo->depack.lzss_dict) {
 		return(0);
@@ -660,7 +660,7 @@ static int rofs_load_header(ROFSinfo *info)
 static int rofs_load_entries(ROFSinfo *info)
 {
     PHYSFS_Io *io = info->io;
-	int i;
+	PHYSFS_uint32 i;
 
 	BAIL_IF_ERRPASS(!io->seek(io, sizeof(rofs_id)), 0);
 	BAIL_IF_ERRPASS(!rofs_load_header(info), 0);
