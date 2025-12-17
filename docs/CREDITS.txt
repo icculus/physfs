@@ -167,6 +167,9 @@ Bug fixes,
 Bug fixes:
     Rob Loach
 
+ROFS archiver:
+    Patrice Mandin
+
 Other stuff:
     Your name here! Patches go to icculus@icculus.org ...
 

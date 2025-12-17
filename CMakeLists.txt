@@ -99,6 +99,7 @@ set(PHYSFS_SRCS
     src/physfs_archiver_7z.c
     src/physfs_archiver_mvl.c
     src/physfs_archiver_qpak.c
+    src/physfs_archiver_rofs.c
     src/physfs_archiver_wad.c
     src/physfs_archiver_csm.c
     src/physfs_archiver_zip.c
@@ -155,6 +156,11 @@ endif()
 option(PHYSFS_ARCHIVE_QPAK "Enable Quake I/II QPAK support" TRUE)
 if(NOT PHYSFS_ARCHIVE_QPAK)
     add_definitions(-DPHYSFS_SUPPORTS_QPAK=0)
+endif()
+
+option(PHYSFS_ARCHIVE_ROFS "Enable Resident Evil 3 ROFS support" TRUE)
+if(NOT PHYSFS_ARCHIVE_ROFS)
+    add_definitions(-DPHYSFS_SUPPORTS_ROFS=0)
 endif()
 
 option(PHYSFS_ARCHIVE_SLB "Enable I-War / Independence War SLB support" TRUE)
@@ -415,6 +421,7 @@ message_bool_option("CSM support" PHYSFS_ARCHIVE_CSM)
 message_bool_option("HOG support" PHYSFS_ARCHIVE_HOG)
 message_bool_option("MVL support" PHYSFS_ARCHIVE_MVL)
 message_bool_option("QPAK support" PHYSFS_ARCHIVE_QPAK)
+message_bool_option("ROFS support" PHYSFS_ARCHIVE_ROFS)
 message_bool_option("SLB support" PHYSFS_ARCHIVE_SLB)
 message_bool_option("VDF support" PHYSFS_ARCHIVE_VDF)
 message_bool_option("ISO9660 support" PHYSFS_ARCHIVE_ISO9660)
