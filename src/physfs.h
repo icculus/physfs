@@ -154,6 +154,8 @@
  * - .BIN (Chasm: The Rift engine archives)
  * - .VDF (Gothic I/II engine archives)
  * - .SLB (Independence War archives)
+ * - .POD (Terminal Velocity POD archives)
+ * - .DAT (Resident Evil 3 rofs<n>.dat archives)
  *
  * String policy for PhysicsFS 2.0 and later:
  *
