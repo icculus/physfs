@@ -3,28 +3,67 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  Build:
+  desktop:
     name: ${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.os }}
+    defaults:
+      run:
+        shell: sh
     strategy:
+      fail-fast: false
       matrix:
         platform:  # !!! FIXME: figure out an efficient way to get SDL2 on the Windows/Mac bots.
-        - { name: Linux,   os: ubuntu-latest, flags: -GNinja }
-        - { name: MinGW,   os: windows-latest, flags: -GNinja -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc -DCMAKE_SYSTEM_NAME=Windows }
-        - { name: Windows, os: windows-latest }
-        - { name: MacOS,   os: macos-latest }
+        - { name: Linux,   os: ubuntu-latest }
+        - { name: MinGW,   os: windows-latest, flags: -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc -DCMAKE_SYSTEM_NAME=Windows }
+        - { name: Windows, os: windows-latest, msvc: true }
+        - { name: macOS,   os: macos-latest }
     steps:
-    - name: Setup Linux dependencies
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install ninja-build
-    - name: Setup MinGW dependencies
-      if: contains(matrix.platform.name, 'MinGW')
-      run:  choco install ninja
     - name: Get PhysicsFS sources
-      uses: actions/checkout@v4
-    - name: Configure CMake
-      run: cmake -B build ${{ matrix.platform.flags }}
-    - name: Build
-      run: cmake --build build/
+      uses: actions/checkout@v6
+    - uses: ilammy/msvc-dev-cmd@v1
+      if: ${{ !!matrix.platform.msvc }}
+      with:
+        arch: x64
+    - name: Set up ninja
+      uses: ./.github/actions/setup-ninja
+    - name: Configure (CMake)
+      run: |
+        cmake -B build -GNinja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=prefix_cmake \
+          -DPHYSFS_INSTALL_MAN=ON \
+          -DPHYSFS_WERROR=ON \
+          ${{ matrix.platform.flags }}
+    - name: Build (CMake)
+      run: |
+        cmake --build build/ --verbose
+    - name: Install (CMake)
+      run: |
+        set -eu
+        cmake --install build/
+        echo "PhysFS_ROOT=$(pwd)/prefix_cmake" >> $GITHUB_ENV
+    - name: Verify CMake configuration files
+      run: |
+        cmake -S cmake/test -B cmake_config_build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DTEST_SHARED=${{ matrix.platform.shared }} \
+          -DTEST_STATIC=${{ matrix.platform.static }}
+        cmake --build cmake_config_build --verbose
+    - name: 'Test versioning'
+      run: |
+        build-scripts/test-versioning.sh
+
+  os2:
+    name: OS/2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: open-watcom/setup-watcom@v0
+      - name: Build physfs.dll
+        run: |
+          cd src
+          wmake -sn -f Makefile.os2
+      - name: distclean
+        run: |
+          cd src
+          wmake -sn -f Makefile.os2 distclean

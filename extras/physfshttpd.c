@@ -86,7 +86,8 @@ static const char *lastError(void)
 
 static int writeAll(const char *ipstr, const int sock, void *buf, const size_t len)
 {
-    if (write(sock, buf, len) != len)
+    PHYSFS_sint64 amount_written = write(sock, buf, len);
+    if (amount_written < 0 || (size_t)amount_written != len)
     {
         printf("%s: Write error to socket.\n", ipstr);
         return 0;
@@ -218,34 +219,38 @@ static void *do_http(void *_args)
     char ipstr[128];
     char buffer[512];
     char *ptr;
+    int amount_read;
     strncpy(ipstr, inet_ntoa(((struct sockaddr_in *) args->addr)->sin_addr),
             sizeof (ipstr));
     ipstr[sizeof (ipstr) - 1] = '\0';
 
     printf("%s: connected.\n", ipstr);
-    read(args->sock, buffer, sizeof (buffer));
-    buffer[sizeof (buffer) - 1] = '\0';
-    ptr = strchr(buffer, '\n');
-    if (!ptr)
-        printf("%s: potentially bogus request.\n", ipstr);
-    else
+    amount_read = read(args->sock, buffer, sizeof (buffer));
+    if (amount_read > 0)
     {
-        *ptr = '\0';
-        ptr = strchr(buffer, '\r');
-        if (ptr != NULL)
-            *ptr = '\0';
-
-        if ((toupper(buffer[0]) == 'G') &&
-            (toupper(buffer[1]) == 'E') &&
-            (toupper(buffer[2]) == 'T') &&
-            (toupper(buffer[3]) == ' ') &&
-            (toupper(buffer[4]) == '/'))
+        buffer[sizeof (buffer) - 1] = '\0';
+        ptr = strchr(buffer, '\n');
+        if (!ptr)
+            printf("%s: potentially bogus request.\n", ipstr);
+        else
         {
-            ptr = strchr(buffer + 5, ' ');
+            *ptr = '\0';
+            ptr = strchr(buffer, '\r');
             if (ptr != NULL)
                 *ptr = '\0';
-            feed_http_request(ipstr, args->sock, buffer + 4);
-        } /* if */
+
+            if ((toupper(buffer[0]) == 'G') &&
+                (toupper(buffer[1]) == 'E') &&
+                (toupper(buffer[2]) == 'T') &&
+                (toupper(buffer[3]) == ' ') &&
+                (toupper(buffer[4]) == '/'))
+            {
+                ptr = strchr(buffer + 5, ' ');
+                if (ptr != NULL)
+                    *ptr = '\0';
+                feed_http_request(ipstr, args->sock, buffer + 4);
+            } /* if */
+        } /* else */
     } /* else */
 
     /* !!! FIXME: Time the transfer. */
@@ -377,6 +382,7 @@ int main(int argc, char **argv)
         printf("listen socket failed to create.\n");
         return 42;
     } /* if */
+    printf("Listening on port %d\n", portnum);
 
     while (1)  /* infinite loop for now. */
     {

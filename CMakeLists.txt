@@ -15,13 +15,19 @@ cmake_minimum_required(VERSION 3.5...4.0)
 
 project(PhysicsFS VERSION ${PHYSFS_VERSION} LANGUAGES C )
 
+include(CMakeDependentOption)
 include(GNUInstallDirs)
+include("${PROJECT_SOURCE_DIR}/cmake/GetGitRevisionDescription.cmake")
+include("${PROJECT_SOURCE_DIR}/cmake/PrivateSdlFunctions.cmake")
+include("${PROJECT_SOURCE_DIR}/cmake/sdlmanpages.cmake")
 
 # Increment this if/when we break backwards compatibility.
 set(PHYSFS_SOVERSION 1)
 
 set(PHYSFS_M_SRCS)
 set(PHYSFS_CPP_SRCS)
+
+option(PHYSFS_WERROR "Treat warnings as errors" OFF)
 
 if(WIN32)
     list(APPEND OPTIONAL_LIBRARY_LIBS advapi32 shell32)
@@ -101,6 +107,7 @@ set(PHYSFS_SRCS
     src/physfs_archiver_vdf.c
     src/physfs_archiver_lec3d.c
     src/physfs_archiver_pod.c
+    src/physfs_version.rc
     ${PHYSFS_CPP_SRCS}
     ${PHYSFS_M_SRCS}
 )
@@ -180,18 +187,19 @@ option(PHYSFS_BUILD_STATIC "Build static library" TRUE)
 if(PHYSFS_BUILD_STATIC)
     add_library(physfs-static STATIC ${PHYSFS_SRCS})
     add_library(PhysFS::PhysFS-static ALIAS physfs-static)
-    set_target_properties(physfs-static PROPERTIES EXPORT_NAME PhysFS-static)
+    sdl_add_warning_options(physfs-static WARNING_AS_ERROR ${PHYSFS_WERROR})
+    set_property(TARGET physfs-static PROPERTY EXPORT_NAME PhysFS-static)
     # Don't rename this on Windows, since DLLs will also produce an import
     #  library named "physfs.lib" which would conflict; Unix tend to like the
     #  same library name with a different extension for static libs, but
     #  Windows can just have a separate name.
     if(NOT MSVC)
-        set_target_properties(physfs-static PROPERTIES OUTPUT_NAME "physfs")
+        set_property(TARGET physfs-static PROPERTY OUTPUT_NAME "physfs")
     endif()
     if(WINRT)
         # Ignore LNK4264 warnings; we don't author any WinRT components, just consume them, so we're okay in a static library.
-		set_target_properties(physfs-static PROPERTIES VS_WINRT_COMPONENT True)
-        set_target_properties(physfs-static PROPERTIES STATIC_LIBRARY_FLAGS "/ignore:4264")
+        set_property(TARGET physfs-static PROPERTY VS_WINRT_COMPONENT TRUE)
+        set_property(TARGET physfs-static PROPERTY STATIC_LIBRARY_FLAGS "/ignore:4264")
     endif()
     if(WIN32 OR WINRT OR OS2)
         # no dll exports from the static library
@@ -199,39 +207,49 @@ if(PHYSFS_BUILD_STATIC)
     endif()
     target_include_directories(physfs-static PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
     target_link_libraries(physfs-static PRIVATE ${OPTIONAL_LIBRARY_LIBS} ${OTHER_LDFLAGS})
-    set(PHYSFS_LIB_TARGET PhysFS::PhysFS-static)
     list(APPEND PHYSFS_INSTALL_TARGETS "physfs-static")
 endif()
 
 option(PHYSFS_BUILD_SHARED "Build shared library" TRUE)
 if(PHYSFS_BUILD_SHARED)
-    add_library(physfs SHARED ${PHYSFS_SRCS})
-    add_library(PhysFS::PhysFS ALIAS physfs)
-    set_target_properties(physfs PROPERTIES MACOSX_RPATH 1)
-    set_target_properties(physfs PROPERTIES VERSION ${PHYSFS_VERSION})
-    set_target_properties(physfs PROPERTIES SOVERSION ${PHYSFS_SOVERSION})
-    set_target_properties(physfs PROPERTIES EXPORT_NAME PhysFS)
+    add_library(physfs-shared SHARED ${PHYSFS_SRCS})
+    add_library(PhysFS::PhysFS-shared ALIAS physfs-shared)
+    sdl_add_warning_options(physfs-shared WARNING_AS_ERROR ${PHYSFS_WERROR})
+    set_property(TARGET physfs-shared PROPERTY OUTPUT_NAME "physfs")
+    set_property(TARGET physfs-shared PROPERTY MACOSX_RPATH 1)
+    set_property(TARGET physfs-shared PROPERTY VERSION ${PHYSFS_VERSION})
+    set_property(TARGET physfs-shared PROPERTY SOVERSION ${PHYSFS_SOVERSION})
+    set_property(TARGET physfs-shared PROPERTY EXPORT_NAME PhysFS-shared)
+    if(WIN32)
+        set_property(TARGET physfs-shared PROPERTY PREFIX "")
+    endif()
+    if(MINGW)
+        target_link_options(physfs-shared PRIVATE -static-libgcc)
+    endif()
     if(WINRT)
-		set_target_properties(physfs PROPERTIES VS_WINRT_COMPONENT TRUE)
+        set_property(TARGET physfs-shared PROPERTY VS_WINRT_COMPONENT TRUE)
     endif()
-    if(OS2) # OS/2 does not support a DLL name longer than 8 characters.
-        set_target_properties(physfs PROPERTIES OUTPUT_NAME "physfs")
-    endif()
-    target_include_directories(physfs PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(physfs PRIVATE ${OPTIONAL_LIBRARY_LIBS} ${OTHER_LDFLAGS})
-    set(PHYSFS_LIB_TARGET PhysFS::PhysFS)
-    list(APPEND PHYSFS_INSTALL_TARGETS "physfs")
+    target_include_directories(physfs-shared PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+    target_link_libraries(physfs-shared PRIVATE ${OPTIONAL_LIBRARY_LIBS} ${OTHER_LDFLAGS})
+    list(APPEND PHYSFS_INSTALL_TARGETS "physfs-shared")
 endif()
 
 if(NOT PHYSFS_BUILD_SHARED AND NOT PHYSFS_BUILD_STATIC)
     message(FATAL "Both shared and static libraries are disabled!")
 endif()
 
+if(TARGET physfs-shared)
+    add_library(PhysFS::PhysFS ALIAS physfs-shared)
+elseif(TARGET PhysFS::PhysFS-static)
+    add_library(PhysFS::PhysFS ALIAS physfs-static)
+endif()
+
 option(PHYSFS_BUILD_TEST "Build stdio test program." TRUE)
 mark_as_advanced(PHYSFS_BUILD_TEST)
 if(PHYSFS_BUILD_TEST)
     add_executable(test_physfs test/test_physfs.c)
-    target_link_libraries(test_physfs PRIVATE ${PHYSFS_LIB_TARGET} ${OTHER_LDFLAGS})
+    target_link_libraries(test_physfs PRIVATE PhysFS::PhysFS)
+    sdl_add_warning_options(test_physfs WARNING_AS_ERROR ${PHYSFS_WERROR})
 
     find_path(READLINE_H readline/readline.h)
     find_path(HISTORY_H readline/history.h)
@@ -244,34 +262,96 @@ if(PHYSFS_BUILD_TEST)
         target_compile_definitions(test_physfs PRIVATE PHYSFS_HAVE_READLINE=1)
     endif()
     list(APPEND PHYSFS_INSTALL_TARGETS test_physfs)
+
+    if(UNIX)
+        add_executable(physfshttpd extras/physfshttpd.c)
+        target_link_libraries(physfshttpd PRIVATE PhysFS::PhysFS)
+        sdl_add_warning_options(physfshttpd WARNING_AS_ERROR ${PHYSFS_WERROR})
+    endif()
 endif()
 
-option(PHYSFS_DISABLE_INSTALL "Disable installing PhysFS" OFF)
-if(NOT PHYSFS_DISABLE_INSTALL)
+option(PHYSFS_INSTALL "Enable PhysFS installation" ON)
+cmake_dependent_option(PHYSFS_INSTALL_MAN "Install man pages for PhysicsFS" OFF "PHYSFS_INSTALL" OFF)
+if(PHYSFS_INSTALL)
+    if(MSVC)
+        set(PHYSFS_INSTALL_CMAKEDIR "cmake")
+    else()
+        set(PHYSFS_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/PhysFS")
+    endif()
 
-    install(TARGETS ${PHYSFS_INSTALL_TARGETS} EXPORT PhysFSExport
+    if(TARGET physfs-shared)
+        install(TARGETS physfs-shared EXPORT physfs-shared-exports
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+        install(EXPORT physfs-shared-exports
+            DESTINATION "${PHYSFS_INSTALL_CMAKEDIR}"
+            FILE PhysFS-shared-targets.cmake
+            NAMESPACE PhysFS::
+        )
+        export(TARGETS physfs-shared NAMESPACE PhysFS:: FILE PhysFS-shared-targets.cmake)
+        if(MSVC)
+            SDL_install_pdb(physfs-shared "${CMAKE_INSTALL_BINDIR}")
+        endif()
+    endif()
+    if(TARGET physfs-static)
+        install(TARGETS physfs-static EXPORT physfs-static-exports
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+        install(EXPORT physfs-static-exports
+            DESTINATION "${PHYSFS_INSTALL_CMAKEDIR}"
+            FILE PhysFS-static-targets.cmake
+            NAMESPACE PhysFS::
+        )
+        export(TARGETS physfs-static NAMESPACE PhysFS:: FILE PhysFS-static-targets.cmake)
+        if(MSVC)
+            SDL_install_pdb(physfs-static "${CMAKE_INSTALL_LIBDIR}")
+        endif()
+    endif()
+    if(TARGET test_physfs)
+        install(TARGETS test_physfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endif()
     install(FILES src/physfs.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-    install(EXPORT PhysFSExport
-            DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/PhysFS"
-            FILE PhysFSConfig.cmake
-            NAMESPACE PhysFS::
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file(cmake/PhysFSConfig.cmake.in PhysFSConfig.cmake
+        NO_SET_AND_CHECK_MACRO
+        PATH_VARS CMAKE_INSTALL_PREFIX
+        INSTALL_DESTINATION "${PHYSFS_INSTALL_CMAKEDIR}"
     )
+    write_basic_package_version_file(PhysFSConfigVersion.cmake
+        COMPATIBILITY SameMajorVersion
+    )
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/PhysFSConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/PhysFSConfigVersion.cmake"
+        DESTINATION "${PHYSFS_INSTALL_CMAKEDIR}"
+    )
+    install(FILES LICENSE.txt
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/licenses/PhysicsFS${PROJECT_VERSION_MAJOR}")
+
+    configure_file(cmake/cmake_uninstall.cmake.in cmake_uninstall.cmake IMMEDIATE @ONLY)
+    add_custom_target(uninstall-physfs
+        COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
     if(NOT MSVC)
-        configure_file(
-            "extras/physfs.pc.in"
-            "extras/physfs.pc"
-            @ONLY
-        )
-
+        configure_file(cmake/physfs.pc.in physfs.pc @ONLY)
         install(
-            FILES "${CMAKE_CURRENT_BINARY_DIR}/extras/physfs.pc"
+            FILES "${CMAKE_CURRENT_BINARY_DIR}/physfs.pc"
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+        )
+    endif()
+
+    if(PHYSFS_INSTALL_MAN)
+        sdl_get_git_revision_hash(PHYSFS_REVISION)
+        SDL_generate_manpages(
+            HEADERS_DIR "${PROJECT_SOURCE_DIR}/src/physfs.h"
+            SYMBOL "PHYSFS_init"
+            WIKIHEADERS_PL_PATH "${PROJECT_SOURCE_DIR}/build-scripts/wikiheaders.pl"
+            REVISION "${PHYSFS_REVISION}"
         )
     endif()
 endif()
@@ -314,14 +394,6 @@ if(UNIX)
         git archive --prefix="physfs-${PHYSFS_VERSION}/" --output="${PHYSFS_TARBALL}" HEAD
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Building source tarball '${PHYSFS_TARBALL}'..."
-    )
-
-    set(PHYSFS_TARGETNAME_UNINSTALL "uninstall" CACHE STRING "Name of 'uninstall' build target")
-    add_custom_target(
-        ${PHYSFS_TARGETNAME_UNINSTALL}
-        "${CMAKE_CURRENT_SOURCE_DIR}/extras/uninstall.sh"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMENT "Uninstall the project..."
     )
 endif()
 
