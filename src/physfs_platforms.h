@@ -87,6 +87,9 @@
 #elif defined(__WIIU__)
 #  define PHYSFS_PLATFORM_CAFE 1
 #  define PHYSFS_NO_CDROM_SUPPORT 1
+#elif defined(__vita__)
+#  define PHYSFS_PLATFORM_VITA 1
+#  define PHYSFS_NO_CDROM_SUPPORT 1
 #else
 #  error Unknown platform.
 #endif
