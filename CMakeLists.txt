@@ -104,6 +104,7 @@ set(PHYSFS_SRCS
     src/physfs_archiver_rofs.c
     src/physfs_archiver_wad.c
     src/physfs_archiver_csm.c
+    src/physfs_archiver_tar.c
     src/physfs_archiver_zip.c
     src/physfs_archiver_slb.c
     src/physfs_archiver_iso9660.c
@@ -143,6 +144,11 @@ endif()
 option(PHYSFS_ARCHIVE_CSM "Enable Chasm: The Rift CSM.BIN support" TRUE)
 if(NOT PHYSFS_ARCHIVE_CSM)
     add_definitions(-DPHYSFS_SUPPORTS_CSM=0)
+endif()
+
+option(PHYSFS_ARCHIVE_TAR "Enable POSIX TAR / Chasm: The Rift [Demo] Remastered csm.bin support" TRUE)
+if(NOT PHYSFS_ARCHIVE_TAR)
+    add_definitions(-DPHYSFS_SUPPORTS_TAR=0)
 endif()
 
 option(PHYSFS_ARCHIVE_HOG "Enable Descent I/II HOG support" TRUE)
@@ -407,6 +413,7 @@ message_bool_option("7zip support" PHYSFS_ARCHIVE_7Z)
 message_bool_option("GRP support" PHYSFS_ARCHIVE_GRP)
 message_bool_option("WAD support" PHYSFS_ARCHIVE_WAD)
 message_bool_option("CSM support" PHYSFS_ARCHIVE_CSM)
+message_bool_option("TAR support" PHYSFS_ARCHIVE_TAR)
 message_bool_option("HOG support" PHYSFS_ARCHIVE_HOG)
 message_bool_option("MVL support" PHYSFS_ARCHIVE_MVL)
 message_bool_option("QPAK support" PHYSFS_ARCHIVE_QPAK)

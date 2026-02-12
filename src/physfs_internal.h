@@ -90,6 +90,7 @@ extern const PHYSFS_Archiver __PHYSFS_Archiver_HOG;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_MVL;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_WAD;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_CSM;
+extern const PHYSFS_Archiver __PHYSFS_Archiver_TAR;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_SLB;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_ISO9660;
 extern const PHYSFS_Archiver __PHYSFS_Archiver_VDF;
@@ -213,6 +214,9 @@ void __PHYSFS_smallFree(void *ptr);
 #endif
 #ifndef PHYSFS_SUPPORTS_CSM
 #define PHYSFS_SUPPORTS_CSM PHYSFS_SUPPORTS_DEFAULT
+#endif
+#ifndef PHYSFS_SUPPORTS_TAR
+#define PHYSFS_SUPPORTS_TAR PHYSFS_SUPPORTS_DEFAULT
 #endif
 #ifndef PHYSFS_SUPPORTS_QPAK
 #define PHYSFS_SUPPORTS_QPAK PHYSFS_SUPPORTS_DEFAULT
