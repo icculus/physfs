@@ -40,7 +40,7 @@ extern "C" {
 /**
  * Open a platform-independent filename for reading, and make it accessible
  *  via an SDL_IOStream. The file will be closed in PhysicsFS when the
- *  RWops is closed. PhysicsFS should be configured to your liking before
+ *  stream is closed. PhysicsFS should be configured to your liking before
  *  opening files through this method.
  *
  *   @param filename File to open in platform-independent notation.
@@ -52,7 +52,7 @@ PHYSFS_DECL SDL_IOStream *PHYSFSSDL3_openRead(const char *fname);
 /**
  * Open a platform-independent filename for writing, and make it accessible
  *  via an SDL_IOStream. The file will be closed in PhysicsFS when the
- *  RWops is closed. PhysicsFS should be configured to your liking before
+ *  stream is closed. PhysicsFS should be configured to your liking before
  *  opening files through this method.
  *
  *   @param filename File to open in platform-independent notation.
@@ -64,7 +64,7 @@ PHYSFS_DECL SDL_IOStream *PHYSFSSDL3_openWrite(const char *fname);
 /**
  * Open a platform-independent filename for appending, and make it accessible
  *  via an SDL_IOStream. The file will be closed in PhysicsFS when the
- *  RWops is closed. PhysicsFS should be configured to your liking before
+ *  stream is closed. PhysicsFS should be configured to your liking before
  *  opening files through this method.
  *
  *   @param filename File to open in platform-independent notation.
@@ -76,8 +76,8 @@ PHYSFS_DECL SDL_IOStream *PHYSFSSDL3_openAppend(const char *fname);
 /**
  * Make a SDL_IOStream from an existing PhysicsFS file handle. You should
  *  dispose of any references to the handle after successful creation of
- *  the RWops. The actual PhysicsFS handle will be destroyed when the
- *  RWops is closed.
+ *  the stream. The actual PhysicsFS handle will be destroyed when the
+ *  stream is closed.
  *
  *   @param handle a valid PhysicsFS file handle.
  *  @return A valid SDL_IOStream on success, NULL on error. Specifics

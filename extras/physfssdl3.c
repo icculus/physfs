@@ -131,7 +131,7 @@ SDL_IOStream *PHYSFSSDL3_makeIOStream(PHYSFS_File *handle)
 {
     SDL_IOStream *retval = NULL;
     if (handle == NULL) {
-        SDL_SetError("NULL pointer passed to PHYSFSSDL3_makeRWops().");
+        SDL_SetError("NULL pointer passed to PHYSFSSDL3_makeIOStream().");
     } else {
         retval = create_iostream(handle);
     }
