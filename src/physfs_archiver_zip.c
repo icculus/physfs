@@ -124,7 +124,7 @@ typedef struct
 #define ZIP_GENERAL_BITS_IGNORE_LOCAL_HEADER  (1 << 3)
 
 /* support for "traditional" PKWARE encryption. */
-static int zip_entry_is_tradional_crypto(const ZIPentry *entry)
+static int zip_entry_is_traditional_crypto(const ZIPentry *entry)
 {
     return (entry->general_bits & ZIP_GENERAL_BITS_TRADITIONAL_CRYPTO) != 0;
 } /* zip_entry_is_traditional_crypto */
@@ -162,8 +162,8 @@ static PHYSFS_sint64 zip_read_decrypt(ZIPfileinfo *finfo, void *buf, PHYSFS_uint
     PHYSFS_Io *io = finfo->io;
     const PHYSFS_sint64 br = io->read(io, buf, len);
 
-    /* Decompression the new data if necessary. */
-    if (zip_entry_is_tradional_crypto(finfo->entry) && (br > 0))
+    /* Decompress the new data if necessary. */
+    if (zip_entry_is_traditional_crypto(finfo->entry) && (br > 0))
     {
         PHYSFS_uint32 *keys = finfo->crypto_keys;
         PHYSFS_uint8 *ptr = (PHYSFS_uint8 *) buf;
@@ -382,7 +382,7 @@ static int ZIP_seek(PHYSFS_Io *_io, PHYSFS_uint64 offset)
     ZIPfileinfo *finfo = (ZIPfileinfo *) _io->opaque;
     ZIPentry *entry = finfo->entry;
     PHYSFS_Io *io = finfo->io;
-    const int encrypted = zip_entry_is_tradional_crypto(entry);
+    const int encrypted = zip_entry_is_traditional_crypto(entry);
 
     BAIL_IF(offset > entry->uncompressed_size, PHYSFS_ERR_PAST_EOF, 0);
 
@@ -1169,7 +1169,7 @@ static int zip_load_entries(ZIPinfo *info,
     {
         ZIPentry *entry = zip_load_entry(info, zip64, data_ofs);
         BAIL_IF_ERRPASS(!entry, 0);
-        if (zip_entry_is_tradional_crypto(entry))
+        if (zip_entry_is_traditional_crypto(entry))
             info->has_crypto = 1;
     } /* for */
 
@@ -1590,7 +1590,7 @@ static PHYSFS_Io *ZIP_openRead(void *opaque, const char *filename)
             goto ZIP_openRead_failed;
     } /* if */
 
-    if (!zip_entry_is_tradional_crypto(entry))
+    if (!zip_entry_is_traditional_crypto(entry))
         GOTO_IF(password != NULL, PHYSFS_ERR_BAD_PASSWORD, ZIP_openRead_failed);
     else
     {
