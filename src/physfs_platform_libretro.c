@@ -208,7 +208,7 @@ void __PHYSFS_platformDestroyMutex(void *mutex)
 int __PHYSFS_platformGrabMutex(void *mutex)
 {
 #ifdef PHYSFS_PLATFORM_LIBRETRO_NO_THREADS
-    return 0;
+    return 1; /* Single-threaded, so we ignore this by returning success. */
 #else
     PthreadMutex *m = (PthreadMutex *) mutex;
     uintptr_t tid = sthread_get_current_thread_id();
