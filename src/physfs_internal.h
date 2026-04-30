@@ -69,7 +69,7 @@ extern "C" {
    All file-private symbols need to be marked "static".
    Everything shared between PhysicsFS sources needs to be in this
    file between the visibility pragma blocks. */
-#if !defined(_WIN32) && (PHYSFS_MINIMUM_GCC_VERSION(4,0) || defined(__clang__))
+#if !defined(_WIN32) && !defined(DJGPP) && (PHYSFS_MINIMUM_GCC_VERSION(4,0) || defined(__clang__))
 #define PHYSFS_HAVE_PRAGMA_VISIBILITY 1
 #endif
 
@@ -477,7 +477,7 @@ void __PHYSFS_DirTreeDeinit(__PHYSFS_DirTree *dt);
  *  Obviously, this isn't a function. If you need more than one char for this,
  *  you'll need to pull some old pieces of PhysicsFS out of revision control.
  */
-#if defined(PHYSFS_PLATFORM_WINDOWS) || defined(PHYSFS_PLATFORM_OS2)
+#if defined(PHYSFS_PLATFORM_DOS) || defined(PHYSFS_PLATFORM_WINDOWS) || defined(PHYSFS_PLATFORM_OS2)
 #define __PHYSFS_platformDirSeparator '\\'
 #else
 #define __PHYSFS_STANDARD_DIRSEP 1

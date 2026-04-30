@@ -233,7 +233,7 @@ extern "C" {
 #define PHYSFS_DECL __declspec(dllexport)
 #elif defined(__SUNPRO_C)
 #define PHYSFS_DECL __global
-#elif ((__GNUC__ >= 3) && (!defined(__EMX__)) && (!defined(sun)))
+#elif ((__GNUC__ >= 3) && (!defined(__EMX__)) && (!defined(DJGPP)) && (!defined(sun)))
 #define PHYSFS_DECL __attribute__((visibility("default")))
 #else
 #define PHYSFS_DECL

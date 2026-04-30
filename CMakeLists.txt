@@ -85,6 +85,7 @@ set(PHYSFS_SRCS
     src/physfs_unicode.c
     src/physfs_platform_cafe.c
     src/physfs_platform_ctr.c
+    src/physfs_platform_dos.c
     src/physfs_platform_posix.c
     src/physfs_platform_unix.c
     src/physfs_platform_windows.c
@@ -218,7 +219,10 @@ if(PHYSFS_BUILD_STATIC)
     list(APPEND PHYSFS_INSTALL_TARGETS "physfs-static")
 endif()
 
-option(PHYSFS_BUILD_SHARED "Build shared library" TRUE)
+if (NOT DOS)
+    option(PHYSFS_BUILD_SHARED "Build shared library" TRUE)
+endif()
+
 if(PHYSFS_BUILD_SHARED)
     add_library(physfs-shared SHARED ${PHYSFS_SRCS})
     add_library(PhysFS::PhysFS-shared ALIAS physfs-shared)
@@ -258,6 +262,9 @@ if(PHYSFS_BUILD_TEST)
     add_executable(test_physfs test/test_physfs.c)
     target_link_libraries(test_physfs PRIVATE PhysFS::PhysFS)
     sdl_add_warning_options(test_physfs WARNING_AS_ERROR ${PHYSFS_WERROR})
+    if(DOS)
+        set_target_properties(test_physfs PROPERTIES OUTPUT_NAME "TESTPHYS")   # 8.3 file names!
+    endif()
 
     find_path(READLINE_H readline/readline.h)
     find_path(HISTORY_H readline/history.h)

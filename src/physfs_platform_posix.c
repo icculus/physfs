@@ -19,7 +19,10 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#ifndef PHYSFS_PLATFORM_DOS
 #include <pthread.h>
+#endif
 
 #include "physfs_internal.h"
 
@@ -31,7 +34,6 @@ static PHYSFS_ErrorCode errcodeFromErrnoError(const int err)
         case 0: return PHYSFS_ERR_OK;
         case EACCES: return PHYSFS_ERR_PERMISSION;
         case EPERM: return PHYSFS_ERR_PERMISSION;
-        case EDQUOT: return PHYSFS_ERR_NO_SPACE;
         case EIO: return PHYSFS_ERR_IO;
         case ELOOP: return PHYSFS_ERR_SYMLINK_LOOP;
         case EMLINK: return PHYSFS_ERR_NO_SPACE;
@@ -41,10 +43,13 @@ static PHYSFS_ErrorCode errcodeFromErrnoError(const int err)
         case ENOTDIR: return PHYSFS_ERR_NOT_FOUND;
         case EISDIR: return PHYSFS_ERR_NOT_A_FILE;
         case EROFS: return PHYSFS_ERR_READ_ONLY;
-        case ETXTBSY: return PHYSFS_ERR_BUSY;
         case EBUSY: return PHYSFS_ERR_BUSY;
         case ENOMEM: return PHYSFS_ERR_OUT_OF_MEMORY;
         case ENOTEMPTY: return PHYSFS_ERR_DIR_NOT_EMPTY;
+        #ifndef PHYSFS_PLATFORM_DOS  /* djgpp doesn't have these. */
+        case EDQUOT: return PHYSFS_ERR_NO_SPACE;
+        case ETXTBSY: return PHYSFS_ERR_BUSY;
+        #endif
         default: return PHYSFS_ERR_OS_ERROR;
     } /* switch */
 } /* errcodeFromErrnoError */
@@ -56,6 +61,7 @@ static inline PHYSFS_ErrorCode errcodeFromErrno(void)
 } /* errcodeFromErrno */
 
 
+#ifndef PHYSFS_PLATFORM_DOS
 static char *getUserDirByUID(void)
 {
     uid_t uid = getuid();
@@ -114,6 +120,7 @@ char *__PHYSFS_platformCalcUserDir(void)
 
     return retval;
 } /* __PHYSFS_platformCalcUserDir */
+#endif
 
 
 PHYSFS_EnumerateCallbackResult __PHYSFS_platformEnumerate(const char *dirname,
@@ -175,6 +182,10 @@ static void *doOpen(const char *filename, int mode)
 
     /* O_APPEND doesn't actually behave as we'd like. */
     mode &= ~O_APPEND;
+
+#ifdef PHYSFS_PLATFORM_DOS
+    mode |= O_BINARY;
+#endif
 
 #ifdef O_CLOEXEC
     /* Add O_CLOEXEC if defined */
@@ -367,6 +378,7 @@ int __PHYSFS_platformStat(const char *fname, PHYSFS_Stat *st, const int follow)
 } /* __PHYSFS_platformStat */
 
 
+#ifndef PHYSFS_PLATFORM_DOS
 typedef struct
 {
     pthread_mutex_t mutex;
@@ -442,6 +454,7 @@ void __PHYSFS_platformReleaseMutex(void *mutex)
         } /* if */
     } /* if */
 } /* __PHYSFS_platformReleaseMutex */
+#endif  /* !PHYSFS_PLATFORM_DOS */
 
 #endif  /* PHYSFS_PLATFORM_POSIX */
 
