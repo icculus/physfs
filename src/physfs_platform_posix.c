@@ -172,11 +172,23 @@ static inline void set_CLOEXEC(int fildes)
 }
 #endif
 
-static void *doOpen(const char *filename, int mode)
+typedef struct File
+{
+    int fd;
+    PHYSFS_uint64 offset;
+    PHYSFS_uint8 readahead[4 * 1024];
+    size_t readahead_pos;
+    size_t readahead_len;
+    int readonly;
+} File;
+
+
+static File *doOpen(const char *filename, int mode)
 {
     const int appending = (mode & O_APPEND);
+    PHYSFS_sint64 offset = 0;
+    File *retval = NULL;
     int fd;
-    int *retval;
 
     errno = 0;
 
@@ -203,7 +215,8 @@ static void *doOpen(const char *filename, int mode)
 
     if (appending)
     {
-        if (lseek(fd, 0, SEEK_END) < 0)
+        offset = (PHYSFS_sint64) lseek(fd, 0, SEEK_END);
+        if (offset < 0)
         {
             const int err = errno;
             close(fd);
@@ -211,21 +224,29 @@ static void *doOpen(const char *filename, int mode)
         } /* if */
     } /* if */
 
-    retval = (int *) allocator.Malloc(sizeof (int));
+    retval = (File *) allocator.Malloc(sizeof (File));
     if (!retval)
     {
         close(fd);
         BAIL(PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     } /* if */
 
-    *retval = fd;
-    return ((void *) retval);
+    memset(retval, '\0', sizeof (*retval));
+
+    retval->fd = fd;
+    retval->offset = (PHYSFS_uint64) offset;
+
+    return retval;
 } /* doOpen */
 
 
 void *__PHYSFS_platformOpenRead(const char *filename)
 {
-    return doOpen(filename, O_RDONLY);
+    File *f = doOpen(filename, O_RDONLY);
+    if (f) {
+        f->readonly = 1;
+    }
+    return f;
 } /* __PHYSFS_platformOpenRead */
 
 
@@ -244,76 +265,124 @@ void *__PHYSFS_platformOpenAppend(const char *filename)
 PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
                                     PHYSFS_uint64 len)
 {
-    const int fd = *((int *) opaque);
-    ssize_t rc = 0;
+    BAIL_IF(!__PHYSFS_ui64FitsAddressSpace(len), PHYSFS_ERR_INVALID_ARGUMENT, -1);
+    File *f = (File *) opaque;
+    size_t br = 0;
 
-    if (!__PHYSFS_ui64FitsAddressSpace(len))
-        BAIL(PHYSFS_ERR_INVALID_ARGUMENT, -1);
+    while (len > 0)
+    {
+        size_t cpy = f->readahead_len;
+        if (cpy == 0)
+        {
+            const ssize_t rc = read(f->fd, f->readahead, sizeof (f->readahead));
+            if ((rc < 0) && (errno == EINTR)) {
+                continue; /* just try again. */
+            }
+            BAIL_IF(rc < 0, errcodeFromErrno(), (br > 0) ? (PHYSFS_sint64) br : -1);
+            f->readahead_len = (size_t) rc;
+            f->readahead_pos = 0;
+            cpy = f->readahead_len;
+            if (!cpy)  /* out of data. */
+                return (PHYSFS_sint64) br;
+        } /* if */
 
-    do {
-        rc = read(fd, buffer, (size_t) len);
-    } while ((rc == -1) && (errno == EINTR));
-    BAIL_IF(rc == -1, errcodeFromErrno(), -1);
-    assert(rc >= 0);
-    assert((PHYSFS_uint64)rc <= len);
-    return (PHYSFS_sint64) rc;
+        if (((size_t) len) < cpy)
+            cpy = (size_t) len;
+
+        memcpy(buffer, f->readahead + f->readahead_pos, cpy);
+        f->offset += cpy;
+        f->readahead_len -= cpy;
+        f->readahead_pos += cpy;
+        len -= cpy;
+        br += cpy;
+        buffer = ((PHYSFS_uint8 *) buffer) + cpy;
+    } /* while */
+
+    return (PHYSFS_sint64) br;
 } /* __PHYSFS_platformRead */
 
 
 PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
                                      PHYSFS_uint64 len)
 {
-    const int fd = *((int *) opaque);
+    File *f = (File *) opaque;
     ssize_t rc = 0;
 
     if (!__PHYSFS_ui64FitsAddressSpace(len))
         BAIL(PHYSFS_ERR_INVALID_ARGUMENT, -1);
 
     do {
-        rc = write(fd, (void *) buffer, (size_t) len);
+        rc = write(f->fd, (void *) buffer, (size_t) len);
     } while ((rc == -1) && (errno == EINTR));
     BAIL_IF(rc == -1, errcodeFromErrno(), rc);
     assert(rc >= 0);
     assert((PHYSFS_uint64)rc <= len);
+    f->offset += (PHYSFS_sint64) len;
     return (PHYSFS_sint64) rc;
 } /* __PHYSFS_platformWrite */
 
 
 int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
 {
-    const int fd = *((int *) opaque);
-    const off_t rc = lseek(fd, (off_t) pos, SEEK_SET);
+    File *f = (File *) opaque;
+
+    const PHYSFS_uint64 start = (PHYSFS_uint64) f->offset;
+    if (pos == start) {
+        return 1;  /* already there, nothing to do. */
+    }
+
+    const off_t rc = lseek(f->fd, (off_t) pos, SEEK_SET);
     BAIL_IF(rc == -1, errcodeFromErrno(), 0);
+
+    f->offset = (PHYSFS_sint64) pos;
+
+    if (f->readonly) {
+        if (pos > start) {
+            /* can we save _some_ of our readahead? */
+            const PHYSFS_uint64 diff = pos - start;
+            if (diff < f->readahead_len)
+            {
+                f->readahead_len -= diff;
+                f->readahead_pos += diff;
+                if (lseek(f->fd, (off_t) f->readahead_len, SEEK_CUR) == -1) {
+                    f->readahead_len = f->readahead_pos = 0;  /* dump the buffer */
+                    BAIL(errcodeFromErrno(), 0);
+                }
+                return 1;
+            } /* if */
+        } /* else if */
+
+        f->readahead_len = 0;  /* dump the readahead cache. */
+        f->readahead_pos = 0;
+    }
+
     return 1;
 } /* __PHYSFS_platformSeek */
 
 
 PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 {
-    const int fd = *((int *) opaque);
-    PHYSFS_sint64 retval;
-    retval = (PHYSFS_sint64) lseek(fd, 0, SEEK_CUR);
-    BAIL_IF(retval == -1, errcodeFromErrno(), -1);
-    return retval;
+    File *f = (File *) opaque;
+    return f->offset;
 } /* __PHYSFS_platformTell */
 
 
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
-    const int fd = *((int *) opaque);
+    File *f = (File *) opaque;
     struct stat statbuf;
-    BAIL_IF(fstat(fd, &statbuf) == -1, errcodeFromErrno(), -1);
+    BAIL_IF(fstat(f->fd, &statbuf) == -1, errcodeFromErrno(), -1);
     return ((PHYSFS_sint64) statbuf.st_size);
 } /* __PHYSFS_platformFileLength */
 
 
 int __PHYSFS_platformFlush(void *opaque)
 {
-    const int fd = *((int *) opaque);
+    File *f = (File *) opaque;
     int rc = -1;
-    if ((fcntl(fd, F_GETFL) & O_ACCMODE) != O_RDONLY) {
+    if (!f->readonly) {
         do {
-            rc = fsync(fd);
+            rc = fsync(f->fd);
         } while ((rc == -1) && (errno == EINTR));
         BAIL_IF(rc == -1, errcodeFromErrno(), 0);
     }
@@ -323,10 +392,10 @@ int __PHYSFS_platformFlush(void *opaque)
 
 void __PHYSFS_platformClose(void *opaque)
 {
-    const int fd = *((int *) opaque);
+    File *f = (File *) opaque;
     int rc = -1;
     do {
-        rc = close(fd);  /* we don't check this. You should have used flush! */
+        rc = close(f->fd);  /* we don't check this. You should have used flush! */
     } while ((rc == -1) && (errno == EINTR));
     allocator.Free(opaque);
 } /* __PHYSFS_platformClose */
