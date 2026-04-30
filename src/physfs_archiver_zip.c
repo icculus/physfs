@@ -1092,6 +1092,7 @@ static ZIPentry *zip_load_entry(ZIPinfo *info, const int zip64,
         {
             BAIL_IF_ERRPASS(!readui16(io, &sig), NULL);
             BAIL_IF_ERRPASS(!readui16(io, &len), NULL);
+            BAIL_IF(extralen < (4 + len), PHYSFS_ERR_CORRUPT, NULL);
 
             si64 += 4 + len;
             extralen -= 4 + len;
