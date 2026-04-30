@@ -104,8 +104,8 @@ static void *GOB_openArchive(PHYSFS_Io *io, const char *name,
 	}
 	else
 	{
-		BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
 		gob = 0;
+		BAIL(PHYSFS_ERR_UNSUPPORTED, NULL);
 	}
 
 	BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &catofs, 4), NULL);

@@ -969,14 +969,14 @@ static inline int zip_has_symlink_attr(const ZIPentry *entry,
 static PHYSFS_sint64 zip_dos_time_to_physfs_time(PHYSFS_uint32 dostime)
 {
     const PHYSFS_uint32 dosdate = (PHYSFS_uint32) ((dostime >> 16) & 0xFFFF);
-    dostime &= 0xFFFF;
+    const PHYSFS_uint32 dostime16 = dostime & 0xFFFF;
 
     const int m = (int) ((dosdate >> 5) & 0x0F);
     const int d = (int) ((dosdate >> 0) & 0x1F) + 1;
     const int y = (int) (((dosdate >> 9) & 0x7F) + 1980) - (m <= 2 ? 1 : 0);
-    const int hour   = (int) ((dostime >> 11) & 0x1F);
-    const int minute = (int) ((dostime >>  5) & 0x3F);
-    const int sec    = (int) ((dostime <<  1) & 0x3E);
+    const int hour   = (int) ((dostime16 >> 11) & 0x1F);
+    const int minute = (int) ((dostime16 >>  5) & 0x3F);
+    const int sec    = (int) ((dostime16 <<  1) & 0x3E);
 
     // days since 1/1/1970: https://howardhinnant.github.io/date_algorithms.html#days_from_civil
     const int era = ((y >= 0) ? y : (y - 399)) / 400;

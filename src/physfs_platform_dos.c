@@ -38,19 +38,22 @@ void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
 #else
     /* MSCDEX API calls go through interrupt 0x2F with AH=0x15: https://www.phatcode.net/res/220/files/mscdex21.txt */
     __dpmi_regs regs;
+    int num_drives;
+
     regs.x.ax = 0x1500;  /* get number of CD drive letters */
     regs.x.bx = 0x0000;
     __dpmi_int(0x2F, &regs);
 
-    const int num_drives = (int) regs.x.bx;  /* if zero, no drives or no MSCDEX installed. */
+    num_drives = (int) regs.x.bx;  /* if zero, no drives or no MSCDEX installed. */
     if (num_drives > 0) {
+        char drives[26];
+        int i;
         regs.x.ax = 0x150D;  /* get CD drive letters */
         regs.x.es = __tb >> 4;     /* the transfer buffer is at least 2k large, if all possible drives were CD-ROMs, we'd need 26 bytes. */
         regs.x.bx = __tb & 0x0f;
         __dpmi_int(0x2F, &regs);
-        char drives[26];
         dosmemget(__tb, num_drives, drives);
-        for (int i = 0; i < num_drives; i++) {
+        for (i = 0; i < num_drives; i++) {
             const char path[] = { 'A' + drives[i], ':', '\\', '\0' };
             DIR *dirp = opendir(path);  /* if we can open the drive's root dir, there's a filesystem there. */
             if (dirp) {
@@ -79,16 +82,25 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
        https://stackoverflow.com/questions/60928997/how-to-get-environment-variables-in-a-dos-assembly-program
      */
     __dpmi_regs regs;
+
+    char *lastbackslash;
+    char *retval;
+
+    unsigned long pspseg;
+    unsigned long envsel;
+    unsigned long i;
+    int zero_count = 0;
+    int slen = 0;
+    int offset;
+
     regs.x.ax = 0x6200;  /* get number of CD drive letters */
     regs.x.bx = 0x0000;
     __dpmi_int(0x21, &regs);
 
     /* https://www.delorie.com/djgpp/doc/ug/dpmi/farptr-intro.html.en */
-    const unsigned long pspseg = (unsigned long) regs.x.bx;
-    const unsigned long envsel = (unsigned long) _farpeekw(_dos_ds, (pspseg * 16) + 0x2C);
+    pspseg = (unsigned long) regs.x.bx;
+    envsel = (unsigned long) _farpeekw(_dos_ds, (pspseg * 16) + 0x2C);
 
-    int zero_count = 0;
-    int offset;
     for (offset = 0; (offset < 0xFFFF) && (zero_count < 2); offset++) {
         const char ch = (char) _farpeekb(envsel, offset);
         if (ch == 0) {
@@ -105,15 +117,14 @@ char *__PHYSFS_platformCalcBaseDir(const char *argv0)
     /* there's a Uint16 here that represents number of extension strings. In practice it's always 1 and that one string is the path we need. */
     offset += 2;
 
-    int slen = 0;
-    for (unsigned long i = offset; _farpeekb(envsel, i) != 0; i++) {
+    for (i = offset; _farpeekb(envsel, i) != 0; i++) {
         slen++;
     }
 
     slen++;  /* count the null terminator. */
 
-    char *lastbackslash = NULL;
-    char *retval = (char *) allocator.Malloc(slen);
+    lastbackslash = NULL;
+    retval = (char *) allocator.Malloc(slen);
     if (retval) {
         int i = 0;
         do {
