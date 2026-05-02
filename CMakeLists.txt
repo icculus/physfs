@@ -86,6 +86,7 @@ set(PHYSFS_SRCS
     src/physfs_platform_cafe.c
     src/physfs_platform_ctr.c
     src/physfs_platform_dos.c
+    src/physfs_platform_emscripten.c
     src/physfs_platform_posix.c
     src/physfs_platform_unix.c
     src/physfs_platform_windows.c
@@ -192,6 +193,12 @@ if(NOT PHYSFS_ARCHIVE_POD)
     add_definitions(-DPHYSFS_SUPPORTS_POD=0)
 endif()
 
+if(EMSCRIPTEN)
+    set(PHYSFS_EMSCRIPTEN_STORAGE_PATH "" CACHE STRING "Specify a path for prefdir on Emscripten")
+    if(NOT PHYSFS_EMSCRIPTEN_STORAGE_PATH STREQUAL "")
+        add_definitions(-DPHYSFS_EMSCRIPTEN_STORAGE_PATH="${PHYSFS_EMSCRIPTEN_STORAGE_PATH}")
+    endif()
+endif()
 
 option(PHYSFS_BUILD_STATIC "Build static library" TRUE)
 if(PHYSFS_BUILD_STATIC)
@@ -220,7 +227,7 @@ if(PHYSFS_BUILD_STATIC)
     list(APPEND PHYSFS_INSTALL_TARGETS "physfs-static")
 endif()
 
-if (NOT DOS)
+if (NOT DOS AND NOT EMSCRIPTEN)
     option(PHYSFS_BUILD_SHARED "Build shared library" TRUE)
 endif()
 

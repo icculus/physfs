@@ -15,6 +15,9 @@
 #if defined(TARGET_EXTENSION) && (defined(TARGET_PLAYDATE) || defined(TARGET_SIMULATOR))
 #  define PHYSFS_PLATFORM_PLAYDATE 1
 #  define PHYSFS_NO_CRUNTIME_MALLOC 1
+#elif (defined __EMSCRIPTEN__)
+#  define PHYSFS_PLATFORM_EMSCRIPTEN 1
+#  define PHYSFS_PLATFORM_POSIX 1
 #elif (defined DJGPP)
 #  define PHYSFS_PLATFORM_DOS 1
 #  define PHYSFS_PLATFORM_POSIX 1  /* close enough with djgpp */
