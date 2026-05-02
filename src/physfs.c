@@ -1106,7 +1106,7 @@ static char *calculateBaseDir(const char *argv0)
 {
     const char dirsep = __PHYSFS_platformDirSeparator;
     char *retval = NULL;
-    char *ptr = NULL;
+    const char *ptr = NULL;
 
     /* Give the platform layer first shot at this. */
     retval = __PHYSFS_platformCalcBaseDir(argv0);
