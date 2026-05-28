@@ -89,9 +89,13 @@ char *__PHYSFS_platformCalcUserDir(void)
 
 char *__PHYSFS_platformCalcPrefDir(const char *org, const char *app)
 {
-    char *out = SDL_GetPrefPath(org, app);
-    BAIL_IF(out == NULL, PHYSFS_ERR_OS_ERROR, NULL);
-    /* Unlike SDL_GetBasePath() or SDL_GetUserFolder(), SDL_GetPrefPath() allocates the string for us. */
+    char *out;
+    char *pref = SDL_GetPrefPath(org, app);
+    BAIL_IF(pref == NULL, PHYSFS_ERR_OS_ERROR, NULL);
+    /* SDL_GetPrefPath() expects SDL_free(), which may be different than PhysFS's allocator. Use __PHYSFS_strdup() to be safe. */
+    out = __PHYSFS_strdup(pref);
+    SDL_free(pref);
+    BAIL_IF(!out, PHYSFS_ERR_OUT_OF_MEMORY, NULL);
     return out;
 } /* __PHYSFS_platformCalcPrefDir */
 
