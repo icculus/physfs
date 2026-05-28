@@ -88,6 +88,7 @@ set(PHYSFS_SRCS
     src/physfs_platform_dos.c
     src/physfs_platform_emscripten.c
     src/physfs_platform_posix.c
+    src/physfs_platform_sdl3.c
     src/physfs_platform_unix.c
     src/physfs_platform_windows.c
     src/physfs_platform_ogc.c
@@ -191,6 +192,11 @@ endif()
 option(PHYSFS_ARCHIVE_POD "Enable Terminal Reality POD Archive support" TRUE)
 if(NOT PHYSFS_ARCHIVE_POD)
     add_definitions(-DPHYSFS_SUPPORTS_POD=0)
+endif()
+
+option(PHYSFS_PLATFORM_SDL3 "Enable building for the SDL3 file system" FALSE)
+if(PHYSFS_PLATFORM_SDL3)
+    add_definitions(-DPHYSFS_PLATFORM_SDL3=1)
 endif()
 
 if(EMSCRIPTEN)

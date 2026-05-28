@@ -12,7 +12,9 @@
  *  PHYSFS_PLATFORM_UNIX on that system.
  */
 
-#if defined(TARGET_EXTENSION) && (defined(TARGET_PLAYDATE) || defined(TARGET_SIMULATOR))
+#if defined(PHYSFS_PLATFORM_SDL3)
+#define PHYSFS_NO_CDROM_SUPPORT 1
+#elif defined(TARGET_EXTENSION) && (defined(TARGET_PLAYDATE) || defined(TARGET_SIMULATOR))
 #  define PHYSFS_PLATFORM_PLAYDATE 1
 #  define PHYSFS_NO_CRUNTIME_MALLOC 1
 #elif (defined __EMSCRIPTEN__)
