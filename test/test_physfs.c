@@ -402,10 +402,9 @@ static void cmd_tree_recursive(const char *prefix, const char *fullPath, const c
     }
     else
     {
-        int file_count;
         char **i;
         printf("\n");
-        for (i = rc, file_count = 0; *i != NULL; i++, file_count++) {
+        for (i = rc; *i != NULL; i++) {
             char *newFullPath = malloc(strlen(fullPath) + strlen(*i) + 2);
             char *thisPrefix;
             strcpy(newFullPath, fullPath);
