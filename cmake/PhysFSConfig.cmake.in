@@ -6,6 +6,8 @@ set_package_properties(PhysicsFS PROPERTIES
 
 @PACKAGE_INIT@
 
+set(PHYSFS_PLATFORM_SDL3 @PHYSFS_PLATFORM_SDL3@)
+
 set(PhysFS_PhysFS_FOUND)
 
 set(PhysFS_PhysFS-shared_FOUND)
@@ -17,6 +19,12 @@ endif()
 
 set(PhysFS_PhysFS-static_FOUND)
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/PhysFS-static-targets.cmake")
+
+    if(PHYSFS_PLATFORM_SDL3)
+        include(CMakeFindDependencyMacro)
+        find_dependency(SDL3)
+    endif()
+
     include("${CMAKE_CURRENT_LIST_DIR}/PhysFS-static-targets.cmake")
     set(PhysFS_PhysFS-static_FOUND TRUE)
     set(PhysFS_PhysFS_FOUND TRUE)
