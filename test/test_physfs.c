@@ -13,10 +13,6 @@
 #include <errno.h>
 #include <string.h>
 
-#if (defined __MWERKS__)
-#include <SIOUX.h>
-#endif
-
 #if (defined PHYSFS_HAVE_READLINE)
 #include <unistd.h>
 #include <readline/readline.h>
@@ -1658,14 +1654,6 @@ int main(int argc, char **argv)
     char *buf = NULL;
     int rc = 1;
     int i;
-
-#if (defined __MWERKS__)
-    extern tSIOUXSettings SIOUXSettings;
-    SIOUXSettings.asktosaveonclose = 0;
-    SIOUXSettings.autocloseonquit = 1;
-    SIOUXSettings.rows = 40;
-    SIOUXSettings.columns = 120;
-#endif
 
     printf("\n");
 

@@ -55,8 +55,6 @@ extern "C" {
 
 #ifdef __cplusplus
     /* C++ always has a real inline keyword. */
-#elif (defined macintosh) && !(defined __MWERKS__)
-#   define inline
 #elif (defined _MSC_VER)
 #   define inline __inline
 #endif
