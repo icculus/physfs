@@ -1696,6 +1696,7 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
         {
             allocator.Free(prefDir);
             prefDir = NULL;
+            return NULL;  /* endstr points into the freed buffer. */
         } /* if */
     } /* if */
 
