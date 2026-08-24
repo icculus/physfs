@@ -1699,7 +1699,8 @@ const char *PHYSFS_getPrefDir(const char *org, const char *app)
         } /* if */
     } /* if */
 
-    *endstr = dirsep;  /* readd the final dirsep. */
+    if (prefDir)
+        *endstr = dirsep;  /* readd the final dirsep if we still have a prefdir. */
 
     return prefDir;
 } /* PHYSFS_getPrefDir */
