@@ -4038,8 +4038,8 @@ extern PHYSFS_DECL void PHYSFS_CALL PHYSFS_setErrorCode(PHYSFS_ErrorCode code);
  *
  * On Linux, this might look like: "/home/bob/.local/share/My Program Name"
  *
- * On Mac OS X, this might look like: "/Users/bob/Library/Application
- * Support/My Program Name"
+ * On macOS, this might look like: "/Users/bob/Library/Application Support/My
+ * Program Name"
  *
  * (etc.)
  *
