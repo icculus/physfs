@@ -71,12 +71,7 @@ static int vdfLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count,
         name[VDF_ENTRY_NAME_LENGTH] = '\0';  /* always null-terminated. */
         for (namei = VDF_ENTRY_NAME_LENGTH - 1; namei >= 0; namei--)
         {
-            /* We assume the filenames are low-ASCII; consider the archive
-               corrupt if we see something above 127, since we don't know the
-               encoding. (We can change this later if we find out these exist
-               and are intended to be, say, latin-1 or UTF-8 encoding). */
-            BAIL_IF(((PHYSFS_uint8) name[namei]) > 127, PHYSFS_ERR_CORRUPT, 0);
-
+            /* VDFS filenames uses Windows-125x encoding, which depends of the region. */
             if (name[namei] == ' ')
                 name[namei] = '\0';
             else
