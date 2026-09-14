@@ -534,7 +534,7 @@ static int isRofs(PHYSFS_Io *io)
 
 static int rofs_read_filename(PHYSFS_Io *io, char *dst, PHYSFS_uint32 dst_len)
 {
-	int i = 0;
+	PHYSFS_uint32 i = 0;
 
 	memset(dst, '\0', dst_len);
 
@@ -543,6 +543,15 @@ static int rofs_read_filename(PHYSFS_Io *io, char *dst, PHYSFS_uint32 dst_len)
 
 		if (!__PHYSFS_readAll(io, &c, 1))
 			return(0);
+
+		/* Filenames in a rofs.dat are just a run of bytes terminated by a
+		   NUL, with no length prefix, so a corrupt (or hostile) archive
+		   could otherwise make us write past the end of dst. */
+		if (i >= dst_len)
+		{
+			PHYSFS_setErrorCode(PHYSFS_ERR_CORRUPT);
+			return(0);
+		}
 
 		dst[i] = c;
 	} while (dst[i++] != '\0');

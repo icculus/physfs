@@ -309,6 +309,12 @@ if(PHYSFS_BUILD_TEST)
         target_link_libraries(physfshttpd PRIVATE PhysFS::PhysFS)
         sdl_add_warning_options(physfshttpd WARNING_AS_ERROR ${PHYSFS_WERROR})
     endif()
+
+    add_executable(test_rofs_corrupt_filename test/test_rofs_corrupt_filename.c)
+    target_link_libraries(test_rofs_corrupt_filename PRIVATE PhysFS::PhysFS)
+    sdl_add_warning_options(test_rofs_corrupt_filename WARNING_AS_ERROR ${PHYSFS_WERROR})
+    enable_testing()
+    add_test(NAME rofs_corrupt_filename COMMAND test_rofs_corrupt_filename)
 endif()
 
 option(PHYSFS_INSTALL "Enable PhysFS installation" ON)
