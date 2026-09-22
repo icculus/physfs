@@ -8,5 +8,5 @@ Description: PhysicsFS is a library to provide abstract access to various archiv
 URL: https://icculus.org/physfs/
 Version: @PHYSFS_VERSION@
 Requires.private: @PC_PRIVATE_REQUIRES@
-Libs: -L${libdir} -lphysfs
+Libs: @PC_LIBS@
 Cflags: -I${includedir}
