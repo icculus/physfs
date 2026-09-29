@@ -47,13 +47,63 @@
 
 #if PHYSFS_SUPPORTS_WAD
 
+const char *map_lumps[] = {
+    "BEHAVIOR",     /* Hexen */
+    "BLOCKMAP",
+    "LINEDEFS",
+    "NODES",
+    "REJECT",
+    "SECTORS",
+    "SEGS",
+    "SIDEDEFS",
+    "SSECTORS",
+    "THINGS",
+    "VERTEXES",
+    NULL,
+};
+
+static int is_digit(char c) {
+    return c >= '0' && c <= '9';
+}
+
+static int is_map_lump(const char *name) {
+    const char **lump;
+    
+    for (lump = map_lumps; *lump; lump++) {
+        if (strcmp(name, *lump) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int is_doom_map_name(const char *name) {
+    size_t len = strlen(name);
+
+    if (len == 4 && name[0] == 'E' && is_digit(name[1]) && name[2] == 'M' && is_digit(name [3])) {
+        /* ExMy */
+        return 1;
+    }
+    if (len == 5 && strncmp(name, "MAP", 3) == 0 && is_digit(name[3]) && is_digit(name[4])) {
+        /* MAPxx */
+        return 1;
+    }
+    return 0;
+}
+
 static int wadLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
 {
+    char path[8 + 1 + 8 + 1];
+    size_t parent_pos = 0;
     PHYSFS_uint32 i;
+
+    path[0] = '\0';
+
     for (i = 0; i < count; i++)
     {
         PHYSFS_uint32 pos;
         PHYSFS_uint32 size;
+        int is_directory;
         char name[9];
 
         BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &pos, 4), 0);
@@ -63,7 +113,31 @@ static int wadLoadEntries(PHYSFS_Io *io, const PHYSFS_uint32 count, void *arc)
         name[8] = '\0'; /* name might not be null-terminated in file. */
         size = PHYSFS_swapULE32(size);
         pos = PHYSFS_swapULE32(pos);
-        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, name, 0, -1, -1, pos, size), 0);
+        is_directory = 0;
+
+        if (size == 0) {
+            if (is_doom_map_name(name)) {
+                strcpy(path, name);
+                parent_pos = strlen(path);
+                is_directory = 1;
+            } else {
+                /* Ignore _START and _END tags */
+                continue;
+            }
+        } else {
+            if (parent_pos) {
+                if (is_map_lump(name)) {
+                    strcat(path, "/");
+                    strcpy(path + 1 + parent_pos, name);
+                } else {
+                    parent_pos = 0;
+                    strcpy(path, name);
+                }
+            } else {
+                strcpy(path, name);
+            }
+        }
+        BAIL_IF_ERRPASS(!UNPK_addEntry(arc, path, is_directory, -1, -1, pos, size), 0);
     } /* for */
 
     return 1;
@@ -90,10 +164,10 @@ static void *WAD_openArchive(PHYSFS_Io *io, const char *name,
     BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &count, sizeof (count)), NULL);
     count = PHYSFS_swapULE32(count);
 
-    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &directoryOffset, 4), 0);
+    BAIL_IF_ERRPASS(!__PHYSFS_readAll(io, &directoryOffset, 4), NULL);
     directoryOffset = PHYSFS_swapULE32(directoryOffset);
 
-    BAIL_IF_ERRPASS(!io->seek(io, directoryOffset), 0);
+    BAIL_IF_ERRPASS(!io->seek(io, directoryOffset), NULL);
 
     unpkarc = UNPK_openArchive(io, 0, 1);
     BAIL_IF_ERRPASS(!unpkarc, NULL);
