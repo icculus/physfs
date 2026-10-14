@@ -1211,6 +1211,9 @@ static int initStaticArchivers(void)
     #if PHYSFS_SUPPORTS_POD
         REGISTER_STATIC_ARCHIVER(POD)
     #endif
+    #if PHYSFS_SUPPORTS_CUEBIN
+        REGISTER_STATIC_ARCHIVER(CUEBIN)
+    #endif
 
     #undef REGISTER_STATIC_ARCHIVER
 

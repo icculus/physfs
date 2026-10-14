@@ -29,7 +29,8 @@ SRCS = physfs.c                   &
        physfs_archiver_csm.c      &
        physfs_archiver_vdf.c      &
        physfs_archiver_lec3d.c    &
-       physfs_archiver_pod.c
+       physfs_archiver_pod.c      &
+       physfs_archiver_cuebin.c
 
 
 OBJS = $(SRCS:.c=.obj)
